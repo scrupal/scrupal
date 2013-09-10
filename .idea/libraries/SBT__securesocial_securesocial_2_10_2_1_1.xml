@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: securesocial:securesocial_2.10:2.1.1">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/securesocial/securesocial_2.10/jars/securesocial_2.10-2.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/securesocial/securesocial_2.10/docs/securesocial_2.10-2.1.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/securesocial/securesocial_2.10/srcs/securesocial_2.10-2.1.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

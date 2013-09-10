@@ -1,0 +1,11 @@
+.history
+.idea/workspace.xml
+dist
+logs
+project/project
+project/target
+target
+tmp
+out/
+bower_components
+diff.out

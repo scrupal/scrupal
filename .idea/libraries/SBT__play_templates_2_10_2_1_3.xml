@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: play:templates_2.10:2.1.3">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/local/play/templates_2.10/2.1.3/jars/templates_2.10.jar!/"></root>
+    </CLASSES>
+    <JAVADOC> </JAVADOC>
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/local/play/templates_2.10/2.1.3/srcs/templates_2.10-sources.jar!/"></root>
+    </SOURCES>
+  </library>
+</component>
