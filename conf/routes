@@ -1,9 +1,58 @@
+######################################################################################################################
+# This file is part of Scrupal a Web Application Framework.                                                          #
+#                                                                                                                    #
+# Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.                                            #
+#                                                                                                                    #
+# Scrupal is free software: you can redistribute it and/or modify it under the terms                                 #
+# of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   #
+# or (at your option) any later version.                                                                             #
+#                                                                                                                    #
+# Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      #
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      #
+# details.                                                                                                           #
+#                                                                                                                    #
+# You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          #
+# http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             #
+######################################################################################################################
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                           controllers.Application.index
+# Home page for Scrupal which provides setup instructions, etc.
+GET         /                               scrupal.controllers.Home.index
 
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+# Login page
+# User Signup, Login, Password Reset, Greeting and Logout
+#GET         /login                          scrupal.controllers.Authentication.login
+#GET         /logout                         scrupal.controllers.Authentication.logout
+#GET         /not-authorized                 scrupal.controllers.Authentication.notAuthorized
+#GET         /goodbye                        scrupal.controllers.Authentication.goodbye
+
+#GET         /signup                         scrupal.controllers.Signup.startSignUp
+#POST        /signup                         scrupal.controllers.Signup.handleStartSignUp
+#GET         /signup/:token                  scrupal.controllers.Signup.signUp(token)
+#POST        /signup/:token                  scrupal.controllers.Signup.handleSignUp(token)
+#GET         /reset                          scrupal.controllers.Signup.startResetPassword
+#POST        /reset                          scrupal.controllers.Signup.handleStartResetPassword
+#GET         /reset/:token                   scrupal.controllers.Signup.resetPassword(token)
+#POST        /reset/:token                   scrupal.controllers.Signup.handleResetPassword(token)
+#GET         /password                       scrupal.controllers.Password.changePassword
+#POST        /password                       scrupal.controllers.Password.handlePasswordChange
+
+#GET         /welcome                        scrupal.controllers.Authenticated.welcome
+
+# Admin application lives at this url
+#GET         /admin                          scrupal.controllers.Administration.adminIndex
+#GET         /admin/module                   scrupal.controllers.Administration.adminListModules
+#GET         /admin/module/:mod              scrupal.controllers.Administration.adminModule(mod)
+
+# REST based Entities
+POST        /rest/:kind                     scrupal.controllers.Entity.create(kind)
+GET         /rest/:kind/:id                 scrupal.controllers.Entity.read(kind, id)
+PUT         /rest/:kind/:id                 scrupal.controllers.Entity.update(kind, id)
+DELETE      /rest/:kind/:id                 scrupal.controllers.Entity.delete(kind, id)
+HEAD        /rest/:kind/:id                 scrupal.controllers.Entity.info(kind, id)
+OPTIONS     /rest/:kind/:id                 scrupal.controllers.Entity.options(kind, id)
+
+# Map static resources from the /assets folder to the /assets URL path
+GET         /assets/*file                   scrupal.controllers.Assets.at(path="/public", file)

@@ -1,7 +1,19 @@
-@(message: String)
+@(message: String)(implicit request: RequestHeader)
 
-@main("Welcome to Play 2.1") {
-    
-    @play20.welcome(message)
-    
+@main("Welcome to Scrupal") {
+<div class="alert-info">This will eventually contain the main index.</div>
+<div>
+	<i class="icon-forward" style="color: lawngreen;"></i>
+</div>
+
+<p>1+1={{1+1}}</p>
+
+<showdown>
+# Heading 1
+## Heading
+1. `list` 1
+1. ~numbered~ 1
+</showdown>
+
+
 }

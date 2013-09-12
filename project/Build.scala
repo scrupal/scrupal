@@ -115,7 +115,7 @@ object ScrupalBuild extends Build {
     path = file("."),
     settings = ( buildSettings ++ Seq (
       resolvers := all_resolvers,
-      libraryDependencies := Seq ( specs2, play2_reactivemongo, play_plugins_redis ),
+      libraryDependencies := Seq ( specs2, play2_reactivemongo, play_plugins_redis, mailer_plugin ),
       printClasspath <<= print_class_path
     ))
   )
