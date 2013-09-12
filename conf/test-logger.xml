@@ -30,10 +30,10 @@
     </appender>
 
     <logger name="play" level="INFO" />
-    <logger name="app" level="DEBUG" />
-    <logger name="scrupal" level="DEBUG"/>
+    <logger name="application" level="DEBUG" />
 
     <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
         <appender-ref ref="SIFT" />
     </root>
