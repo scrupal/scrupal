@@ -1,14 +1,14 @@
 <component name="libraryTable">
   <library name="SBT: io.netty:netty:3.6.5.Final">
     <CLASSES>
-      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/jars/netty-3.6.5.Final.jar!/"></root>
-      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/bundles/netty-3.6.5.Final.jar!/"></root>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/jars/netty-3.6.5.Final.jar!/" />
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/bundles/netty-3.6.5.Final.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/docs/netty-3.6.5.Final-javadoc.jar!/"></root>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/docs/netty-3.6.5.Final-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/srcs/netty-3.6.5.Final-sources.jar!/"></root>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/io.netty/netty/srcs/netty-3.6.5.Final-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

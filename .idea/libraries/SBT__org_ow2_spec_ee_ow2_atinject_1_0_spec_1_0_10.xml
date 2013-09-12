@@ -1,22 +1,14 @@
 <component name="libraryTable">
   <library name="SBT: org.ow2.spec.ee:ow2-atinject-1.0-spec:1.0.10">
     <CLASSES>
-      <root 
-      url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/jars/ow2-atinject-1.0-spec-1.0.10.jar!/">
-</root>
-      <root 
-      url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/bundles/ow2-atinject-1.0-spec-1.0.10.jar!/">
-</root>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/jars/ow2-atinject-1.0-spec-1.0.10.jar!/" />
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/bundles/ow2-atinject-1.0-spec-1.0.10.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root 
-      url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/docs/ow2-atinject-1.0-spec-1.0.10-javadoc.jar!/">
-</root>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/docs/ow2-atinject-1.0-spec-1.0.10-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root 
-      url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/srcs/ow2-atinject-1.0-spec-1.0.10-sources.jar!/">
-</root>
+      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/cache/org.ow2.spec.ee/ow2-atinject-1.0-spec/srcs/ow2-atinject-1.0-spec-1.0.10-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
