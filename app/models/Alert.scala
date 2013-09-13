@@ -21,8 +21,9 @@ import org.joda.time.DateTime
 import scrupal.utils.Icons
 import play.api.libs.json._
 import play.api.templates.Html
-import play.api.libs.json
 import scala.xml.{Elem, NodeSeq, Node}
+
+import MissingJSONReadsWrites._
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
@@ -164,18 +165,6 @@ object Alert
     Html(ns.foldLeft[StringBuilder](new StringBuilder) { (s,n) => s.append( n.buildString(true))}.toString)
   }
 
-  implicit val htmlReader : Reads[Html] = new Reads[Html] {
-    def reads(jsValue : JsValue) : JsResult[Html] = {
-      (jsValue \ "html" ).validate[String].map { h => Html(h) }
-    }
-  }
-
-  implicit val htmlWriter : Writes[Html] = new Writes[Html] {
-    def writes(h : Html) : JsValue = JsString(h.toString)
-  }
-
-  implicit val htmlFormat : Format[Html] = Format(htmlReader, htmlWriter)
-
   implicit val alertKindReader : Reads[AlertKind] = new Reads[AlertKind] {
     def reads(jsValue: JsValue) : JsResult[AlertKind] = {
       (jsValue \ "alert_kind").validate[String].map { s => AlertKind.withName(s) }
@@ -191,7 +180,5 @@ object Alert
   implicit val AlertKindFormatter : Format[AlertKind] = Format(alertKindReader, alertKindWriter)
 
   implicit val formatter : Format[Alert] = Json.format[Alert]
-
-
 }
 

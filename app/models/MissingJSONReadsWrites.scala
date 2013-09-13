@@ -15,66 +15,38 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.test
+package scrupal.models
 
-import scrupal.models.Entity
-
-import play.api.Logger
-import play.api.libs.json.{JsObject, Json}
-import play.api.test._
-import play.api.test.Helpers.running
-
-import scala.concurrent.Await
-import org.specs2.mutable.Specification
-
-import reactivemongo.core.commands.LastError
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+import reactivemongo.bson.BSONObjectID
+import play.api.templates.Html
 
 /**
- * One line sentence description here.
- * Further description here.
+ * Some handy Json Reads[T] and Writes[T] for various things not otherswise provided.
  */
-object TestEntity { implicit val teFormatter = Json.format[TestEntity] }
-
-case class TestEntity(one : Int = 1, two: String = "2") extends Entity
+object MissingJSONReadsWrites
 {
-  override lazy val collectionName = "test_entities"
-  override def toJson = {
-    super.toJson.deepMerge( Json.toJson(this).asInstanceOf[JsObject] )
-  }
-}
 
-class EntitySpec extends Specification
-{
-	val te = new TestEntity()
+  implicit val BSONObjectIDReads : Reads[BSONObjectID] =
+    ( __ \ '_id).read[String].map { v => BSONObjectID(v) }
 
-	"Entity" should {
-		"generate plural collection name" in {
-			te.collectionName must equalTo("test_entities")
-		}
-		"fail to compare against a non-entity" in {
-			val other = "not-matchable"
-			te.equals(other) must beFalse
-			te.equals(te) must beTrue
-		}
-		"allow reincarnation of Entity Subclass" in {
-			val js = Json.toJson[TestEntity](te)
-      Logger.debug("TestEntity.toJson -> " + Json.prettyPrint(js))
-			val cm2 : TestEntity = Json.fromJson[TestEntity](js).get
-      val js2 = Json.toJson[TestEntity](cm2)
-      Logger.debug("TestEntity(2).toJson -> " + Json.prettyPrint(js2))
-			te.equals(cm2) must beTrue
-		}
-    "save to and delete from reactivemongo" in {
-      running(FakeApplication()) {
-        val future = Entity.save(te)
-        val x : LastError = Await.result(future, Duration(2,TimeUnit.SECONDS) )
-        x.ok must beTrue
-        val remove_future = Entity.remove(te)
-        val y : LastError = Await.result(remove_future, Duration(2,TimeUnit.SECONDS) )
-        y.ok must beTrue
-      }
+
+  implicit val BSONObjectIDWrites : Writes[BSONObjectID] =
+    ( __ \ '_id).write[String].contramap{ (a: BSONObjectID) => a.stringify }
+
+  implicit val BSONObjectIDFormats = Format(BSONObjectIDReads, BSONObjectIDWrites)
+
+  implicit val htmlReader : Reads[Html] = new Reads[Html] {
+    def reads(jsValue : JsValue) : JsResult[Html] = {
+      (jsValue \ "html" ).validate[String].map { h => Html(h) }
     }
-	}
+  }
+
+  implicit val htmlWriter : Writes[Html] = new Writes[Html] {
+    def writes(h : Html) : JsValue = JsString(h.toString)
+  }
+
+  implicit val htmlFormat : Format[Html] = Format(htmlReader, htmlWriter)
+
 }
