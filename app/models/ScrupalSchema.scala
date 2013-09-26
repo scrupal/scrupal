@@ -31,7 +31,7 @@ class ScrupalSchema(sketch: Sketch) extends Schema (sketch)
     // CoreComponent tables
     Modules.ddl ++ Alerts.ddl ++
     // UserComponent tables
-    Identities.ddl ++ Handles.ddl
+    Principals.ddl ++ Handles.ddl
     // Admin tables
     /* ++ Alerts.ddl */
   }

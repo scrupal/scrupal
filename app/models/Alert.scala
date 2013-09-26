@@ -101,43 +101,53 @@ import AlertKind._
  * has a "latest" alert they've seen. Alerts expire, however, so it is possible for a user to miss an alert.
  * The intent is to provide a way to provide cross-site alerting of system notices such as down time or new
  * feature enhancements.
+ * @param id Optional unique identifier for the Alert
+ * @param created Timestamp of creation
+ * @param label Label of the Alert
+ * @param description Brief description of the alert
+ * @param message Text of the message to deliver to users
+ * @param alertKind The kind of alert
+ * @param iconKind The icon to use in the alert
+ * @param prefix The prefix label to use in the alert
+ * @param cssClass The cssClass name to use in the alert
+ * @param expires The time at which the alert expires
  */
 case class Alert (
-    description : String,
-    message: String,
-    alertKind: AlertKind.Value = AlertKind.Note,
-    iconKind : Icons.Value,
-    prefix : String,
-    cssClass : String,
-    expires: DateTime,
-    override val id : Option[Long],
-    override val module_id : Long,
-    override val label : String,
-    override val created : DateTime
+  override val id : Option[Long],
+  override val created : DateTime,
+  override val label : String,
+  override val description : String,
+  message: String,
+  alertKind: AlertKind.Value,
+  iconKind : Icons.Value,
+  prefix : String,
+  cssClass : String,
+  expires: DateTime
 ) extends Entity[Alert]
 {
   /**
-   * Shorthand constructor for Alerts
-   *
-   * @param id - The ID of the alert, or (typically) None
-   * @param module_id - The ID of the module from which the alert was generated
-   * @param label - The name of the alert
-   * @param created - The timestamp of the creation of the
-   * @param description
-   * @param message
-   * @param alertKind
+   * A shorthand constructor for Alerts.
+   * This makes it possible to construct alerts with fewer parameters. The remaining parameters are chosen sanely
+   * based on the alertKind parameter, which defaults to a Note
+   * @param id Optional unique identifier for the Alert
+   * @param created Timestamp of creation
+   * @param label Label of the Alert
+   * @param description Brief description of the alert
+   * @param message Text of the message to deliver to users
+   * @param alertKind The kind of alert
    */
-  def this(id: Option[Long], module_id: Long, label: String, created: DateTime,
-           description : String, message: String, alertKind: AlertKind.Value = AlertKind.Note) =
+  def this(id: Option[Long], created: DateTime, label: String,  description : String,
+           message: String, alertKind: AlertKind.Value = AlertKind.Note) =
   {
-    this(description, message, alertKind, kind2icon(alertKind), kind2prefix(alertKind), kind2css(alertKind),
-          kind2expiry(alertKind), id, module_id, label, created)
+    this(id, created, label, description, message, alertKind, kind2icon(alertKind),
+         kind2prefix(alertKind), kind2css(alertKind), kind2expiry(alertKind))
   }
 
-  def forId(id: Long) = Alert(description, message, alertKind, iconKind,  prefix, cssClass, expires,
-                              Some(id), module_id, label, created)
+  def forId(id: Long) = Alert(Some(id), created, label, description,
+                              message, alertKind, iconKind,  prefix, cssClass, expires)
   def iconHtml : Html = Icons.html(iconKind);
-  def expiresInTheFuture : Boolean = expires.isAfterNow
+  def expired : Boolean = expires.isBeforeNow
+  def unexpired : Boolean = !expired
 
   implicit def Elem2Html(e : Elem) : Html = Html(e.buildString(stripComments = true))
   implicit def Node2Html(n : Node) : Html = Html(n.buildString(stripComments = true))

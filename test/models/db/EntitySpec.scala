@@ -15,81 +15,76 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.test
+package scrupal.models.db
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.Symbol
 
 import play.api.Logger
-import play.api.libs.json.{JsString, JsNumber, JsObject, Json}
 import play.api.test._
 import play.api.test.Helpers.running
 
 import org.specs2.mutable.Specification
-
-// import scrupal.models.{StorableCompanion, Entity}
-
+import org.joda.time.DateTime
+import scala.slick.lifted.DDL
+import scrupal.test.FakeScrupal
+import scala.slick.session.Session
 
 
 /**
- * One line sentence description here.
- * Further description here.
-class TestEntity extends Entity
-{
-  uno(1)
-  two("2")
-  def one() = get[JsNumber]('one)
-  def uno(i : Int) = set[JsNumber]('one, JsNumber(i))
-  def two = get[JsString]('two)
-  def two(s: String) = set[JsString]('two, JsString(s))
+ * Test that our basic abstractions for accessing the database hold water.
+ */
+case class SomeValue(x: Short, y: Short)
+
+case class TestEntity(
+  override val id: Option[Long],
+  override val created: DateTime,
+  override val label: String,
+  override val description: String,
+  testVal : SomeValue
+) extends Entity[TestEntity] {
+  def forId(id: Long) : TestEntity = TestEntity(Some(id), created, label, description, testVal)
 }
 
-object TestEntity extends StorableCompanion[TestEntity]( { () => new TestEntity })
-{
-  override val collectionName = "test_entities"
-  System.out.println("Constructing TestEntity")
+trait TestComponent extends Component { self : Sketch =>
+  import profile.simple._
+
+  implicit val someValueMapper = MappedTypeMapper.base[SomeValue,Int](
+    { v => v.x << 16 + v.y }, { i => SomeValue((i >> 16).toShort, (i & 0x0FFFF).toShort) } )
+
+  object TestEntities extends EntityTable[TestEntity]("test_entities") {
+    def testVal = column[SomeValue]("test_val")
+    def * = id.? ~ created ~ label ~ description ~ testVal <> (TestEntity, TestEntity.unapply _)
+  }
+}
+
+class TestSchema(sketch: Sketch) extends Schema(sketch) with TestComponent {
+  val ddl : DDL = TestEntities.ddl
 }
 
 class EntitySpec extends Specification
 {
-	val te = new TestEntity()
+	val te = new TestEntity(None, DateTime.now(), "Test", "This is a test", SomeValue(1,2))
 
 	"Entity" should {
-		"generate plural collection name" in {
-			TestEntity.collectionName must equalTo("test_entities")
-		}
 		"fail to compare against a non-entity" in {
 			val other = "not-matchable"
 			te.equals(other) must beFalse
 			te.equals(te) must beTrue
 		}
-		"allow reincarnation of Entity Subclass" in {
-			val js = te.toJson
-      Logger.debug("TestEntity.toJson -> " + Json.prettyPrint(js))
-			val cm2 = TestEntity.create(js)
-      val js2 = cm2.toJson
-      Logger.debug("TestEntity(2).toJson -> " + Json.prettyPrint(js2))
-			te.equals(cm2) must beTrue
-		}
     "save, load and delete with reactivemongo" in {
-      running(FakeApplication()) {
-        TestEntity.save(te) map { f =>
-          f.ok must beTrue
-          val id = te._id
-          TestEntity.fetch(id) map { g =>
-            g match {
-              case None => { failure }
-              case thing: Some[TestEntity] => {
-                TestEntity.remove(thing.get._id) map { h =>
-                h.ok must beTrue}
-              }
-            }
-          }
+      running(FakeScrupal) {
+        FakeScrupal.db withSession { implicit session : Session =>
+          val ts = new TestSchema(FakeScrupal.sketch)
+          ts.create
+          val te2 = ts.TestEntities.upsert(te)
+          val te3 = ts.TestEntities.fetch(te2.id.get)
+          te3.isDefined must beTrue
+          val te4 = te3.get
+          te4.id.equals(te2.id) must beTrue
+          te4.testVal.equals(te4.testVal) must beTrue
+          ts.TestEntities.delete(te4.id) must beTrue
         }
         success
-
       }
     }
-	}
+  }
 }
- */

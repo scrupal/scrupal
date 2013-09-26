@@ -20,19 +20,23 @@ package scrupal.models
 import scrupal.models.db._
 import org.joda.time.{Duration, DateTime}
 import scrupal.utils.Icons
+import scala.slick.direct.AnnotationMapper.column
 
 /**
  * Representation of a module in the database. Modules are plug-in extensions to Scrupal.
- * @param description
  * @param id
- * @param module_id
- * @param label
  * @param created
+ * @param label
+ * @param description A brief description of the module
  */
-case class Module(description: String, id: Option[Long], module_id: Long, label: String, created: DateTime)
-  extends Entity[Module]
-{
-  def forId(id: Long) = Module(description, Some(id), id, label, created)
+case class Module(
+  override val id: Option[Long],
+  override val created: DateTime,
+  override val label: String,
+  override val description: String,
+  enabled : Boolean
+) extends Entity[Module] {
+  def forId(id: Long) = Module(Some(id), created, label, description, enabled)
 }
 
 trait CoreComponent extends Component { self : Component =>
@@ -49,12 +53,11 @@ trait CoreComponent extends Component { self : Component =>
   implicit val alertTM = MappedTypeMapper.base[AlertKind.Value,Int]( { alert => alert.id }, { id => AlertKind(id) } )
 
   object Modules extends EntityTable[Module]("modules") {
-    def description = column[String]("name")
-    def * =  description ~ id.? ~ module_id ~ label ~ created <> (Module, Module.unapply _)
+    def enabled = column[Boolean]("enabled")
+    def * =  id.? ~ created ~ label ~ description ~ enabled <> (Module, Module.unapply _)
   }
 
   object Alerts extends EntityTable[Alert]("alerts") {
-    def description = column[String]("description")
     def message =     column[String]("message")
     def alertKind =   column[AlertKind.Value]("alertKind")
     def iconKind =    column[Icons.Value]("iconKind")
@@ -62,16 +65,16 @@ trait CoreComponent extends Component { self : Component =>
     def cssClass =    column[String]("css")
     def expires =     column[DateTime]("expires")
     def expires_index = index("expires_index", expires, unique=false)
-    def * =           description ~ message ~ alertKind  ~ iconKind ~ prefix ~ cssClass ~ expires ~
-      id.? ~ module_id ~ label ~ created <> (Alert, Alert.unapply _ )
+    def * = id.? ~ created ~ label ~ description  ~ message ~ alertKind  ~ iconKind ~ prefix ~ cssClass ~ expires <>
+       (Alert, Alert.unapply _ )
 
     lazy val unexpiredQuery = for { expires <- Parameters[DateTime] ; alrt <- this if alrt.expires > expires  } yield alrt
 
     def findUnexpired(implicit session: Session) : List[Alert] =  {  unexpiredQuery(DateTime.now()).list }
 
-    lazy val renewQuery = for { theID <- Parameters[Long]; alrt <- this if alrt.id === theID } yield alrt.expires
-
-    // def renew(id: Long, howLong: Duration)(implicit session: Session) = { tableQueryToUpdateInvoker(renewQuery).mutate(id)( expires => DateTime.now().plus(howLong)) }
-
+    def renew(theID: Long, howLong: Duration)(implicit session: Session) = {
+      val query = for {  alrt <- this if alrt.id === theID } yield alrt.expires
+      query.update(DateTime.now().plus(howLong))
+    }
   }
 }

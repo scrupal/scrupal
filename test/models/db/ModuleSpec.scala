@@ -37,7 +37,7 @@ class ModuleSpec extends Specification {
         FakeScrupal.db withSession { implicit session: Session =>
           import FakeScrupal.schema._
           create
-          val mod = Modules.insert(Module("Test Module", None, 0, "foo", DateTime.now()))
+          val mod = Modules.insert(Module(None, DateTime.now(), "foo", "Test Module", enabled=false))
           mod.label must beEqualTo("foo")
           val mod2 = Modules.fetch(mod.id.get).get
           mod.id must beEqualTo(mod2.id)

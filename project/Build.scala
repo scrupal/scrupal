@@ -106,6 +106,11 @@ object ScrupalBuild extends Build {
 
   val printClasspath = TaskKey[File]("print-class-path")
 
+  addCommandAlias("tq", "test-quick")
+  addCommandAlias("tm", "test-only scrupal.models")
+  addCommandAlias("tu", "test-only scrupal.utils")
+  addCommandAlias("tc", "test-only scrupal.controllers")
+
   def print_class_path = (target, fullClasspath in Compile, compile in Compile) map { (out, cp, analysis) =>
     println(cp.files.map(_.getCanonicalPath).mkString("\n"))
     println("----")

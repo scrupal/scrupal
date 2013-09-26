@@ -22,54 +22,50 @@ import scrupal.models.db._
 import scrupal.utils.Hash
 
 /**
- * The Identity of a Principal as authenticated by an email address and a password.
- * @param email
- * @param password
- * @param hasher
- * @param salt
- * @param complexity
- * @param id
- * @param module_id
- * @param label
- * @param created
+ * Information about a principal as authenticated by an email address and a password.
+ * @param id The unique identifier of this Identity
+ * @param created The timestamp when this Identity was created
+ * @param password The Principal's hashed password
+ * @param hasher The Hasher algorithm used
+ * @param salt The salt used in generation of the principal's hashed password
+ * @param complexity The complexity factor for the Hasher algorithm
  */
-case class Identity(email: String, password: String, hasher: String, salt: String = Hash.salt, complexity: Long = 0,
-                    id: Option[Long], module_id: Long, label: String, created: DateTime)
-  extends Entity[Identity] {
-  def forId(id: Long) = Identity(email, password, hasher, salt, complexity, Some(id), module_id, label, created)
+case class Principal(id: Option[Long], created: DateTime,
+                    email: String, password: String, hasher: String, salt: String = Hash.salt, complexity: Long = 0)
+  extends Identifiable[Principal] {
+  def forId(id: Long) = Principal(Some(id), created, email, password, hasher, salt, complexity)
 }
 
 /**
  * A Handle that a given Principal might utilize
- * @param userName
- * @param identity_id
- * @param id
- * @param module_id
- * @param label
- * @param created
+ * @param userName The user name the principal has chosen to utilize
+ * @param identity_id The id (foreign key) of the principal
+ * @param id The unique id of this handle
+ * @param created The timestamp at which the Handle was created
  */
-case class Handle(userName: String, identity_id: Long,
-                  id: Option[Long], module_id: Long, label: String, created: DateTime)
-  extends Entity[Handle] {
-  def forId(id: Long) = Handle(userName, identity_id, Some(id), module_id, label, created)
+case class Handle(userName: String, identity_id: Long, id: Option[Long], created: DateTime)
+  extends Identifiable[Handle] {
+  def forId(id: Long) = Handle(userName, identity_id, Some(id),  created)
 }
 
-
+/**
+ * A database component for user related information.
+ */
 trait UserComponent extends Component { self: Sketch =>
 
-  object Identities extends EntityTable[Identity]("identities") {
+  object Principals extends IdentifiableTable[Principal]("identities") {
     def email = column[String]("email")
     def password = column[String]("password")
     def hasher = column[String]("hasher")
     def salt = column[String]("salt")
     def complexity = column[Long]("complexity")
-    def * = email ~ password ~ hasher ~ salt ~ complexity ~ id.? ~ module_id ~ label ~ created <> (Identity, Identity.unapply _)
+    def * = id.? ~ created ~ email ~ password ~ hasher ~ salt ~ complexity  <> (Principal, Principal.unapply _)
   }
 
-  object Handles extends EntityTable[Handle]("handles") {
+  object Handles extends IdentifiableTable[Handle]("handles") {
     def userName = column[String]("user_name")
     def identity_id = column[Long]("identity_id")
-    def * = userName ~ identity_id ~ id.? ~ module_id ~ label ~ created <> (Handle, Handle.unapply _)
+    def * = userName ~ identity_id ~ id.?  ~ created <> (Handle, Handle.unapply _)
   }
 
 }

@@ -36,7 +36,7 @@ class AlertSpec extends Specification
 	  val t :DateTime =  DateTime.now().plusDays(1)
 
 		"construct with one argument and give sane results" in {
-			val alert =  new Alert( None, 0L, "Alert", DateTime.now(), "Alert", "<span>Note Message</span>" )
+			val alert =  new Alert( None, DateTime.now(),  "Alert", "Alert", "<span>Note Message</span>" )
 			alert.message.toString must beEqualTo("<span>Note Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Note)
 			alert.iconKind must beEqualTo(Icons.info)
@@ -44,7 +44,7 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Note:")
 		}
 		"construct with two arguments and give sane results" in {
-			val alert = new Alert(None, 0L, "Alert", DateTime.now(), "Alert", "<span>Danger Message</span>", AlertKind.Danger )
+			val alert = new Alert(None, DateTime.now(), "Alert", "Alert", "<span>Danger Message</span>", AlertKind.Danger )
 			alert.message.toString must beEqualTo("<span>Danger Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Danger)
 			alert.iconKind must beEqualTo(Icons.warning_sign)
@@ -52,9 +52,9 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Danger!")
 		}
 		"construct with three arguments and give sane results" in {
-			val alert = Alert("Alert", "<span>Warning Message</span>", AlertKind.Warning,
+			val alert = Alert(None, DateTime.now(), "Alert", "Alert", "<span>Warning Message</span>", AlertKind.Warning,
         AlertKind.kind2icon(AlertKind.Warning), AlertKind.kind2prefix(AlertKind.Warning),
-        AlertKind.kind2css(AlertKind.Warning), t, None, 0, "Alert", DateTime.now()  )
+        AlertKind.kind2css(AlertKind.Warning), t )
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Warning)
 			alert.iconKind must beEqualTo(Icons.exclamation)
@@ -63,8 +63,8 @@ class AlertSpec extends Specification
 			alert.expires must beEqualTo( t)
 		}
 		"construct with four arguments and give sane results" in {
-			val alert = Alert(  "Alert", "<span>Caution Message</span>", AlertKind.Caution,
-        Icons.align_center, "Alignment!", "", new DateTime(0), None, 0, "Alert", DateTime.now())
+			val alert = Alert(None, DateTime.now(),  "Alert", "Alert", "<span>Caution Message</span>", AlertKind.Caution,
+        Icons.align_center, "Alignment!", "", new DateTime(0))
 			alert.message.toString must beEqualTo("<span>Caution Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Caution)
 			alert.iconKind must beEqualTo(Icons.align_center)
@@ -72,7 +72,7 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Alignment!")
 		}
 		"produce correct icon html" in {
-			val alert = new Alert(None, 0, "A", DateTime.now(), "A", "<span>Html Message</span>")
+			val alert = new Alert(None, DateTime.now(), "A", "A", "<span>Html Message</span>")
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
     "save to and fetch from the DB" in {
@@ -80,18 +80,16 @@ class AlertSpec extends Specification
         FakeScrupal.db withSession { implicit session: Session =>
           import FakeScrupal.schema._
           create
-          val a1 = Alerts.insert(new Alert(None, 0, "foo", DateTime.now(), "Alert", "Message" ))
+          val a1 = Alerts.insert(new Alert(None, DateTime.now(), "foo", "Alert", "Message" ))
           a1.label must beEqualTo("foo")
           val a2 = Alerts.fetch(a1.id.get).get
           val saved_time = a2.expires
           a1.id must beEqualTo(a2.id)
-//          Alerts.renew(a1.id.get, Duration.standardMinutes(30))
-//          val a3 = Alerts.fetch(a1.id.get).get
-//          a3.expires.isAfter(saved_time.plusMinutes(29))  must beTrue
+          Alerts.renew(a1.id.get, Duration.standardMinutes(30))
+          val a3 = Alerts.fetch(a1.id.get).get
+          a3.expires.isAfter(saved_time.plusMinutes(29))  must beTrue
         }
-
       }
     }
-
 	}
 }
