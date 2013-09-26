@@ -17,29 +17,81 @@
 
 package scrupal.models
 
-import org.joda.time.DateTime
-import scrupal.utils.Icons
-import play.api.libs.json._
 import play.api.templates.Html
 import scala.xml.{Elem, NodeSeq, Node}
 
-import MissingJSONReadsWrites._
+import scrupal.utils.Icons
+import scrupal.models.db._
+import org.joda.time.DateTime
+import scala.Enumeration
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
- * icon and expiration time of the alert.
+ * icon and expiration time of the alert via the various kind2xxx methods on this enumeration. The Alert class makes
+ * use of those methods in its constructors
  */
 object AlertKind extends Enumeration
 {
-	type AlertKind = Value
-	val Success = Value("Success")      ///< Denotes a successful operation that was completed
-	val Note = Value("Note")            ///< An FYI for the user to take note of
-	val Help = Value("Help")            ///< A helpful tip the user may need to proceed successfully
-	val Warning = Value("Warning")      ///< Warning about something the user has just done and how it will affect things later
-	val Caution = Value("Caution")      ///< Alternate to Warning
-	val Error = Value("Error")          ///< An error in the user's input or use of the site
-	val Danger = Value("Danger")        ///< A caution about the potential loss of information or other significant action
-	val Critical = Value("Critical")    ///< Alternate to Danger
+  type AlertKind = Value
+  val Success = Value("Success")      ///< Denotes a successful operation that was completed
+  val Note = Value("Note")            ///< An FYI for the user to take note of
+  val Help = Value("Help")            ///< A helpful tip the user may need to proceed successfully
+  val Warning = Value("Warning")      ///< Warning about something the user has just done and how it will affect things later
+  val Caution = Value("Caution")      ///< Alternate to Warning
+  val Error = Value("Error")          ///< An error in the user's input or use of the site
+  val Danger = Value("Danger")        ///< A caution about the potential loss of information or other significant action
+  val Critical = Value("Critical")    ///< Alternate to Danger
+
+  def kind2prefix(kind: AlertKind) : String =
+  {
+    kind match {
+      case Success => "Success!"
+      case Note => "Note:"
+      case Warning => "Warning!"
+      case Caution => "Caution!"
+      case Error => "Error:"
+      case Danger => "Danger!"
+      case Critical => "Critical!"
+    }
+  }
+
+  def kind2icon(kind: AlertKind) : Icons.Icons =
+  {
+    kind match {
+      case Success => Icons.ok
+      case Note => Icons.info
+      case Warning => Icons.exclamation
+      case Caution => Icons.exclamation
+      case Error => Icons.remove
+      case Danger => Icons.warning_sign
+      case Critical => Icons.warning_sign
+    }
+  }
+
+  def kind2css(kind: AlertKind) : String = {
+    kind match {
+      case Success => "alert-success"
+      case Note => "alert-info"
+      case Warning => ""
+      case Caution => ""
+      case Error => "alert-danger"
+      case Danger => "alert-danger"
+      case Critical => "alert-danger"
+    }
+  }
+
+  def kind2expiry(kind: AlertKind) : DateTime = {
+    kind match {
+      case Success => DateTime.now().plusMillis(100)
+      case Note => DateTime.now().plusSeconds(30)
+      case Warning => DateTime.now().plusMinutes(30)
+      case Caution => DateTime.now().plusHours(1)
+      case Error => DateTime.now().plusHours(4)
+      case Danger => DateTime.now().plusHours(12)
+      case Critical => DateTime.now().plusHours(24)
+    }
+  }
+
 }
 
 import AlertKind._
@@ -50,114 +102,42 @@ import AlertKind._
  * The intent is to provide a way to provide cross-site alerting of system notices such as down time or new
  * feature enhancements.
  */
-case class Alert(
-    alertKind: AlertKind.AlertKind,
-    message: Html,
-    iconKind : Icons.Icons,
+case class Alert (
+    description : String,
+    message: String,
+    alertKind: AlertKind.Value = AlertKind.Note,
+    iconKind : Icons.Value,
     prefix : String,
     cssClass : String,
-    expires: DateTime
-) extends Entity
+    expires: DateTime,
+    override val id : Option[Long],
+    override val module_id : Long,
+    override val label : String,
+    override val created : DateTime
+) extends Entity[Alert]
 {
-	def this(message: Html)(implicit kind: AlertKind = AlertKind.Note ) = {
-		this(kind, message,  Alert.iconForKind(kind), Alert.prefixForKind(kind), Alert.cssClassForKind(kind),
-			Alert.expirationForKind(kind))
-	}
+  /**
+   * Shorthand constructor for Alerts
+   *
+   * @param id - The ID of the alert, or (typically) None
+   * @param module_id - The ID of the module from which the alert was generated
+   * @param label - The name of the alert
+   * @param created - The timestamp of the creation of the
+   * @param description
+   * @param message
+   * @param alertKind
+   */
+  def this(id: Option[Long], module_id: Long, label: String, created: DateTime,
+           description : String, message: String, alertKind: AlertKind.Value = AlertKind.Note) =
+  {
+    this(description, message, alertKind, kind2icon(alertKind), kind2prefix(alertKind), kind2css(alertKind),
+          kind2expiry(alertKind), id, module_id, label, created)
+  }
 
-	def this(kind: AlertKind, message: Html) = {
-		this(kind, message, Alert.iconForKind(kind), Alert.prefixForKind(kind), Alert.cssClassForKind(kind),
-			Alert.expirationForKind(kind))
-	}
-
-	def this(kind: AlertKind, message: Html, iconKind: Icons.Icons) = {
-		this(kind, message, iconKind, Alert.prefixForKind(kind), Alert.cssClassForKind(kind),
-			Alert.expirationForKind(kind))
-	}
-
-	def this(kind: AlertKind, message: Html, prefix: String) = {
-		this(kind, message, Alert.iconForKind(kind), prefix, Alert.cssClassForKind(kind), Alert.expirationForKind(kind))
-	}
-
-	def this(kind: AlertKind, message: Html, iconKind: Icons.Icons, prefix: String) = {
-		this(kind, message, iconKind, prefix, Alert.cssClassForKind(kind), Alert.expirationForKind(kind))
-	}
-
-	def this(kind: AlertKind, message:Html, iconKind: Icons.Icons, prefix: String, cssClass: String) = {
-		this(kind, message, iconKind, prefix, cssClass, Alert.expirationForKind(kind))
-	}
-
-	def this(kind: AlertKind, message: Html, expiry: DateTime) = {
-		this(kind, message, Alert.iconForKind(kind), Alert.prefixForKind(kind), Alert.cssClassForKind(kind), expiry)
-	}
-
-	def iconHtml : Html = Icons.html(iconKind);
-}
-
-/**
- * Companion object for Alert class. Just provides some constructor help.
- */
-object Alert
-{
-	def from(message: Html) = new Alert(message)
-	def from(kind: AlertKind, msg: Html) = new Alert(kind, msg)
-	def from(kind: AlertKind, msg: Html, iconKind: Icons.Icons) = new Alert(kind, msg, iconKind)
-	def from(kind: AlertKind, msg: Html, iconKind: Icons.Icons, prefix: String) = new Alert(kind, msg, iconKind, prefix)
-	def from(kind: AlertKind, msg: Html, prefix: String) = new Alert(kind, msg, prefix)
-	def from(kind: AlertKind, msg: Html, iconKind: Icons.Icons, prefix: String, cssClass: String) =
-		new Alert(kind, msg, iconKind, prefix, cssClass)
-  def from(kind: AlertKind, msg: Html, iconKind: Icons.Icons, prefix: String, cssClass: String, expires: DateTime) =
-    new Alert(kind, msg, iconKind, prefix, cssClass, expires)
-	def from(kind: AlertKind, msg: Html, expiry: DateTime) = new Alert(kind, msg, expiry)
-
-	def prefixForKind(kind: AlertKind) : String =
-	{
-		kind match {
-			case Success => "Success!"
-			case Note => "Note:"
-			case Warning => "Warning!"
-			case Caution => "Caution!"
-			case Error => "Error:"
-			case Danger => "Danger!"
-			case Critical => "Critical!"
-		}
-	}
-
-	def iconForKind(kind: AlertKind) : Icons.Icons =
-	{
-		kind match {
-			case Success => Icons.ok
-			case Note => Icons.info
-			case Warning => Icons.exclamation
-			case Caution => Icons.exclamation
-			case Error => Icons.remove
-			case Danger => Icons.warning_sign
-			case Critical => Icons.warning_sign
-		}
-	}
-
-	def cssClassForKind(kind: AlertKind) : String = {
-		kind match {
-			case Success => "alert-success"
-			case Note => "alert-info"
-			case Warning => ""
-			case Caution => ""
-			case Error => "alert-danger"
-			case Danger => "alert-danger"
-			case Critical => "alert-danger"
-		}
-	}
-
-	def expirationForKind(kind: AlertKind) : DateTime = {
-		kind match {
-			case Success => DateTime.now().plusMillis(100)
-			case Note => DateTime.now().plusSeconds(30)
-			case Warning => DateTime.now().plusMinutes(30)
-			case Caution => DateTime.now().plusHours(1)
-			case Error => DateTime.now().plusHours(4)
-			case Danger => DateTime.now().plusHours(12)
-			case Critical => DateTime.now().plusHours(24)
-		}
-	}
+  def forId(id: Long) = Alert(description, message, alertKind, iconKind,  prefix, cssClass, expires,
+                              Some(id), module_id, label, created)
+  def iconHtml : Html = Icons.html(iconKind);
+  def expiresInTheFuture : Boolean = expires.isAfterNow
 
   implicit def Elem2Html(e : Elem) : Html = Html(e.buildString(stripComments = true))
   implicit def Node2Html(n : Node) : Html = Html(n.buildString(stripComments = true))
@@ -165,20 +145,5 @@ object Alert
     Html(ns.foldLeft[StringBuilder](new StringBuilder) { (s,n) => s.append( n.buildString(true))}.toString)
   }
 
-  implicit val alertKindReader : Reads[AlertKind] = new Reads[AlertKind] {
-    def reads(jsValue: JsValue) : JsResult[AlertKind] = {
-      (jsValue \ "alert_kind").validate[String].map { s => AlertKind.withName(s) }
-    }
-  }
-
-  implicit val alertKindWriter : Writes[AlertKind] = new Writes[AlertKind] {
-    def writes(alert: AlertKind) : JsValue = {
-      JsString(alert.toString)
-    }
-  }
-
-  implicit val AlertKindFormatter : Format[AlertKind] = Format(alertKindReader, alertKindWriter)
-
-  implicit val formatter : Format[Alert] = Json.format[Alert]
 }
 

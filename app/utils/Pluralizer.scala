@@ -120,7 +120,7 @@ abstract class Pluralizer
 
 object Pluralizer extends Pluralizer
 {
-	def pluralize(word: String, count: Int) : String =
+	def pluralize(word: String, count: Int = 2) : String =
 	{
 		if (count == 1 || count == -1)
 		{

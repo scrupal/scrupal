@@ -1,4 +1,4 @@
-@(title: String)(content: Html)(implicit context: scrupal.models.Context = scrupal.models.Context,
+@(title: String)(content: Html)(implicit context : scrupal.models.Context  = scrupal.models.Context.active,
 		request: RequestHeader)
 @import scrupal.controllers.routes
 <!DOCTYPE html>

@@ -19,22 +19,26 @@ package scrupal.models
 
 import org.joda.time.DateTime
 import play.api.templates.Html
+import play.api.libs.json.{Json, JsObject}
+import scala.concurrent.duration.span
+
 
 
 /**
  * A context for the views so they can obtain various bits of information without a large number of parameters.
  */
-case class Context(appName : String) extends Entity
+case class Context(obj: JsObject = Json.obj())
 {
   def alerts : Seq[Alert] = Seq()
+  val appName : String = "Scrupal"
 }
 
 /**
  * An instance of the Context with sensible defaults so the views can have a default object to use as the Context.
  */
-object Context extends Context("Scrupal")
+object Context
 {
-  override def alerts = Seq(
-	  Alert.from(AlertKind.Note, Html("<span>This is a site wide alert</span>"), DateTime.now().plusDays(1))
-  )
+  var active : Context = new Context() {
+    val k = AlertKind.Note
+  }
 }

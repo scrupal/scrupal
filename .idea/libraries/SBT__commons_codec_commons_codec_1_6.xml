@@ -1,9 +1,13 @@
 <component name="libraryTable">
   <library name="SBT: commons-codec:commons-codec:1.6">
     <CLASSES>
-      <root url="jar:///usr/local/Cellar/play/2.1.3/libexec/repository/local/commons-codec/commons-codec/1.6/jars/commons-codec.jar!/" />
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/local/commons-codec/commons-codec/1.6/jars/commons-codec.jar!/" />
     </CLASSES>
-    <JAVADOC />
-    <SOURCES />
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/cache/commons-codec/commons-codec/docs/commons-codec-1.6-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/cache/commons-codec/commons-codec/srcs/commons-codec-1.6-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

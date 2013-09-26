@@ -1,5 +1,5 @@
 @(alert: Option[scrupal.models.Alert] = None)(implicit request: RequestHeader)
-@if(alert.isDefined && alert.get.expires.isAfterNow) {
+@if(alert.isDefined && alert.get.expiresInTheFuture) {
 <div class="alert alert-dismissible @alert.get.cssClass">
 	<button type="button" class="close" data-dismiss="alert" aria-hidden="true"><i class="icon-remove-sign"></i></button>
 	<strong>@alert.get.iconHtml&nbsp;@alert.get.prefix</strong>&nbsp;@alert.get.message

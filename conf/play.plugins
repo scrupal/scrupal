@@ -1,3 +1,2 @@
-400:play.modules.reactivemongo.ReactiveMongoPlugin
 550:com.typesafe.plugin.RedisPlugin
 1500:com.typesafe.plugin.CommonsMailerPlugin

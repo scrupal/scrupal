@@ -14,16 +14,16 @@
  * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
-package scrupal.core.models.test
+package scrupal.models
 
 import org.specs2.mutable.Specification
-import org.joda.time.DateTime
+import play.api.test.Helpers._
 
-import scrupal.models.{Alert, AlertKind}
+import scrupal.test.FakeScrupal
 import scrupal.utils.Icons
-import play.api.templates.Html
-import scala.concurrent.duration.span
-import play.api.Logger
+import org.joda.time.{Duration, DateTime}
+import org.joda.time.Duration._
+import scala.slick.session.Session
 
 /**
  * One line sentence description here.
@@ -31,13 +31,12 @@ import play.api.Logger
  */
 class AlertSpec extends Specification
 {
-  import scrupal.models.Alert._
 	"Alert" should {
 
-	  val t = DateTime.parse("2014-01-01T00:00:00")
+	  val t :DateTime =  DateTime.now().plusDays(1)
 
 		"construct with one argument and give sane results" in {
-			val alert = Alert.from( <span>Note Message</span> )
+			val alert =  new Alert( None, 0L, "Alert", DateTime.now(), "Alert", "<span>Note Message</span>" )
 			alert.message.toString must beEqualTo("<span>Note Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Note)
 			alert.iconKind must beEqualTo(Icons.info)
@@ -45,7 +44,7 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Note:")
 		}
 		"construct with two arguments and give sane results" in {
-			val alert = Alert.from(AlertKind.Danger, <span>Danger Message</span> )
+			val alert = new Alert(None, 0L, "Alert", DateTime.now(), "Alert", "<span>Danger Message</span>", AlertKind.Danger )
 			alert.message.toString must beEqualTo("<span>Danger Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Danger)
 			alert.iconKind must beEqualTo(Icons.warning_sign)
@@ -53,7 +52,9 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Danger!")
 		}
 		"construct with three arguments and give sane results" in {
-			val alert = Alert.from(AlertKind.Warning, <span>Warning Message</span>, t )
+			val alert = Alert("Alert", "<span>Warning Message</span>", AlertKind.Warning,
+        AlertKind.kind2icon(AlertKind.Warning), AlertKind.kind2prefix(AlertKind.Warning),
+        AlertKind.kind2css(AlertKind.Warning), t, None, 0, "Alert", DateTime.now()  )
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Warning)
 			alert.iconKind must beEqualTo(Icons.exclamation)
@@ -62,31 +63,35 @@ class AlertSpec extends Specification
 			alert.expires must beEqualTo( t)
 		}
 		"construct with four arguments and give sane results" in {
-			val alert = Alert.from(AlertKind.Caution, <span>Caution Message</span>, Icons.align_center, "Alignment!")
+			val alert = Alert(  "Alert", "<span>Caution Message</span>", AlertKind.Caution,
+        Icons.align_center, "Alignment!", "", new DateTime(0), None, 0, "Alert", DateTime.now())
 			alert.message.toString must beEqualTo("<span>Caution Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Caution)
 			alert.iconKind must beEqualTo(Icons.align_center)
 			alert.cssClass must beEqualTo("")
 			alert.prefix must beEqualTo("Alignment!")
 		}
-		"construct with five arguments and give sane results" in {
-			val alert = Alert.from(AlertKind.Success, <span>Success Message</span>, Icons.globe, "Goodness!", "alert-success")
-			alert.alertKind must beEqualTo(AlertKind.Success)
-			alert.cssClass must beEqualTo("alert-success")
-			alert.prefix must beEqualTo("Goodness!")
-			alert.message.toString must beEqualTo("<span>Success Message</span>")
-		}
-		"construct with six arguments and give sane results" in {
-			val alert = Alert.from(AlertKind.Critical, <span>Critical Message</span>, Icons.heart, "Heart!", "alert-success", t)
-			alert.alertKind must beEqualTo(AlertKind.Critical)
-			alert.cssClass must beEqualTo("alert-success")
-			alert.prefix must beEqualTo("Heart!")
-			alert.message.toString must beEqualTo("<span>Critical Message</span>")
-			alert.expires must beEqualTo( t )
-		}
 		"produce correct icon html" in {
-			val alert = Alert.from(<span>Html Message</span>)
+			val alert = new Alert(None, 0, "A", DateTime.now(), "A", "<span>Html Message</span>")
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
+    "save to and fetch from the DB" in {
+      running(FakeScrupal) {
+        FakeScrupal.db withSession { implicit session: Session =>
+          import FakeScrupal.schema._
+          create
+          val a1 = Alerts.insert(new Alert(None, 0, "foo", DateTime.now(), "Alert", "Message" ))
+          a1.label must beEqualTo("foo")
+          val a2 = Alerts.fetch(a1.id.get).get
+          val saved_time = a2.expires
+          a1.id must beEqualTo(a2.id)
+//          Alerts.renew(a1.id.get, Duration.standardMinutes(30))
+//          val a3 = Alerts.fetch(a1.id.get).get
+//          a3.expires.isAfter(saved_time.plusMinutes(29))  must beTrue
+        }
+
+      }
+    }
+
 	}
 }

@@ -17,32 +17,37 @@
 
 package scrupal.models.test
 
-import scrupal.models.Entity
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.Symbol
 
 import play.api.Logger
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsString, JsNumber, JsObject, Json}
 import play.api.test._
 import play.api.test.Helpers.running
 
-import scala.concurrent.Await
 import org.specs2.mutable.Specification
 
-import reactivemongo.core.commands.LastError
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
+// import scrupal.models.{StorableCompanion, Entity}
+
+
 
 /**
  * One line sentence description here.
  * Further description here.
- */
-object TestEntity { implicit val teFormatter = Json.format[TestEntity] }
-
-case class TestEntity(one : Int = 1, two: String = "2") extends Entity
+class TestEntity extends Entity
 {
-  override lazy val collectionName = "test_entities"
-  override def toJson = {
-    super.toJson.deepMerge( Json.toJson(this).asInstanceOf[JsObject] )
-  }
+  uno(1)
+  two("2")
+  def one() = get[JsNumber]('one)
+  def uno(i : Int) = set[JsNumber]('one, JsNumber(i))
+  def two = get[JsString]('two)
+  def two(s: String) = set[JsString]('two, JsString(s))
+}
+
+object TestEntity extends StorableCompanion[TestEntity]( { () => new TestEntity })
+{
+  override val collectionName = "test_entities"
+  System.out.println("Constructing TestEntity")
 }
 
 class EntitySpec extends Specification
@@ -51,7 +56,7 @@ class EntitySpec extends Specification
 
 	"Entity" should {
 		"generate plural collection name" in {
-			te.collectionName must equalTo("test_entities")
+			TestEntity.collectionName must equalTo("test_entities")
 		}
 		"fail to compare against a non-entity" in {
 			val other = "not-matchable"
@@ -59,22 +64,32 @@ class EntitySpec extends Specification
 			te.equals(te) must beTrue
 		}
 		"allow reincarnation of Entity Subclass" in {
-			val js = Json.toJson[TestEntity](te)
+			val js = te.toJson
       Logger.debug("TestEntity.toJson -> " + Json.prettyPrint(js))
-			val cm2 : TestEntity = Json.fromJson[TestEntity](js).get
-      val js2 = Json.toJson[TestEntity](cm2)
+			val cm2 = TestEntity.create(js)
+      val js2 = cm2.toJson
       Logger.debug("TestEntity(2).toJson -> " + Json.prettyPrint(js2))
 			te.equals(cm2) must beTrue
 		}
-    "save to and delete from reactivemongo" in {
+    "save, load and delete with reactivemongo" in {
       running(FakeApplication()) {
-        val future = Entity.save(te)
-        val x : LastError = Await.result(future, Duration(2,TimeUnit.SECONDS) )
-        x.ok must beTrue
-        val remove_future = Entity.remove(te)
-        val y : LastError = Await.result(remove_future, Duration(2,TimeUnit.SECONDS) )
-        y.ok must beTrue
+        TestEntity.save(te) map { f =>
+          f.ok must beTrue
+          val id = te._id
+          TestEntity.fetch(id) map { g =>
+            g match {
+              case None => { failure }
+              case thing: Some[TestEntity] => {
+                TestEntity.remove(thing.get._id) map { h =>
+                h.ok must beTrue}
+              }
+            }
+          }
+        }
+        success
+
       }
     }
 	}
 }
+ */

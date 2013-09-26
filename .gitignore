@@ -7,5 +7,8 @@ project/target
 target
 tmp
 out/
+defunkt/
 bower_components
 diff.out
+application.home_IS_UNDEFINED/
+conf/heroku.conf

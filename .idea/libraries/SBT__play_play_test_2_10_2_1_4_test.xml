@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: play:play-test_2.10:2.1.4:test">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/local/play/play-test_2.10/2.1.4/jars/play-test_2.10.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/local/play/play-test_2.10/2.1.4/srcs/play-test_2.10-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

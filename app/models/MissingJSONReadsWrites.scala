@@ -17,14 +17,14 @@
 
 package scrupal.models
 
+
+/**
+ * Some handy Json Reads[T] and Writes[T] for various things not otherswise provided.
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import play.api.templates.Html
 
-/**
- * Some handy Json Reads[T] and Writes[T] for various things not otherswise provided.
- */
 object MissingJSONReadsWrites
 {
 
@@ -50,3 +50,6 @@ object MissingJSONReadsWrites
   implicit val htmlFormat : Format[Html] = Format(htmlReader, htmlWriter)
 
 }
+
+ */
+

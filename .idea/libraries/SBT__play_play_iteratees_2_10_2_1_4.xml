@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: play:play-iteratees_2.10:2.1.4">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/local/play/play-iteratees_2.10/2.1.4/jars/play-iteratees_2.10.jar!/" />
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/local/play/play-iteratees_2.10/2.1.4/srcs/play-iteratees_2.10-test-sources.jar!/" />
+      <root url="file:///usr/local/Cellar/play/2.1.4/libexec/repository/local/play/play-iteratees_2.10/2.1.4/poms/play-iteratees_2.10.pom" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.1.4/libexec/repository/local/play/play-iteratees_2.10/2.1.4/srcs/play-iteratees_2.10-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

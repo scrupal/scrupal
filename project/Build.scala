@@ -1,4 +1,3 @@
-import dispatch./
 import sbt._
 import sbt.Keys._
 import play.Project._
@@ -82,9 +81,15 @@ object Resolvers
 object Dependencies
 {
   val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
-  val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.9"
   val mailer_plugin           = "com.typesafe"        %% "play-plugins-mailer"    % "2.1.0"
+  val slick                   = "com.typesafe.slick"  %% "slick"                  % "1.0.1"
+  val h2                      = "com.h2database"      % "h2"                      % "1.3.173"
 
+  val pbkdf2                  = "io.github.nremond"   %% "pbkdf2-scala"           % "0.2"
+  val bcrypt                  = "org.mindrot"         % "jbcrypt"                 % "0.3m"
+  val scrypt                  = "com.lambdaworks"     % "scrypt"                  % "1.4.0"
+
+//val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.9"
 //val icu4j                   = "com.ibm.icu"          % "icu4j"                  % "51.1"
 //val geolocation             =  "com.edulify"        %% "geolocation"            % "1.1.0"
 
@@ -113,10 +118,10 @@ object ScrupalBuild extends Build {
   lazy val scrupal = play.Project(
     appName,
     path = file("."),
-    settings = ( buildSettings ++ Seq (
+    settings = buildSettings ++ Seq (
       resolvers := all_resolvers,
-      libraryDependencies := Seq ( specs2, play2_reactivemongo, play_plugins_redis, mailer_plugin ),
+      libraryDependencies := Seq ( specs2,  play_plugins_redis, mailer_plugin, slick, h2, pbkdf2, bcrypt, scrypt ),
       printClasspath <<= print_class_path
-    ))
+    )
   )
 }
