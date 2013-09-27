@@ -20,8 +20,18 @@ package scrupal.models
 import scrupal.models.db._
 import org.joda.time.{Duration, DateTime}
 import scrupal.utils.Icons
-import scala.slick.direct.AnnotationMapper.column
 
+/**
+ * Information about a site hosted by Scrupal
+ */
+case class Site(
+  override val id: Option[Long],
+  override val created: DateTime,
+  override val label: String,
+  override val description: String
+ ) extends Entity[Site] {
+  def forId(id: Long) = Site(Some(id), created, label, description)
+}
 /**
  * Representation of a module in the database. Modules are plug-in extensions to Scrupal.
  * @param id
@@ -51,6 +61,10 @@ trait CoreComponent extends Component { self : Component =>
 
   // This allows you to use AlertKind.Value as a type argument to the column method in a table definition
   implicit val alertTM = MappedTypeMapper.base[AlertKind.Value,Int]( { alert => alert.id }, { id => AlertKind(id) } )
+
+  object Sites extends EntityTable[Site]("sites") {
+    def * =  id.? ~ created ~ label ~ description <> (Site, Site.unapply _)
+  }
 
   object Modules extends EntityTable[Module]("modules") {
     def enabled = column[Boolean]("enabled")

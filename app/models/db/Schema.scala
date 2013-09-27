@@ -19,7 +19,186 @@ package scrupal.models.db
 
 import scala.slick.driver.ExtendedProfile
 import scala.slick.lifted.DDL
+import org.joda.time.DateTime
 import play.api.Logger
+import scala.slick.driver._
+import scala.slick.jdbc.{StaticQuery0, StaticQuery}
+
+/**
+ * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
+ * implementation. This is similar to Slick's Profiles, but we call them Sketches here because they're a related but
+ * different concept. The subclasses of this trait are concrete, one for each kind of database. Every Sketch
+ * has a member that is the Slick ExtendedProfile to be used, specifies  the schema name to be used
+ * for the scrupal tables, knows the driver class name, can instantiate that driver, and knows how to create the
+ * schema in which the Scrupal tables live. This allows administrators to keep scrupal's tables separate from other
+ * modules added to scrupal, while keeping all the data in the same database
+ */
+trait Sketch {
+  val profile : ExtendedProfile
+  val driverClass : String
+  val schema : Option[String] = None
+  def driver = Class.forName(driverClass).newInstance()
+  def makeSchema : StaticQuery0[Int] = throw new NotImplementedError("Making DB Schema for " + driverClass )
+  override def toString = { "{" + driverClass + ", " + schema + "," + profile }
+}
+
+
+/**
+ * Provides the notion of something stored in the database that is identifiable by a long integer.
+ * Additionally we want to know when the record was created. This pair of values forms the base class upon which all
+ * things stored in the database must derive.
+ *
+ * @tparam T
+ */
+trait Identifiable[T <: Identifiable[T]] extends scala.Equals {
+  val id: Option[Long]
+  val created: DateTime
+  def forId(id: Long) : T
+  override def equals(entity: Any) : Boolean = {
+    entity match {
+      case that : Entity[T] => {
+        ( this.id.isDefined == that.id.isDefined ) && ( ! this.id.isDefined || (this.id.get == that.id.get) ) &&
+          ( this.created == that.created )
+      }
+      case _ => false
+    }
+  }
+}
+
+trait Modifiable[T <: Modifiable[T]] extends Identifiable[T]  {
+  val changed: DateTime
+}
+
+/**
+ * Most tables that we define are some sort of entity in the database and every entity has certain fields, this
+ * trait allows them to be mixed in to a subclass. Entities are identifiable, have a label, a description, and a last
+ * modified time.
+ * @tparam T The type into which the Entity is being mixed
+ */
+trait Entity[T <: Entity[T]] extends Identifiable[T] {
+  val label : String
+  val description: String
+  override def equals(entity : Any) : Boolean = {
+    entity match {
+      case that : Entity[T] => {
+        ( this.id.isDefined == that.id.isDefined ) && ( ! this.id.isDefined || (this.id.get == that.id.get) ) &&
+          this.label.equals(that.label) && this.description.equals(that.description)
+      }
+      case _ => false
+    }
+  }
+}
+
+trait ModifiableEntity[T <: ModifiableEntity[T]] extends Entity[T] with Modifiable[T]  ;
+
+/**
+ * The abstract database component.
+ * This trait allows use to define database components which are simply collections of related tables and the
+ * various query methods on those tables to provide access to them. Since Components contain Tables and Scrupal requires
+ * all database entities to have a particular shape, that shape is enforced in the EntityTable class. Note that
+ * Component extends Sketch which is mixed in to other components but resolved by the Schema class.
+ */
+trait Component extends Sketch { this : Sketch =>
+
+  // So we can define the Table items and queries, we import the Slick database profile here
+  import profile.simple._
+
+  // Many of the subclasses will require the common type mappers so we import them now
+  import CommonTypeMappers._
+
+  abstract class IdentifiableTable[C <:Identifiable[C]](tableName: String) extends Table[C](schema, tableName) {
+    def id = column[Long](tableName + "_id", O.PrimaryKey, O.AutoInc);
+
+    def created = column[DateTime]("created")
+
+    lazy val fetchByIDQuery = for { id <- Parameters[Long] ; ent <- this if ent.id === id } yield ent
+
+    def fetch(id: Long)(implicit s: Session) : Option[C] = fetchByIDQuery(id).firstOption
+
+    def fetch(oid: Option[Long])(implicit s: Session) : Option[C] = {
+      oid match { case None => None ; case Some(id) => fetch(id) }
+    }
+
+    lazy val findSinceQuery = for {  created <- Parameters[DateTime] ; e <- this if e.created >= created } yield e
+
+    def findSince(dt: DateTime)(implicit s: Session ) : List[C] = findSinceQuery(dt).list
+
+    def insert(entity: C)( implicit s: Session ) : C = {
+      val resulting_id = * returning id insert(entity)
+      entity.forId(resulting_id)
+    }
+
+    def update(entity: C)(implicit s: Session ) : C = {
+      this.filter(_.id === entity.id) update(entity)
+      entity
+    }
+
+    // -- operations on rows
+    def delete(id: Long)(implicit s: Session ) : Boolean =  {
+      this.filter(_.id === id).delete > 0
+    }
+
+    def delete(oid: Option[Long])(implicit s: Session) : Boolean = {
+      oid match { case None => false; case Some(id) => delete(id) }
+    }
+
+    lazy val findAllQuery = for (entity <- this) yield entity
+
+    def findAll() (implicit s: Session) : List[C] = {
+      findAllQuery.list
+    }
+
+    def upsert(entity: C)(implicit s: Session) : C = {
+      entity.id match {
+        case None => Logger.debug("Inserting: " + entity) ; insert(entity)
+        case Some(id) => Logger.debug("Updating: " + entity); update(entity)
+      }
+    }
+  }
+
+  /**
+   * The base class of all table definitions in Scrupal.
+   * Most tables in the Scrupal database represent some form of entity that can be manipulated through the
+   * admin interface. To ensure a certain level of consistency across all such entities, we enforce the structure
+   * of the entities with this class. Every entity table should subclass from EntityTable
+   * @param tableName The name of the table in the database
+   * @tparam C The case class that represents rows in this table
+   */
+  abstract class EntityTable[C <:Entity[C]](tableName: String)  extends IdentifiableTable[C](tableName) {
+
+    def label = column[String]("label", O.NotNull)
+
+    def label_index = index(tableName + "_label_index", label, unique=true)
+
+    def description = column[String]("description", O.NotNull)
+
+    lazy val fetchByNameQuery = for { l <- Parameters[String] ; e <- this if e.label === l } yield e
+
+    def fetch(label: String)(implicit s: Session) : Option[C] = fetchByNameQuery(label).firstOption
+
+  }
+
+  abstract class ModifiableEntityTable[C <: ModifiableEntity[C]](tableName: String) extends EntityTable[C](tableName) {
+
+    def changed = column[DateTime]("changed", O.NotNull)
+
+    def changed_index = index(tableName + "_changed_index", changed, unique=false)
+
+    lazy val fetchByChangedQuery = for { chg <- Parameters[DateTime]; me <- this if me.changed >= chg } yield me
+
+  }
+
+  /**
+   * The base class of all correlation tables.
+   * This allows many-to-many relationships to be established by simply listing the pairs of IDs
+   */
+  abstract class CorrelationTable[A <:Identifiable[A], B<:Identifiable[B]](tableName: String)
+    extends Table[(Long,Long)](schema, tableName) {
+    def a_id = column[Long]("a_id")
+    def b_id = column[Long]("b_id")
+    def correlation_index = index(tableName + "_index", (a_id, b_id), unique=true)
+  }
+}
 
 /**
  * Abstract Database Schema.
@@ -60,3 +239,44 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
   }
 
 }
+
+/**
+ * The Sketch for H2 Database
+ * @param schema - optional schema name for the profile
+ */
+case class H2Profile(override val schema: Option[String] = None ) extends Sketch
+{
+  override val profile: ExtendedProfile = H2Driver
+  override val driverClass : String = "org.h2.Driver"
+  override def makeSchema : StaticQuery0[Int] = StaticQuery.u + "SET TRACE_LEVEL_FILE 4; CREATE SCHEMA IF NOT EXISTS " + schema.get
+}
+
+/**
+ * The Sketch for H2 Database
+ * @param schema - optional schema name for the profile
+ */
+case class MySQLProfile (override val schema: Option[String] = None )  extends Sketch {
+  override val profile: ExtendedProfile = MySQLDriver
+  override val driverClass : String = "com.mysql.jdbc.Driver"
+}
+
+/**
+ * The Sketch for SQLite Database
+ * @param schema - optional schema name for the profile
+ */
+class SQLiteProfile (override val schema: Option[String] = None ) extends Sketch {
+  override val profile: ExtendedProfile = SQLiteDriver
+  override val driverClass : String = "org.sqlite.JDBC"
+
+}
+
+/**
+ * The Sketch for Postgres Database
+ * @param schema - optional schema name for the profile
+ */
+class PostgresProfile (override val schema: Option[String] = None ) extends Sketch {
+  override val profile: ExtendedProfile = PostgresDriver
+  override val driverClass : String = "org.postgresql.Driver"
+
+}
+
