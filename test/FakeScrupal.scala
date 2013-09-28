@@ -18,8 +18,9 @@
 package scrupal.test
 
 import java.io.File
-import play.api.test.FakeApplication
 import play.api.Logger
+import play.api.test._
+import play.api.test.Helpers._
 import scrupal.models.ScrupalSchema
 import scala.slick.session.Database
 

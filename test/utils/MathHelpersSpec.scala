@@ -15,10 +15,9 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package utils
+package scrupal.utils
 
 import org.specs2.mutable.Specification
-import scrupal.utils.MathHelpers
 
 /**
  * One line sentence description here.

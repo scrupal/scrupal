@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: net.sf.ehcache:ehcache-core:2.6.6">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/local/net.sf.ehcache/ehcache-core/2.6.6/jars/ehcache-core.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/net.sf.ehcache/ehcache-core/docs/ehcache-core-2.6.6-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/net.sf.ehcache/ehcache-core/srcs/ehcache-core-2.6.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

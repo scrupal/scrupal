@@ -20,7 +20,7 @@ package scrupal.utils
 import play.api._
 import play.api.Mode
 import java.io.File
-import play.api.mvc.{Result, Handler, RequestHeader, EssentialAction}
+import play.api.mvc.{SimpleResult, Handler, RequestHeader, EssentialAction}
 
 object Global extends GlobalSettings
 {
@@ -97,7 +97,7 @@ object Global extends GlobalSettings
 	 * @param ex The exception
 	 * @return The result to send to the client
 	 */
-	override def onError(request: RequestHeader, ex: Throwable): Result = {
+	override def onError(request: RequestHeader, ex: Throwable)  = {
 		DefaultGlobal.onError(request, ex)
 	/*
 		try {
@@ -127,7 +127,7 @@ object Global extends GlobalSettings
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-	override def onHandlerNotFound(request: RequestHeader): Result = {
+	override def onHandlerNotFound(request: RequestHeader)  = {
 		DefaultGlobal.onHandlerNotFound(request)
 		/*
 		NotFound(Play.maybeApplication.map {
@@ -145,7 +145,7 @@ object Global extends GlobalSettings
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-	override def onBadRequest(request: RequestHeader, error: String): Result = {
+	override def onBadRequest(request: RequestHeader, error: String)  = {
 		DefaultGlobal.onBadRequest(request, error)
 		/*
 		BadRequest(views.html.defaultpages.badRequest(request, error))

@@ -57,7 +57,7 @@ class HasherSpec extends Specification {
       val delta = Math.abs((t2 - t1) - (t3 - t2))
       val ratio = delta.toDouble / avg.toDouble
       Logger.debug("avg=" + avg + ", delta=" + delta + ", ratio=" + ratio)
-      ratio must beLessThan( 0.05 )
+      ratio must beLessThan( 0.10 ) // Less than 10% difference in timing
     }
 
     "BCrypt works" in {

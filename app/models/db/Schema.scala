@@ -23,6 +23,7 @@ import org.joda.time.DateTime
 import play.api.Logger
 import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery0, StaticQuery}
+import scala.slick.direct.AnnotationMapper.column
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -232,8 +233,8 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
 
   def create(implicit session: Session): Unit = {
     if (schema.isDefined) {
-      val update = sketch.makeSchema()
-      update.execute()
+      val update = sketch.makeSchema
+      update.execute
     }
     ddl.create
   }

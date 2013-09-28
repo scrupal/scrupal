@@ -12,8 +12,7 @@ object BuildSettings
 {
   val appName = "scrupal"
   val buildVersion = "0.1"
-
-  val buildSettings = Defaults.defaultSettings ++ Seq (
+  val buildSettings = playScalaSettings ++ Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     javacOptions ++= Seq(
       "-J-Xmx1024m",
@@ -24,15 +23,16 @@ object BuildSettings
     scalacOptions   ++= Seq(
       "-J-Xss32m",
       "-feature",
+      "-Xlint",
+      "-unchecked",
+      "-deprecation",
       "-language:implicitConversions",
       "-language:postfixOps",
       "-language:reflectiveCalls",
-      "-unchecked",
-      "-deprecation",
       "-encoding", "utf8",
       "-Ywarn-adapted-args"
     ),
-    scalaVersion    := "2.10",
+    scalaVersion    := "2.10.2",
     shellPrompt     := ShellPrompt.buildShellPrompt,
     version         := buildVersion
   )
@@ -125,8 +125,20 @@ object ScrupalBuild extends Build {
     path = file("."),
     settings = buildSettings ++ Seq (
       resolvers := all_resolvers,
-      libraryDependencies := Seq ( specs2,  play_plugins_redis, mailer_plugin, slick, h2, pbkdf2, bcrypt, scrypt ),
+      libraryDependencies := Seq (
+        jdbc,
+        cache,
+        filters,
+        component("play-test"),
+        specs2,
+        play_plugins_redis,
+        mailer_plugin,
+        slick,
+        h2,
+        pbkdf2, bcrypt, scrypt
+      ),
       printClasspath <<= print_class_path
     )
   )
+  override def rootProject = Some(scrupal)
 }
