@@ -17,8 +17,6 @@
 
 package scrupal.models.db
 
-import scrupal.models.ScrupalSchema
-
 /**
  * A collection of utilities for dealing with the Scrupal database. This is where we find the initialization code
  * and various things to make using the database even easier.

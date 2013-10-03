@@ -21,8 +21,8 @@ import java.io.File
 import play.api.Logger
 import play.api.test._
 import play.api.test.Helpers._
-import scrupal.models.ScrupalSchema
 import scala.slick.session.Database
+import scrupal.models.db.ScrupalSchema
 
 
 /**

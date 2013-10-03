@@ -24,6 +24,7 @@ import org.joda.time.DateTime
 import play.api.Logger
 
 import scrupal.test.FakeScrupal
+import scrupal.models.db.Module
 
 /**
  * One line sentence description here.

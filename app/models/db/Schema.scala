@@ -18,7 +18,7 @@
 package scrupal.models.db
 
 import scala.slick.driver.ExtendedProfile
-import scala.slick.lifted.DDL
+import scala.slick.lifted.{ForeignKeyAction, DDL}
 import org.joda.time.DateTime
 import play.api.Logger
 import scala.slick.driver._
@@ -193,11 +193,15 @@ trait Component extends Sketch { this : Sketch =>
    * The base class of all correlation tables.
    * This allows many-to-many relationships to be established by simply listing the pairs of IDs
    */
-  abstract class CorrelationTable[A <:Identifiable[A], B<:Identifiable[B]](tableName: String)
-    extends Table[(Long,Long)](schema, tableName) {
-    def a_id = column[Long]("a_id")
-    def b_id = column[Long]("b_id")
-    def correlation_index = index(tableName + "_index", (a_id, b_id), unique=true)
+  abstract class ManyToManyTable[A <: Identifiable[A], B <: Identifiable[B] ] (
+      nameA: String, nameB: String, tableA: IdentifiableTable[A], tableB:  IdentifiableTable[B]) extends Table[(Long,Long)](schema, nameA + "_" + nameB) {
+    def a_id = column[Long](nameA + "_id")
+    def b_id = column[Long](nameB + "_id")
+    def a_fkey = foreignKey(nameA + "_fkey", a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def b_fkey = foreignKey(nameB + "_fkey", b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def selectAssociatedA(b: Long) = for ( c <- this if c.b_id === b ) yield c.a_id
+    def selectAssociatedB(a: Long) = for ( c <- this if c.a_id === a ) yield c.b_id
+    def * = a_id ~ b_id
   }
 }
 

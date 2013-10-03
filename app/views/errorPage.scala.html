@@ -1,5 +1,7 @@
-@(alert: scrupal.models.Alert)(implicit request: RequestHeader)
+@(alert: scrupal.models.db.Alert)(implicit request: RequestHeader)
+
+@import scrupal.models.db.Alert
 
 @main("ERROR") {
-@messages(Option[scrupal.models.Alert](alert))
+@messages(Option[Alert](alert))
 }

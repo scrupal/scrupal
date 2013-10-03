@@ -15,15 +15,15 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.models.db
 
 import play.api.templates.Html
 import scala.xml.{Elem, NodeSeq, Node}
 
 import scrupal.utils.Icons
-import scrupal.models.db._
-import org.joda.time.DateTime
+import org.joda.time.{Duration, DateTime}
 import scala.Enumeration
+import scala.slick.lifted.DDL
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
@@ -42,7 +42,7 @@ object AlertKind extends Enumeration
   val Danger = Value("Danger")        ///< A caution about the potential loss of information or other significant action
   val Critical = Value("Critical")    ///< Alternate to Danger
 
-  def kind2prefix(kind: AlertKind) : String =
+  def toPrefix(kind: AlertKind) : String =
   {
     kind match {
       case Success => "Success!"
@@ -55,7 +55,7 @@ object AlertKind extends Enumeration
     }
   }
 
-  def kind2icon(kind: AlertKind) : Icons.Icons =
+  def toIcon(kind: AlertKind) : Icons.Icons =
   {
     kind match {
       case Success => Icons.ok
@@ -68,7 +68,7 @@ object AlertKind extends Enumeration
     }
   }
 
-  def kind2css(kind: AlertKind) : String = {
+  def toCss(kind: AlertKind) : String = {
     kind match {
       case Success => "alert-success"
       case Note => "alert-info"
@@ -80,7 +80,7 @@ object AlertKind extends Enumeration
     }
   }
 
-  def kind2expiry(kind: AlertKind) : DateTime = {
+  def toExpiry(kind: AlertKind) : DateTime = {
     kind match {
       case Success => DateTime.now().plusMillis(100)
       case Note => DateTime.now().plusSeconds(30)
@@ -139,8 +139,8 @@ case class Alert (
   def this(id: Option[Long], created: DateTime, label: String,  description : String,
            message: String, alertKind: AlertKind.Value = AlertKind.Note) =
   {
-    this(id, created, label, description, message, alertKind, kind2icon(alertKind),
-         kind2prefix(alertKind), kind2css(alertKind), kind2expiry(alertKind))
+    this(id, created, label, description, message, alertKind, toIcon(alertKind),
+         toPrefix(alertKind), toCss(alertKind), toExpiry(alertKind))
   }
 
   def forId(id: Long) = Alert(Some(id), created, label, description,
@@ -154,6 +154,45 @@ case class Alert (
   implicit def NodeSeq2Html(ns : NodeSeq) : Html = {
     Html(ns.foldLeft[StringBuilder](new StringBuilder) { (s,n) => s.append( n.buildString(true))}.toString)
   }
+
+}
+
+trait NotificationComponent extends Component { self : Component =>
+
+  import profile.simple._
+
+  // Get the TypeMapper for DateTime
+  import CommonTypeMappers._
+
+  // This allows you to use AlertKind.Value as a type argument to the column method in a table definition
+  implicit val iconTM = MappedTypeMapper.base[Icons.Value,Int]( { icon => icon.id }, { id => Icons(id)})
+
+  // This allows you to use AlertKind.Value as a type argument to the column method in a table definition
+  implicit val alertTM = MappedTypeMapper.base[AlertKind.Value,Int]( { alert => alert.id }, { id => AlertKind(id) } )
+
+
+  object Alerts extends EntityTable[Alert]("alerts") {
+    def message =     column[String]("message")
+    def alertKind =   column[AlertKind.Value]("alertKind")
+    def iconKind =    column[Icons.Value]("iconKind")
+    def prefix =      column[String]("prefix")
+    def cssClass =    column[String]("css")
+    def expires =     column[DateTime]("expires")
+    def expires_index = index("expires_index", expires, unique=false)
+    def * = id.? ~ created ~ label ~ description  ~ message ~ alertKind  ~ iconKind ~ prefix ~ cssClass ~ expires <>
+      (Alert, Alert.unapply _ )
+
+    lazy val unexpiredQuery = for { expires <- Parameters[DateTime] ; alrt <- this if alrt.expires > expires  } yield alrt
+
+    def findUnexpired(implicit session: Session) : List[Alert] =  {  unexpiredQuery(DateTime.now()).list }
+
+    def renew(theID: Long, howLong: Duration)(implicit session: Session) = {
+      val query = for {  alrt <- this if alrt.id === theID } yield alrt.expires
+      query.update(DateTime.now().plus(howLong))
+    }
+  }
+
+  def notificationDDL : DDL = Alerts.ddl
 
 }
 

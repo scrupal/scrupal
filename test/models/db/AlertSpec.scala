@@ -19,12 +19,9 @@ package scrupal.models.db
 import org.specs2.mutable.Specification
 import play.api.test.Helpers._
 
-import scrupal.models.Alert
-import scrupal.models.AlertKind
 import scrupal.test.FakeScrupal
 import scrupal.utils.Icons
 import org.joda.time.{Duration, DateTime}
-import org.joda.time.Duration._
 import scala.slick.session.Session
 
 /**
@@ -55,8 +52,8 @@ class AlertSpec extends Specification
 		}
 		"construct with three arguments and give sane results" in {
 			val alert = Alert(None, DateTime.now(), "Alert", "Alert", "<span>Warning Message</span>", AlertKind.Warning,
-        AlertKind.kind2icon(AlertKind.Warning), AlertKind.kind2prefix(AlertKind.Warning),
-        AlertKind.kind2css(AlertKind.Warning), t )
+        AlertKind.toIcon(AlertKind.Warning), AlertKind.toPrefix(AlertKind.Warning),
+        AlertKind.toCss(AlertKind.Warning), t )
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Warning)
 			alert.iconKind must beEqualTo(Icons.exclamation)

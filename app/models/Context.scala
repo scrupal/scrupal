@@ -17,11 +17,8 @@
 
 package scrupal.models
 
-import org.joda.time.DateTime
-import play.api.templates.Html
 import play.api.libs.json.{Json, JsObject}
-import scala.concurrent.duration.span
-
+import scrupal.models.db.{AlertKind, Alert}
 
 
 /**

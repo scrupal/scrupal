@@ -15,11 +15,11 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.models.db
 
 import org.joda.time.DateTime
-import scrupal.models.db._
 import scrupal.utils.Hash
+import scala.slick.lifted.DDL
 
 /**
  * Information about a principal as authenticated by an email address and a password.
@@ -64,8 +64,11 @@ trait UserComponent extends Component { self: Sketch =>
 
   object Handles extends IdentifiableTable[Handle]("handles") {
     def userName = column[String]("user_name")
-    def identity_id = column[Long]("identity_id")
-    def * = userName ~ identity_id ~ id.?  ~ created <> (Handle, Handle.unapply _)
+    def principal_id = column[Long]("principal_id")
+    def principal_fkey = foreignKey("principal_fkey", principal_id, Principals)(_.id)
+    def * = userName ~ principal_id ~ id.?  ~ created <> (Handle, Handle.unapply _)
   }
+
+  def userDDL : DDL = Principals.ddl ++ Handles.ddl
 
 }

@@ -1,4 +1,7 @@
-@(alert: Option[scrupal.models.Alert] = None)(implicit request: RequestHeader)
+@(alert: Option[scrupal.models.db.Alert] = None)(implicit request: RequestHeader)
+
+@import scrupal.models.db.Alert
+
 @if(alert.isDefined && alert.get.unexpired) {
 <div class="alert alert-dismissible @alert.get.cssClass">
 	<button type="button" class="close" data-dismiss="alert" aria-hidden="true"><i class="icon-remove-sign"></i></button>

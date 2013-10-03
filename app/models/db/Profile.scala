@@ -15,25 +15,22 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.models.db
 
-import scala.slick.lifted.DDL
-import scrupal.models.db._
+import org.joda.time.DateTime
 
 /**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
+ * One line sentence description here.
+ * Further description here.
  */
-class ScrupalSchema(sketch: Sketch) extends Schema (sketch)
-  with CoreComponent with UserComponent  /* with AlertComponent */
-{
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    // CoreComponent tables
-    Modules.ddl ++ Alerts.ddl ++
-    // UserComponent tables
-    Principals.ddl ++ Handles.ddl
-    // Admin tables
-    /* ++ Alerts.ddl */
-  }
+case class Profile(
+  override val id : Option[Long],
+  override val created : DateTime,
+  principal : Long
 
+) extends Identifiable[Profile]{
+  def forId(id: Long) = Profile(Some(id), created, principal)
+}
+
+trait ProfileComponent extends Component {
 }
