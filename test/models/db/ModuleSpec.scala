@@ -23,7 +23,7 @@ import scala.slick.session.{Session, Database}
 import org.joda.time.DateTime
 import play.api.Logger
 
-import scrupal.test.FakeScrupal
+import scrupal.test.{WithDBSession, FakeScrupal}
 import scrupal.models.db.Module
 
 /**
@@ -33,17 +33,12 @@ import scrupal.models.db.Module
 class ModuleSpec extends Specification {
 
   "Module" should {
-    "save to and fetch from the DB" in {
-      running(FakeScrupal) {
-        FakeScrupal.db withSession { implicit session: Session =>
-          import FakeScrupal.schema._
-          create
-          val mod = Modules.insert(Module(None, DateTime.now(), "foo", "Test Module", enabled=false))
-          mod.label must beEqualTo("foo")
-          val mod2 = Modules.fetch(mod.id.get).get
-          mod.id must beEqualTo(mod2.id)
-        }
-      }
+    "save to and fetch from the DB" in new WithDBSession {
+      import schema._
+      val mod = Modules.insert(Module(None, DateTime.now(), "foo", "Test Module", enabled=false))
+      mod.label must beEqualTo("foo")
+      val mod2 = Modules.fetch(mod.id.get).get
+      mod.id must beEqualTo(mod2.id)
     }
   }
 }

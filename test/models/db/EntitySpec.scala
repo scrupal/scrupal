@@ -23,7 +23,7 @@ import play.api.test.Helpers.running
 import org.specs2.mutable.Specification
 import org.joda.time.DateTime
 import scala.slick.lifted.DDL
-import scrupal.test.FakeScrupal
+import scrupal.test.{WithDBSession, FakeScrupal}
 import scala.slick.session.Session
 import scala.slick.direct.AnnotationMapper.column
 
@@ -69,21 +69,17 @@ class EntitySpec extends Specification
 			te.equals(other) must beFalse
 			te.equals(te) must beTrue
 		}
-    "save, load and delete from DB" in {
-      running(FakeScrupal) {
-        FakeScrupal.db withSession { implicit session : Session =>
-          val ts = new TestSchema(FakeScrupal.sketch)
-          ts.create
-          val te2 = ts.TestEntities.upsert(te)
-          val te3 = ts.TestEntities.fetch(te2.id.get)
-          te3.isDefined must beTrue
-          val te4 = te3.get
-          te4.id.equals(te2.id) must beTrue
-          te4.testVal.equals(te4.testVal) must beTrue
-          ts.TestEntities.delete(te4.id) must beTrue
-        }
-        success
-      }
+    "save, load and delete from DB" in new WithDBSession {
+      val ts = new TestSchema(FakeScrupal.sketch)
+      ts.create
+      import ts._
+      val te2 = TestEntities.upsert(te)
+      val te3 = TestEntities.fetch(te2.id.get)
+      te3.isDefined must beTrue
+      val te4 = te3.get
+      te4.id.equals(te2.id) must beTrue
+      te4.testVal.equals(te4.testVal) must beTrue
+      TestEntities.delete(te4.id) must beTrue
     }
   }
 }

@@ -18,11 +18,12 @@
 package scrupal.test
 
 import java.io.File
-import play.api.Logger
+import play.api.{db, Logger}
 import play.api.test._
-import play.api.test.Helpers._
-import scala.slick.session.Database
-import scrupal.models.db.ScrupalSchema
+import scala.slick.session.{Session, Database}
+import scrupal.models.db.{Sketch, ScrupalSchema}
+import org.specs2.execute.{Result, AsResult}
+
 
 
 /**
@@ -35,8 +36,19 @@ object FakeScrupal extends FakeApplication(
 
   val url = "jdbc:h2:mem:test1"
   val sketch = scrupal.models.db.DB.sketch4URL(url)
-  Logger.debug("sketch = " + sketch)
   val schema = new ScrupalSchema(sketch)
   val db = Database.forURL(url, sketch.driverClass)
 }
 
+abstract class WithDBSession() extends WithApplication(FakeScrupal) {
+  lazy val sketch : Sketch = FakeScrupal.sketch
+  lazy val schema : ScrupalSchema = new ScrupalSchema(sketch)
+  implicit var session : Session = null
+  override def around[T: AsResult](t: => T): Result = super.around {
+    FakeScrupal.db withSession { implicit s: Session =>
+      session = s
+      schema.create(session)
+      t
+    }
+  }
+}

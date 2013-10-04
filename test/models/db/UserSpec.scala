@@ -17,16 +17,12 @@
 
 package models.db
 
-import play.api.test.Helpers.running
 
 import org.specs2.mutable.Specification
 import org.joda.time.DateTime
-import scrupal.models.db._
 import scrupal.models.db.Principal
-import scrupal.test.FakeScrupal
-import scala.slick.session.Session
+import scrupal.test.WithDBSession
 import scrupal.utils.HasherKinds
-import akka.actor.IO.Handle
 
 
 /**
@@ -36,43 +32,30 @@ import akka.actor.IO.Handle
 class UserSpec extends Specification
 {
 	"Principal" should {
-		"save, load and delete from DB" in {
-      running(FakeScrupal) {
-        FakeScrupal.db withSession { implicit session : Session =>
-          val sk : Sketch = FakeScrupal.sketch
-          val ts = new ScrupalSchema(FakeScrupal.sketch)
-          ts.create
-          val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
-          val p2 = ts.Principals.upsert(p)
-          val p3 = ts.Principals.fetch(p2.id.get)
-          p3.isDefined must beTrue
-          val p4 = p3.get
-          p4.id.equals(p2.id) must beTrue
-          p4.password.equals(p4.password) must beTrue
-          ts.Principals.delete(p4.id) must beTrue
-        }
-        success
-      }
+		"save, load and delete from DB" in new WithDBSession {
+      import schema._
+      val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+      val p2 = Principals.upsert(p)
+      val p3 = Principals.fetch(p2.id.get)
+      p3.isDefined must beTrue
+      val p4 = p3.get
+      p4.id.equals(p2.id) must beTrue
+      p4.password.equals(p4.password) must beTrue
+      Principals.delete(p4.id) must beTrue
     }
   }
 
   "Handle" should {
-    "save, load and delete from DB" in {
-      running(FakeScrupal) {
-        FakeScrupal.db withSession { implicit session : Session =>
-          val sk : Sketch = FakeScrupal.sketch
-          val ts = new ScrupalSchema(FakeScrupal.sketch)
-          ts.create
-          val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
-          val p2 : Principal = ts.Principals.upsert(p)
-          ts.Handles.insert("nobody", p2.id.get)
-          val p3 : Principal = ts.Handles.principals("nobody").head
-          p3.id must beEqualTo(p2.id)
-          val h : String = ts.Handles.handles(p2.id.get).head
-          h must beEqualTo("nobody")
-          ts.Handles.delete("nobody") must beTrue
-        }
-      }
+    "save, load and delete from DB" in new WithDBSession {
+      import schema._
+      val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+      val p2 : Principal = Principals.upsert(p)
+      Handles.insert("nobody", p2.id.get)
+      val p3 : Principal = Handles.principals("nobody").head
+      p3.id must beEqualTo(p2.id)
+      val h : String = Handles.handles(p2.id.get).head
+      h must beEqualTo("nobody")
+      Handles.delete("nobody") must beTrue
     }
     "allow many-to-many relations with Principal" in {
       success

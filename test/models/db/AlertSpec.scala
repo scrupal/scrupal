@@ -19,7 +19,7 @@ package scrupal.models.db
 import org.specs2.mutable.Specification
 import play.api.test.Helpers._
 
-import scrupal.test.FakeScrupal
+import scrupal.test.{WithDBSession, FakeScrupal}
 import scrupal.utils.Icons
 import org.joda.time.{Duration, DateTime}
 import scala.slick.session.Session
@@ -74,21 +74,16 @@ class AlertSpec extends Specification
 			val alert = new Alert(None, DateTime.now(), "A", "A", "<span>Html Message</span>")
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
-    "save to and fetch from the DB" in {
-      running(FakeScrupal) {
-        FakeScrupal.db withSession { implicit session: Session =>
-          import FakeScrupal.schema._
-          create
-          val a1 = Alerts.insert(new Alert(None, DateTime.now(), "foo", "Alert", "Message" ))
-          a1.label must beEqualTo("foo")
-          val a2 = Alerts.fetch(a1.id.get).get
-          val saved_time = a2.expires
-          a1.id must beEqualTo(a2.id)
-          Alerts.renew(a1.id.get, Duration.standardMinutes(30))
-          val a3 = Alerts.fetch(a1.id.get).get
-          a3.expires.isAfter(saved_time.plusMinutes(29))  must beTrue
-        }
-      }
+    "save to and fetch from the DB" in new WithDBSession {
+      import schema._
+      val a1 = Alerts.insert(new Alert(None, DateTime.now(), "foo", "Alert", "Message" ))
+      a1.label must beEqualTo("foo")
+      val a2 = Alerts.fetch(a1.id.get).get
+      val saved_time = a2.expires
+      a1.id must beEqualTo(a2.id)
+      Alerts.renew(a1.id.get, Duration.standardMinutes(30))
+      val a3 = Alerts.fetch(a1.id.get).get
+      a3.expires.isAfter(saved_time.plusMinutes(29))  must beTrue
     }
 	}
 }
