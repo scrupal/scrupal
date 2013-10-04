@@ -28,6 +28,7 @@ case class Context(obj: JsObject = Json.obj())
 {
   def alerts : Seq[Alert] = Seq()
   val appName : String = "Scrupal"
+  val theme: String = "default"
 }
 
 /**

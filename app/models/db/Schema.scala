@@ -57,7 +57,7 @@ trait Identifiable[T <: Identifiable[T]] extends scala.Equals {
   def forId(id: Long) : T
   override def equals(entity: Any) : Boolean = {
     entity match {
-      case that : Entity[T] => {
+      case that : Thing[T] => {
         ( this.id.isDefined == that.id.isDefined ) && ( ! this.id.isDefined || (this.id.get == that.id.get) ) &&
           ( this.created == that.created )
       }
@@ -71,17 +71,17 @@ trait Modifiable[T <: Modifiable[T]] extends Identifiable[T]  {
 }
 
 /**
- * Most tables that we define are some sort of entity in the database and every entity has certain fields, this
- * trait allows them to be mixed in to a subclass. Entities are identifiable, have a label, a description, and a last
- * modified time.
- * @tparam T The type into which the Entity is being mixed
+ * Most tables that we define are some sort of thing with a name and a description in the database and certain other
+ * fields. This trait allows such named and described things to be mixed in to a subclass. Things are identifiable,
+ * have a label, a description, and a creation time.
+ * @tparam T The type into which the Thing is being mixed
  */
-trait Entity[T <: Entity[T]] extends Identifiable[T] {
+trait Thing[T <: Thing[T]] extends Identifiable[T] {
   val label : String
   val description: String
   override def equals(entity : Any) : Boolean = {
     entity match {
-      case that : Entity[T] => {
+      case that : Thing[T] => {
         ( this.id.isDefined == that.id.isDefined ) && ( ! this.id.isDefined || (this.id.get == that.id.get) ) &&
           this.label.equals(that.label) && this.description.equals(that.description)
       }
@@ -90,7 +90,7 @@ trait Entity[T <: Entity[T]] extends Identifiable[T] {
   }
 }
 
-trait ModifiableEntity[T <: ModifiableEntity[T]] extends Entity[T] with Modifiable[T]  ;
+trait ModifiableThing[T <: ModifiableThing[T]] extends Thing[T] with Modifiable[T]  ;
 
 /**
  * The abstract database component.
@@ -150,10 +150,7 @@ trait Component extends Sketch { this : Sketch =>
     }
 
     def upsert(entity: C)(implicit s: Session) : C = {
-      entity.id match {
-        case None => Logger.debug("Inserting: " + entity) ; insert(entity)
-        case Some(id) => Logger.debug("Updating: " + entity); update(entity)
-      }
+      if (entity.id.isDefined) update(entity) else insert(entity)
     }
   }
 
@@ -165,7 +162,7 @@ trait Component extends Sketch { this : Sketch =>
    * @param tableName The name of the table in the database
    * @tparam C The case class that represents rows in this table
    */
-  abstract class EntityTable[C <:Entity[C]](tableName: String)  extends IdentifiableTable[C](tableName) {
+  abstract class ThingTable[C <:Thing[C]](tableName: String)  extends IdentifiableTable[C](tableName) {
 
     def label = column[String]("label", O.NotNull)
 
@@ -177,24 +174,27 @@ trait Component extends Sketch { this : Sketch =>
 
     def fetch(label: String)(implicit s: Session) : Option[C] = fetchByNameQuery(label).firstOption
 
-  }
+  };
 
-  abstract class ModifiableEntityTable[C <: ModifiableEntity[C]](tableName: String) extends EntityTable[C](tableName) {
+  abstract class ModifiableThingTable[C <: ModifiableThing[C]](tableName: String) extends ThingTable[C](tableName) {
 
     def changed = column[DateTime]("changed", O.NotNull)
 
     def changed_index = index(tableName + "_changed_index", changed, unique=false)
 
-    lazy val fetchByChangedQuery = for { chg <- Parameters[DateTime]; me <- this if me.changed >= chg } yield me
+    lazy val modifiedSinceQuery = for { chg <- Parameters[DateTime]; mt <- this if mt.changed >= chg } yield mt
 
-  }
+    def modifiedSince(chg: DateTime)(implicit s: Session) : List[C] = modifiedSinceQuery(chg).list
+
+  };
 
   /**
    * The base class of all correlation tables.
    * This allows many-to-many relationships to be established by simply listing the pairs of IDs
    */
   abstract class ManyToManyTable[A <: Identifiable[A], B <: Identifiable[B] ] (
-      nameA: String, nameB: String, tableA: IdentifiableTable[A], tableB:  IdentifiableTable[B]) extends Table[(Long,Long)](schema, nameA + "_" + nameB) {
+      nameA: String, nameB: String, tableA: IdentifiableTable[A], tableB:  IdentifiableTable[B])
+      extends Table[(Long,Long)](schema, nameA + "_" + nameB) {
     def a_id = column[Long](nameA + "_id")
     def b_id = column[Long](nameB + "_id")
     def a_fkey = foreignKey(nameA + "_fkey", a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
@@ -202,6 +202,44 @@ trait Component extends Sketch { this : Sketch =>
     def selectAssociatedA(b: Long) = for ( c <- this if c.b_id === b ) yield c.a_id
     def selectAssociatedB(a: Long) = for ( c <- this if c.a_id === a ) yield c.b_id
     def * = a_id ~ b_id
+  };
+
+  /**
+   * The base class of all tables that provide a string key to reference some Identifiable table.
+   * This allows a
+   */
+  abstract class NamedIdentifiableTable[ReferentType <: Identifiable[ReferentType]](
+      name: String, valueTable: IdentifiableTable[ReferentType])
+      extends Table[(String,Long)](schema, name) {
+    def key = column[String](name + "_key")
+    def value = column[Long](name + "_value")
+    def value_fkey = foreignKey(name + "_value_fkey", value, valueTable)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def key_value_index = index(name + "_key_value_index", on=(key, value), unique=true)
+    def * = key ~ value
+
+    def insert(k: String, v: Long)( implicit s: Session ) : Unit = {
+     insert( (k,v) )
+    }
+
+    // -- operations on rows
+    def delete(k: String)(implicit s: Session ) : Boolean =  {
+      this.filter(_.key === k).delete > 0
+    }
+
+    lazy val findValuesQuery = for {
+      k <- Parameters[String];
+      ni <- this if ni.key === k ;
+      vt <- valueTable if ni.value === vt.id
+    } yield vt
+
+    def findValues(aKey: String)(implicit s: Session) : List[ReferentType] = findValuesQuery(aKey).list
+
+    lazy val findKeysQuery = for {
+      id <- Parameters[Long];
+      ni <- this if ni.value === id
+    } yield ni.key
+
+    def findKeys(id : Long)(implicit s: Session) : List[String] = findKeysQuery(id).list
   }
 }
 

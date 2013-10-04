@@ -20,6 +20,7 @@ package scrupal.models.db
 import org.joda.time.DateTime
 import scrupal.utils.Hash
 import scala.slick.lifted.DDL
+import scala.slick.session.Session
 
 /**
  * Information about a principal as authenticated by an email address and a password.
@@ -37,18 +38,6 @@ case class Principal(id: Option[Long], created: DateTime,
 }
 
 /**
- * A Handle that a given Principal might utilize
- * @param userName The user name the principal has chosen to utilize
- * @param identity_id The id (foreign key) of the principal
- * @param id The unique id of this handle
- * @param created The timestamp at which the Handle was created
- */
-case class Handle(userName: String, identity_id: Long, id: Option[Long], created: DateTime)
-  extends Identifiable[Handle] {
-  def forId(id: Long) = Handle(userName, identity_id, Some(id),  created)
-}
-
-/**
  * A database component for user related information.
  */
 trait UserComponent extends Component { self: Sketch =>
@@ -62,11 +51,9 @@ trait UserComponent extends Component { self: Sketch =>
     def * = id.? ~ created ~ email ~ password ~ hasher ~ salt ~ complexity  <> (Principal, Principal.unapply _)
   }
 
-  object Handles extends IdentifiableTable[Handle]("handles") {
-    def userName = column[String]("user_name")
-    def principal_id = column[Long]("principal_id")
-    def principal_fkey = foreignKey("principal_fkey", principal_id, Principals)(_.id)
-    def * = userName ~ principal_id ~ id.?  ~ created <> (Handle, Handle.unapply _)
+  object Handles extends NamedIdentifiableTable[Principal]("handles", Principals) {
+    def handles(identity: Long)(implicit s: Session) = findKeys(identity)
+    def principals(handle: String)(implicit s: Session) = findValues(handle)
   }
 
   def userDDL : DDL = Principals.ddl ++ Handles.ddl

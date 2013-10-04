@@ -15,75 +15,67 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
-
+package models.db
 
 import play.api.test.Helpers.running
 
 import org.specs2.mutable.Specification
 import org.joda.time.DateTime
-import scala.slick.lifted.DDL
+import scrupal.models.db._
+import scrupal.models.db.Principal
 import scrupal.test.FakeScrupal
 import scala.slick.session.Session
-import scala.slick.direct.AnnotationMapper.column
+import scrupal.utils.HasherKinds
+import akka.actor.IO.Handle
 
 
 /**
  * Test that our basic abstractions for accessing the database hold water.
  */
-case class SomeValue(x: Short, y: Short)
 
-case class TestEntity(
-  override val id: Option[Long],
-  override val created: DateTime,
-  override val label: String,
-  override val description: String,
-  testVal : SomeValue
-) extends Thing[TestEntity] {
-  def forId(id: Long) : TestEntity = TestEntity(Some(id), created, label, description, testVal)
-}
-
-trait TestComponent extends Component { self : Sketch =>
-  import profile.simple._
-
-  implicit val someValueMapper = MappedTypeMapper.base[SomeValue,Int](
-    { v => v.x << 16 + v.y }, { i => SomeValue((i >> 16).toShort, (i & 0x0FFFF).toShort) } )
-
-  object TestEntities extends ThingTable[TestEntity]("test_entities") {
-    def testVal = column[SomeValue]("test_val")
-    def * = id.? ~ created ~ label ~ description ~ testVal <> (TestEntity, TestEntity.unapply _)
-  }
-}
-
-class TestSchema(sketch: Sketch) extends Schema(sketch) with TestComponent {
-  val ddl : DDL = TestEntities.ddl
-}
-
-class EntitySpec extends Specification
+class UserSpec extends Specification
 {
-	val te = new TestEntity(None, DateTime.now(), "Test", "This is a test", SomeValue(1,2))
-
-	"Entity" should {
-		"fail to compare against a non-entity" in {
-			val other = "not-matchable"
-			te.equals(other) must beFalse
-			te.equals(te) must beTrue
-		}
-    "save, load and delete from DB" in {
+	"Principal" should {
+		"save, load and delete from DB" in {
       running(FakeScrupal) {
         FakeScrupal.db withSession { implicit session : Session =>
-          val ts = new TestSchema(FakeScrupal.sketch)
+          val sk : Sketch = FakeScrupal.sketch
+          val ts = new ScrupalSchema(FakeScrupal.sketch)
           ts.create
-          val te2 = ts.TestEntities.upsert(te)
-          val te3 = ts.TestEntities.fetch(te2.id.get)
-          te3.isDefined must beTrue
-          val te4 = te3.get
-          te4.id.equals(te2.id) must beTrue
-          te4.testVal.equals(te4.testVal) must beTrue
-          ts.TestEntities.delete(te4.id) must beTrue
+          val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+          val p2 = ts.Principals.upsert(p)
+          val p3 = ts.Principals.fetch(p2.id.get)
+          p3.isDefined must beTrue
+          val p4 = p3.get
+          p4.id.equals(p2.id) must beTrue
+          p4.password.equals(p4.password) must beTrue
+          ts.Principals.delete(p4.id) must beTrue
         }
         success
       }
+    }
+  }
+
+  "Handle" should {
+    "save, load and delete from DB" in {
+      running(FakeScrupal) {
+        FakeScrupal.db withSession { implicit session : Session =>
+          val sk : Sketch = FakeScrupal.sketch
+          val ts = new ScrupalSchema(FakeScrupal.sketch)
+          ts.create
+          val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+          val p2 : Principal = ts.Principals.upsert(p)
+          ts.Handles.insert("nobody", p2.id.get)
+          val p3 : Principal = ts.Handles.principals("nobody").head
+          p3.id must beEqualTo(p2.id)
+          val h : String = ts.Handles.handles(p2.id.get).head
+          h must beEqualTo("nobody")
+          ts.Handles.delete("nobody") must beTrue
+        }
+      }
+    }
+    "allow many-to-many relations with Principal" in {
+      success
     }
   }
 }

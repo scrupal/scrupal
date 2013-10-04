@@ -20,8 +20,9 @@
  * elements and capabilities that any Scrupal application needs. What it doesn't do is provide any particular
  * application level constructs, just facilities applications can utilize.
  */
-var scrupal = angular.module("scrupal", []);
 // var Showdown = require('showdown');
+// var angular = require('angular');
+var scrupal = angular.module("scrupal", []);
 
 scrupal.directive('showdown', function($compile) {
     var converter = new Showdown.converter();

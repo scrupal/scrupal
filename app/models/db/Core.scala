@@ -17,9 +17,9 @@
 
 package scrupal.models.db
 
-import org.joda.time.{Duration, DateTime}
-import scrupal.utils.Icons
+import org.joda.time.DateTime
 import scala.slick.lifted.DDL
+import scala.slick.direct.AnnotationMapper.column
 
 /**
  * Information about a site hosted by Scrupal
@@ -29,7 +29,7 @@ case class Site(
   override val created: DateTime,
   override val label: String,
   override val description: String
- ) extends Entity[Site] {
+ ) extends Thing[Site] {
   def forId(id: Long) = Site(Some(id), created, label, description)
 }
 
@@ -70,13 +70,13 @@ case class Module(
   override val label: String,
   override val description: String,
   enabled : Boolean
-) extends Entity[Module] {
+) extends Thing[Module] {
   def forId(id: Long) = Module(Some(id), created, label, description, enabled)
 }
 
 trait CoreComponent extends Component {
 
-  object Sites extends EntityTable[Site]("sites") {
+  object Sites extends ThingTable[Site]("sites") {
     def * =  id.? ~ created ~ label ~ description <> (Site, Site.unapply _)
   }
 
@@ -88,7 +88,7 @@ trait CoreComponent extends Component {
 
   object Sites_HostPorts extends ManyToManyTable[Site,HostPort]("sites", "hostports", Sites, HostPorts)
 
-  object Modules extends EntityTable[Module]("modules") {
+  object Modules extends ThingTable[Module]("modules") {
     def enabled = column[Boolean]("enabled")
     def * =  id.? ~ created ~ label ~ description ~ enabled <> (Module, Module.unapply _)
   }

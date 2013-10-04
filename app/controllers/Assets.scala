@@ -29,9 +29,9 @@ object Assets extends controllers.AssetsBuilder
   }
 
 	/**
-	 * A way to obtain a theme css file just by th ename of the theme
-	 * @param name
-	 * @return
+	 * A way to obtain a theme css file just by the name of the theme
+	 * @param name Name of the theme
+	 * @return path to the theme's .css file
 	 */
 	 def theme(name: String) : Action[AnyContent] = {
 		// TODO: This should validate that the theme exists

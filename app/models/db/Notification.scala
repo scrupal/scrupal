@@ -24,6 +24,7 @@ import scrupal.utils.Icons
 import org.joda.time.{Duration, DateTime}
 import scala.Enumeration
 import scala.slick.lifted.DDL
+import scala.slick.direct.AnnotationMapper.column
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
@@ -123,7 +124,7 @@ case class Alert (
   prefix : String,
   cssClass : String,
   expires: DateTime
-) extends Entity[Alert]
+) extends Thing[Alert]
 {
   /**
    * A shorthand constructor for Alerts.
@@ -171,7 +172,7 @@ trait NotificationComponent extends Component { self : Component =>
   implicit val alertTM = MappedTypeMapper.base[AlertKind.Value,Int]( { alert => alert.id }, { id => AlertKind(id) } )
 
 
-  object Alerts extends EntityTable[Alert]("alerts") {
+  object Alerts extends ThingTable[Alert]("alerts") {
     def message =     column[String]("message")
     def alertKind =   column[AlertKind.Value]("alertKind")
     def iconKind =    column[Icons.Value]("iconKind")
