@@ -26,6 +26,7 @@ object BuildSettings
       "-Xlint",
       "-unchecked",
       "-deprecation",
+      // "-Xlog-implicits", //<-- turn on to debug 'diverging implicit expansion error'
       "-language:implicitConversions",
       "-language:postfixOps",
       "-language:reflectiveCalls",
