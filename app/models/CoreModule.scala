@@ -18,42 +18,31 @@
 package scrupal.models
 
 import scrupal.api._
-import play.api.libs.json._
-import java.net.{URISyntaxException, URI}
 import scrupal.api.Setting
-import scrupal.api.StringType
 import scrupal.api.Trait
-import play.api.libs.json.JsString
-import play.api.libs.json.JsSuccess
-
-
 
 /**
  * One line sentence description here.
  * Further description here.
  */
 object CoreModule extends Module('Core, "Scrupal's Core module for basic site functionality.") {
-  override val registration_id = 'Core
-  override val majorVersion = 0
-  override val minorVersion = 1
-  override val updateVersion = 0
-  val majorIncompatible = 0
-  val minorIncompatible = 0
 
+  val version = Version(0,1,0)
+  val obsoletes = Version(0,0,0)
+
+  /** The core types that Scrupal provides to all modules */
   override val types = Seq[Type](
-    Identifier_t, DomainName_t, URI_t, IPv4Address_t
+    Identifier_t, DomainName_t, EmailAddress_t, URI_t, IPv4Address_t, TcpPort_t
   )
 
+  /** Settings for the core */
   override val settings = Seq[SettingsGroup] (
     SettingsGroup('site, "Settings related to the site that Scrupal is providing.", Seq(
-      Setting('siteName, DomainName_t, "The name of the site Scrupal will be serving"),
+      Setting('name, Identifier_t, "The name of the site Scrupal will be serving"),
+      Setting('domain, DomainName_t, "The domain name at which Scrupal will receive requests"),
       Setting('port, TcpPort_t, "The TCP Port number on which Scrupal should listen")
       )
     )
   )
-
-  override val traits = Seq[Trait]()
-  override val entities = Seq[Entity]()
-  override val events = Events.ValueSet ()
 
 }

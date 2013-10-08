@@ -45,7 +45,7 @@ object URI_t extends Type('URI, "A type for validating URI strings.", TypeKind.C
 
 /** The Scrupal Type for IP version 4 addresses */
 object IPv4Address_t extends StringType('IPv4Address, "A type for IP v4 Addresses",
-  "\"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$".r, 15)
+  "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$".r, 15)
 
 /** The Scrupal Type for TCP port numbers */
 object TcpPort_t extends RangeType('TcpPort, "A type for TCP port numbers", 1, 65535)

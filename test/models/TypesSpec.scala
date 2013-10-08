@@ -15,58 +15,68 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.models
 
 import org.specs2.mutable.Specification
-import scala.collection.immutable.HashMap
+import play.api.libs.json.{JsNumber, JsString}
 
-/** Test specifications for the API Module class */
-class ModuleSpec extends Specification {
-  object Module1 extends Module('Module1, "Module1 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,8,20)
+/**
+ * One line sentence description here.
+ * Further description here.
+ */
+class TypesSpec extends Specification {
+
+  "DomainName_t" should {
+    "accept scrupal.org" in {
+      DomainName_t.validate(JsString("scrupal.org")).asOpt.isDefined must beTrue
+    }
+    "reject ###.999" in {
+      DomainName_t.validate(JsString("###.999")).asOpt.isDefined must beFalse
+    }
   }
 
-  object Module2 extends Module('Module2, "Module2 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,9,1)
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,8,21)
-    )
+  "Identifier_t" should {
+    "accept ***My-Funky.1d3nt1f13r###" in {
+      Identifier_t.validate(JsString("***My-Funky.1d3nt1f13r###")).asOpt.isDefined must beTrue
+    }
+    "reject {NotAnIdentifer}" in {
+      Identifier_t.validate(JsString("{NotAnIdentifer}9")).asOpt.isDefined must beFalse
+    }
   }
 
-  object Module3 extends Module('Module3, "Module3 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,9,1)
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,9,10)
-    )
+  "URI_t" should {
+    "accept http://user:pw@scrupal.org/path?q=where#extra" in {
+      URI_t.validate(JsString("http://user:pw@scrupal.org/path?q=where#extra")).asOpt.isDefined must beTrue
+    }
+    "reject Not\\A@URI" in {
+      URI_t.validate(JsString("Not\\A@URI")).asOpt.isDefined must beFalse
+    }
   }
 
-  "Version" should {
-    "compare correctly with large values" in {
-      val v1 = Version(32767, 2112525145, 0)
-      val v2 = Version(32767, 2112525146, 0)
-      val v3 = Version(0,1,0)
-      v1 < v2 must beTrue
-      v3 < v2 must beTrue
+  "IPv4Address_t" should {
+    "accept 1.2.3.4" in {
+      IPv4Address_t.validate(JsString("1.2.3.4")).asOpt.isDefined must beTrue
+    }
+    "reject 1.2.3.400" in {
+      IPv4Address_t.validate(JsString("1.2.3.400")).asOpt.isDefined must beFalse
     }
   }
-  "Module1" should {
-    "have obsoletes prior to version" in {
-      Module1.obsoletes < Module1.version must beTrue
+
+  "TcpPort_t" should {
+    "accept 8088" in {
+      TcpPort_t.validate(JsNumber(8088)).asOpt.isDefined must beTrue
     }
-    "have same obsolete Version as Module2's dependency" in {
-      Module1.obsoletes == Module2.dependencies('Module1)
+    "reject 65537" in {
+      TcpPort_t.validate(JsString("65537")).asOpt.isDefined must beFalse
     }
-    "have different obsolete Version as Module3's dependency" in {
-      Module1.obsoletes < Module3.dependencies('Module1)
+  }
+
+  "EmailAddress_t" should {
+    "accept someone@scrupal.org" in {
+      EmailAddress_t.validate(JsString("someone@scrupal.org")).asOpt.isDefined must beTrue
     }
-    "be incompatible with Module2" in {
-      Module1.isCompatibleWith(Module2) must beFalse
-    }
-    "be compatible with Module3" in {
-      Module1.isCompatibleWith((Module3)) must beTrue
+    "reject nobody@24" in {
+      EmailAddress_t.validate(JsString("nobody@24")).asOpt.isDefined must beFalse
     }
   }
 }

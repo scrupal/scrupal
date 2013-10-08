@@ -15,58 +15,13 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal
 
-import org.specs2.mutable.Specification
-import scala.collection.immutable.HashMap
+/** The Module API to Scrupal.
+  * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
+  * is simply the "Core" module, this API provides essential everything needed to write Scrupal itself and any extension
+  * to Scrupal through the introduction of a new module.
+  */
+package object api {
 
-/** Test specifications for the API Module class */
-class ModuleSpec extends Specification {
-  object Module1 extends Module('Module1, "Module1 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,8,20)
-  }
-
-  object Module2 extends Module('Module2, "Module2 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,9,1)
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,8,21)
-    )
-  }
-
-  object Module3 extends Module('Module3, "Module3 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,9,1)
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,9,10)
-    )
-  }
-
-  "Version" should {
-    "compare correctly with large values" in {
-      val v1 = Version(32767, 2112525145, 0)
-      val v2 = Version(32767, 2112525146, 0)
-      val v3 = Version(0,1,0)
-      v1 < v2 must beTrue
-      v3 < v2 must beTrue
-    }
-  }
-  "Module1" should {
-    "have obsoletes prior to version" in {
-      Module1.obsoletes < Module1.version must beTrue
-    }
-    "have same obsolete Version as Module2's dependency" in {
-      Module1.obsoletes == Module2.dependencies('Module1)
-    }
-    "have different obsolete Version as Module3's dependency" in {
-      Module1.obsoletes < Module3.dependencies('Module1)
-    }
-    "be incompatible with Module2" in {
-      Module1.isCompatibleWith(Module2) must beFalse
-    }
-    "be compatible with Module3" in {
-      Module1.isCompatibleWith((Module3)) must beTrue
-    }
-  }
 }

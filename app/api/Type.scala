@@ -21,9 +21,12 @@ import play.api.libs.json._
 
 import scala.util.matching.Regex
 import scala.collection.immutable.HashMap
-import play.api.libs.json.JsObject
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsString
 import play.api.libs.json.JsNumber
+import play.api.libs.json.JsObject
+import play.api.data.validation.ValidationError
 
 /**
   * An enumeration for the fundamental kinds of data types that Scrupal can model.
@@ -212,6 +215,24 @@ case class MapType  (
       }
       case x => JsError("JsObject was expected, not " + x.getClass.getSimpleName )
     }
+  }
+}
+
+/** Provides a common paradigm: validation of JsObject content. */
+trait ObjectValidator {
+  /**
+   * This traverses a JsObject and for each field, looks up the associated type in the "structure" and validates that
+   * field with the type.
+   * @return JsSuccess(true) if all the fields of the JsObject value validate correctly
+   */
+  protected def validateObj( value: JsObject)(implicit structure: Map[Symbol,Type]) : JsResult[Boolean] = {
+    if (value.value exists {
+      case (key,data) => !(structure.contains(Symbol(key)) &&
+        structure.get(Symbol(key)).get.validate(data).asOpt.isDefined)
+    })
+      JsError(JsPath(), ValidationError("Not all elements validate"))
+    else
+      JsSuccess(true)
   }
 }
 
