@@ -19,11 +19,9 @@ package scrupal.models
 
 import play.api.test.Helpers._
 import org.specs2.mutable.Specification
-import scala.slick.session.{Session, Database}
 import org.joda.time.DateTime
-import play.api.Logger
 
-import scrupal.test.{WithDBSession, FakeScrupal}
+import scrupal.test.{WithDBSession}
 import scrupal.models.db.Module
 
 /**

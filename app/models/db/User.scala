@@ -20,10 +20,12 @@ package scrupal.models.db
 import org.joda.time.DateTime
 import scrupal.utils.Hash
 import scala.slick.lifted.DDL
-import scala.slick.session.Session
 
 /**
- * Information about a principal as authenticated by an email address and a password.
+ * Information about a Principal, the essential identify of a user of the system. Authentication of Principals requires
+ * either one or more authentication factors. The first factor (something the Principal knows) is embodied in this object
+ * via the password, hasher algorithm, salt and complexity fields. Subsequent authentication factors are dealt with in
+ * separate objects. Each Principal is associated with an email address and a unique identifier (long number).
  * @param id The unique identifier of this Identity
  * @param created The timestamp when this Identity was created
  * @param password The Principal's hashed password
@@ -31,10 +33,26 @@ import scala.slick.session.Session
  * @param salt The salt used in generation of the principal's hashed password
  * @param complexity The complexity factor for the Hasher algorithm
  */
-case class Principal(id: Option[Long], created: DateTime,
-                    email: String, password: String, hasher: String, salt: String = Hash.salt, complexity: Long = 0)
-  extends Identifiable[Principal] {
+case class Principal(
+  override val id: Option[Long],
+  override val created: DateTime,
+  email: String,
+  password: String,
+  hasher: String,
+  salt: String = Hash.salt,
+  complexity: Long = 0
+) extends Identifiable[Principal] {
   def forId(id: Long) = Principal(Some(id), created, email, password, hasher, salt, complexity)
+}
+
+case class ProfileType(
+  override val id: Option[Long],
+  override val created: DateTime,
+  override val label: String,
+  override val description: String,
+  override val modified: DateTime
+) extends ModifiableThing[ProfileType] {
+  def forId(id: Long) = ProfileType(Some(id), created, label, description, modified)
 }
 
 /**
@@ -42,6 +60,13 @@ case class Principal(id: Option[Long], created: DateTime,
  */
 trait UserComponent extends Component { self: Sketch =>
 
+  import profile.simple._
+
+  import CommonTypeMappers._
+
+  /**
+   * The table of principals which are simple identifiable objects.
+   */
   object Principals extends IdentifiableTable[Principal]("identities") {
     def email = column[String]("email")
     def password = column[String]("password")
@@ -51,9 +76,36 @@ trait UserComponent extends Component { self: Sketch =>
     def * = id.? ~ created ~ email ~ password ~ hasher ~ salt ~ complexity  <> (Principal, Principal.unapply _)
   }
 
+  /**
+   * The table of Handles by which Principals are known. This is a NamedIdentifiableTable because it identifies the
+   * Principal with one or more names. A given Principal can have multiple names and a given name can identify multiple
+   * Principals.
+   */
   object Handles extends NamedIdentifiableTable[Principal]("handles", Principals) {
     def handles(identity: Long)(implicit s: Session) = findKeys(identity)
     def principals(handle: String)(implicit s: Session) = findValues(handle)
+  }
+
+  /**
+   * The table of temporary tokens by which a user is identified.
+   */
+  object Tokens extends NamedIdentifiableTable[Principal]("tokens", Principals) {
+    def expiration = column[DateTime]("expiration")
+    def tokens(principal: Long)(implicit s: Session) = findKeys(principal)
+    def principals(token: String)(implicit s: Session) = findValues(token)
+
+    lazy val unexpiredQuery = for {
+      k <- Parameters[String];
+      token <- this if token.key === k && token.expiration > DateTime.now();
+      p <- Principals if token.value === p.id
+    } yield p.id
+
+    def unexpired(token: String)(implicit s: Session) : List[Long] = { unexpiredQuery(token).list }
+  }
+
+
+  object ProfileTypes extends ModifiableThingTable[ProfileType]("profile_types") {
+    def * = id.? ~ created ~ label ~ description ~ modified <> (ProfileType.tupled, ProfileType.unapply _)
   }
 
   def userDDL : DDL = Principals.ddl ++ Handles.ddl

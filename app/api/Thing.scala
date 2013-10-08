@@ -15,35 +15,47 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
-import java.sql.Timestamp
-import org.joda.time.DateTimeZone._
-import scala.util.matching.Regex
 
 /**
- * This object just collects together a variety of Slick TypeMappers that are used to convert between database
- * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
- * when they are used. To use them just "import CommonTypeMappers._"
+ * A piece of information that can be created within Scrupal.
+ * Creatable maintain an identifier (long value) that is unique for all values of the Creatable's leaf type.
  */
-object CommonTypeMappers {
-
-
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-    { d => new Timestamp( d getMillis ) },
-    { t => new DateTime (t getTime, UTC)  }
-  )
-
-  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
-    { r => r.pattern.pattern() },
-    { s => new Regex(s) }
-  )
-
-  implicit lazy val essentialDatumKindsMapper = MappedTypeMapper.base[EssentialDatumKinds.Type,Short] (
-    { bk => bk.id.toShort },
-    { s => EssentialDatumKinds(s) }
-  )
-
+trait Creatable {
+  val id : Option[Long] = None
+  val created : Option[DateTime] = None
+  def exists = id.isDefined && created.isDefined
 }
+
+/**
+ * A trait for
+ */
+trait Modifiable {
+  val modified : Option[DateTime] = None
+  def isModified = modified.isDefined
+}
+
+trait Nameable {
+  val name : Symbol
+  def isNamed : Boolean = ! name.name.isEmpty
+}
+
+trait Describable {
+  val description : String
+  def isDescribed : Boolean = ! description.isEmpty
+}
+
+abstract class CreatableThing(
+  override val id : Option[Long] = None,
+  override val created : Option[DateTime] = Some(DateTime.now())
+) extends Creatable
+
+abstract class Thing(
+  override val name: Symbol,
+  override val description: String
+) extends CreatableThing with Modifiable with Nameable with Describable
+
+
+

@@ -29,10 +29,10 @@ class RegistrationSpec extends Specification {
     "allow Registrable to be mixed in" in {
       abstract class Test_Registrable extends Registrable
       object one extends Test_Registrable {
-        override val id = "one"
+        override val registration_id = 'one
       }
       object two extends Test_Registrable {
-        override val id = "two"
+        override val registration_id = 'two
       }
       object registry extends Registry[Test_Registrable] {
         override val registryName = "Test-Registry"

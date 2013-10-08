@@ -15,35 +15,57 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.MappedTypeMapper
 import org.joda.time.DateTime
-import java.sql.Timestamp
-import org.joda.time.DateTimeZone._
-import scala.util.matching.Regex
+import org.specs2.mutable.Specification
 
 /**
- * This object just collects together a variety of Slick TypeMappers that are used to convert between database
- * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
- * when they are used. To use them just "import CommonTypeMappers._"
+ * One line sentence description here.
+ * Further description here.
  */
-object CommonTypeMappers {
+class ThingSpec extends Specification {
+  case class TestCreatable(
+    override val id : Option[Long] = Some(1),
+    override val created : Option[DateTime] = Some(DateTime.now())
+  ) extends Creatable
 
+  "Creatable" should {
+    "report existence with both id and timestamp" in {
+      val t = TestCreatable()
+      t.exists must beTrue
+    }
 
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-    { d => new Timestamp( d getMillis ) },
-    { t => new DateTime (t getTime, UTC)  }
-  )
+    "report non-existence without id" in {
+      val t = TestCreatable(None)
+      t.exists must beFalse
+    }
 
-  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
-    { r => r.pattern.pattern() },
-    { s => new Regex(s) }
-  )
+    "report non-existence without timestamp" in {
+      val t = TestCreatable( created = None )
+      t.exists must beFalse
+    }
+  }
 
-  implicit lazy val essentialDatumKindsMapper = MappedTypeMapper.base[EssentialDatumKinds.Type,Short] (
-    { bk => bk.id.toShort },
-    { s => EssentialDatumKinds(s) }
-  )
+  case class TestModifiable(override val modified: Option[DateTime] = Some(DateTime.now()) ) extends Modifiable
 
+  "Modifiable" should {
+    "report modification when changed" in {
+      val t = TestModifiable()
+      t.isModified must beTrue
+    }
+    "report non-modification when unchanged" in {
+      val t= TestModifiable(None)
+      t.isModified must beFalse
+    }
+  }
+
+  case class TestThing(override val name: Symbol, override val description: String) extends Thing(name, description)
+
+  "Thing" should {
+    "instantiate with simple arguments" in {
+      val t = TestThing('test, "Testing")
+      t.isNamed && t.isDescribed must beTrue
+    }
+  }
 }

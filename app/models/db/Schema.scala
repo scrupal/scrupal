@@ -52,8 +52,8 @@ trait Sketch {
  * @tparam T
  */
 trait Identifiable[T <: Identifiable[T]] extends scala.Equals {
-  val id: Option[Long]
-  val created: DateTime
+  val id: Option[Long] = None
+  val created: DateTime = DateTime.now()
   def forId(id: Long) : T
   override def equals(entity: Any) : Boolean = {
     entity match {
@@ -67,8 +67,10 @@ trait Identifiable[T <: Identifiable[T]] extends scala.Equals {
 }
 
 trait Modifiable[T <: Modifiable[T]] extends Identifiable[T]  {
-  val changed: DateTime
+  val modified: DateTime
 }
+
+
 
 /**
  * Most tables that we define are some sort of thing with a name and a description in the database and certain other
@@ -107,7 +109,7 @@ trait Component extends Sketch { this : Sketch =>
   // Many of the subclasses will require the common type mappers so we import them now
   import CommonTypeMappers._
 
-  abstract class IdentifiableTable[C <:Identifiable[C]](tableName: String) extends Table[C](schema, tableName) {
+  abstract class IdentifiableTable[C <:Identifiable[C]](val tname: String) extends Table[C](schema, tname ) {
     def id = column[Long](tableName + "_id", O.PrimaryKey, O.AutoInc);
 
     def created = column[DateTime]("created")
@@ -133,6 +135,8 @@ trait Component extends Sketch { this : Sketch =>
       this.filter(_.id === entity.id) update(entity)
       entity
     }
+
+    def delete(entity: C)(implicit s: Session) : Boolean = delete(entity.id)
 
     // -- operations on rows
     def delete(id: Long)(implicit s: Session ) : Boolean =  {
@@ -164,11 +168,11 @@ trait Component extends Sketch { this : Sketch =>
    */
   abstract class ThingTable[C <:Thing[C]](tableName: String)  extends IdentifiableTable[C](tableName) {
 
-    def label = column[String]("label", O.NotNull)
+    def label = column[String](tableName + "_label", O.NotNull)
 
     def label_index = index(tableName + "_label_index", label, unique=true)
 
-    def description = column[String]("description", O.NotNull)
+    def description = column[String](tableName + "_description", O.NotNull)
 
     lazy val fetchByNameQuery = for { l <- Parameters[String] ; e <- this if e.label === l } yield e
 
@@ -178,11 +182,20 @@ trait Component extends Sketch { this : Sketch =>
 
   abstract class ModifiableThingTable[C <: ModifiableThing[C]](tableName: String) extends ThingTable[C](tableName) {
 
-    def changed = column[DateTime]("changed", O.NotNull)
+    def modified = column[DateTime](tableName + "_modified", O.NotNull)
 
-    def changed_index = index(tableName + "_changed_index", changed, unique=false)
+    def modified_index = index(tableName + "_modified_index", modified, unique=false)
 
-    lazy val modifiedSinceQuery = for { chg <- Parameters[DateTime]; mt <- this if mt.changed >= chg } yield mt
+    override def update(thing: C)(implicit s: Session ) : C = {
+      val selected = this.where(_.id === thing.id)
+      selected.update(thing)
+      selected.map(t => t.modified).update(DateTime.now())
+      thing
+    }
+
+
+
+    lazy val modifiedSinceQuery = for { chg <- Parameters[DateTime]; mt <- this if mt.modified > chg } yield mt
 
     def modifiedSince(chg: DateTime)(implicit s: Session) : List[C] = modifiedSinceQuery(chg).list
 
@@ -192,16 +205,19 @@ trait Component extends Sketch { this : Sketch =>
    * The base class of all correlation tables.
    * This allows many-to-many relationships to be established by simply listing the pairs of IDs
    */
-  abstract class ManyToManyTable[A <: Identifiable[A], B <: Identifiable[B] ] (
+  abstract class ManyToManyTable[A <: Identifiable[A], B <: Identifiable[B] ] (tableName: String,
       nameA: String, nameB: String, tableA: IdentifiableTable[A], tableB:  IdentifiableTable[B])
-      extends Table[(Long,Long)](schema, nameA + "_" + nameB) {
-    def a_id = column[Long](nameA + "_id")
-    def b_id = column[Long](nameB + "_id")
-    def a_fkey = foreignKey(nameA + "_fkey", a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
-    def b_fkey = foreignKey(nameB + "_fkey", b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
-    def selectAssociatedA(b: Long) = for ( c <- this if c.b_id === b ) yield c.a_id
-    def selectAssociatedB(a: Long) = for ( c <- this if c.a_id === a ) yield c.b_id
+      extends Table[(Long,Long)](schema, tableName) {
+    def a_id = column[Long](tableName + "_" + nameA + "_id")
+    def b_id = column[Long](tableName + "_" + nameB + "_id")
+    def a_fkey = foreignKey(tableName + "_" + nameA + "_fkey", a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def b_fkey = foreignKey(tableName + "_" + nameB + "_fkey", b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
+    lazy val findBsQuery = for { aId <- Parameters[Long]; a <- this if a.a_id === aId; b <- tableB if b.id === a.b_id } yield b
+    lazy val findAsQuery = for { bId <- Parameters[Long]; b <- this if b.b_id === bId; a <- tableA if a.id === b.a_id } yield a
+    def selectAssociatedA(b: B)(implicit s: Session) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
+    def selectAssociatedB(a: A)(implicit s: Session) : List[B] = { if (a.id.isDefined) findBsQuery(a.id.get).list else List() }
     def * = a_id ~ b_id
+
   };
 
   /**
@@ -209,17 +225,17 @@ trait Component extends Sketch { this : Sketch =>
    * This allows a
    */
   abstract class NamedIdentifiableTable[ReferentType <: Identifiable[ReferentType]](
-      name: String, valueTable: IdentifiableTable[ReferentType])
-      extends Table[(String,Long)](schema, name) {
-    def key = column[String](name + "_key")
-    def value = column[Long](name + "_value")
-    def value_fkey = foreignKey(name + "_value_fkey", value, valueTable)(_.id, onDelete = ForeignKeyAction.Cascade)
-    def key_value_index = index(name + "_key_value_index", on=(key, value), unique=true)
+      tableName: String, valueTable: IdentifiableTable[ReferentType])
+      extends Table[(String,Long)](schema, tableName) {
+    def key = column[String](tableName + "_key")
+    def value = column[Long](tableName + "_value")
+    def value_fkey = foreignKey(tableName + "_value_fkey", value, valueTable)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def key_value_index = index(tableName + "_key_value_index", on=(key, value), unique=true)
     def * = key ~ value
 
-    def insert(k: String, v: Long)( implicit s: Session ) : Unit = {
-     insert( (k,v) )
-    }
+    def insert( pair: (String, Long) )( implicit s: Session)  = { * insert pair }
+
+    def insert(k: String, v: Long)( implicit s: Session ) : Unit = insert( Tuple2(k, v) )
 
     // -- operations on rows
     def delete(k: String)(implicit s: Session ) : Boolean =  {

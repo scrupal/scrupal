@@ -15,35 +15,38 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.MappedTypeMapper
-import org.joda.time.DateTime
-import java.sql.Timestamp
-import org.joda.time.DateTimeZone._
-import scala.util.matching.Regex
+import org.specs2.mutable.Specification
+import play.api.libs.json.{JsError, JsSuccess, JsString, Json}
 
-/**
- * This object just collects together a variety of Slick TypeMappers that are used to convert between database
- * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
- * when they are used. To use them just "import CommonTypeMappers._"
- */
-object CommonTypeMappers {
+/** Test that the Setting and SettingsGroup classes do their jobs correctly */
+class SettingsSpec extends Specification {
+  val fooType = StringType('TestType, "Foo", "^foo$".r, 32)
 
+  "Settings" should {
+    "validate simple foo pattern" in {
+      val s = Setting('name, fooType, "Setting description")
+      s.validate( JsString("foo")).get must beTrue
+    }
+  }
 
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-    { d => new Timestamp( d getMillis ) },
-    { t => new DateTime (t getTime, UTC)  }
-  )
+  "SettingsGroup" should {
+    "allow simple construction" in {
+      val nested = SettingsGroup('group, "Group description", Seq(
+        Setting('name, fooType, "Setting description")
+      ))
 
-  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
-    { r => r.pattern.pattern() },
-    { s => new Regex(s) }
-  )
-
-  implicit lazy val essentialDatumKindsMapper = MappedTypeMapper.base[EssentialDatumKinds.Type,Short] (
-    { bk => bk.id.toShort },
-    { s => EssentialDatumKinds(s) }
-  )
+      val result = nested.validate(
+        Json.obj( "group" -> Json.obj(
+          "name" -> "foo")
+        )
+      ) match {
+        case x: JsSuccess[Boolean] => x
+        case y: JsError => { println(y); y }
+      }
+      result.getOrElse(false) must beTrue
+    }
+  }
 
 }

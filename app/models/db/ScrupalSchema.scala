@@ -23,11 +23,11 @@ import scala.slick.lifted.DDL
  * The basic schema for Scrupal. This is composed by merging together the various Components.
  */
 class ScrupalSchema(sketch: Sketch) extends Schema (sketch)
-  with CoreComponent with UserComponent  with NotificationComponent
+  with CoreComponent with UserComponent with EntityComponent with NotificationComponent
 {
   // Super class Schema requires us to provide the DDL from our tables
   override val ddl : DDL = {
-    coreDDL ++ userDDL ++ notificationDDL
+    coreDDL ++ userDDL ++ entityDDL ++ notificationDDL
   }
 
 }

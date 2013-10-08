@@ -25,7 +25,7 @@ import play.api.Logger
  * Mix this in to anything you want to register and define the "id"; then pass that object to the Registrar you want
  */
 trait Registrable {
-  def id: String
+  def registration_id: Symbol
 }
 
 /**
@@ -36,22 +36,22 @@ trait Registrable {
 trait Registry[T <: Registrable] {
   protected val registryName = "Registry"
   protected val registrantsName = "Registrable"
-  private val registrants = new HashMap[String, T]()
+  private val registrants = new HashMap[Symbol, T]()
 
   def register(thing : T) = {
-    Logger.debug("Registering " + thing.getClass().getCanonicalName() + " as " + thing.id + " with registrants = " +
+    Logger.debug("Registering " + thing.getClass().getCanonicalName() + " as " + thing.registration_id.name + " with registrants = " +
       registrants.map( x => x._1 ))
-    if (registrants.contains(thing.id)) {
+    if (registrants.contains(thing.registration_id)) {
       throw new IllegalArgumentException(
-        "There is already a %s named %s registered with %s".format(registrantsName, thing.id, registryName)
+        "There is already a %s named %s registered with %s".format(registrantsName, thing.registration_id.name, registryName)
       )
     }
-    registrants.put(thing.id, thing)
+    registrants.put(thing.registration_id, thing)
   }
 
-  def isRegistered(name: String) = registrants.contains(name)
-  def unRegister(thing: T) = registrants -= thing.id
-  def getRegistrant(name: String) : T  = {
+  def isRegistered(name: Symbol) = registrants.contains(name)
+  def unRegister(thing: T) = registrants -= thing.registration_id
+  def getRegistrant(name: Symbol) : T  = {
     registrants.get(name).getOrElse {
       throw new IllegalArgumentException(
         "There is no %s named %s registered with %s".format(registrantsName, name, registryName)
@@ -65,7 +65,7 @@ trait Registry[T <: Registrable] {
 
   def pick : T = {
     val random_index = rand.nextInt(registrants.size)
-    val key : String = registrants.keySet.toArray.apply(random_index)
+    val key : Symbol = registrants.keySet.toArray.apply(random_index)
     getRegistrant(key)
   }
 }

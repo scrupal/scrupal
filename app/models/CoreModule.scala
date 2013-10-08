@@ -15,35 +15,45 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.models
 
-import scala.slick.lifted.MappedTypeMapper
-import org.joda.time.DateTime
-import java.sql.Timestamp
-import org.joda.time.DateTimeZone._
-import scala.util.matching.Regex
+import scrupal.api._
+import play.api.libs.json._
+import java.net.{URISyntaxException, URI}
+import scrupal.api.Setting
+import scrupal.api.StringType
+import scrupal.api.Trait
+import play.api.libs.json.JsString
+import play.api.libs.json.JsSuccess
+
+
 
 /**
- * This object just collects together a variety of Slick TypeMappers that are used to convert between database
- * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
- * when they are used. To use them just "import CommonTypeMappers._"
+ * One line sentence description here.
+ * Further description here.
  */
-object CommonTypeMappers {
+object CoreModule extends Module('Core, "Scrupal's Core module for basic site functionality.") {
+  override val registration_id = 'Core
+  override val majorVersion = 0
+  override val minorVersion = 1
+  override val updateVersion = 0
+  val majorIncompatible = 0
+  val minorIncompatible = 0
 
-
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-    { d => new Timestamp( d getMillis ) },
-    { t => new DateTime (t getTime, UTC)  }
+  override val types = Seq[Type](
+    Identifier_t, DomainName_t, URI_t, IPv4Address_t
   )
 
-  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
-    { r => r.pattern.pattern() },
-    { s => new Regex(s) }
+  override val settings = Seq[SettingsGroup] (
+    SettingsGroup('site, "Settings related to the site that Scrupal is providing.", Seq(
+      Setting('siteName, DomainName_t, "The name of the site Scrupal will be serving"),
+      Setting('port, TcpPort_t, "The TCP Port number on which Scrupal should listen")
+      )
+    )
   )
 
-  implicit lazy val essentialDatumKindsMapper = MappedTypeMapper.base[EssentialDatumKinds.Type,Short] (
-    { bk => bk.id.toShort },
-    { s => EssentialDatumKinds(s) }
-  )
+  override val traits = Seq[Trait]()
+  override val entities = Seq[Entity]()
+  override val events = Events.ValueSet ()
 
 }

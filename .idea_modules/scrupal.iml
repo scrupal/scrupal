@@ -24,7 +24,6 @@
       <sourceFolder url="file://$MODULE_DIR$/../test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../test/resources" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/../target/resolution-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/api" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/cache" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/classes" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/classes_managed" />
@@ -33,7 +32,6 @@
       <excludeFolder url="file://$MODULE_DIR$/../target/specs2-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../target/streams" />
       <excludeFolder url="file://$MODULE_DIR$/../target/test-reports" />
-      <excludeFolder url="file://$MODULE_DIR$/../target/universal" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

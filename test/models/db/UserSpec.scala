@@ -57,8 +57,29 @@ class UserSpec extends Specification
       h must beEqualTo("nobody")
       Handles.delete("nobody") must beTrue
     }
-    "allow many-to-many relations with Principal" in {
-      success
+    "allow many-to-many relations with Principal" in new WithDBSession {
+      import schema._
+      val p1 = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+      val p2 = new Principal(None, DateTime.now(), "exempli@gratis.org", "openpw",  HasherKinds.SCrypt.toString() )
+      val p1id = Principals.upsert(p1).id.get;
+      val p2id = Principals.insert(p2).id.get;
+      Handles.insert("nobody", p1id)
+      Handles.insert("nowhere", p1id)
+      Handles.insert("exempli", p2id)
+      Handles.insert("gratis", p2id)
+      Handles.insert("nobody", p2id)
+      Handles.insert("nowhere", p2id)
+      Handles.insert("exempli", p1id)
+      Handles.insert("gratis", p1id)
+
+      Handles.principals("nobody").count(p => true) must beEqualTo(2)
+      Handles.principals("nowhere").count(p => true) must beEqualTo(2)
+      Handles.principals("exempli").count(p => true) must beEqualTo(2)
+      Handles.principals("gratis").count(p => true) must beEqualTo(2)
+      Handles.handles(p1id).count(p => true) must beEqualTo(4)
+      Handles.handles(p2id).count(p => true) must beEqualTo(4)
+      Handles.handles(p1id).count(p => p.contains("n")) must beEqualTo(2)
+      Handles.handles(p2id).count(p => p.contains("e")) must beEqualTo(2)
     }
   }
 }

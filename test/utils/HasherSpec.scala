@@ -33,7 +33,7 @@ class HasherSpec extends Specification {
 
   "Hasher" should {
     "pick random hashers" in {
-      val list : Seq[String] = for ( i <- 1 to 10 ) yield Hash.pick.id
+      val list : Seq[Symbol] = for ( i <- 1 to 10 ) yield Hash.pick.registration_id
       list.distinct.size >= 3 must beTrue
     }
 

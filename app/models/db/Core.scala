@@ -19,7 +19,8 @@ package scrupal.models.db
 
 import org.joda.time.DateTime
 import scala.slick.lifted.DDL
-import scala.slick.direct.AnnotationMapper.column
+import scala.util.matching.Regex
+
 
 /**
  * Information about a site hosted by Scrupal
@@ -51,12 +52,6 @@ case class HostPort(
   def forId(id: Long) = HostPort(Some(id), created, host, port)
 }
 
-case class Site_HostPort (
-  site_id : Long,
-  hostport_id : Long
-)
-;
-
 /**
  * Representation of a module in the database. Modules are plug-in extensions to Scrupal.
  * @param id
@@ -64,7 +59,7 @@ case class Site_HostPort (
  * @param label
  * @param description A brief description of the module
  */
-case class Module(
+case class Module (
   override val id: Option[Long],
   override val created: DateTime,
   override val label: String,
@@ -74,23 +69,43 @@ case class Module(
   def forId(id: Long) = Module(Some(id), created, label, description, enabled)
 }
 
+case class Setting (
+  override val id: Option[Long],
+  override val created: DateTime,
+  name : String,
+  kind : Long
+) extends Identifiable[Setting] {
+  def forId(id: Long) = Setting(Some(id), created, name, kind)
+}
+
+
 trait CoreComponent extends Component {
 
+  // Get the TypeMapper for DateTime
+  import CommonTypeMappers._
+
   object Sites extends ThingTable[Site]("sites") {
-    def * =  id.? ~ created ~ label ~ description <> (Site, Site.unapply _)
+    def * =  id.? ~ created ~ label ~ description <> (Site.tupled, Site.unapply _)
   }
 
   object HostPorts extends IdentifiableTable[HostPort]("hostports") {
     def host = column[String]("host")
     def port = column[Int]("port")
-    def * = id.? ~ created ~ host ~ port <> (HostPort, HostPort.unapply _)
+    def * = id.? ~ created ~ host ~ port <> (HostPort.tupled, HostPort.unapply _)
   }
 
-  object Sites_HostPorts extends ManyToManyTable[Site,HostPort]("sites", "hostports", Sites, HostPorts)
+  object Sites_HostPorts extends ManyToManyTable[Site,HostPort]("HostPortsOfSites", "sites", "hostports", Sites, HostPorts)
 
   object Modules extends ThingTable[Module]("modules") {
     def enabled = column[Boolean]("enabled")
-    def * =  id.? ~ created ~ label ~ description ~ enabled <> (Module, Module.unapply _)
+    def * =  id.? ~ created ~ label ~ description ~ enabled <> (Module.tupled, Module.unapply _)
+  }
+
+  object Settings extends IdentifiableTable[Setting]("settings") {
+    def name = column[String](tableName + "_name")
+    def name_index = index(tableName + "_name_index", name, unique=true)
+    def kind = column[Long](tableName + "_kind")
+    def * = id.? ~ created ~ name ~ kind <> (Setting.tupled, Setting.unapply _ )
   }
 
   def coreDDL : DDL = Sites.ddl ++ HostPorts.ddl ++ Sites_HostPorts.ddl ++ Modules.ddl

@@ -15,35 +15,43 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.models
 
-import scala.slick.lifted.MappedTypeMapper
-import org.joda.time.DateTime
-import java.sql.Timestamp
-import org.joda.time.DateTimeZone._
-import scala.util.matching.Regex
+import java.net.{URISyntaxException, URI}
 
-/**
- * This object just collects together a variety of Slick TypeMappers that are used to convert between database
- * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
- * when they are used. To use them just "import CommonTypeMappers._"
- */
-object CommonTypeMappers {
+import play.api.libs.json._
 
+import scrupal.api._
 
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-    { d => new Timestamp( d getMillis ) },
-    { t => new DateTime (t getTime, UTC)  }
-  )
+/** The Scrupal Type for the identifier of things */
+object Identifier_t extends StringType('Identifier, "A type for Scrupal Identifiers", "^[-A-Za-z0-9_+=|!.^@#%*?]+$".r,64)
 
-  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
-    { r => r.pattern.pattern() },
-    { s => new Regex(s) }
-  )
+/** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
+object DomainName_t extends StringType('DomainName, "A type for domain names",
+  "^(([a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9])\\.){0,126}([A-Za-z0-9][-A-Za-z0-9]*[A-Za-z0-9])$".r, 253)
 
-  implicit lazy val essentialDatumKindsMapper = MappedTypeMapper.base[EssentialDatumKinds.Type,Short] (
-    { bk => bk.id.toShort },
-    { s => EssentialDatumKinds(s) }
-  )
-
+/** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
+object URI_t extends Type('URI, "A type for validating URI strings.", TypeKind.CustomKind) {
+  override def validate(value: JsValue) : JsResult[Boolean]= {
+    value match {
+      case v: JsString => {
+        try { new URI( v.value ); JsSuccess(true) }
+        catch { case xcptn: URISyntaxException => JsError(xcptn.getMessage) }
+      }
+      case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
+    }
+  }
 }
+
+/** The Scrupal Type for IP version 4 addresses */
+object IPv4Address_t extends StringType('IPv4Address, "A type for IP v4 Addresses",
+  "\"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$".r, 15)
+
+/** The Scrupal Type for TCP port numbers */
+object TcpPort_t extends RangeType('TcpPort, "A type for TCP port numbers", 1, 65535)
+
+/** The Scrupal Type for Email addresses */
+object EmailAddress_t extends StringType('EmailAddress, "An email address",
+  "^([a-z0-9_.-]+)@([-0-9a-z.]+)\\.([a-z.]{2,6})$".r, 253)
+
+
