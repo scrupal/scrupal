@@ -39,12 +39,27 @@ case class Version(
   minor : Int,
   update: Int
 ) extends Ordered[Version] {
+
+  /** Compare to Version instances
+    * Comparison only uses the minor and major numbers because updates are considered to be bug fixes that do not
+    * provide new functionality but just correct existing functionality. Consequently versions with the same major
+    * and minor numbers will yield 0 from this function
+    * @param that The Version to compare `this` to
+    * @return <0 if `this` < `that`, 0 if they are equal, > 0 if `this` > `that`
+    */
+
   override def compare(that: Version) : Int = {
     if (this.major != that.major)
       this.major - that.major
     else
       this.minor - that.minor
   }
+
+  /**
+   *
+   * @param other
+   * @return
+   */
   override def equals(other: Any) = {
     other match {
       case v: Version => {
@@ -55,6 +70,13 @@ case class Version(
     }
   }
 
+  /** Compute hashcode for versions, not that we'll need it much.
+    * Since we don't expect major version numbers to be very large, just retain their low order bits and shift them
+    * up into the high order bits of the result. We reserve most of the bits for the minor number
+    * @return integer hashcode for Versions
+    */
   override def hashCode : Int = major << 24 + minor << 8 + update
+
+  /** Generate the typical dot notation for versions */
   override def toString = major + "." + minor + "." + update
 }

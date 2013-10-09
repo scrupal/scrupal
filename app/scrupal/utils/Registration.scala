@@ -38,7 +38,7 @@ trait Registry[T <: Registrable] {
   protected val registrantsName = "Registrable"
   private val registrants = new HashMap[Symbol, T]()
 
-  def register(thing : T) = {
+  def register(thing : T) : Unit = {
     Logger.debug("Registering " + thing.getClass().getCanonicalName() + " as " + thing.registration_id.name + " with registrants = " +
       registrants.map( x => x._1 ))
     if (registrants.contains(thing.registration_id)) {

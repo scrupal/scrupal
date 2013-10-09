@@ -20,16 +20,12 @@ package scrupal.api
 import scala.slick.driver.ExtendedProfile
 import scala.slick.lifted.{ForeignKeyAction, DDL}
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone.UTC
 import play.api.Logger
 import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery0, StaticQuery}
 import scala.slick.direct.AnnotationMapper.column
 import java.sql.Timestamp
-import org.joda.time.DateTimeZone._
-import scala.slick.direct.AnnotationMapper.column
-import scala.Some
-import scala.Tuple2
-import scrupal.utils.Pluralizer
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -274,7 +270,7 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
  * The Sketch for H2 Database
  * @param schema - optional schema name for the profile
  */
-case class H2Profile(override val schema: Option[String] = None ) extends Sketch
+case class H2Sketch(override val schema: Option[String] = None ) extends Sketch
 {
   override val profile: ExtendedProfile = H2Driver
   override val driverClass : String = "org.h2.Driver"
@@ -285,7 +281,7 @@ case class H2Profile(override val schema: Option[String] = None ) extends Sketch
  * The Sketch for H2 Database
  * @param schema - optional schema name for the profile
  */
-case class MySQLProfile (override val schema: Option[String] = None )  extends Sketch {
+case class MySQLSketch (override val schema: Option[String] = None )  extends Sketch {
   override val profile: ExtendedProfile = MySQLDriver
   override val driverClass : String = "com.mysql.jdbc.Driver"
 }
@@ -294,7 +290,7 @@ case class MySQLProfile (override val schema: Option[String] = None )  extends S
  * The Sketch for SQLite Database
  * @param schema - optional schema name for the profile
  */
-class SQLiteProfile (override val schema: Option[String] = None ) extends Sketch {
+class SQLiteSketch (override val schema: Option[String] = None ) extends Sketch {
   override val profile: ExtendedProfile = SQLiteDriver
   override val driverClass : String = "org.sqlite.JDBC"
 
@@ -304,7 +300,7 @@ class SQLiteProfile (override val schema: Option[String] = None ) extends Sketch
  * The Sketch for Postgres Database
  * @param schema - optional schema name for the profile
  */
-class PostgresProfile (override val schema: Option[String] = None ) extends Sketch {
+class PostgresSketch (override val schema: Option[String] = None ) extends Sketch {
   override val profile: ExtendedProfile = PostgresDriver
   override val driverClass : String = "org.postgresql.Driver"
 

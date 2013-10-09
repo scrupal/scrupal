@@ -32,10 +32,10 @@ object DB {
    */
   def sketch4URL(url: String, schema: Option[String] = None ) : Sketch = {
     url match {
-      case s if s.startsWith("jdbc:h2:") => return new H2Profile(schema)
-      case s if s.startsWith("jdbc:mysql:") => return new MySQLProfile(schema)
-      case s if s.startsWith("jdbc:sqllite:") => return new SQLiteProfile(schema)
-      case s if s.startsWith("jdbc:postgresql:") => return new PostgresProfile(schema)
+      case s if s.startsWith("jdbc:h2:") => return new H2Sketch(schema)
+      case s if s.startsWith("jdbc:mysql:") => return new MySQLSketch(schema)
+      case s if s.startsWith("jdbc:sqllite:") => return new SQLiteSketch(schema)
+      case s if s.startsWith("jdbc:postgresql:") => return new PostgresSketch(schema)
       case _ => throw new UnsupportedOperationException("JDBC Url (" + url + ") is not for a supported database.")
     }
   }

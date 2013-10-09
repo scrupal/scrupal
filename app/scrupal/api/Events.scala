@@ -19,7 +19,6 @@ package scrupal.api
 
 import play.api.mvc.RequestHeader
 
-
 /** The categories of events by their applicability */
 object EventCategory extends Enumeration {
   type Type = Value
@@ -41,10 +40,11 @@ case class Scrupal_Start() extends Event(EventCategory.Scrupal, 'Start)
 case class Scrupal_Stop() extends Event(EventCategory.Scrupal, 'Stop)
 
 // Request related events below here
+/** Abstract event class for events that concern themselves with HTTP requests */
 abstract class RequestEvent(
   val request: RequestHeader,
-  category : EventCategory.Type,
-  name : Symbol
+  override val category : EventCategory.Type,
+  override val name : Symbol
 ) extends Event(category, name)
 
 /** An event that occurs when an error (exception, i.e. HTTP 500) is thrown during request processing */
@@ -63,19 +63,15 @@ case class Request_BadRequest(override val request: RequestHeader)
 case class Request_Handled(override val request: RequestHeader)
   extends RequestEvent(request, EventCategory.Request, 'Handled)
 
-abstract class HandlerFor[E <: Event]{
-  def handle(event : E)
-}
-
-/** An enumeration of the events in which a Module can register interest */
-object Events extends Enumeration {
-  type Type = Value
-  val Scrupal_Start = Value // When Scrupal initializes
-  val Scrupal_Stop = Value
-  val Cache_Lookup = Value
-  val Entity_Insert = Value
-  val Entity_Update = Value
-  val Entity_Delete = Value
-  val Module_Enable = Value
-  val Module_Disable = Value
+abstract class HandlerFor[E <: Event](
+  val category : EventCategory.Type,
+  val name : Symbol
+) {
+  def check(event: E) = {
+    require(event.category == category, "Event category " + event.category + " for Handler requiring " + category)
+    require(event.name == name, "Event " + event.name + " for handler requiring " + name)
+  }
+  def handle(event : E) = {
+    check(event)
+  }
 }

@@ -39,8 +39,8 @@ class TypesSpec extends Specification {
     "accept ***My-Funky.1d3nt1f13r###" in {
       Identifier_t.validate(JsString("***My-Funky.1d3nt1f13r###")).asOpt.isDefined must beTrue
     }
-    "reject {NotAnIdentifer}" in {
-      Identifier_t.validate(JsString("{NotAnIdentifer}9")).asOpt.isDefined must beFalse
+    "reject 'Not An Identifier'" in {
+      Identifier_t.validate(JsString("Not An Identifier ")).asOpt.isDefined must beFalse
     }
   }
 
@@ -50,6 +50,15 @@ class TypesSpec extends Specification {
     }
     "reject Not\\A@URI" in {
       URI_t.validate(JsString("Not\\A@URI")).asOpt.isDefined must beFalse
+    }
+  }
+
+  "JDBC_URL_t" should {
+    "accept jdbc:h2:mem:test_url" in {
+      JDBC_URL_t.validate(JsString("jdbc:h2:mem:test_url")).asOpt.isDefined must beTrue
+    }
+    "reject http://user:pw@scrupal.org/path?q=where#extra" in {
+      JDBC_URL_t.validate(JsString("http://user:pw@scrupal.org/path?q=where#extra")).asOpt.isDefined must beFalse
     }
   }
 
@@ -73,10 +82,26 @@ class TypesSpec extends Specification {
 
   "EmailAddress_t" should {
     "accept someone@scrupal.org" in {
+      println("Email Regex: " + EmailAddress_t.regex.pattern.pattern)
       EmailAddress_t.validate(JsString("someone@scrupal.org")).asOpt.isDefined must beTrue
     }
-    "reject nobody@24" in {
-      EmailAddress_t.validate(JsString("nobody@24")).asOpt.isDefined must beFalse
+    "reject white space" in {
+      EmailAddress_t.validate(JsString(" \t\r\n")).asOpt.isDefined must beFalse
+    }
+    "reject nobody@ scrupal dot org" in {
+      EmailAddress_t.validate(JsString("nobody@ 24 dot com")).asOpt.isDefined must beFalse
+    }
+    "reject no body@scrupal.org" in {
+      EmailAddress_t.validate(JsString("no body@scrupal.org")).asOpt.isDefined must beFalse
+    }
+  }
+
+  "LegalName_t" should {
+    "accept 'My Legal Name'" in {
+      LegalName_t.validate(JsString("My Legal Name")).asOpt.isDefined must beTrue
+    }
+    "reject tab char" in {
+      LegalName_t.validate(JsString("\t")).asOpt.isDefined must beFalse
     }
   }
 }

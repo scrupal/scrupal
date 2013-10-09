@@ -37,16 +37,16 @@ trait ValueValidator {
 }
 
 /** Validation trait for JsArray
-  * This provides the comment code for validating that the elements of an array are consistently the same type. The
-  * basic idea is that this gets mixed into a Type that provides the elemType parameter to conduct the validation.
+  * Several of the types defined below expect a JsArray with a particular element type. This trait just provides the
+  * method to validate the JsArray against the expected element type.
   */
 trait ArrayValidator {
 
   /** The validation method for validating a JsArray
-    *
+    * This traverses the array and validates that each element conforms to the `elemType`
     * @param value The JsArray to be validated
     * @param elemType The Type each element of the array should have. By default
-    * @return
+    * @return JsSuccess(true) when valid, JsError otherwise
     */
   def validate(value : JsArray, elemType: Type) : JsResult[Boolean] = {
     /// TODO: Improve this to collect and return all the validation issues
@@ -56,15 +56,16 @@ trait ArrayValidator {
   }
 }
 
-/** Provides a common paradigm: validation of JsObject content.
-  *
+/** Validation trait for JsObject
+  * Several of the types defined below expect a JsObject with a particular structure to them. This trait just
+  * provides the method to validate the JsObject against a Map of what is expected in that JsObject.
   */
 trait ObjectValidator {
-  /**
-   * This traverses a JsObject and for each field, looks up the associated type in the "structure" and validates that
-   * field with the type.
-   * @return JsSuccess(true) if all the fields of the JsObject value validate correctly
-   */
+  /** The validation method for validating a JsObject
+    * This traverses a JsObject and for each field, looks up the associated type in the "structure" and validates that
+    * field with the type.
+    * @return JsSuccess(true) if all the fields of the JsObject value validate correctly
+    */
    def validate( value: JsObject, structure: Map[Symbol,Type]) : JsResult[Boolean] = {
     if (value.value exists {
       case (key,data) => !(structure.contains(Symbol(key)) &&
@@ -76,14 +77,12 @@ trait ObjectValidator {
   }
 }
 
-
-
-
-/** A generic Type used as a placeholder for the subclasses.
-  * Note that the name of the Type is a Symbol. Symbols are interned so there is only every one copy of the name of
+/** A generic Type used as a placeholder for subclasses that compose types.
+  * Note that the name of the Type is a Symbol. Symbols are interned so there is only ever one copy of the name of
   * the type. This is important because type linkage is done by indirectly referencing the name, not the actual type
-  * object. Scrupal also interns the Type objects that modules provide so they can be looked up by name quickly. This
-  * allows inter-module integration without sharing code.
+  * object and name reference equality is the same as type equality.  Scrupal also interns the Type objects that
+  * modules provide so they can be looked up by name quickly. This allows inter-module integration without sharing
+  * code and provides rapid determination of type equality.
   * @param name The name of the type
   */
 abstract class Type (
@@ -94,9 +93,8 @@ abstract class Type (
   require(!description.isEmpty)
 
   /** By default the validate method returns an error
-    *
-    * @param value
-    * @return
+    * @param value The JSON value to be validated
+    * @return JsError, always -- subclasses should override
     */
   override def validate(value : JsValue) : JsResult[Boolean] = JsError("Unimplemented validator.")
 
@@ -130,8 +128,7 @@ case class ReferenceType (
           JsError("Reference object should only have one entry.")
         else {
           val (typ,id) = map.head
-          // TODO: validate that typ is a symbol/identifier legal for types and that id is the right form for an
-          // TODO: identifier
+          // TODO: validate that typ is a symbol/identifier legal for types and id is correct for an identifier
           JsSuccess(true)
         }
       }
@@ -142,10 +139,10 @@ case class ReferenceType (
 
 /** A String type constrains a string by defining its content with a regular expression and a maximum length.
   *
-  * @param name
-  * @param description
-  * @param regex
-  * @param maxLen
+  * @param name THe name of the string type
+  * @param description A brief expression of the string type
+  * @param regex The regular expression that specifies legal values for the string type
+  * @param maxLen The maximum length of this string type
   */
 case class StringType (
   override val name : Symbol,
@@ -158,7 +155,7 @@ case class StringType (
   override def validate(value : JsValue) = {
     value match {
       case v: JsString => {
-        if (v.value.length <= maxLen && regex.findAllIn(v.value).nonEmpty) JsSuccess(true)
+        if (v.value.length <= maxLen && regex.findFirstIn(v.value).isDefined) JsSuccess(true)
         else JsError("Value does not match pattern " + regex.pattern.pattern())
       }
       case x => super.validate(value)
@@ -291,7 +288,7 @@ case class EnumType  (
   * @param description
   * @param elemType
   */
-abstract class CompoundType[T <: CompoundType[T]] (
+abstract class CompoundType (
   name : Symbol,
   description : String,
   val elemType : Type
@@ -328,7 +325,7 @@ case class SetType  (
   override val name : Symbol,
   override val description : String,
   override val elemType : Type
-) extends CompoundType[SetType](name, description, elemType) with ArrayValidator {
+) extends CompoundType(name, description, elemType) with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -354,7 +351,7 @@ case class MapType  (
   override val name : Symbol,
   override val description : String,
   override val elemType : Type
-) extends CompoundType[MapType](name, description, elemType) {
+) extends CompoundType(name, description, elemType) {
 
   override def validate(value : JsValue) = {
     value match {
@@ -396,7 +393,27 @@ case class TraitType (
       case x => super.validate(value)
     }
   }
+}
 
+class BundleType(
+  override val name: Symbol,
+  override val description: String,
+  val traits : HashMap[Symbol,TraitType]
+) extends Type(name, description) with ObjectValidator {
+
+  override def validate(value: JsValue) : JsResult[Boolean] = {
+    value match {
+      case v: JsObject => validate(v, traits)
+      case x => super.validate(value)
+    }
+  }
+}
+
+object BundleType {
+  def apply(name: Symbol, description: String, traits: HashMap[Symbol,TraitType]) : BundleType =
+    new BundleType(name, description, traits)
+
+  lazy val Empty : BundleType = apply('Empty, " ", HashMap[Symbol,TraitType]())
 }
 
 /** The fundamental element of interaction for Modules.
@@ -408,17 +425,9 @@ case class TraitType (
 case class EntityType (
   override val name: Symbol,
   override val description: String,
-  traits : HashMap[Symbol,TraitType],
+  override val traits : HashMap[Symbol,TraitType],
   actions : HashMap[Symbol,Action] = HashMap()
-) extends Type(name, description) with ObjectValidator {
-  require(!traits.isEmpty)
-
-  override def validate(value: JsValue) : JsResult[Boolean] = {
-    value match {
-      case v: JsObject => validate(v, traits)
-      case x => super.validate(value)
-    }
-  }
+) extends BundleType(name, description, traits) {
 }
 
 

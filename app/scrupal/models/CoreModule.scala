@@ -18,10 +18,12 @@
 package scrupal.models
 
 import scrupal.api._
+import scala.collection.immutable.HashMap
 
 
-/**
- * One line sentence description here.
+/** Scrupal's Core Module.
+  * This is the base module of all modules. It provides the various abstractions that permit other modules to extend
+  * its functionality. The Core module defines the simple, trait, bundle and entity types
  * Further description here.
  */
 object CoreModule extends Module (
@@ -33,18 +35,14 @@ object CoreModule extends Module (
 
   /** The core types that Scrupal provides to all modules */
   override val types = Seq[Type](
-    Identifier_t, DomainName_t, EmailAddress_t, URI_t, IPv4Address_t, TcpPort_t
+    Identifier_t, DomainName_t, TcpPort_t, URI_t, JDBC_URL_t, IPv4Address_t, EmailAddress_t, LegalName_t, SiteInfo_t
   )
 
   /** Settings for the core
-    * */
-  override val settings = Seq[SettingsGroup] (
-    SettingsGroup('site, "Settings related to the site that Scrupal is providing.", Seq(
-      Setting('name, Identifier_t, "The name of the site Scrupal will be serving"),
-      Setting('domain, DomainName_t, "The domain name at which Scrupal will receive requests"),
-      Setting('port, TcpPort_t, "The TCP Port number on which Scrupal should listen")
-      )
-    )
-  )
-
+    */
+  override val settings = BundleType('Core, "Scrupal Core Module Settings", HashMap[Symbol,TraitType](
+    'instance -> TraitType('instance, "Settings for the current instance of Scrupal", HashMap[Symbol,Type](
+      'owner -> LegalName_t
+    ))
+  ))
 }

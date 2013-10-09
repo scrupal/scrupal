@@ -22,6 +22,7 @@ import play.api.libs.json._
 import play.api.libs.json.JsSuccess
 import play.api.Logger
 import scala.collection.immutable.HashMap
+import scrupal.models.{Patterns, EmailAddress_t}
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {
@@ -46,11 +47,6 @@ class TypeSpec extends Specification {
     }
   }
 
-  /** The Scrupal Type for Email addresses */
-  object EmailAddress extends StringType('EmailAddress, "An email address",
-    "^([a-z0-9_.-]+)@([-0-9a-z.]+)\\.([a-z.]{2,6})$".r, 253)
-
-
   "MiddlePeriod" should {
     "accept 'foo.bar'" in {
       val result = MiddlePeriod.validate(JsString("foo.bar"))
@@ -61,15 +57,6 @@ class TypeSpec extends Specification {
     }
     "reject 'foo.barbaz'" in {
       MiddlePeriod.validate(JsString("foo.barbaz")).asOpt.isDefined must beFalse
-    }
-  }
-
-  "EmailAddress" should {
-    "accept somebody@example.net" in {
-      EmailAddress.validate(JsString("somebody@example.net")).asOpt.isDefined must beTrue
-    }
-    "reject ###@!!!.net" in {
-      EmailAddress.validate(JsString("###@!!!.net")).asOpt.isDefined must beFalse
     }
   }
 
@@ -211,7 +198,7 @@ class TypeSpec extends Specification {
 
   object trait1 extends TraitType('trait1, "Trait example 1", HashMap[Symbol, Type](
       'even -> MiddlePeriod,
-      'email -> EmailAddress,
+      'email -> EmailAddress_t,
       'range -> rangeTy,
       'real -> realTy,
       'enum -> enumTy
