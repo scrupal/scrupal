@@ -15,41 +15,42 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.controllers
+package scrupal.api
 
-import play.api.mvc.{Action, Controller}
-import play.api.templates.Html
+import play.api.libs.json._
+import play.api.libs.json.JsObject
 
-
-/**
- * The controller for handling RESTful interaction with Entities
- * This controller provides the actions necessary to securely invoke
- */
-object Entity extends Controller
-{
-	def create(kind: String) = Action { implicit request =>
-		Ok(views.html.main("Create for "+ kind)( Html("<p>TBI</p>") ) )
-	}
-
-	def read(kind: String, id: String) = Action { implicit request =>
-		Ok(views.html.main("Read for "+kind)( Html("<p>TBI</p>") ) )
-	}
-
-	def update(kind: String, id: String) = Action { implicit request =>
-		Ok(views.html.main("Update for "+kind)( Html("<p>TBI</p>") ) )
-	}
-
-	def delete(kind: String, id: String) = Action { implicit request =>
-		Ok(views.html.main("Delete for "+ kind)( Html("<p>TBI</p>") ) )
-	}
-
-	def info(kind: String, id: String) = Action { implicit request =>
-		Ok(views.html.main("Info for "+ kind)( Html("<p>TBI</p>") ) )
-	}
-
-	def options(kind: String, id: String) = Action { implicit request =>
-		Ok(views.html.main("Options for " + kind)( Html("<p>TBI</p>") ) )
-	}
+/** A named value for configuring a Module */
+case class Setting(
+  override val name: Symbol,
+  valueType : Type,
+  override val description: String,
+  override val id : Option[Long] = None
+) extends Thing[Setting](name, description) {
+  def forId(id : Long) = Setting(name, valueType, description, Some(id))
+  def validate(value : JsValue) = valueType.validate(value)
+}
 
 
+/** A named group of settings.
+  * This allows settings to be categorized and clustered for better managability.
+  */
+case class SettingsGroup(
+  override val name: Symbol,
+  override val description: String,
+  settings : Seq[Setting],
+  override val id : Option[Long] = None
+) extends Thing[SettingsGroup](name, description) with ObjectValidator {
+  def forId(id: Long) = SettingsGroup(name, description, settings, Some(id))
+  def validate( value : JsObject ) : JsResult[Boolean] = {
+    val result : JsResult[Boolean] = ( value \ name.name ) match {
+      case a: JsObject => {
+        val structure : Map[Symbol,Type] = settings map { s => (s.name, s.valueType) } toMap  ;
+        validate(a, structure)
+      }
+      case x: JsUndefined => JsError("Entry " + name.name + " was not found")
+      case x => JsError("JsArray was expected, not " + x.getClass.getSimpleName )
+    }
+    result
+  }
 }

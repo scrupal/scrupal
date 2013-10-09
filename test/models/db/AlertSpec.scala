@@ -35,7 +35,7 @@ class AlertSpec extends Specification
 	  val t :DateTime =  DateTime.now().plusDays(1)
 
 		"construct with one argument and give sane results" in {
-			val alert =  new Alert( None, DateTime.now(),  "Alert", "Alert", "<span>Note Message</span>" )
+			val alert =  new Alert( 'Alert, "Alert", "<span>Note Message</span>" )
 			alert.message.toString must beEqualTo("<span>Note Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Note)
 			alert.iconKind must beEqualTo(Icons.info)
@@ -43,7 +43,7 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Note:")
 		}
 		"construct with two arguments and give sane results" in {
-			val alert = new Alert(None, DateTime.now(), "Alert", "Alert", "<span>Danger Message</span>", AlertKind.Danger )
+			val alert = new Alert('Alert, "Alert", "<span>Danger Message</span>", AlertKind.Danger )
 			alert.message.toString must beEqualTo("<span>Danger Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Danger)
 			alert.iconKind must beEqualTo(Icons.warning_sign)
@@ -51,7 +51,7 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Danger!")
 		}
 		"construct with three arguments and give sane results" in {
-			val alert = Alert(None, DateTime.now(), "Alert", "Alert", "<span>Warning Message</span>", AlertKind.Warning,
+			val alert = Alert('Alert, "Alert", "<span>Warning Message</span>", AlertKind.Warning,
         AlertKind.toIcon(AlertKind.Warning), AlertKind.toPrefix(AlertKind.Warning),
         AlertKind.toCss(AlertKind.Warning), t )
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
@@ -62,7 +62,7 @@ class AlertSpec extends Specification
 			alert.expires must beEqualTo( t)
 		}
 		"construct with four arguments and give sane results" in {
-			val alert = Alert(None, DateTime.now(),  "Alert", "Alert", "<span>Caution Message</span>", AlertKind.Caution,
+			val alert = Alert('Alert, "Alert", "<span>Caution Message</span>", AlertKind.Caution,
         Icons.align_center, "Alignment!", "", new DateTime(0))
 			alert.message.toString must beEqualTo("<span>Caution Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Caution)
@@ -71,13 +71,13 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Alignment!")
 		}
 		"produce correct icon html" in {
-			val alert = new Alert(None, DateTime.now(), "A", "A", "<span>Html Message</span>")
+			val alert = new Alert('A, "A", "<span>Html Message</span>")
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
     "save to and fetch from the DB" in new WithDBSession {
       import schema._
-      val a1 = Alerts.insert(new Alert(None, DateTime.now(), "foo", "Alert", "Message" ))
-      a1.label must beEqualTo("foo")
+      val a1 = Alerts.insert(new Alert('foo, "Alert", "Message" ))
+      a1.name must beEqualTo('foo)
       val a2 = Alerts.fetch(a1.id.get).get
       val saved_time = a2.expires
       a1.id must beEqualTo(a2.id)

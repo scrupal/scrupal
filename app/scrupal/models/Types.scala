@@ -15,47 +15,43 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.models
 
-import org.joda.time.DateTime
+import java.net.{URISyntaxException, URI}
 
-/**
- * A piece of information that can be created within Scrupal.
- * Creatable maintain an identifier (long value) that is unique for all values of the Creatable's leaf type.
- */
-trait Creatable {
-  val id : Option[Long] = None
-  val created : Option[DateTime] = None
-  def exists = id.isDefined && created.isDefined
+import play.api.libs.json._
+
+import scrupal.api._
+
+/** The Scrupal Type for the identifier of things */
+object Identifier_t extends StringType('Identifier, "A type for Scrupal Identifiers", "^[-A-Za-z0-9_+=|!.^@#%*?]+$".r,64)
+
+/** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
+object DomainName_t extends StringType('DomainName, "A type for domain names",
+  "^(([a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9])\\.){0,126}([A-Za-z0-9][-A-Za-z0-9]*[A-Za-z0-9])$".r, 253)
+
+/** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
+object URI_t extends Type('URI, "A type for validating URI strings.") {
+  override def validate(value: JsValue) : JsResult[Boolean]= {
+    value match {
+      case v: JsString => {
+        try { new URI( v.value ); JsSuccess(true) }
+        catch { case xcptn: URISyntaxException => JsError(xcptn.getMessage) }
+      }
+      case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
+    }
+  }
 }
 
-/**
- * A trait for
- */
-trait Modifiable {
-  val modified : Option[DateTime] = None
-  def isModified = modified.isDefined
-}
+/** The Scrupal Type for IP version 4 addresses */
+object IPv4Address_t extends StringType('IPv4Address, "A type for IP v4 Addresses",
+  "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$".r, 15)
 
-trait Nameable {
-  val name : Symbol
-  def isNamed : Boolean = ! name.name.isEmpty
-}
+/** The Scrupal Type for TCP port numbers */
+object TcpPort_t extends RangeType('TcpPort, "A type for TCP port numbers", 1, 65535)
 
-trait Describable {
-  val description : String
-  def isDescribed : Boolean = ! description.isEmpty
-}
-
-abstract class CreatableThing(
-  override val id : Option[Long] = None,
-  override val created : Option[DateTime] = Some(DateTime.now())
-) extends Creatable
-
-abstract class Thing(
-  override val name: Symbol,
-  override val description: String
-) extends CreatableThing with Modifiable with Nameable with Describable
-
+/** The Scrupal Type for Email addresses */
+object EmailAddress_t extends StringType('EmailAddress, "An email address",
+  "^([a-z0-9_.-]+)@([-0-9a-z.]+)\\.([a-z.]{2,6})$".r, 253)
 
 

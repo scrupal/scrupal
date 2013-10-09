@@ -27,7 +27,7 @@ import scala.collection.immutable.HashMap
 class TypeSpec extends Specification {
 
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-  object MiddlePeriod extends Type('URI, "A type for validating URI strings.", TypeKind.CustomKind) {
+  object MiddlePeriod extends Type('URI, "A type for validating URI strings.") {
     override def validate(value: JsValue) : JsResult[Boolean]= {
       value match {
         case v: JsString => {
@@ -132,13 +132,13 @@ class TypeSpec extends Specification {
   val blobTy = BLOBType('blob, "Blob example", "application/binary", 2, 4)
 
   "BLOBType(2,4)" should {
-    "accept 3 binary bytes" in {
-      val bytes = Array[Byte](0x21, 0x22, 0x23)
-      blobTy.validate(bytes) must beTrue
+    "accept valid URI" in {
+      val url = JsString("http://foo.com/bar/baz.bin")
+      blobTy.validate(url).asOpt.isDefined must beTrue
     }
-    "reject 1 binary byte" in {
-      val byte = Array[Byte](0x21)
-      blobTy.validate(byte) must beFalse
+    "reject invalid URI" in {
+      val url = JsString("http:")
+      blobTy.validate(url).asOpt.isDefined must beFalse
     }
   }
 
@@ -209,7 +209,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object trait1 extends Trait('trait1, "Trait example 1", HashMap[Symbol, Type](
+  object trait1 extends TraitType('trait1, "Trait example 1", HashMap[Symbol, Type](
       'even -> MiddlePeriod,
       'email -> EmailAddress,
       'range -> rangeTy,
@@ -218,15 +218,13 @@ class TypeSpec extends Specification {
     )
   )
 
-  object trait2 extends Trait('trait2, "Trait example 2", HashMap[Symbol, Type](
+  object trait2 extends TraitType('trait2, "Trait example 2", HashMap[Symbol, Type](
       'list -> listTy,
       'set -> setTy,
       'map -> mapTy
   ))
 
-  object AnEntity extends Entity('entity, "Entity example") {
-    override def traits = HashMap('trait1 -> trait1, 'trait2 -> trait2)
-    override def actions = HashMap()
+  object AnEntity extends EntityType('entity, "Entity example", HashMap('trait1 -> trait1, 'trait2 -> trait2)) {
   }
 
   val js1 = Json.obj(

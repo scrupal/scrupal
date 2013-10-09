@@ -120,6 +120,8 @@ abstract class Pluralizer
 
 object Pluralizer extends Pluralizer
 {
+  def pluralize(word : Symbol) : String = pluralize(word.name)
+
 	def pluralize(word: String, count: Int = 2) : String =
 	{
 		if (count == 1 || count == -1)
@@ -508,34 +510,5 @@ object Pluralizer extends Pluralizer
 
 	// Otherwise, assume that the plural just adds -s
 	standard("(.*)$", "$1s")
-
-	/**
-	 *
-scala> val tapper = new Tapper("hello!")
-tapper: Tapper[java.lang.String] = Tapper@5e53bbfa
-
-scala> tapper.tap { s => println(s) )
-hello!
-res0: java.lang.String = hello!
-Now we need to get objects responding to #tap. We do that by defining an implicit.
-
-object Tap {
-  implicit def any2Tapper[A](toTap: A): Tapper[A] = new Tapper(toTap)
-)
-We wrap the implicit's definition in an object, which is scala for singleton. Those methods can then be imported in to arbitrary scope using the import statement. This REPL session should make everything clear:
-
-scala> "hello!".tap { s => println(s) }
-<console>:5: error: value tap is not a member of java.lang.String
-"hello!".tap { s => println(s) }
-^
-
-scala> import Tap._
-import Tap._
-
-scala> "hello!".tap { s => println(s) }
-hello!
-res2: java.lang.String = hello!
-
-	 */
 }
 

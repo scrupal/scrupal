@@ -15,31 +15,20 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.models.db
 
-import play.api.test.Helpers._
-import org.specs2.mutable.Specification
-import org.joda.time.DateTime
-
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.Module
+import scala.slick.lifted.MappedTypeMapper
+import scala.util.matching.Regex
 
 /**
- * One line sentence description here.
- * Further description here.
+ * This object just collects together a variety of Slick TypeMappers that are used to convert between database
+ * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
+ * when they are used. To use them just "import CommonTypeMappers._"
  */
-class ModuleSpec extends Specification {
+object CommonTypeMappers {
 
-  "Module" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      /*
-      import schema._
-      val mod = Modules.insert(Module('foo, "Test Module"))
-      mod.name must beEqualTo("foo")
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      */
-      success
-    }
-  }
+  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
+    { r => r.pattern.pattern() },
+    { s => new Regex(s) }
+  )
 }

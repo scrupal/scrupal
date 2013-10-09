@@ -17,20 +17,18 @@
 
 package scrupal.models.db
 
-import org.joda.time.DateTime
+import scala.slick.lifted.DDL
+import scrupal.api.{Sketch, Schema}
 
 /**
- * One line sentence description here.
- * Further description here.
+ * The basic schema for Scrupal. This is composed by merging together the various Components.
  */
-case class Profile(
-  override val id : Option[Long],
-  override val created : DateTime,
-  principal : Long
+class ScrupalSchema(sketch: Sketch) extends Schema (sketch)
+  with CoreComponent with UserComponent with EntityComponent with NotificationComponent
+{
+  // Super class Schema requires us to provide the DDL from our tables
+  override val ddl : DDL = {
+    coreDDL ++ userDDL ++ entityDDL ++ notificationDDL
+  }
 
-) extends Identifiable[Profile]{
-  def forId(id: Long) = Profile(Some(id), created, principal)
-}
-
-trait ProfileComponent extends Component {
 }

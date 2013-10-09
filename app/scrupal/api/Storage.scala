@@ -15,34 +15,27 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.api
 
-import scrupal.api._
-import scrupal.api.Setting
-import scrupal.api.Trait
+import play.api.libs.json.{JsResult, JsObject}
+import org.joda.time.DateTime
 
-/**
- * One line sentence description here.
- * Further description here.
- */
-object CoreModule extends Module('Core, "Scrupal's Core module for basic site functionality.") {
+trait Storable
 
-  val version = Version(0,1,0)
-  val obsoletes = Version(0,0,0)
 
-  /** The core types that Scrupal provides to all modules */
-  override val types = Seq[Type](
-    Identifier_t, DomainName_t, EmailAddress_t, URI_t, IPv4Address_t, TcpPort_t
-  )
-
-  /** Settings for the core */
-  override val settings = Seq[SettingsGroup] (
-    SettingsGroup('site, "Settings related to the site that Scrupal is providing.", Seq(
-      Setting('name, Identifier_t, "The name of the site Scrupal will be serving"),
-      Setting('domain, DomainName_t, "The domain name at which Scrupal will receive requests"),
-      Setting('port, TcpPort_t, "The TCP Port number on which Scrupal should listen")
-      )
-    )
-  )
-
+/** One line sentence description here.
+  * Further description here.
+  */
+abstract class Storage[S <: Storable] {
+  def create(obj: S ) : JsResult[Long]
+  def fetch(id: Long) : JsResult[JsObject]
+  def update(obj: S) : JsResult[JsObject]
+  def delete(obj: S) : JsResult[Boolean]
 }
+   /*
+case class MemoryStorage() extends Storage
+
+case class CacheStorage() extends Storage
+
+case class DatabaseStorage() extends Storage
+     */

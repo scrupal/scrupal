@@ -19,19 +19,21 @@ package scrupal.models.db
 
 import org.joda.time.DateTime
 import scala.slick.lifted.DDL
-import scala.util.matching.Regex
+import scrupal.api._
+import scala.Some
 
 
 /**
  * Information about a site hosted by Scrupal
  */
 case class Site(
-  override val id: Option[Long],
-  override val created: DateTime,
-  override val label: String,
-  override val description: String
- ) extends Thing[Site] {
-  def forId(id: Long) = Site(Some(id), created, label, description)
+  override val name: Symbol,
+  override val description: String,
+  override val modified: Option[DateTime] = Some(DateTime.now()),
+  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val id: Option[Long] = None
+ ) extends Thing[Site](name, description, modified, created, id) {
+  def forId(id: Long) = Site(name, description, modified, created, Some(id))
 }
 
 /**
@@ -43,41 +45,41 @@ case class Site(
  * @param host Domain name or IP address
  * @param port TCP Port number
  */
-case class HostPort(
+case class HostPort (
   override val id: Option[Long],
-  override val created: DateTime,
+  override val created: Option[DateTime],
   host : String,
   port: Int
-) extends Identifiable[HostPort] {
+) extends Creatable[HostPort] {
   def forId(id: Long) = HostPort(Some(id), created, host, port)
 }
 
 /**
  * Representation of a module in the database. Modules are plug-in extensions to Scrupal.
- * @param id
- * @param created
- * @param label
+ * @param name
  * @param description A brief description of the module
+ * @param modified
+ * @param created
+ * @param id
  */
 case class Module (
-  override val id: Option[Long],
-  override val created: DateTime,
-  override val label: String,
+  override val name: Symbol,
   override val description: String,
-  enabled : Boolean
-) extends Thing[Module] {
-  def forId(id: Long) = Module(Some(id), created, label, description, enabled)
+  override val modified: Option[DateTime] = Some(DateTime.now()),
+  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val id: Option[Long] = None
+) extends Thing[Module](name, description, modified, created, id) {
+  def forId(id: Long) = Module(name, description,  modified, created, Some(id))
 }
 
 case class Setting (
-  override val id: Option[Long],
-  override val created: DateTime,
-  name : String,
-  kind : Long
-) extends Identifiable[Setting] {
-  def forId(id: Long) = Setting(Some(id), created, name, kind)
+  override val name : Symbol,
+  kind : Long,
+  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val id: Option[Long] = None
+) extends ImmutableThing[Setting](name, created, id) {
+  def forId(id: Long) = Setting(name, kind, created, Some(id))
 }
-
 
 trait CoreComponent extends Component {
 
@@ -85,27 +87,27 @@ trait CoreComponent extends Component {
   import CommonTypeMappers._
 
   object Sites extends ThingTable[Site]("sites") {
-    def * =  id.? ~ created ~ label ~ description <> (Site.tupled, Site.unapply _)
+    def * = name ~ description ~ modified.? ~ created.? ~ id.? <> (Site.tupled, Site.unapply _)
   }
 
-  object HostPorts extends IdentifiableTable[HostPort]("hostports") {
+  object HostPorts extends CreatableTable[HostPort]("hostports") {
     def host = column[String]("host")
     def port = column[Int]("port")
-    def * = id.? ~ created ~ host ~ port <> (HostPort.tupled, HostPort.unapply _)
+    def * = id.? ~ created.? ~ host ~ port <> (HostPort.tupled, HostPort.unapply _)
   }
 
   object Sites_HostPorts extends ManyToManyTable[Site,HostPort]("HostPortsOfSites", "sites", "hostports", Sites, HostPorts)
 
   object Modules extends ThingTable[Module]("modules") {
     def enabled = column[Boolean]("enabled")
-    def * =  id.? ~ created ~ label ~ description ~ enabled <> (Module.tupled, Module.unapply _)
+    def * =  name ~ description ~ modified.? ~ created.? ~ id.?  <> (Module.tupled, Module.unapply _)
   }
 
-  object Settings extends IdentifiableTable[Setting]("settings") {
-    def name = column[String](tableName + "_name")
+  object Settings extends CreatableTable[Setting]("settings") {
+    def name = column[Symbol](tableName + "_name")
     def name_index = index(tableName + "_name_index", name, unique=true)
     def kind = column[Long](tableName + "_kind")
-    def * = id.? ~ created ~ name ~ kind <> (Setting.tupled, Setting.unapply _ )
+    def * = name ~ kind ~ created.? ~ id.? <> (Setting.tupled, Setting.unapply _ )
   }
 
   def coreDDL : DDL = Sites.ddl ++ HostPorts.ddl ++ Sites_HostPorts.ddl ++ Modules.ddl

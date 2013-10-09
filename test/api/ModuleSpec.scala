@@ -19,25 +19,19 @@ package scrupal.api
 
 import org.specs2.mutable.Specification
 import scala.collection.immutable.HashMap
+import scrupal.api._
 
 /** Test specifications for the API Module class */
 class ModuleSpec extends Specification {
-  object Module1 extends Module('Module1, "Module1 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,8,20)
-  }
+  object Module1 extends Module('Module1, "Module1 Description", Version(1,0,0), Version(0,8,20)) { }
 
-  object Module2 extends Module('Module2, "Module2 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,9,1)
+  object Module2 extends Module('Module2, "Module2 Description", Version(1,0,0), Version(0,9,1)) {
     override val dependencies = HashMap[Symbol,Version](
       'Module1 -> Version(0,8,21)
     )
   }
 
-  object Module3 extends Module('Module3, "Module3 Description") {
-    val version = Version(1,0,0)
-    val obsoletes = Version(0,9,1)
+  object Module3 extends Module('Module3, "Module3 Description", Version(1,0,0), Version(0,9,1)) {
     override val dependencies = HashMap[Symbol,Version](
       'Module1 -> Version(0,9,10)
     )

@@ -21,9 +21,9 @@ import java.io.File
 import play.api.{db, Logger}
 import play.api.test._
 import scala.slick.session.{Session, Database}
-import scrupal.models.db.{Sketch, ScrupalSchema}
+import scrupal.models.db.{ScrupalSchema}
 import org.specs2.execute.{Result, AsResult}
-
+import scrupal.api.Sketch
 
 
 /**

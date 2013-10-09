@@ -18,8 +18,10 @@
 package scrupal.models.db
 
 import org.joda.time.DateTime
-import scrupal.utils.Hash
 import scala.slick.lifted.DDL
+
+import scrupal.api._
+import scrupal.utils.Hash
 
 /**
  * Information about a Principal, the essential identify of a user of the system. Authentication of Principals requires
@@ -35,24 +37,24 @@ import scala.slick.lifted.DDL
  */
 case class Principal(
   override val id: Option[Long],
-  override val created: DateTime,
+  override val created: Option[DateTime],
   email: String,
   password: String,
   hasher: String,
   salt: String = Hash.salt,
   complexity: Long = 0
-) extends Identifiable[Principal] {
+) extends Creatable[Principal] {
   def forId(id: Long) = Principal(Some(id), created, email, password, hasher, salt, complexity)
 }
 
 case class ProfileType(
-  override val id: Option[Long],
-  override val created: DateTime,
-  override val label: String,
+  override val name: Symbol,
   override val description: String,
-  override val modified: DateTime
-) extends ModifiableThing[ProfileType] {
-  def forId(id: Long) = ProfileType(Some(id), created, label, description, modified)
+  override val modified: Option[DateTime] = Some(DateTime.now()),
+  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val id: Option[Long] = None
+) extends Thing[ProfileType](name, description, modified, created, id) {
+  def forId(id: Long) = ProfileType(name, description, modified, created, Some(id))
 }
 
 /**
@@ -67,13 +69,14 @@ trait UserComponent extends Component { self: Sketch =>
   /**
    * The table of principals which are simple identifiable objects.
    */
-  object Principals extends IdentifiableTable[Principal]("identities") {
+  object Principals extends CreatableTable[Principal]("identities") {
     def email = column[String]("email")
     def password = column[String]("password")
     def hasher = column[String]("hasher")
     def salt = column[String]("salt")
     def complexity = column[Long]("complexity")
-    def * = id.? ~ created ~ email ~ password ~ hasher ~ salt ~ complexity  <> (Principal, Principal.unapply _)
+    def * = id.? ~ created.? ~ email ~ password ~ hasher ~ salt ~ complexity <> (Principal.tupled,
+      Principal.unapply _)
   }
 
   /**
@@ -104,8 +107,8 @@ trait UserComponent extends Component { self: Sketch =>
   }
 
 
-  object ProfileTypes extends ModifiableThingTable[ProfileType]("profile_types") {
-    def * = id.? ~ created ~ label ~ description ~ modified <> (ProfileType.tupled, ProfileType.unapply _)
+  object ProfileTypes extends ThingTable[ProfileType]("profile_types") {
+    def * = name ~ description ~ modified.? ~ created.? ~ id.? <> (ProfileType.tupled, ProfileType.unapply _)
   }
 
   def userDDL : DDL = Principals.ddl ++ Handles.ddl

@@ -19,12 +19,14 @@ package scrupal.models.db
 
 import play.api.templates.Html
 import scala.xml.{Elem, NodeSeq, Node}
-
-import scrupal.utils.Icons
-import org.joda.time.{Duration, DateTime}
 import scala.Enumeration
+
+import org.joda.time.{Duration, DateTime}
 import scala.slick.lifted.DDL
 import scala.slick.direct.AnnotationMapper.column
+
+import scrupal.utils.Icons
+import scrupal.api.{Thing,Component}
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
@@ -104,7 +106,7 @@ import AlertKind._
  * feature enhancements.
  * @param id Optional unique identifier for the Alert
  * @param created Timestamp of creation
- * @param label Label of the Alert
+ * @param name Name of the Alert
  * @param description Brief description of the alert
  * @param message Text of the message to deliver to users
  * @param alertKind The kind of alert
@@ -114,17 +116,19 @@ import AlertKind._
  * @param expires The time at which the alert expires
  */
 case class Alert (
-  override val id : Option[Long],
-  override val created : DateTime,
-  override val label : String,
+  override val name : Symbol,
   override val description : String,
   message: String,
   alertKind: AlertKind.Value,
   iconKind : Icons.Value,
   prefix : String,
   cssClass : String,
-  expires: DateTime
-) extends Thing[Alert]
+  expires: DateTime,
+  override val modified : Option[DateTime] = Some(DateTime.now()),
+  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val id : Option[Long] = None
+
+) extends Thing[Alert](name, description, modified, created, id)
 {
   /**
    * A shorthand constructor for Alerts.
@@ -132,20 +136,20 @@ case class Alert (
    * based on the alertKind parameter, which defaults to a Note
    * @param id Optional unique identifier for the Alert
    * @param created Timestamp of creation
-   * @param label Label of the Alert
+   * @param name Label of the Alert
    * @param description Brief description of the alert
    * @param message Text of the message to deliver to users
    * @param alertKind The kind of alert
    */
-  def this(id: Option[Long], created: DateTime, label: String,  description : String,
-           message: String, alertKind: AlertKind.Value = AlertKind.Note) =
+  def this(name: Symbol, description : String, message: String, alertKind: AlertKind.Value = AlertKind.Note,
+           modified: Option[DateTime] = None, created : Option[DateTime] = None, id: Option[Long] = None) =
   {
-    this(id, created, label, description, message, alertKind, toIcon(alertKind),
-         toPrefix(alertKind), toCss(alertKind), toExpiry(alertKind))
+    this(name, description, message, alertKind, toIcon(alertKind),  toPrefix(alertKind), toCss(alertKind),
+         toExpiry(alertKind), modified, created, id)
   }
 
-  def forId(id: Long) = Alert(Some(id), created, label, description,
-                              message, alertKind, iconKind,  prefix, cssClass, expires)
+  def forId(id: Long) = Alert(name, description, message, alertKind, iconKind,  prefix, cssClass, expires,
+                              modified, created, Some(id))
   def iconHtml : Html = Icons.html(iconKind);
   def expired : Boolean = expires.isBeforeNow
   def unexpired : Boolean = !expired
@@ -173,15 +177,15 @@ trait NotificationComponent extends Component { self : Component =>
 
 
   object Alerts extends ThingTable[Alert]("alerts") {
-    def message =     column[String]("message")
-    def alertKind =   column[AlertKind.Value]("alertKind")
-    def iconKind =    column[Icons.Value]("iconKind")
-    def prefix =      column[String]("prefix")
-    def cssClass =    column[String]("css")
-    def expires =     column[DateTime]("expires")
-    def expires_index = index("expires_index", expires, unique=false)
-    def * = id.? ~ created ~ label ~ description  ~ message ~ alertKind  ~ iconKind ~ prefix ~ cssClass ~ expires <>
-      (Alert, Alert.unapply _ )
+    def message =     column[String](tableName + "_message")
+    def alertKind =   column[AlertKind.Value](tableName + "_alertKind")
+    def iconKind =    column[Icons.Value](tableName + "_iconKind")
+    def prefix =      column[String](tableName + "_prefix")
+    def cssClass =    column[String](tableName + "_css")
+    def expires =     column[DateTime](tableName + "_expires")
+    def expires_index = index(tableName + "_expires_index", expires, unique=false)
+    def * = name ~ description  ~ message ~ alertKind  ~ iconKind ~ prefix ~ cssClass ~ expires ~
+            modified.? ~ created.? ~ id.? <> (Alert.tupled, Alert.unapply _ )
 
     lazy val unexpiredQuery = for { expires <- Parameters[DateTime] ; alrt <- this if alrt.expires > expires  } yield alrt
 

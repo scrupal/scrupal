@@ -28,7 +28,9 @@ class ThingSpec extends Specification {
   case class TestCreatable(
     override val id : Option[Long] = Some(1),
     override val created : Option[DateTime] = Some(DateTime.now())
-  ) extends Creatable
+  ) extends Creatable[TestCreatable] {
+    def forId(id: Long) = TestCreatable(Some(id), created)
+  }
 
   "Creatable" should {
     "report existence with both id and timestamp" in {
@@ -47,7 +49,8 @@ class ThingSpec extends Specification {
     }
   }
 
-  case class TestModifiable(override val modified: Option[DateTime] = Some(DateTime.now()) ) extends Modifiable
+  case class TestModifiable(override val modified: Option[DateTime] = Some(DateTime.now()) )
+    extends Modifiable
 
   "Modifiable" should {
     "report modification when changed" in {
@@ -60,7 +63,13 @@ class ThingSpec extends Specification {
     }
   }
 
-  case class TestThing(override val name: Symbol, override val description: String) extends Thing(name, description)
+  case class TestThing(override val name: Symbol, override val description: String,
+    override val modified: Option[DateTime] = None,
+    override val created: Option[DateTime] = None,
+    override val id: Option[Long] = None)
+    extends Thing[TestThing](name, description, modified, created, id) {
+    def forId(id: Long) = TestThing(name, description, modified, created, Some(id))
+  }
 
   "Thing" should {
     "instantiate with simple arguments" in {

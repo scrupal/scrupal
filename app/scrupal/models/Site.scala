@@ -15,31 +15,29 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package models
 
-import play.api.test.Helpers._
-import org.specs2.mutable.Specification
-import org.joda.time.DateTime
+import scrupal.api.Thing
+import scrupal.models.{DomainName_t, Identifier_t, TcpPort_t}
 
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.Module
+/** The information about a Site that Scrupal vends.
+  * Scrupal can be configured to respond to numerous web sites (multi-tenant) from a single instance. This Site
+  * represents the salient information about a given Site that is being served to users. A Site consists of a set of
+  * modules that are configured for its use (not necessarily all modules loaded are used by a given Site), the
+  * configuration for that set of modules for that site, and some rudimentary information for routing requests.
+  */
+case class Site (
+  name : Symbol,
+  description : String,
+  domain : String
+)
+  // extends Thing(name, description)
+{
 
-/**
- * One line sentence description here.
- * Further description here.
- */
-class ModuleSpec extends Specification {
-
-  "Module" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      /*
-      import schema._
-      val mod = Modules.insert(Module('foo, "Test Module"))
-      mod.name must beEqualTo("foo")
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      */
-      success
-    }
-  }
+  /*
+  val name
+  Setting('name, Identifier_t, "The name of the site Scrupal will be serving"),
+  Setting('domain, DomainName_t, "The domain name at which Scrupal will receive requests"),
+  Setting('port, TcpPort_t, "The TCP Port number on which Scrupal should listen")
+  */
 }

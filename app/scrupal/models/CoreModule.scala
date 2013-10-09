@@ -15,17 +15,36 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.controllers
+package scrupal.models
 
-import play.api.mvc.{Action, RequestHeader, Controller}
+import scrupal.api._
+
 
 /**
- * A controller to provide the Introduction To Scrupal content
+ * One line sentence description here.
  * Further description here.
  */
-object Home extends Controller
-{
-	def index = Action { implicit request: RequestHeader =>
-		Ok(views.html.index("Welcome To Scrupal"))
-	}
+object CoreModule extends Module (
+  'Core,
+  "Scrupal's Core module for basic site functionality.",
+  Version(0,1,0),
+  Version(0,0,0)
+) {
+
+  /** The core types that Scrupal provides to all modules */
+  override val types = Seq[Type](
+    Identifier_t, DomainName_t, EmailAddress_t, URI_t, IPv4Address_t, TcpPort_t
+  )
+
+  /** Settings for the core
+    * */
+  override val settings = Seq[SettingsGroup] (
+    SettingsGroup('site, "Settings related to the site that Scrupal is providing.", Seq(
+      Setting('name, Identifier_t, "The name of the site Scrupal will be serving"),
+      Setting('domain, DomainName_t, "The domain name at which Scrupal will receive requests"),
+      Setting('port, TcpPort_t, "The TCP Port number on which Scrupal should listen")
+      )
+    )
+  )
+
 }

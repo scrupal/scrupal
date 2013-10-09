@@ -15,31 +15,17 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.controllers
 
-import play.api.test.Helpers._
-import org.specs2.mutable.Specification
-import org.joda.time.DateTime
-
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.Module
+import play.api.mvc.{Action, RequestHeader, Controller}
 
 /**
- * One line sentence description here.
+ * A controller to provide the Introduction To Scrupal content
  * Further description here.
  */
-class ModuleSpec extends Specification {
-
-  "Module" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      /*
-      import schema._
-      val mod = Modules.insert(Module('foo, "Test Module"))
-      mod.name must beEqualTo("foo")
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      */
-      success
-    }
-  }
+object Home extends Controller
+{
+	def index = Action { implicit request: RequestHeader =>
+		Ok(scrupal.views.html.index("Welcome To Scrupal"))
+	}
 }

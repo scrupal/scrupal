@@ -15,31 +15,12 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.api
 
-import play.api.test.Helpers._
-import org.specs2.mutable.Specification
-import org.joda.time.DateTime
+import play.api.libs.json.JsObject
 
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.Module
-
-/**
- * One line sentence description here.
- * Further description here.
- */
-class ModuleSpec extends Specification {
-
-  "Module" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      /*
-      import schema._
-      val mod = Modules.insert(Module('foo, "Test Module"))
-      mod.name must beEqualTo("foo")
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      */
-      success
-    }
-  }
+/** An action against an Entity that is parameterized by a JSON object and returns a JSON object as its result. */
+abstract class Action(name: Symbol, description: String) extends Thing(name, description) {
+  def apply(in: JsObject ) : JsObject
 }
+

@@ -15,19 +15,18 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.DDL
+import play.api.libs.json.{JsResult, JsValue}
 
-/**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
- */
-class ScrupalSchema(sketch: Sketch) extends Schema (sketch)
-  with CoreComponent with UserComponent with EntityComponent with NotificationComponent
-{
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ userDDL ++ entityDDL ++ notificationDDL
-  }
-
+/** A trait to define the transform method for objects that can transform a JsValue
+  * Transformers implement the transform method to transform JSON values from one shape to another
+  */
+trait Transformer {
+  /** Transform a JSON value into another JSON value
+    * Abstract method definition for transformers to transform JSON values
+    * @param value The JSON value to be transformed
+    * @return JsSuccess(JsValue) when successful, JsError when not
+    */
+  def transform(value: JsValue) : JsResult[JsValue]
 }

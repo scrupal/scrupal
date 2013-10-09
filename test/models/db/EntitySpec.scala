@@ -17,15 +17,12 @@
 
 package scrupal.models.db
 
-
-import play.api.test.Helpers.running
-
 import org.specs2.mutable.Specification
 import org.joda.time.DateTime
 import scala.slick.lifted.DDL
 import scrupal.test.{WithDBSession, FakeScrupal}
-import scala.slick.session.Session
-import scala.slick.direct.AnnotationMapper.column
+import scrupal.api.{Thing, Component, Sketch, Schema}
+import scala.slick.lifted
 
 
 /**
@@ -34,24 +31,25 @@ import scala.slick.direct.AnnotationMapper.column
 case class SomeValue(x: Short, y: Short)
 
 case class TestEntity(
-  override val id: Option[Long],
-  override val created: DateTime,
-  override val label: String,
+  override val name: Symbol,
   override val description: String,
+  override val modified: Option[DateTime] = None,
+  override val created: Option[DateTime] = None,
+  override val id: Option[Long],
   testVal : SomeValue
-) extends Thing[TestEntity] {
-  def forId(id: Long) : TestEntity = TestEntity(Some(id), created, label, description, testVal)
+) extends Thing[TestEntity](name, description, modified, created, id) {
+  def forId(id: Long) : TestEntity = TestEntity(name, description, modified, created, Some(id), testVal)
 }
 
 trait TestComponent extends Component { self : Sketch =>
   import profile.simple._
 
-  implicit val someValueMapper = MappedTypeMapper.base[SomeValue,Int](
+  implicit val someValueMapper = lifted.MappedTypeMapper.base[SomeValue,Int](
     { v => v.x << 16 + v.y }, { i => SomeValue((i >> 16).toShort, (i & 0x0FFFF).toShort) } )
 
   object TestEntities extends ThingTable[TestEntity]("test_entities") {
     def testVal = column[SomeValue]("test_val")
-    def * = id.? ~ created ~ label ~ description ~ testVal <> (TestEntity, TestEntity.unapply _)
+    def * = name ~ description ~ modified.? ~ created.? ~ id.? ~ testVal <> (TestEntity, TestEntity.unapply _)
   }
 }
 
@@ -61,7 +59,7 @@ class TestSchema(sketch: Sketch) extends Schema(sketch) with TestComponent {
 
 class EntitySpec extends Specification
 {
-	val te = new TestEntity(None, DateTime.now(), "Test", "This is a test", SomeValue(1,2))
+	val te = new TestEntity('Test, "This is a test", None, None, None, SomeValue(1,2))
 
 	"Entity" should {
 		"fail to compare against a non-entity" in {

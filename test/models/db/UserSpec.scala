@@ -34,7 +34,7 @@ class UserSpec extends Specification
 	"Principal" should {
 		"save, load and delete from DB" in new WithDBSession {
       import schema._
-      val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+      val p = new Principal(None, Some(DateTime.now()), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
       val p2 = Principals.upsert(p)
       val p3 = Principals.fetch(p2.id.get)
       p3.isDefined must beTrue
@@ -48,7 +48,7 @@ class UserSpec extends Specification
   "Handle" should {
     "save, load and delete from DB" in new WithDBSession {
       import schema._
-      val p = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
+      val p = new Principal(None, Some(DateTime.now()), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
       val p2 : Principal = Principals.upsert(p)
       Handles.insert("nobody", p2.id.get)
       val p3 : Principal = Handles.principals("nobody").head
@@ -59,8 +59,10 @@ class UserSpec extends Specification
     }
     "allow many-to-many relations with Principal" in new WithDBSession {
       import schema._
-      val p1 = new Principal(None, DateTime.now(), "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
-      val p2 = new Principal(None, DateTime.now(), "exempli@gratis.org", "openpw",  HasherKinds.SCrypt.toString() )
+      val p1 = new Principal(None, Some(DateTime.now()), "nobody@nowhere.ex", "openpw",
+        HasherKinds.SCrypt.toString() )
+      val p2 = new Principal(None, Some(DateTime.now()), "exempli@gratis.org", "openpw",
+        HasherKinds.SCrypt.toString() )
       val p1id = Principals.upsert(p1).id.get;
       val p2id = Principals.insert(p2).id.get;
       Handles.insert("nobody", p1id)

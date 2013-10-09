@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
 import scala.slick.driver.ExtendedProfile
 import scala.slick.lifted.{ForeignKeyAction, DDL}
@@ -24,6 +24,12 @@ import play.api.Logger
 import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery0, StaticQuery}
 import scala.slick.direct.AnnotationMapper.column
+import java.sql.Timestamp
+import org.joda.time.DateTimeZone._
+import scala.slick.direct.AnnotationMapper.column
+import scala.Some
+import scala.Tuple2
+import scrupal.utils.Pluralizer
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -43,57 +49,6 @@ trait Sketch {
   override def toString = { "{" + driverClass + ", " + schema + "," + profile }
 }
 
-
-/**
- * Provides the notion of something stored in the database that is identifiable by a long integer.
- * Additionally we want to know when the record was created. This pair of values forms the base class upon which all
- * things stored in the database must derive.
- *
- * @tparam T
- */
-trait Identifiable[T <: Identifiable[T]] extends scala.Equals {
-  val id: Option[Long] = None
-  val created: DateTime = DateTime.now()
-  def forId(id: Long) : T
-  override def equals(entity: Any) : Boolean = {
-    entity match {
-      case that : Thing[T] => {
-        ( this.id.isDefined == that.id.isDefined ) && ( ! this.id.isDefined || (this.id.get == that.id.get) ) &&
-          ( this.created == that.created )
-      }
-      case _ => false
-    }
-  }
-}
-
-trait Modifiable[T <: Modifiable[T]] extends Identifiable[T]  {
-  val modified: DateTime
-}
-
-
-
-/**
- * Most tables that we define are some sort of thing with a name and a description in the database and certain other
- * fields. This trait allows such named and described things to be mixed in to a subclass. Things are identifiable,
- * have a label, a description, and a creation time.
- * @tparam T The type into which the Thing is being mixed
- */
-trait Thing[T <: Thing[T]] extends Identifiable[T] {
-  val label : String
-  val description: String
-  override def equals(entity : Any) : Boolean = {
-    entity match {
-      case that : Thing[T] => {
-        ( this.id.isDefined == that.id.isDefined ) && ( ! this.id.isDefined || (this.id.get == that.id.get) ) &&
-          this.label.equals(that.label) && this.description.equals(that.description)
-      }
-      case _ => false
-    }
-  }
-}
-
-trait ModifiableThing[T <: ModifiableThing[T]] extends Thing[T] with Modifiable[T]  ;
-
 /**
  * The abstract database component.
  * This trait allows use to define database components which are simply collections of related tables and the
@@ -106,13 +61,18 @@ trait Component extends Sketch { this : Sketch =>
   // So we can define the Table items and queries, we import the Slick database profile here
   import profile.simple._
 
-  // Many of the subclasses will require the common type mappers so we import them now
-  import CommonTypeMappers._
+  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
+    { d => new Timestamp( d getMillis ) },
+    { t => new DateTime (t getTime, UTC)  }
+  )
 
-  abstract class IdentifiableTable[C <:Identifiable[C]](val tname: String) extends Table[C](schema, tname ) {
+  implicit lazy val symbolMapper = MappedTypeMapper.base[Symbol,String] (
+    { s => s.name},
+    { s => Symbol(s) }
+  )
+
+  abstract class IdentifiableTable[C <: Identifiable[C]](val tname: String) extends Table[C](schema, tname ) {
     def id = column[Long](tableName + "_id", O.PrimaryKey, O.AutoInc);
-
-    def created = column[DateTime]("created")
 
     lazy val fetchByIDQuery = for { id <- Parameters[Long] ; ent <- this if ent.id === id } yield ent
 
@@ -121,10 +81,6 @@ trait Component extends Sketch { this : Sketch =>
     def fetch(oid: Option[Long])(implicit s: Session) : Option[C] = {
       oid match { case None => None ; case Some(id) => fetch(id) }
     }
-
-    lazy val findSinceQuery = for {  created <- Parameters[DateTime] ; e <- this if e.created >= created } yield e
-
-    def findSince(dt: DateTime)(implicit s: Session ) : List[C] = findSinceQuery(dt).list
 
     def insert(entity: C)( implicit s: Session ) : C = {
       val resulting_id = * returning id insert(entity)
@@ -158,6 +114,26 @@ trait Component extends Sketch { this : Sketch =>
     }
   }
 
+  abstract class CreatableTable[C <: Creatable[C]](tname: String) extends IdentifiableTable[C](tname) {
+    def created = column[DateTime](tableName + "_created", O.Nullable) // FIXME: Dynamic Date required!
+
+    lazy val findSinceQuery = for {  created <- Parameters[DateTime] ; e <- this if e.created >= created } yield e
+
+    def findSince(dt: DateTime)(implicit s: Session ) : List[C] = findSinceQuery(dt).list
+
+  }
+
+  abstract class ImmutableThingTable[C <: ImmutableThing[C]](tname: String) extends CreatableTable[C](tname) {
+    def name = column[Symbol](tableName + "_name", O.NotNull)
+
+    def name_index = index(tableName + "_name_index", name, unique=true)
+
+    lazy val fetchByNameQuery = for { n <- Parameters[Symbol] ; e <- this if e.name === n } yield e
+
+    def fetch(aName: Symbol)(implicit s: Session) : Option[C] = fetchByNameQuery(aName).firstOption
+
+  }
+
   /**
    * The base class of all table definitions in Scrupal.
    * Most tables in the Scrupal database represent some form of entity that can be manipulated through the
@@ -166,23 +142,17 @@ trait Component extends Sketch { this : Sketch =>
    * @param tableName The name of the table in the database
    * @tparam C The case class that represents rows in this table
    */
-  abstract class ThingTable[C <:Thing[C]](tableName: String)  extends IdentifiableTable[C](tableName) {
-
-    def label = column[String](tableName + "_label", O.NotNull)
-
-    def label_index = index(tableName + "_label_index", label, unique=true)
+  abstract class DescribableThingTable[C <: DescribedThing[C]](tableName: String)
+    extends ImmutableThingTable[C] (tableName) {
 
     def description = column[String](tableName + "_description", O.NotNull)
 
-    lazy val fetchByNameQuery = for { l <- Parameters[String] ; e <- this if e.label === l } yield e
-
-    def fetch(label: String)(implicit s: Session) : Option[C] = fetchByNameQuery(label).firstOption
-
   };
 
-  abstract class ModifiableThingTable[C <: ModifiableThing[C]](tableName: String) extends ThingTable[C](tableName) {
+  abstract class ThingTable[C <: Thing[C]](tableName: String)
+    extends DescribableThingTable[C](tableName) {
 
-    def modified = column[DateTime](tableName + "_modified", O.NotNull)
+    def modified = column[DateTime](tableName + "_modified", O.Nullable)
 
     def modified_index = index(tableName + "_modified_index", modified, unique=false)
 
@@ -192,8 +162,6 @@ trait Component extends Sketch { this : Sketch =>
       selected.map(t => t.modified).update(DateTime.now())
       thing
     }
-
-
 
     lazy val modifiedSinceQuery = for { chg <- Parameters[DateTime]; mt <- this if mt.modified > chg } yield mt
 
@@ -212,6 +180,7 @@ trait Component extends Sketch { this : Sketch =>
     def b_id = column[Long](tableName + "_" + nameB + "_id")
     def a_fkey = foreignKey(tableName + "_" + nameA + "_fkey", a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
     def b_fkey = foreignKey(tableName + "_" + nameB + "_fkey", b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def a_b_uniqueness = index(tableName + "_uniqueness", (a_id, b_id), unique= true)
     lazy val findBsQuery = for { aId <- Parameters[Long]; a <- this if a.a_id === aId; b <- tableB if b.id === a.b_id } yield b
     lazy val findAsQuery = for { bId <- Parameters[Long]; b <- this if b.b_id === bId; a <- tableA if a.id === b.a_id } yield a
     def selectAssociatedA(b: B)(implicit s: Session) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
@@ -259,6 +228,7 @@ trait Component extends Sketch { this : Sketch =>
   }
 }
 
+
 /**
  * Abstract Database Schema.
  * A Schema is a collection of Components. Each module or the Scrupal Core should only define on Schema each.
@@ -298,6 +268,7 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
   }
 
 }
+
 
 /**
  * The Sketch for H2 Database

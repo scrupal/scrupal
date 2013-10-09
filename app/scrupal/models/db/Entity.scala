@@ -15,31 +15,46 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.models.db
 
-import play.api.test.Helpers._
-import org.specs2.mutable.Specification
+import scala.slick.lifted.DDL
 import org.joda.time.DateTime
+import scrupal.api.{Thing,  Component}
+import java.sql.Clob
+import scala.slick.direct.AnnotationMapper.column
 
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.Module
+case class Entity (
+  override val name : Symbol,
+  override val description : String,
+  typ : Symbol,
+  override val modified : Option[DateTime] = Some(DateTime.now()),
+  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val id : Option[Long] = None
+) extends Thing[Entity](name, description, modified, created, id) {
+  def forId(id: Long) = Entity(name, description, typ, modified, created, Some(id))
+}
 
 /**
  * One line sentence description here.
  * Further description here.
  */
-class ModuleSpec extends Specification {
+trait EntityComponent extends Component {
 
-  "Module" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      /*
-      import schema._
-      val mod = Modules.insert(Module('foo, "Test Module"))
-      mod.name must beEqualTo("foo")
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      */
-      success
-    }
+  import profile.simple._
+
+  object Entities extends ThingTable[Entity]("entities") {
+    def typ = column[Symbol](tableName + "typ")
+    def * = name ~ description ~ typ ~ modified.? ~ created.? ~ id.? <> (Entity, Entity.unapply _)
   }
+
+  object Traits extends Table[(Long,Long,Symbol,Clob)]("traits") {
+    def tid = column[Long](tableName + "_tid", O.PrimaryKey)
+    def eid = column[Long](tableName + "_eid")
+    def eid_fkey = foreignKey(tableName + "_eid_fkey", eid, Entities)(_.id)
+    def typ = column[Symbol](tableName + "_typ")
+    def payload = column[Clob](tableName + "_payload")
+    def * = tid ~ eid ~ typ ~ payload
+  }
+
+  def entityDDL : DDL = Entities.ddl ++ Traits.ddl
 }
