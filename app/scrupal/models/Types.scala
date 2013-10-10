@@ -126,11 +126,13 @@ object LegalName_t extends StringType('LegalName, "The name of a person or corpo
 
 /** The Scrupal Type for information about Sites */
 object SiteInfo_t extends TraitType('SiteInfo, "Basic information about a site that Scrupal will serve.",
-  HashMap(
+  fields = HashMap(
     'name -> Identifier_t,
     'title -> Identifier_t,
     'domain -> DomainName_t,
     'port -> TcpPort_t,
     'admin_email -> EmailAddress_t,
     'copyright -> Identifier_t
-  ))
+  ),
+  actions = HashMap()
+)

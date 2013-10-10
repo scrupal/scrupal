@@ -17,61 +17,58 @@
 
 package scrupal.api
 
-import play.api.mvc.RequestHeader
+import scala.collection.mutable
 
-/** The categories of events by their applicability */
-object EventCategory extends Enumeration {
-  type Type = Value
-  val Scrupal = Value // Events related to Scrupal as a whole
-  val Request = Value // Events related requests coming into Scrupal
-  val Entity = Value // Events related to entities
-  val Module = Value // Events related to modules
-}
-
-/** Abstract notion of an event */
-abstract class Event (
-  val category : EventCategory.Type,
-  val name : Symbol
-)
-
-// Scrupal general events below here
-/** Event definition for scrupal startup */
-case class Scrupal_Start() extends Event(EventCategory.Scrupal, 'Start)
-case class Scrupal_Stop() extends Event(EventCategory.Scrupal, 'Stop)
-
-// Request related events below here
-/** Abstract event class for events that concern themselves with HTTP requests */
-abstract class RequestEvent(
-  val request: RequestHeader,
-  override val category : EventCategory.Type,
-  override val name : Symbol
-) extends Event(category, name)
-
-/** An event that occurs when an error (exception, i.e. HTTP 500) is thrown during request processing */
-case class Request_Error(override val request: RequestHeader)
-  extends RequestEvent(request, EventCategory.Request, 'Error)
-
-/** An event that occurs when a handler is not found for a request */
-case class Request_NotFound(override val request: RequestHeader)
-  extends RequestEvent(request, EventCategory.Request, 'NotFound)
-
-/** An event that occurs when a bad request is recognized */
-case class Request_BadRequest(override val request: RequestHeader)
-  extends RequestEvent(request, EventCategory.Request, 'BadRequest)
-
-/** An event that occurs after successfully handling a request */
-case class Request_Handled(override val request: RequestHeader)
-  extends RequestEvent(request, EventCategory.Request, 'Handled)
-
-abstract class HandlerFor[E <: Event](
+/** Abstract definition of an event handler for Scrupal
+  * This just allows for ensuring that Handlers and Events are well matched
+  * @param category The category of events this handler handles
+  * @param name THe specific event kind that this handler handles
+  */
+abstract class Handler (
   val category : EventCategory.Type,
   val name : Symbol
 ) {
-  def check(event: E) = {
+  def check(event: Event) {
     require(event.category == category, "Event category " + event.category + " for Handler requiring " + category)
     require(event.name == name, "Event " + event.name + " for handler requiring " + name)
   }
+}
+
+/** Abstract definition of a Handler for a specific kind of event
+  *
+  * @param category The category of event to which this handler applies
+  * @param name The name of the event this Handler handles
+  * @tparam E kind of Event this handler is for
+  */
+abstract class HandlerFor[E <: Event](
+  category : EventCategory.Type,
+  name : Symbol
+) extends Handler(category, name) {
   def handle(event : E) = {
     check(event)
   }
+}
+
+object Handler {
+
+  private[scrupal] def apply(event: Event) : Option[Handler] = {
+    handlers.get(event.category) match {
+      case Some(x) => x.get(event.name) match {
+        case Some(h) => Some(h)
+        case _ => None
+      }
+      case _ => None
+    }
+  }
+
+  private[api] def apply(handler: Handler) = {
+    handlers.getOrElse(handler.category, {
+      val newMap = new mutable.HashMap[Symbol,Handler]()
+      handlers.put(handler.category, newMap );
+      newMap
+    }).put(handler.name, handler)
+  }
+
+  private val handlers = mutable.HashMap[EventCategory.Type,mutable.HashMap[Symbol,Handler]]()
+
 }

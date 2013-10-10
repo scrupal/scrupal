@@ -19,7 +19,7 @@ package scrupal.models
 
 import scrupal.api._
 import scala.collection.immutable.HashMap
-
+import scrupal.models.db.ScrupalSchema
 
 /** Scrupal's Core Module.
   * This is the base module of all modules. It provides the various abstractions that permit other modules to extend
@@ -40,9 +40,19 @@ object CoreModule extends Module (
 
   /** Settings for the core
     */
-  override val settings = BundleType('Core, "Scrupal Core Module Settings", HashMap[Symbol,TraitType](
-    'instance -> TraitType('instance, "Settings for the current instance of Scrupal", HashMap[Symbol,Type](
-      'owner -> LegalName_t
-    ))
-  ))
+  override val settings = BundleType('Core, "Scrupal Core Module Settings",
+    traits = HashMap (
+      'instance -> TraitType('instance, "Settings for the current instance of Scrupal",
+        fields = HashMap (
+          'owner -> LegalName_t
+        ),
+        actions = HashMap (
+        )
+      )
+    ),
+    actions = HashMap (
+    )
+  )
+
+ // val schema = new ScrupalSchema
 }

@@ -21,6 +21,7 @@ import scrupal.utils.{Registry, Registrable}
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
+import play.api.Logger
 
 /** A modular plugin to Scrupal to extend its functionality.
   * A module is an object that provides information (data) and functionality (behavior) to Scrupal so that Scrupal can
@@ -41,7 +42,7 @@ import scala.collection.mutable
   *                  incompatible with `version` (although, depending on the feature in question, some compatibility
   *                  may remain).
   */
-abstract class Module(name: Symbol, description: String, val version: Version, val obsoletes: Version)
+abstract class Module(val name: Symbol, val description: String, val version: Version, val obsoletes: Version)
   extends Registrable {
 
   /** Provide the registration identifier for Registrable
@@ -73,11 +74,17 @@ abstract class Module(name: Symbol, description: String, val version: Version, v
     */
   val handlers = Seq[HandlerFor[Event]]()
 
+  /** Modules have settings but really they are just a Bundle stored like any other so we rename it here */
+  type Settings = BundleType
+
+  /** By default the module's settings are empty. Many modules won't need settings. */
+  val EmptySettings : Settings = BundleType('Empty, " ", HashMap[Symbol,TraitType]())
+
   /** The set of configuration settings for the Module grouped into named sections */
-  val settings : BundleType = BundleType.Empty
+  val settings : Settings = EmptySettings
 
   /** Register this module with the registry of modules */
-  Modules.register(this)
+  Module.register(this)
 
   /** Determine compatibility between `this` [[scrupal.api.Module]] and `that`.
     * This module is compatible with `that` if either `that` does not depend on `this` or the version `that` requires
@@ -98,32 +105,19 @@ abstract class Module(name: Symbol, description: String, val version: Version, v
   * it will register itself with this module. Upon registration, the information it provides about the module is
   * amalgamated into this object for use by the rest of Scrupal.
   */
-object Modules extends Registry[Module] {
+object Module extends Registry[Module] {
 
-  private val types = mutable.HashMap[Symbol,(Type,Module)]()
-  private val handlers = mutable.HashMap[EventCategory.Type,mutable.HashMap[Symbol,HandlerFor[Event]]]()
+  def apply(name: Symbol) : Module = getRegistrant(name)
 
-  override def register(mod: Module) = {
+  private[scrupal] def processModules() : Unit = registrants foreach { case (name: Symbol, mod: Module) =>
     // Put all the types that are not already there into the types map.
-    val pairs = for ( t <- mod.types if !types.contains(t.name)) yield (t,mod)
-    pairs map {
-      case (t: Type, mod: Module) => this.types.put(t.name, (t,mod))
-    }
+    mod.types foreach { typ => Type(typ, mod) match {
+      case Some((t,m)) => Logger.warn(
+        "Overriding type '" + t.name + "' from module " + m.name + " with version from " + "module " + mod.name)
+      case _ => { /* do nothing on purpose */ }
+    }}
 
     // Register all the handlers, creating the category maps as we go
-    mod.handlers.foreach { handler =>
-      handlers.getOrElse(handler.category, {
-        val newMap = new mutable.HashMap[Symbol, HandlerFor[Event]]()
-        handlers.put(handler.category, newMap );
-        newMap
-      }).put(handler.name, handler)
-    }
-  }
-
-  def `type`(name: Symbol) : Option[Type] = {
-    types.get(name) match {
-      case Some((ty,mod)) => Some(ty)
-      case None => None
-    }
+    mod.handlers.foreach { handler => Handler(handler) }
   }
 }

@@ -15,66 +15,39 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.models
 
 import org.specs2.mutable.Specification
-import scala.collection.immutable.HashMap
-import scrupal.api._
 
-/** Test specifications for the API Module class */
-class ModuleSpec extends Specification {
-  object Module1 extends Module('Module1, "Module1 Description", Version(1,0,0), Version(0,8,20)) {
-    override val types = Seq(
-      RangeType('Foo, "Fooness", 0, 0)
-    )
-  }
+import scrupal.test.{WithDBSession}
+import scrupal.models.db.{Bundle, Type, Module}
+import play.api.libs.json.{Json, JsNumber, JsObject}
+import java.sql.Clob
 
-  object Module2 extends Module('Module2, "Module2 Description", Version(1,0,0), Version(0,9,1)) {
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,8,21)
-    )
-  }
+/**
+ * One line sentence description here.
+ * Further description here.
+ */
+class CoreSpec extends Specification {
 
-  object Module3 extends Module('Module3, "Module3 Description", Version(1,0,0), Version(0,9,1)) {
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,9,10)
-    )
-  }
-
-  "Version" should {
-    "compare correctly with large values" in {
-      val v1 = Version(32767, 2112525145, 0)
-      val v2 = Version(32767, 2112525146, 0)
-      val v3 = Version(0,1,0)
-      v1 < v2 must beTrue
-      v3 < v2 must beTrue
-    }
-  }
-
-  "Module1" should {
-    "have obsoletes prior to version" in {
-      Module1.obsoletes < Module1.version must beTrue
-    }
-    "have same obsolete Version as Module2's dependency" in {
-      Module1.obsoletes == Module2.dependencies('Module1)
-    }
-    "have different obsolete Version as Module3's dependency" in {
-      Module1.obsoletes < Module3.dependencies('Module1)
-    }
-    "be incompatible with Module2" in {
-      Module1.isCompatibleWith(Module2) must beFalse
-    }
-    "be compatible with Module3" in {
-      Module1.isCompatibleWith((Module3)) must beTrue
-    }
-  }
-
-  "Modules" should {
-    "register three modules" in {
-      Module.processModules()
-      Module('Module1) must beEqualTo(Module1)
-      Module('Module2) must beEqualTo(Module2)
-      Module('Module3) must beEqualTo(Module3)
+  "Module, Type, Bundle" should {
+    "save to and fetch from the DB" in new WithDBSession {
+      import schema._
+      val mod = Modules.insert(Module('foo, "Foo Man Chew", 1, 0))
+      mod.name must beEqualTo('foo)
+      val mod2 = Modules.fetch(mod.id.get).get
+      mod.id must beEqualTo(mod2.id)
+      val ty = Types.insert(Type('Thai, "Thai Foon", mod.id.get ))
+      ty.name must beEqualTo('Thai)
+      val ty2 = Types.fetch(ty.id.get).get
+      ty.id must beEqualTo(ty2.id)
+      ty2.moduleId must beEqualTo( mod2.id.get )
+      val clob : Clob = schema.toClob(Json.obj("type" -> JsNumber(ty.id.get)))
+      val bundle = Bundles.insert(Bundle('Buns, "Buns Aye", ty.id.get, clob))
+      bundle.name must beEqualTo('Buns)
+      val bun2 = Bundles.fetch(bundle.id.get).get
+      bundle.id must beEqualTo(bun2.id)
+      bun2.typeId must beEqualTo(ty2.id.get)
     }
   }
 }

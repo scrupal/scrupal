@@ -36,19 +36,20 @@ object FakeScrupal extends FakeApplication(
 
   val url = "jdbc:h2:mem:test1"
   val sketch = scrupal.models.db.DB.sketch4URL(url)
-  val schema = new ScrupalSchema(sketch)
   val db = Database.forURL(url, sketch.driverClass)
 }
 
-abstract class WithDBSession() extends WithApplication(FakeScrupal) {
-  lazy val sketch : Sketch = FakeScrupal.sketch
-  lazy val schema : ScrupalSchema = new ScrupalSchema(sketch)
-  implicit var session : Session = null
-  override def around[T: AsResult](t: => T): Result = super.around {
-    FakeScrupal.db withSession { implicit s: Session =>
-      session = s
-      schema.create(session)
-      t
+class WithDBSession(
+  val asketch : Sketch = FakeScrupal.sketch,
+  val schema: ScrupalSchema = new ScrupalSchema(FakeScrupal.sketch),
+  implicit val session: Session  = FakeScrupal.db.createSession()
+) extends WithApplication(FakeScrupal) {
+  override def around[T: AsResult](f: => T): Result = super.around {
+    try {
+      schema.create(session);
+      f
+    } finally {
+      session.close
     }
   }
 }

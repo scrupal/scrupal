@@ -111,6 +111,6 @@ trait UserComponent extends Component { self: Sketch =>
     def * = name ~ description ~ modified.? ~ created.? ~ id.? <> (ProfileType.tupled, ProfileType.unapply _)
   }
 
-  def userDDL : DDL = Principals.ddl ++ Handles.ddl
+  def userDDL : DDL = Principals.ddl ++ Handles.ddl ++ Tokens.ddl ++ ProfileTypes.ddl
 
 }

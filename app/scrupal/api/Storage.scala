@@ -20,8 +20,19 @@ package scrupal.api
 import play.api.libs.json.{JsResult, JsObject}
 import org.joda.time.DateTime
 
-trait Storable
+/** All storable things have, at least, a typ */
+abstract class Storable(val typ : Symbol)
 
+abstract class Reference[T <: Type]
+
+
+abstract class StoreHandler[S <: Storable] {
+  def create(s: S) : Storable
+  def fetch(id : Long) : Option[Storable]
+  def update(s: S) : Option[Storable]
+  def delete(s: S) : Boolean
+  def delete(id: Long) : Boolean
+}
 
 /** One line sentence description here.
   * Further description here.

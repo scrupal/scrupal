@@ -25,7 +25,8 @@ import scrupal.api.{Sketch, Schema}
  */
 class ScrupalSchema(sketch: Sketch) extends Schema (sketch)
   with CoreComponent with UserComponent with EntityComponent with NotificationComponent
-{
+{ self : Schema =>
+
   // Super class Schema requires us to provide the DDL from our tables
   override val ddl : DDL = {
     coreDDL ++ userDDL ++ entityDDL ++ notificationDDL

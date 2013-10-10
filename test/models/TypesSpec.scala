@@ -82,7 +82,7 @@ class TypesSpec extends Specification {
 
   "EmailAddress_t" should {
     "accept someone@scrupal.org" in {
-      println("Email Regex: " + EmailAddress_t.regex.pattern.pattern)
+      // println("Email Regex: " + EmailAddress_t.regex.pattern.pattern)
       EmailAddress_t.validate(JsString("someone@scrupal.org")).asOpt.isDefined must beTrue
     }
     "reject white space" in {

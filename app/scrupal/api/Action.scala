@@ -17,10 +17,20 @@
 
 package scrupal.api
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsValue, JsObject}
+
+abstract class Action(name: Symbol, description: String) extends Thing(name, description)
 
 /** An action against an Entity that is parameterized by a JSON object and returns a JSON object as its result. */
-abstract class Action(name: Symbol, description: String) extends Thing(name, description) {
+abstract class MutatingAction(name: Symbol, description: String) extends Action(name, description) {
   def apply(in: JsObject ) : JsObject
+}
+
+abstract class ReducingAction(name: Symbol, description: String) extends Action(name, description) {
+  def apply(in: JsObject) : JsValue
+}
+
+abstract class EventingAction(name: Symbol, description: String) extends Action(name, description) {
+  def apply(in: JsObject) : Event
 }
 

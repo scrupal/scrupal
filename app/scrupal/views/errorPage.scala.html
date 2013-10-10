@@ -1,6 +1,8 @@
 @(alert: scrupal.models.db.Alert)(implicit request: RequestHeader)
 
 @import scrupal.models.db.Alert
+@import scrupal.views.html.main
+@import scrupal.views.html.messages
 
 @main("ERROR") {
 @messages(Option[Alert](alert))

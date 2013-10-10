@@ -17,12 +17,14 @@
     <output-test url="file://$MODULE_DIR$/../target/scala-2.10/test-classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/..">
-      <sourceFolder url="file://$MODULE_DIR$/../target/scala-2.10/src_managed/main/scrupal" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../target/scala-2.10/src_managed/main/views" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../app" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../conf" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../test/resources" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../app" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../target/scala-2.10/src_managed/main" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/../application.home_IS_UNDEFINED" />
+      <excludeFolder url="file://$MODULE_DIR$/../logs" />
+      <excludeFolder url="file://$MODULE_DIR$/../target/native_libraries" />
       <excludeFolder url="file://$MODULE_DIR$/../target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/cache" />
       <excludeFolder url="file://$MODULE_DIR$/../target/scala-2.10/classes" />
@@ -115,7 +117,6 @@
     <orderEntry type="library" name="SBT: net.sourceforge.nekohtml:nekohtml:1.9.18" level="project" />
     <orderEntry type="library" name="SBT: net.sourceforge.cssparser:cssparser:0.9.9" level="project" />
     <orderEntry type="library" name="SBT: org.w3c.css:sac:1.3" level="project" />
-    <orderEntry type="library" name="SBT: commons-io:commons-io:2.2" level="project" />
     <orderEntry type="library" name="SBT: org.eclipse.jetty:jetty-websocket:8.1.9.v20130131" level="project" />
     <orderEntry type="library" name="SBT: org.eclipse.jetty:jetty-util:8.1.9.v20130131" level="project" />
     <orderEntry type="library" name="SBT: org.eclipse.jetty:jetty-io:8.1.9.v20130131" level="project" />
@@ -128,19 +129,26 @@
     <orderEntry type="library" name="SBT: org.seleniumhq.selenium:selenium-support:2.32.0" level="project" />
     <orderEntry type="library" name="SBT: org.easytesting:fest-assert:1.4" level="project" />
     <orderEntry type="library" name="SBT: org.easytesting:fest-util:1.1.6" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-docs_2.10:2.2.0" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-doc_2.10:1.0.3" level="project" />
+    <orderEntry type="library" name="SBT: org.pegdown:pegdown:1.4.0" level="project" />
+    <orderEntry type="library" name="SBT: org.parboiled:parboiled-java:1.1.5" level="project" />
+    <orderEntry type="library" name="SBT: org.parboiled:parboiled-core:1.1.5" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm:4.1" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-tree:4.1" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-analysis:4.1" level="project" />
+    <orderEntry type="library" name="SBT: org.ow2.asm:asm-util:4.1" level="project" />
+    <orderEntry type="library" name="SBT: commons-io:commons-io:2.4" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe:play-plugins-redis_2.10:2.1.1" level="project" />
     <orderEntry type="library" name="SBT: biz.source_code:base64coder:2010-12-19" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe:play-plugins-util_2.10:2.1.1" level="project" />
-    <orderEntry type="library" name="SBT: org.ow2.spec.ee:ow2-atinject-1.0-spec:1.0.10" level="project" />
-    <orderEntry type="library" name="SBT: com.cedarsoft:guice-annotations:2.0.1" level="project" />
-    <orderEntry type="library" name="SBT: com.intellij:annotations:7.0.3" level="project" />
     <orderEntry type="library" name="SBT: org.sedis:sedis_2.10.0:1.1.1" level="project" />
     <orderEntry type="library" name="SBT: redis.clients:jedis:2.1.0" level="project" />
     <orderEntry type="library" name="SBT: commons-pool:commons-pool:1.5.5" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe:play-plugins-mailer_2.10:2.1.0" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe:play-plugins-mailer_2.10:2.2.0" level="project" />
     <orderEntry type="library" name="SBT: org.apache.commons:commons-email:1.2" level="project" />
     <orderEntry type="library" name="SBT: javax.mail:mail:1.4.1" level="project" />
     <orderEntry type="library" name="SBT: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe:play-plugins-util_2.10:2.2.0" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.slick:slick_2.10:1.0.1" level="project" />
     <orderEntry type="library" name="SBT: com.h2database:h2:1.3.173" level="project" />
     <orderEntry type="library" name="SBT: io.github.nremond:pbkdf2-scala_2.10:0.2" level="project" />

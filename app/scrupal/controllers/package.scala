@@ -15,66 +15,12 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal
 
-import org.specs2.mutable.Specification
-import scala.collection.immutable.HashMap
-import scrupal.api._
+/** Scrupal Controllers Package.
+  * Controllers provide the glue between the data models and the views. Much of the application functionality lives
+  * here.
+  */
+package object controllers {
 
-/** Test specifications for the API Module class */
-class ModuleSpec extends Specification {
-  object Module1 extends Module('Module1, "Module1 Description", Version(1,0,0), Version(0,8,20)) {
-    override val types = Seq(
-      RangeType('Foo, "Fooness", 0, 0)
-    )
-  }
-
-  object Module2 extends Module('Module2, "Module2 Description", Version(1,0,0), Version(0,9,1)) {
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,8,21)
-    )
-  }
-
-  object Module3 extends Module('Module3, "Module3 Description", Version(1,0,0), Version(0,9,1)) {
-    override val dependencies = HashMap[Symbol,Version](
-      'Module1 -> Version(0,9,10)
-    )
-  }
-
-  "Version" should {
-    "compare correctly with large values" in {
-      val v1 = Version(32767, 2112525145, 0)
-      val v2 = Version(32767, 2112525146, 0)
-      val v3 = Version(0,1,0)
-      v1 < v2 must beTrue
-      v3 < v2 must beTrue
-    }
-  }
-
-  "Module1" should {
-    "have obsoletes prior to version" in {
-      Module1.obsoletes < Module1.version must beTrue
-    }
-    "have same obsolete Version as Module2's dependency" in {
-      Module1.obsoletes == Module2.dependencies('Module1)
-    }
-    "have different obsolete Version as Module3's dependency" in {
-      Module1.obsoletes < Module3.dependencies('Module1)
-    }
-    "be incompatible with Module2" in {
-      Module1.isCompatibleWith(Module2) must beFalse
-    }
-    "be compatible with Module3" in {
-      Module1.isCompatibleWith((Module3)) must beTrue
-    }
-  }
-
-  "Modules" should {
-    "register three modules" in {
-      Module.processModules()
-      Module('Module1) must beEqualTo(Module1)
-      Module('Module2) must beEqualTo(Module2)
-      Module('Module3) must beEqualTo(Module3)
-    }
-  }
 }

@@ -196,23 +196,30 @@ class TypeSpec extends Specification {
     }
   }
 
-  object trait1 extends TraitType('trait1, "Trait example 1", HashMap[Symbol, Type](
+  object trait1 extends TraitType('trait1, "Trait example 1",
+    fields = HashMap (
       'even -> MiddlePeriod,
       'email -> EmailAddress_t,
       'range -> rangeTy,
       'real -> realTy,
       'enum -> enumTy
-    )
+    ),
+    actions = HashMap()
   )
 
-  object trait2 extends TraitType('trait2, "Trait example 2", HashMap[Symbol, Type](
+  object trait2 extends TraitType('trait2, "Trait example 2",
+    fields = HashMap(
       'list -> listTy,
       'set -> setTy,
       'map -> mapTy
-  ))
+    ),
+    actions = HashMap()
+  )
 
-  object AnEntity extends EntityType('entity, "Entity example", HashMap('trait1 -> trait1, 'trait2 -> trait2)) {
-  }
+  object AnEntity extends BundleType('entity, "Entity example",
+    traits = HashMap('trait1 -> trait1, 'trait2 -> trait2),
+    actions = HashMap()
+  )
 
   val js1 = Json.obj(
     "even" -> "foo.bar",

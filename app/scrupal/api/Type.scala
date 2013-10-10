@@ -23,6 +23,7 @@ import play.api.libs.json._
 import play.api.data.validation.ValidationError
 import java.net.{URI, URISyntaxException}
 import scrupal.utils.Pluralizer
+import scala.collection.mutable
 
 
 /** A trait to define the validate method for objects that can validate a JsValue */
@@ -367,15 +368,18 @@ case class MapType  (
 }
 
 /** A group of named and typed fields that are related in some way.
-  * A trait is the fundamental unit of storage and construction in Scrupal. Traits are analogous to tables in
+  * A trait is the fundamental unit of construction in Scrupal. Traits are analogous to tables in
   * relational databases. That is, they define the names and types of a group of fields (columns) that are in some
   * way related. For example, a street name, city name, country and postal code are fields of an address trait
-  * because they are related by the common purpose of specifying a location. Entities are simply assembles of
-  * traits that define the entity. A business, for example, might have several address traits,
-  * a list of employee traits, a set of product traits, etc.
+  * because they are related by the common purpose of specifying a location.
   *
-  * Note that Traits, along with List, Set and Map types make the type system here fully composable. You can create
+  * Note that Traits, along with List, Set and Map types make the type system fully composable. You can create
   * an arbitrarily complex data structure (not that we recommend that you do so).
+  *
+  * Traits also have actions associated with them. Actions can
+  * - transform the fields of the Trait into arbitrary JSON (map)
+  * - access the fields of the Trait to reduce its content (reduce)
+  * - mutate the fields of the Trait to produce a new instance of the Trait (mutate)
   * @param name The name of the trait
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type
@@ -383,7 +387,8 @@ case class MapType  (
 case class TraitType (
   override val name : Symbol,
   override val description : String,
-  fields : HashMap[Symbol, Type]
+  fields : HashMap[Symbol, Type],
+  actions: HashMap[Symbol, Action]
 ) extends Type(name, description) with ObjectValidator {
   require(!fields.isEmpty)
 
@@ -395,10 +400,20 @@ case class TraitType (
   }
 }
 
-class BundleType(
+/** A set of named traits that is the unit of storage.
+  * Bundles are simply assemblies of traits. While Traits have tight cohesion, bundles of traits are not cohesive but
+  * simply coupled together to describe different aspects of some thing. If Traits can represent an address then a
+  * bundle permits a business, for example, to have an address for each of its locations,
+  * as well as traits for employees, products, etc. Every Entity is a Bundle and Bundles are the unit of storage
+  * @param name The name of the type
+  * @param description
+  * @param traits
+  */
+case class BundleType(
   override val name: Symbol,
   override val description: String,
-  val traits : HashMap[Symbol,TraitType]
+  traits : HashMap[Symbol,TraitType],
+  actions : HashMap[Symbol,Action] = HashMap()
 ) extends Type(name, description) with ObjectValidator {
 
   override def validate(value: JsValue) : JsResult[Boolean] = {
@@ -409,25 +424,43 @@ class BundleType(
   }
 }
 
-object BundleType {
-  def apply(name: Symbol, description: String, traits: HashMap[Symbol,TraitType]) : BundleType =
-    new BundleType(name, description, traits)
+/** A utility object for accessing the types registered by modules */
+object Type {
 
-  lazy val Empty : BundleType = apply('Empty, " ", HashMap[Symbol,TraitType]())
+  /** Lookup Type by name
+    * This handy application allows constructs like `Type('foo)` to return the Scrupal Type for `foo`
+    * @param name The Symbol for the type you want to look up
+    * @return The corresponding Type object
+    */
+  def apply(name: Symbol) : Option[Type] = {
+    types.get(name) match {
+      case Some((ty,mod)) => Some(ty)
+      case None => None
+    }
+  }
+
+  def exists(name: Symbol) : Boolean = types.contains(name)
+
+  /** Allow only objects in the scrupal.api package to insert Type instances into the list of types
+    *
+    * @param ty
+    * @param mod
+    * @return The previous incarnation of the type
+    */
+  private[api] def apply(ty: Type, mod: Module) : Option[(Type,Module)] = {
+    this.types.put(ty.name, (ty,mod))
+  }
+
+  /** Retrieve the module in which a Type was defined */
+  def moduleOf(name: Symbol) : Option[Module] = {
+    types.get(name) match {
+      case Some((ty,mod)) => Some(mod)
+      case _ => None
+    }
+  }
+
+  /** The mutable list of Types that Scrupal can operate on */
+  private val types = mutable.HashMap[Symbol,(Type,Module)]()
+
 }
-
-/** The fundamental element of interaction for Modules.
-  *
-  * Entity subclasses define the fields and actions that can be accessed from the public API of Scrupal. Modules define
-  * the Entity types that they support and implement the actions that can be taken against them.
-  * Further description here.
-  */
-case class EntityType (
-  override val name: Symbol,
-  override val description: String,
-  override val traits : HashMap[Symbol,TraitType],
-  actions : HashMap[Symbol,Action] = HashMap()
-) extends BundleType(name, description, traits) {
-}
-
 

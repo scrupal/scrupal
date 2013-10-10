@@ -25,7 +25,8 @@ import play.api.Logger
 import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery0, StaticQuery}
 import scala.slick.direct.AnnotationMapper.column
-import java.sql.Timestamp
+import java.sql.{Clob, Timestamp}
+import play.api.libs.json.{JsObject, Json, JsValue}
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -44,6 +45,7 @@ trait Sketch {
   def makeSchema : StaticQuery0[Int] = throw new NotImplementedError("Making DB Schema for " + driverClass )
   override def toString = { "{" + driverClass + ", " + schema + "," + profile }
 }
+
 
 /**
  * The abstract database component.
@@ -138,7 +140,7 @@ trait Component extends Sketch { this : Sketch =>
    * @param tableName The name of the table in the database
    * @tparam C The case class that represents rows in this table
    */
-  abstract class DescribableThingTable[C <: DescribedThing[C]](tableName: String)
+  abstract class DescribedThingTable[C <: DescribedThing[C]](tableName: String)
     extends ImmutableThingTable[C] (tableName) {
 
     def description = column[String](tableName + "_description", O.NotNull)
@@ -146,7 +148,7 @@ trait Component extends Sketch { this : Sketch =>
   };
 
   abstract class ThingTable[C <: Thing[C]](tableName: String)
-    extends DescribableThingTable[C](tableName) {
+    extends DescribedThingTable[C](tableName) {
 
     def modified = column[DateTime](tableName + "_modified", O.Nullable)
 
@@ -249,6 +251,16 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
   // This is where the magic happens :)
   import profile.simple._
 
+  def toClob(js: JsValue)(implicit session: Session) : Clob = {
+    val clob = session.conn.createClob()
+    clob.setString(1, Json.stringify(js));
+    clob
+  }
+
+  def toJson(clob: Clob) : JsValue = Json.parse(clob.getSubString(1,Int.MaxValue))
+  // FIXME: Can't we parse an InputStream?
+
+
   /**
    * Provides the set of DDL from all the tables, etc that this Schema offers. Subclasses must override this so this
    * class can provide functionality around the DDL.
@@ -262,7 +274,6 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
     }
     ddl.create
   }
-
 }
 
 

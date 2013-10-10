@@ -21,38 +21,8 @@ import org.joda.time.DateTime
 import scala.slick.lifted.DDL
 import scrupal.api._
 import scala.Some
-
-
-/**
- * Information about a site hosted by Scrupal
- */
-case class Site(
-  override val name: Symbol,
-  override val description: String,
-  override val modified: Option[DateTime] = Some(DateTime.now()),
-  override val created: Option[DateTime] = Some(DateTime.now()),
-  override val id: Option[Long] = None
- ) extends Thing[Site](name, description, modified, created, id) {
-  def forId(id: Long) = Site(name, description, modified, created, Some(id))
-}
-
-/**
- * The Host:Port portion of a URL to be associated with a Site that Scrupal will serve. Host can either be an IP address
- * or a domain name. A given site can be accessed through multiple HostPorts and behave differently depending which
- * way it was addrssed.
- * @param id Unique identifier of the HostPort
- * @param created Creation timestamp
- * @param host Domain name or IP address
- * @param port TCP Port number
- */
-case class HostPort (
-  override val id: Option[Long],
-  override val created: Option[DateTime],
-  host : String,
-  port: Int
-) extends Creatable[HostPort] {
-  def forId(id: Long) = HostPort(Some(id), created, host, port)
-}
+import scrupal.api.Component
+import java.sql.Clob
 
 /**
  * Representation of a module in the database. Modules are plug-in extensions to Scrupal.
@@ -65,50 +35,66 @@ case class HostPort (
 case class Module (
   override val name: Symbol,
   override val description: String,
+  majVer: Int,
+  minVer: Int,
+  enabled: Boolean = false,
   override val modified: Option[DateTime] = Some(DateTime.now()),
   override val created: Option[DateTime] = Some(DateTime.now()),
   override val id: Option[Long] = None
 ) extends Thing[Module](name, description, modified, created, id) {
-  def forId(id: Long) = Module(name, description,  modified, created, Some(id))
+  def forId(id: Long) = Module(name, description, majVer, minVer, enabled,  modified, created, Some(id))
 }
 
-case class Setting (
-  override val name : Symbol,
-  kind : Long,
+case class Type(
+  override val name: Symbol,
+  override val description: String,
+  moduleId: Long,
   override val created: Option[DateTime] = Some(DateTime.now()),
   override val id: Option[Long] = None
-) extends ImmutableThing[Setting](name, created, id) {
-  def forId(id: Long) = Setting(name, kind, created, Some(id))
+) extends DescribedThing[Type](name, description, created, id) {
+  def forId(id: Long) = Type(name, description, moduleId, created, Some(id))
 }
 
-trait CoreComponent extends Component {
+case class Bundle (
+  override val name: Symbol,
+  override val description: String,
+  typeId: Long,
+  payload: Clob,
+  override val modified: Option[DateTime] = Some(DateTime.now()),
+  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val id: Option[Long] = None
+) extends Thing[Bundle](name, description, modified, created, id) {
+  def forId(id: Long) = Bundle(name, description, typeId, payload, modified, created, Some(id))
+}
+
+trait CoreComponent extends Component { self: Sketch =>
+
+  import profile.simple._
 
   // Get the TypeMapper for DateTime
   import CommonTypeMappers._
 
-  object Sites extends ThingTable[Site]("sites") {
-    def * = name ~ description ~ modified.? ~ created.? ~ id.? <> (Site.tupled, Site.unapply _)
-  }
-
-  object HostPorts extends CreatableTable[HostPort]("hostports") {
-    def host = column[String]("host")
-    def port = column[Int]("port")
-    def * = id.? ~ created.? ~ host ~ port <> (HostPort.tupled, HostPort.unapply _)
-  }
-
-  object Sites_HostPorts extends ManyToManyTable[Site,HostPort]("HostPortsOfSites", "sites", "hostports", Sites, HostPorts)
-
   object Modules extends ThingTable[Module]("modules") {
-    def enabled = column[Boolean]("enabled")
-    def * =  name ~ description ~ modified.? ~ created.? ~ id.?  <> (Module.tupled, Module.unapply _)
+    def majVer = column[Int](tableName + "_majVer")
+    def minVer = column[Int](tableName + "_minVer")
+    def enabled = column[Boolean](tableName + "_enabled", O.Default(false))
+    def * =  name ~ description ~ majVer ~ minVer ~ enabled ~ modified.? ~ created.? ~ id.?  <>
+      (Module.tupled, Module.unapply _)
   }
 
-  object Settings extends CreatableTable[Setting]("settings") {
-    def name = column[Symbol](tableName + "_name")
-    def name_index = index(tableName + "_name_index", name, unique=true)
-    def kind = column[Long](tableName + "_kind")
-    def * = name ~ kind ~ created.? ~ id.? <> (Setting.tupled, Setting.unapply _ )
+  object Types extends DescribedThingTable[Type]("types") {
+    def moduleId = column[Long](tableName + "_moduleId")
+    def moduleId_fkey = foreignKey(tableName + "_moduleId_fkey", moduleId, Modules)(_.id)
+    def * = name ~ description ~ moduleId ~ created.? ~ id.? <> (Type.tupled, Type.unapply _)
   }
 
-  def coreDDL : DDL = Sites.ddl ++ HostPorts.ddl ++ Sites_HostPorts.ddl ++ Modules.ddl
+  object Bundles extends ThingTable[Bundle]("bundles") {
+    def typeId = column[Long](tableName + "_typeId")
+    def typeId_fkey = foreignKey(tableName + "_typeId_fkey", typeId, Types)(_.id)
+    def payload = column[Clob](tableName + "_payload", O.NotNull)
+    def * = name ~ description ~ typeId ~ payload ~ modified.? ~ created.? ~ id.? <>
+      (Bundle.tupled, Bundle.unapply _)
+  }
+
+  def coreDDL : DDL =  Modules.ddl ++ Types.ddl ++ Bundles.ddl
 }

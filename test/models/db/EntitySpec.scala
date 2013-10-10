@@ -68,6 +68,7 @@ class EntitySpec extends Specification
 			te.equals(te) must beTrue
 		}
     "save, load and delete from DB" in new WithDBSession {
+      import schema._
       val ts = new TestSchema(FakeScrupal.sketch)
       ts.create
       import ts._

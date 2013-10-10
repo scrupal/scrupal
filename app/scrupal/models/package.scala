@@ -15,31 +15,11 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal
 
-import play.api.test.Helpers._
-import org.specs2.mutable.Specification
-import org.joda.time.DateTime
+/** Scrupal Models Package.
+  * The Scrupal models consist of the various database modules that define the structure of the data in the database.
+  */
+package object models {
 
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.Module
-
-/**
- * One line sentence description here.
- * Further description here.
- */
-class ModuleSpec extends Specification {
-
-  "Module" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      /*
-      import schema._
-      val mod = Modules.insert(Module('foo, "Test Module"))
-      mod.name must beEqualTo("foo")
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      */
-      success
-    }
-  }
 }

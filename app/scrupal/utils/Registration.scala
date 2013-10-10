@@ -36,7 +36,7 @@ trait Registrable {
 trait Registry[T <: Registrable] {
   protected val registryName = "Registry"
   protected val registrantsName = "Registrable"
-  private val registrants = new HashMap[Symbol, T]()
+  protected val registrants = new HashMap[Symbol, T]()
 
   def register(thing : T) : Unit = {
     Logger.debug("Registering " + thing.getClass().getCanonicalName() + " as " + thing.registration_id.name + " with registrants = " +

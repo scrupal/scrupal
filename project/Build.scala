@@ -12,7 +12,7 @@ object BuildSettings
 {
   val appName = "scrupal"
   val buildVersion = "0.1"
-  val buildSettings = playScalaSettings ++ Seq (
+  val buildSettings = Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     javacOptions ++= Seq(
       "-J-Xmx1024m",
@@ -67,22 +67,20 @@ object ShellPrompt
 
 object Resolvers
 {
-  val sbt_plugin_releases     = Resolver.url("SBT Plugin Releases", url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
-  val pk11_scratch            = "Google PK11-Scratch" at "http://pk11-scratch.googlecode.com/svn/trunk"
+  val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
   val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
-  val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases"
-  val scala_lang              = "Scala Language" at "http://mvnrepository.com/artifact/org.scala-lang/"
+//val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases"
+//val scala_lang              = "Scala Language" at "http://mvnrepository.com/artifact/org.scala-lang/"
+//val sbt_plugin_releases     = Resolver.url("SBT Plugin Releases",url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+//val geolocation             = "geolocation repository" at "http://blabluble.github.com/modules/releases/"
 
-//val geolocation             = "geolocation repository" at "http://blabluble.github.com/modules/releases/",
-
-  val all_resolvers           = Seq ( sbt_plugin_releases, pk11_scratch, typesafe_releases, sonatype_releases,
-	                                    scala_lang )
+  val all_resolvers           = Seq ( typesafe_releases, google_sedis  )
 }
 
 object Dependencies
 {
   val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
-  val mailer_plugin           = "com.typesafe"        %% "play-plugins-mailer"    % "2.1.0"
+  val mailer_plugin           = "com.typesafe"        %% "play-plugins-mailer"    % "2.2.0"
   val slick                   = "com.typesafe.slick"  %% "slick"                  % "1.0.1"
   val h2                      = "com.h2database"      % "h2"                      % "1.3.173"
 
@@ -139,7 +137,7 @@ object ScrupalBuild extends Build {
         pbkdf2, bcrypt, scrypt
       ),
       printClasspath <<= print_class_path
-    )
+    ) ++ playScalaSettings
   )
   override def rootProject = Some(scrupal)
 }
