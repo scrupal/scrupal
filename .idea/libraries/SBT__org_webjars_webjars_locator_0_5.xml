@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:webjars-locator:0.5">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/webjars-locator/jars/webjars-locator-0.5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/webjars-locator/docs/webjars-locator-0.5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/webjars-locator/srcs/webjars-locator-0.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:angular-strap:0.7.4">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/angular-strap/jars/angular-strap-0.7.4.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/angular-strap/docs/angular-strap-0.7.4-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/angular-strap/srcs/angular-strap-0.7.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

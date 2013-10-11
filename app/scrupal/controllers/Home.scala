@@ -18,6 +18,7 @@
 package scrupal.controllers
 
 import play.api.mvc.{Action, RequestHeader, Controller}
+import play.Routes
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -28,4 +29,27 @@ object Home extends Controller
 	def index = Action { implicit request: RequestHeader =>
 		Ok(scrupal.views.html.index("Welcome To Scrupal"))
 	}
+
+  def jsRoutes(varName: String = "jsRoutes") = Action { implicit request =>
+    Ok(
+      Routes.javascriptRouter(varName,
+        routes.javascript.Home.index,
+
+        routes.javascript.Assets.js,
+        routes.javascript.Assets.css,
+        routes.javascript.Assets.misc,
+        routes.javascript.Assets.js_s,
+        routes.javascript.Assets.css_s,
+        routes.javascript.Assets.img,
+        routes.javascript.Assets.theme,
+
+        routes.javascript.Entity.create,
+        routes.javascript.Entity.read,
+        routes.javascript.Entity.update,
+        routes.javascript.Entity.delete,
+        routes.javascript.Entity.info,
+        routes.javascript.Entity.options
+      )
+    ).as(JAVASCRIPT)
+  }
 }

@@ -19,40 +19,52 @@
 # ~~~~
 
 # Home page for Scrupal which provides setup instructions, etc.
-GET         /                               scrupal.controllers.Home.index
+GET            /                                 scrupal.controllers.Home.index
+GET            /jsroutes                        scrupal.controllers.Home.jsRoutes(varName ?= "jsRoutes")
 
 # Login page
 # User Signup, Login, Password Reset, Greeting and Logout
-#GET         /login                          scrupal.controllers.Authentication.login
-#GET         /logout                         scrupal.controllers.Authentication.logout
-#GET         /not-authorized                 scrupal.controllers.Authentication.notAuthorized
-#GET         /goodbye                        scrupal.controllers.Authentication.goodbye
+#GET    /login                                  scrupal.controllers.Authentication.login
+#GET    /logout                                 scrupal.controllers.Authentication.logout
+#GET    /not-authorized                         scrupal.controllers.Authentication.notAuthorized
+#GET    /goodbye                                scrupal.controllers.Authentication.goodbye
 
-#GET         /signup                         scrupal.controllers.Signup.startSignUp
-#POST        /signup                         scrupal.controllers.Signup.handleStartSignUp
-#GET         /signup/:token                  scrupal.controllers.Signup.signUp(token)
-#POST        /signup/:token                  scrupal.controllers.Signup.handleSignUp(token)
-#GET         /reset                          scrupal.controllers.Signup.startResetPassword
-#POST        /reset                          scrupal.controllers.Signup.handleStartResetPassword
-#GET         /reset/:token                   scrupal.controllers.Signup.resetPassword(token)
-#POST        /reset/:token                   scrupal.controllers.Signup.handleResetPassword(token)
-#GET         /password                       scrupal.controllers.Password.changePassword
-#POST        /password                       scrupal.controllers.Password.handlePasswordChange
+#GET    /signup                                 scrupal.controllers.Signup.startSignUp
+#POST   /signup                                 scrupal.controllers.Signup.handleStartSignUp
+#GET    /signup/:token                          scrupal.controllers.Signup.signUp(token)
+#POST   /signup/:token                          scrupal.controllers.Signup.handleSignUp(token)
+#GET    /reset                                  scrupal.controllers.Signup.startResetPassword
+#POST   /reset                                  scrupal.controllers.Signup.handleStartResetPassword
+#GET    /reset/:token                           scrupal.controllers.Signup.resetPassword(token)
+#POST   /reset/:token                           scrupal.controllers.Signup.handleResetPassword(token)
+#GET    /password                               scrupal.controllers.Password.changePassword
+#POST   /password                               scrupal.controllers.Password.handlePasswordChange
 
-#GET         /welcome                        scrupal.controllers.Authenticated.welcome
+#GET    /welcome                                scrupal.controllers.Authenticated.welcome
 
 # Admin application lives at this url
-#GET         /admin                          scrupal.controllers.Administration.adminIndex
-#GET         /admin/module                   scrupal.controllers.Administration.adminListModules
-#GET         /admin/module/:mod              scrupal.controllers.Administration.adminModule(mod)
+#GET    /admin                                  scrupal.controllers.Administration.adminIndex
+#GET    /admin/module                           scrupal.controllers.Administration.adminListModules
+#GET    /admin/module/:mod                      scrupal.controllers.Administration.adminModule(mod)
 
 # REST based Entities
-POST        /rest/:kind                     scrupal.controllers.Entity.create(kind)
-GET         /rest/:kind/:id                 scrupal.controllers.Entity.read(kind, id)
-PUT         /rest/:kind/:id                 scrupal.controllers.Entity.update(kind, id)
-DELETE      /rest/:kind/:id                 scrupal.controllers.Entity.delete(kind, id)
-HEAD        /rest/:kind/:id                 scrupal.controllers.Entity.info(kind, id)
-OPTIONS     /rest/:kind/:id                 scrupal.controllers.Entity.options(kind, id)
+POST           /api/:kind                        scrupal.controllers.Entity.create(kind)
+GET            /api/:kind/:id                    scrupal.controllers.Entity.read(kind, id)
+PUT            /api/:kind/:id                    scrupal.controllers.Entity.update(kind, id)
+DELETE         /api/:kind/:id                    scrupal.controllers.Entity.delete(kind, id)
+HEAD           /api/:kind/:id                    scrupal.controllers.Entity.info(kind, id)
+OPTIONS        /api/:kind/:id                    scrupal.controllers.Entity.options(kind, id)
+
+# Get dependency managed resources from WebJars
+GET            /webjars/javascripts/*file        scrupal.controllers.Assets.js(file)
+GET            /webjars/stylesheets/*file        scrupal.controllers.Assets.css(file)
+GET            /webjars/*file                    scrupal.controllers.Assets.misc(file)
+GET            /require.js                       scrupal.controllers.Assets.requirejs
 
 # Map static resources from the /assets folder to the /assets URL path
-GET         /assets/*file                   scrupal.controllers.Assets.at(path="/public", file)
+
+GET            /assets/javascripts/*file         scrupal.controllers.Assets.js_s(file)
+GET            /assets/stylesheets/*file         scrupal.controllers.Assets.css_s(file)
+GET            /assets/images/*file              scrupal.controllers.Assets.img(file)
+GET            /assets/themes/*file              scrupal.controllers.Assets.theme(file)
+GET            /assets/*file                     scrupal.controllers.Assets.fallback(path="/public", file)

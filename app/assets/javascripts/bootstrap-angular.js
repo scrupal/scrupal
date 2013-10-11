@@ -15,20 +15,22 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
+/**
+ * Bootstrap angular onto the window.document node so we don't have to deal with asynchronous loading issues.
+ * We avoid using ng-app="scrupal" so that angular doesn't attempt to process that directive before we've loaded
+ * our scrupal module.
+ */
 define([
+    'require',
     'webjars!angular',
-    'webjars!marked'
-    //'./controllers/index',
-    //'./directives/index',
-    //'./filters/index',
-    //'./services/index'
-], function (ng, md) {
+    'webjars!domReady',
+    'scrupal'
+], function (require, ng, scrupal) {
     'use strict';
 
-    return angular.module('scrupal', [
-        // 'scrupal.services',
-        // 'scrupal.controllers',
-        // 'scrupal.filters',
-        // 'scrupal.directives'
-    ]);
+    require(['webjars!domReady'], function (domReady) {
+        domReady(function() {
+            angular.bootstrap(window.document, ['scrupal']);
+        })
+    });
 });
