@@ -1,0 +1,25 @@
+@(modules: Iterable[scrupal.api.Module])(implicit request: RequestHeader)
+
+@import scrupal.views.html
+
+@html.main("Administration") {
+<div id="Admin">
+<div class="navbar">
+    <div class="navbar-inner">
+        <ul class="nav nav-pills">
+            <li><a href="#/Scrupal">Scrupal</a></li>
+            <li><a href="#/Modules">Modules</a></li>
+            <li><a href="#/Sites">Sites</a></li>
+            <li><a href="#/Entities">Entities</a></li>
+            <li><a href="#/Traits">Traits</a></li>
+            <li><a href="#/Types">Types</a></li>
+        </ul>
+    </div>
+</div>
+<div class="row">
+    <div class="span12">
+        <div class="well" ng-view ng-animate="{enter: 'enter-animation', leave: 'leave-animation'}"></div>
+    </div>
+</div>
+</div>
+}

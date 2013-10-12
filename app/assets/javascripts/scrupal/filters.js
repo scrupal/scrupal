@@ -15,20 +15,19 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-define([
-    'webjars!angular',
-    'webjars!marked'
-    //'./controllers/index',
-    //'./directives/index',
-    //'./filters/index',
-    //'./services/index'
-], function (ng, md) {
-    'use strict';
+'use strict';
 
-    return angular.module('scrupal', [
-        // 'scrupal.services',
-        // 'scrupal.controllers',
-        // 'scrupal.filters',
-        // 'scrupal.directives'
-    ]);
+/* Scrupal Filters */
+
+define(['angular'], function(angular) {
+
+    var mod = angular.module('scrupal.filters', [])
+
+    mod.filter('interpolate', ['version', function(version) {
+        return function(text) {
+            return String(text).replace(/\%VERSION\%/mg, version);
+        }
+    }]);
+
+    return mod
 });

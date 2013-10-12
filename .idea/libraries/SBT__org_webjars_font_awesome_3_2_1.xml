@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:font-awesome:3.2.1">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/font-awesome/jars/font-awesome-3.2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/font-awesome/docs/font-awesome-3.2.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

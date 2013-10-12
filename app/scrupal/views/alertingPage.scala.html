@@ -1,0 +1,9 @@
+@(title: String)(content: Html)(
+    implicit context : scrupal.models.Context  = scrupal.models.Context.active, request: RequestHeader)
+@import scrupal.views.html
+
+@html.main(title) {
+@html.alert(context.alerts)
+@html.messages(None)
+@content
+}

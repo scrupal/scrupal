@@ -1,9 +1,5 @@
-@(title: String)(content: Html)(
-    implicit context : scrupal.models.Context  = scrupal.models.Context.active, request: RequestHeader)
+@(title: String)(content: Html)(implicit context : scrupal.models.Context  = scrupal.models.Context.active, request: RequestHeader)
 @import scrupal.controllers.routes.Assets
-@import scrupal.controllers.routes.Home
-@import scrupal.views.html.alert
-@import scrupal.views.html.messages
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,21 +10,15 @@
     <link rel="stylesheet" href="@Assets.css( "bootstrap" )" media="screen">
     <link rel="stylesheet" href="@Assets.css( "font-awesome" )" media="screen">
 	<link rel="stylesheet" href="@Assets.css_s( "scrupal" )" media="screen">
+    <style type="text/css">
+    [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
+    }
+    </style>
 </head>
-<body>
-@alert(context.alerts)
-<div class="container">
-@messages(None)
-Index: @Home.index
-@content
-</div>
+<body ng-cloak>
+<div class="container">@content</div>
 @helper.requireJs(core = Assets.requirejs().url, module = Assets.js_s("require-data-main").url)
-@**
-<script type="text/javascript" src="@Assets.js( "angular" )"></script>
-<script type="text/javascript" src="@Assets.js( "jquery" )"></script>
-<script type="text/javascript" src="@Assets.js( "bootstrap" )"></script>
-<script type="text/javascript" src="@Assets.js( "marked" )"></script>
-**@
 </body>
 </html>
 

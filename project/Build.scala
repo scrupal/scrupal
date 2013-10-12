@@ -107,8 +107,10 @@ object Dependencies
   val requirejs               = "org.webjars"         % "requirejs"               % "2.1.8"
   val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1"
   val bootstrap               = "org.webjars"         % "bootstrap"               % "3.0.0"
-  val angularjs               = "org.webjars"         % "angularjs"               % "1.2.0-rc.2"
-  val angular_strap           = "org.webjars"         % "angular-strap"           % "0.7.4"
+  val angularjs               = "org.webjars"         % "angularjs"               % "1.1.5-1"
+  val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-1"
+  val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.6.0-1"
+  val angular_ui_router       = "org.webjars"         % "angular-ui-router"       % "0.2.0"
   val marked                  = "org.webjars"         % "marked"                  % "0.2.9"
   val fontawesome             = "org.webjars"         % "font-awesome"            % "3.2.1"
 
@@ -153,6 +155,10 @@ object ScrupalBuild extends Build {
     out
   }
 
+  // lazy val angularAssets =
+  //  (baseDirectory map { base: File => (( base / "assets/javascripts") ** "/chunks/*.html") })
+
+
   lazy val scrupal = play.Project(
     appName,
     path = file("."),
@@ -160,6 +166,7 @@ object ScrupalBuild extends Build {
       requireJs += "scrupal.js",
       requireJsShim += "scrupal.js",
       resolvers := all_resolvers,
+      // playAssetsDirectories <+= baseDirectory / "foo",
       libraryDependencies := Seq (
         jdbc,
         cache,
@@ -171,10 +178,15 @@ object ScrupalBuild extends Build {
         slick,
         h2,
         pbkdf2, bcrypt, scrypt,
-        webjars_play, requirejs, requirejs_domready, bootstrap, angularjs, angular_strap, marked, fontawesome
+        webjars_play, requirejs, requirejs_domready,  angularjs, angular_ui, angular_ui_bootstrap,
+        angular_ui_router, marked, fontawesome
       ),
       printClasspath <<= print_class_path
-    ) ++ playScalaSettings
+    ) ++
+  //    angularAssets map { f : File => playAssetsDirectories <+= f }
+  //    ++
+      playScalaSettings
   )
-  override def rootProject = Some(scrupal)
+
+   override def rootProject = Some(scrupal)
 }

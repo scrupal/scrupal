@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:angular-ui-router:0.2.0">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/angular-ui-router/jars/angular-ui-router-0.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/angular-ui-router/docs/angular-ui-router-0.2.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

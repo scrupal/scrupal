@@ -15,25 +15,21 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-// Start the main app logic.
-requirejs([
-    'require',
-    'angular',
-    'marked'
-], function( require, angular, marked) {
+'use strict';
 
-    /**
-     * Declare the scrupal module. This is fundamental to Scrupal applications and this module provides all the basic
-     * elements and capabilities that any Scrupal application needs. What it doesn't do is provide any particular
-     * application level constructs, just facilities applications can utilize.
-     */
-    var scrupal = angular.module("scrupal", []);
+/* Scrupal Directives */
+
+define(['angular', 'marked'], function(angular, marked) {
+
+    /** Create the sub-module of scrupal named directives. We define the scrupal directives here */
+    var mod = angular.module('scrupal.directives', [])
 
     /**
      * Create a "marked" element that contains markdown content which is automatically converted, client side, into
      * HTML via the marked.js module.
      */
-    scrupal.directive('marked', function($compile) {
+
+    mod.directive('marked', function($compile) {
         return {
             restrict: 'E',
             link: function(scope, element, attrs) {
@@ -43,4 +39,6 @@ requirejs([
             }
         }
     });
-});
+
+    return mod;
+})

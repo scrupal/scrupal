@@ -18,19 +18,19 @@
 /**
  * Bootstrap angular onto the window.document node so we don't have to deal with asynchronous loading issues.
  * We avoid using ng-app="scrupal" so that angular doesn't attempt to process that directive before we've loaded
- * our scrupal module.
+ * our scrupal module. We utilize the domReady module to make sure that the DOM really is ready before we
+ * instruct Angular to go bootstrap on it. This should give us a clean, reliable, flicker-free startup for
+ * Scrupal pages.
  */
-define([
-    'require',
-    'webjars!angular',
-    'webjars!domReady',
-    'scrupal'
-], function (require, ng, scrupal) {
+define(['require'], function (require) {
     'use strict';
 
-    require(['webjars!domReady'], function (domReady) {
+
+    /** Ask RequireJS to ensure that domReady, AngularJS and scrupal itself are loaded before proceeding */
+    require(['webjars!domReady', 'angular', '/assets/javascripts/scrupal/scrupal.js'], function (domReady, ng, scrupal ) {
+        /** Invoke domReady as a wrapper around the Angular bootstrapping so we don't go off half-cocked */
         domReady(function() {
-            angular.bootstrap(window.document, ['scrupal']);
+            ng.bootstrap(window.document, ['scrupal']);
         })
     });
 });

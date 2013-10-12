@@ -135,7 +135,7 @@ trait Component extends Sketch { this : Sketch =>
   /**
    * The base class of all table definitions in Scrupal.
    * Most tables in the Scrupal database represent some form of entity that can be manipulated through the
-   * admin interface. To ensure a certain level of consistency across all such entities, we enforce the structure
+   * index interface. To ensure a certain level of consistency across all such entities, we enforce the structure
    * of the entities with this class. Every entity table should subclass from EntityTable
    * @param tableName The name of the table in the database
    * @tparam C The case class that represents rows in this table

@@ -211,8 +211,9 @@ object Hash extends Registry[Hasher] {
   }
 
   def check(result : Hasher#HashingResult, attempt: String) = {
-    val hasher : Hasher = getRegistrant(result.hasher)
-    hasher.matches(result, attempt)
+    val hasher : Option[Hasher] = getRegistrant(result.hasher)
+    require(hasher.isDefined)
+    hasher.get.matches(result, attempt)
   }
 
   val keyLength = 64

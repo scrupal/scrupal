@@ -83,6 +83,8 @@ abstract class Module(val name: Symbol, val description: String, val version: Ve
   /** The set of configuration settings for the Module grouped into named sections */
   val settings : Settings = EmptySettings
 
+  val label = name.name
+
   /** Register this module with the registry of modules */
   Module.register(this)
 
@@ -107,7 +109,7 @@ abstract class Module(val name: Symbol, val description: String, val version: Ve
   */
 object Module extends Registry[Module] {
 
-  def apply(name: Symbol) : Module = getRegistrant(name)
+  def apply(name: Symbol) : Option[Module] = getRegistrant(name)
 
   private[scrupal] def processModules() : Unit = registrants foreach { case (name: Symbol, mod: Module) =>
     // Put all the types that are not already there into the types map.
@@ -120,4 +122,6 @@ object Module extends Registry[Module] {
     // Register all the handlers, creating the category maps as we go
     mod.handlers.foreach { handler => Handler(handler) }
   }
+
+  def all : Iterable[Module] = registrants.values
 }

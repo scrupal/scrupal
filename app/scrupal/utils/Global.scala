@@ -21,6 +21,8 @@ import play.api._
 import play.api.Mode
 import java.io.File
 import play.api.mvc.{SimpleResult, Handler, RequestHeader, EssentialAction}
+import scrupal.models.CoreModule
+import scrupal.api.Module
 
 object Global extends GlobalSettings
 {
@@ -32,7 +34,14 @@ object Global extends GlobalSettings
 	 * @param app the application
 	 */
 	override def beforeStart(app: Application) {
+    // Do whatever Play wants to do, first.
 		DefaultGlobal.beforeStart(app)
+
+    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
+    require(CoreModule.registration_id == 'Core)
+
+    // We are now ready to process the registered modules
+    Module.processModules
 	}
 
 	/**

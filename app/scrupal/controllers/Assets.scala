@@ -106,7 +106,18 @@ object Assets extends WebJarAssets(controllers.Assets)
 	 */
 	def theme(name: String, min: Boolean = true) = {
     resolve(themes, minify(name,".css", min))
-    }
+  }
+
+  /** Serve AngularJS Partial Chunks of HTML
+   * An accessor for getting Angular's partial/fragment/chunks of HTML for composed views. We store the HTML files in
+   * a directory named "chunks" underneath the javascript module's directory. But, we ask for it with a path like
+   * /chunks/module/file.html and the router routes such requests HERE.
+   * @param module The name of the Angular module
+   * @param file The name of the file being requested
+   * @return The content of the file
+   */
+  def chunks(module: String, file: String) = fallback(root + "/chunks/" + module, file)
+
 
   /** The pattern for extracting the suffix from a file name */
   private lazy val suffix_r = "(\\.[^.]*)$".r

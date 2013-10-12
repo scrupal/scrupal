@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.webjars:requirejs-domready:2.0.1">
+    <CLASSES>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/requirejs-domready/jars/requirejs-domready-2.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/requirejs-domready/docs/requirejs-domready-2.0.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

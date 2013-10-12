@@ -36,7 +36,7 @@ trait Registrable {
 trait Registry[T <: Registrable] {
   protected val registryName = "Registry"
   protected val registrantsName = "Registrable"
-  protected val registrants = new HashMap[Symbol, T]()
+  private[scrupal] val registrants = new HashMap[Symbol, T]()
 
   def register(thing : T) : Unit = {
     Logger.debug("Registering " + thing.getClass().getCanonicalName() + " as " + thing.registration_id.name + " with registrants = " +
@@ -51,13 +51,7 @@ trait Registry[T <: Registrable] {
 
   def isRegistered(name: Symbol) = registrants.contains(name)
   def unRegister(thing: T) = registrants -= thing.registration_id
-  def getRegistrant(name: Symbol) : T  = {
-    registrants.get(name).getOrElse {
-      throw new IllegalArgumentException(
-        "There is no %s named %s registered with %s".format(registrantsName, name, registryName)
-      )
-    }
-  }
+  def getRegistrant(name: Symbol) : Option[T]  = registrants.get(name)
 
   val rand = new Random(System.currentTimeMillis())
 
@@ -66,7 +60,7 @@ trait Registry[T <: Registrable] {
   def pick : T = {
     val random_index = rand.nextInt(registrants.size)
     val key : Symbol = registrants.keySet.toArray.apply(random_index)
-    getRegistrant(key)
+    getRegistrant(key).get
   }
 }
 
