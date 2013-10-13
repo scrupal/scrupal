@@ -22,6 +22,11 @@ import scrupal.utils.{Registry, Registrable}
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
 import play.api.Logger
+import play.api.libs.json._
+import org.joda.time.DateTime
+import scrupal.api.BundleType
+import scrupal.api.Version
+import scala.Some
 
 /** A modular plugin to Scrupal to extend its functionality.
   * A module is an object that provides information (data) and functionality (behavior) to Scrupal so that Scrupal can
@@ -42,8 +47,13 @@ import play.api.Logger
   *                  incompatible with `version` (although, depending on the feature in question, some compatibility
   *                  may remain).
   */
-abstract class Module(val name: Symbol, val description: String, val version: Version, val obsoletes: Version)
-  extends Registrable {
+abstract class Module(
+  override val name: Symbol,
+  override val description: String,
+  override val created: DateTime,
+  val version: Version,
+  val obsoletes: Version
+) extends UnsavableThing[Module](name, description, created) with Registrable {
 
   /** Provide the registration identifier for Registrable
     * Modules are registrable with the [[scrupal.api.Modules]] object. In all cases the identifier they are
@@ -78,12 +88,14 @@ abstract class Module(val name: Symbol, val description: String, val version: Ve
   type Settings = BundleType
 
   /** By default the module's settings are empty. Many modules won't need settings. */
-  val EmptySettings : Settings = BundleType('Empty, " ", HashMap[Symbol,TraitType]())
+  val EmptySettings : Settings = Type.EmptyBundleType
 
   /** The set of configuration settings for the Module grouped into named sections */
   val settings : Settings = EmptySettings
 
-  val label = name.name
+  lazy val label = name.name
+
+  lazy val moreDetailsURL = "http://modules.scrupal.org/doc/" + label
 
   /** Register this module with the registry of modules */
   Module.register(this)
@@ -100,6 +112,15 @@ abstract class Module(val name: Symbol, val description: String, val version: Ve
       required_version > this.obsoletes
     }
   }
+
+  override def toJson : JsObject = Json.obj(
+    "name" -> label,
+    "description" -> description,
+    "created" -> created,
+    "types" -> (types map { ty: Type => ty.label } ),
+    "events" -> (handlers map { hdlr: HandlerFor[Event] => hdlr.category  + ":" + hdlr.label } ),
+    "settings" -> (settings.traits map { case (n:Symbol, t:TraitType) => n.name } )
+  )
 }
 
 /** Amalgamated information about all registered Modules
@@ -108,6 +129,9 @@ abstract class Module(val name: Symbol, val description: String, val version: Ve
   * amalgamated into this object for use by the rest of Scrupal.
   */
 object Module extends Registry[Module] {
+
+  override val registryName = "Modules"
+  override val registrantsName = "module"
 
   def apply(name: Symbol) : Option[Module] = getRegistrant(name)
 
@@ -123,5 +147,18 @@ object Module extends Registry[Module] {
     mod.handlers.foreach { handler => Handler(handler) }
   }
 
-  def all : Iterable[Module] = registrants.values
+  implicit lazy val moduleWrites : Writes[Module] = new Writes[Module]  {
+    def writes(m: Module): JsValue = {
+      val dependencies  = Json.toJson( m.dependencies map { case (n:Symbol, v:Version) => (n.name, v.toString)} )
+      val types = Json.toJson( m.types map { typ: Type => typ.label } )
+      Json.obj(
+        "name" -> m.label,
+        "version" -> m.version.toString,
+        "obsoletes" -> m.obsoletes.toString,
+        "dependencies" -> dependencies,
+        "types" -> types
+      )
+    }
+  }
+
 }

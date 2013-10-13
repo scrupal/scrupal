@@ -46,6 +46,10 @@ define([
                 templateUrl: "chunks/admin/modules.html",
                 controller: "Modules"
             })
+            .when('/Modules/:modName', {
+                templateUrl: "chunks/admin/module.html",
+                controller: "Module"
+            })
             .when('/Entities', {
                 templateUrl: "chunks/admin/entities.html",
                 controller: "Entities"
@@ -60,9 +64,6 @@ define([
             })
             .otherwise({redirectTo: '/Scrupal'})
     }])
-
-    // Tell angular where to bootstrap this application
-    angular.bootstrap(document.body.querySelector('#Admin'),['admin']);
 
     return admin
 });

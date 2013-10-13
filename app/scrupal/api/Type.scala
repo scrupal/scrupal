@@ -22,8 +22,10 @@ import scala.collection.immutable.HashMap
 import play.api.libs.json._
 import play.api.data.validation.ValidationError
 import java.net.{URI, URISyntaxException}
-import scrupal.utils.Pluralizer
+import scrupal.utils.{Registrable, Registry, Pluralizer}
 import scala.collection.mutable
+import scrupal.models.CoreModule
+import org.joda.time.DateTime
 
 
 /** A trait to define the validate method for objects that can validate a JsValue */
@@ -87,11 +89,15 @@ trait ObjectValidator {
   * @param name The name of the type
   */
 abstract class Type (
-  val name : Symbol,
-  val description: String
-) extends ValueValidator {
+  val module: Module,
+  override val name : Symbol,
+  override val description: String,
+  override val created : DateTime
+) extends UnsavableThing[Type](name, description, created) with ValueValidator with Registrable {
   require(!name.name.isEmpty)
   require(!description.isEmpty)
+
+  override val registration_id : Symbol = name
 
   /** By default the validate method returns an error
     * @param value The JSON value to be validated
@@ -105,7 +111,17 @@ abstract class Type (
     * we use our utility [[scrupal.util.Pluralizer]] to make it consistent. This is lazy constructed so there's no
     * cost for it unless it gets used.
     */
-  lazy val plural = Pluralizer.pluralize(name)
+  lazy val plural = Pluralizer.pluralize(label)
+
+  /** Cache the string version of the Symbol whenever it gets requested */
+  lazy val label = name.name
+
+  /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
+  def kind :String = super.getClass.getSimpleName.replace("$","")
+
+  /** Register this type with the registry of types (below) */
+  Type.register(this)
+
 }
 
 /** The type for indirectly referencing another value of a specific type.
@@ -117,10 +133,12 @@ abstract class Type (
   * @param typ The type of the value to which the this object refers
   */
 case class ReferenceType (
+  override val module: Module,
   override val name : Symbol,
   override val description: String,
+  override val created : DateTime,
   typ : Type
-) extends Type(name, description) {
+) extends Type(module, name, description, created) {
   override def validate(value : JsValue) = {
     value match {
       case v : JsObject => {
@@ -136,6 +154,17 @@ case class ReferenceType (
       case x => super.validate(value)
     }
   }
+
+  override def kind = "Reference"
+
+  override def toJson = Json.obj(
+      "kind" -> kind,
+      "name" -> label,
+      "plural" -> plural,
+      "description" -> description,
+      "created" -> created,
+      "type" -> typ
+    )
 }
 
 /** A String type constrains a string by defining its content with a regular expression and a maximum length.
@@ -146,11 +175,13 @@ case class ReferenceType (
   * @param maxLen The maximum length of this string type
   */
 case class StringType (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   regex : Regex,
   maxLen : Int = Int.MaxValue
-) extends Type(name, description) {
+) extends Type(module, name, description, created) {
   require(maxLen >= 0)
 
   override def validate(value : JsValue) = {
@@ -162,6 +193,18 @@ case class StringType (
       case x => super.validate(value)
     }
   }
+
+  override def kind = "String"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "regex" -> regex.pattern.pattern,
+    "maxLen" -> maxLen
+  )
 }
 
 /** A Range type constrains Long Integers between a minimum and maximum value
@@ -172,11 +215,13 @@ case class StringType (
   * @param max
   */
 case class RangeType (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   min : Long = Int.MinValue,
   max : Long = Int.MaxValue
-) extends Type(name, description) {
+) extends Type(module, name, description, created) {
 
   override def validate(value : JsValue) = {
     value match {
@@ -188,6 +233,17 @@ case class RangeType (
       case x => super.validate(value)
     }
   }
+  override def kind = "Range"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "min" -> min,
+    "max" -> max
+  )
 }
 
 /** A Real type constrains Double values between a minimum and maximum value
@@ -198,11 +254,13 @@ case class RangeType (
   * @param max
   */
 case class RealType (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   min : Double = Double.MinValue,
   max : Double = Double.MaxValue
-) extends Type(name, description) {
+) extends Type(module, name, description, created) {
 
   override def validate(value : JsValue) = {
     value match {
@@ -214,6 +272,18 @@ case class RealType (
       case x => super.validate(value)
     }
   }
+
+  override def kind = "Real"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "min" -> min,
+    "max" -> max
+  )
 }
 
 /** A BLOB type has a specified MIME content type and a minimum and maximum length
@@ -225,12 +295,14 @@ case class RealType (
   * @param maxLen
   */
 case class BLOBType  (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   mime : String,
-  minLen : Integer = 0,
+  minLen : Int = 0,
   maxLen : Long = Long.MaxValue
-) extends Type(name, description) {
+) extends Type(module, name, description, created) {
   assert(minLen >= 0)
   assert(maxLen >= 0)
   assert(mime.contains("/"))
@@ -259,28 +331,57 @@ case class BLOBType  (
     * @return JsSuccess(true)
     */
   def validate(uri: URI) : JsResult[Boolean] = JsSuccess(true)
+
+  override def kind = "BLOB"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "mine" -> mime,
+    "minLen" -> minLen,
+    "axnLen" -> maxLen
+  )
 }
 
 /** An Enum type allows a selection of one enumerator from a list of enumerators.
   * Each enumerator is assigned an integer value.
   */
 case class EnumType  (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
-  enumerators : HashMap[String, Int]
-) extends Type(name, description) {
+  override val created : DateTime,
+  enumerators : HashMap[Symbol, Int]
+) extends Type(module, name, description, created) {
   require(!enumerators.isEmpty)
 
   override def validate(value : JsValue) = {
     value match {
       case v: JsString => {
-        if (enumerators.contains( v.value )) JsSuccess(true)
+        if (enumerators.contains( Symbol(v.value) )) JsSuccess(true)
         else JsError("Invalid enumeration value")
       }
       case x => super.validate(value)
     }
   }
-  def valueOf(enum: String) = enumerators.get(enum)
+  def valueOf(enum: Symbol) = enumerators.get(enum)
+  def valueOf(enum: String) = enumerators.get(Symbol(enum))
+
+  override def kind = "Enum"
+
+  override def toJson = {
+    Json.obj(
+      "kind" -> "Enum",
+      "name" -> label,
+      "plural" -> plural,
+      "description" -> description,
+      "created" -> created,
+      "enumerators" -> (enumerators map { case (name:Symbol, value: Int) => (name.name, value) })
+    )
+  }
 }
 
 /** Abstract base class of Types that refer to another Type that is the element type of the compound type
@@ -290,10 +391,12 @@ case class EnumType  (
   * @param elemType
   */
 abstract class CompoundType (
+  module: Module,
   name : Symbol,
   description : String,
+  created : DateTime,
   val elemType : Type
-) extends Type(name, description)
+) extends Type(module, name, description, created)
 
 /** A List type allows a non-exclusive list of elements of other types to be constructed
   *
@@ -302,10 +405,12 @@ abstract class CompoundType (
   * @param elemType
   */
 case class ListType  (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   override val elemType : Type
-) extends CompoundType(name, description, elemType) with ArrayValidator {
+) extends CompoundType(module, name, description, created, elemType) with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -313,6 +418,17 @@ case class ListType  (
       case x => super.validate(value)
     }
   }
+
+  override def kind = "List"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "elementType" -> elemType.label
+  )
 }
 
 
@@ -323,10 +439,12 @@ case class ListType  (
   * @param elemType
   */
 case class SetType  (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   override val elemType : Type
-) extends CompoundType(name, description, elemType) with ArrayValidator {
+) extends CompoundType(module, name, description, created, elemType) with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -340,6 +458,17 @@ case class SetType  (
       case x => super.validate(value)
     }
   }
+
+  override def kind = "Set"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "elementType" -> elemType.label
+  )
 }
 
 /** A Map is a set whose elements are named with an arbitrary string
@@ -349,10 +478,12 @@ case class SetType  (
   * @param elemType
   */
 case class MapType  (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   override val elemType : Type
-) extends CompoundType(name, description, elemType) {
+) extends CompoundType(module, name, description, created, elemType) {
 
   override def validate(value : JsValue) = {
     value match {
@@ -365,6 +496,17 @@ case class MapType  (
       case x => super.validate(value)
     }
   }
+
+  override def kind = "Map"
+
+  override def toJson = Json.obj(
+    "kind" -> kind,
+    "name" -> label,
+    "plural" -> plural,
+    "description" -> description,
+    "created" -> created,
+    "elementType" -> elemType.label
+  )
 }
 
 /** A group of named and typed fields that are related in some way.
@@ -385,11 +527,13 @@ case class MapType  (
   * @param fields A map of the field name symbols to their Type
   */
 case class TraitType (
+  override val module: Module,
   override val name : Symbol,
   override val description : String,
+  override val created : DateTime,
   fields : HashMap[Symbol, Type],
   actions: HashMap[Symbol, Action]
-) extends Type(name, description) with ObjectValidator {
+) extends Type(module, name, description, created) with ObjectValidator {
   require(!fields.isEmpty)
 
   override def validate(value: JsValue) : JsResult[Boolean] = {
@@ -397,6 +541,20 @@ case class TraitType (
       case v: JsObject => validate(v, fields)
       case x => super.validate(value)
     }
+  }
+
+  override def kind = "Trait"
+
+  override def toJson = {
+    Json.obj(
+      "kind" -> kind,
+      "name" -> label,
+      "plural" -> plural,
+      "description" -> description,
+      "created" -> created,
+      "fields" -> (fields map { case (s:Symbol, t:Type) => (s.name, t.label ) }),
+      "actions" -> (actions map { case (s:Symbol, a:Action) => (s.name,a.label) })
+    )
   }
 }
 
@@ -410,11 +568,13 @@ case class TraitType (
   * @param traits
   */
 case class BundleType(
+  override val module: Module,
   override val name: Symbol,
   override val description: String,
+  override val created : DateTime,
   traits : HashMap[Symbol,TraitType],
   actions : HashMap[Symbol,Action] = HashMap()
-) extends Type(name, description) with ObjectValidator {
+) extends Type(module, name, description, created) with ObjectValidator {
 
   override def validate(value: JsValue) : JsResult[Boolean] = {
     value match {
@@ -422,10 +582,28 @@ case class BundleType(
       case x => super.validate(value)
     }
   }
+
+  override def kind = "Bundle"
+
+  override def toJson = {
+    Json.obj(
+      "kind" -> kind,
+      "name" -> label,
+      "plural" -> plural,
+      "description" -> description,
+      "created" -> created,
+      "traits" ->  (traits map { case (s:Symbol,t:TraitType) => (s.name, t.label) } ),
+      "actions" -> (actions map { case (s:Symbol, a:Action) => (s.name, a.label) } )
+    )
+  }
 }
 
 /** A utility object for accessing the types registered by modules */
-object Type {
+object Type extends Registry[Type] {
+
+  override val registryName = "Types"
+  override val registrantsName = "type"
+
 
   /** Lookup Type by name
     * This handy application allows constructs like `Type('foo)` to return the Scrupal Type for `foo`
@@ -433,8 +611,8 @@ object Type {
     * @return The corresponding Type object
     */
   def apply(name: Symbol) : Option[Type] = {
-    types.get(name) match {
-      case Some((ty,mod)) => Some(ty)
+    registrants.get(name) match {
+      case x: Some[Type] => x
       case None => None
     }
   }
@@ -453,14 +631,20 @@ object Type {
 
   /** Retrieve the module in which a Type was defined */
   def moduleOf(name: Symbol) : Option[Module] = {
-    types.get(name) match {
-      case Some((ty,mod)) => Some(mod)
+    registrants.get(name) match {
+      case Some(ty) => Some(ty.module)
       case _ => None
     }
   }
 
+  val EmptyBundleType = BundleType(CoreModule, 'Empty, " ",
+    new DateTime(2013,10,13,2,40), HashMap[Symbol,TraitType]())
+
   /** The mutable list of Types that Scrupal can operate on */
   private val types = mutable.HashMap[Symbol,(Type,Module)]()
 
+  implicit lazy val typeWriter : Writes[Type] = new Writes[Type] {
+    def writes(typ: Type) = typ.toJson
+  }
 }
 

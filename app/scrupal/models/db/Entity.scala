@@ -28,7 +28,7 @@ case class Entity (
   override val description : String,
   typ : Symbol,
   override val modified : Option[DateTime] = Some(DateTime.now()),
-  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val created : DateTime = DateTime.now(),
   override val id : Option[Long] = None
 ) extends Thing[Entity](name, description, modified, created, id) {
   def forId(id: Long) = Entity(name, description, typ, modified, created, Some(id))
@@ -44,7 +44,7 @@ trait EntityComponent extends Component {
 
   object Entities extends ThingTable[Entity]("entities") {
     def typ = column[Symbol](tableName + "typ")
-    def * = name ~ description ~ typ ~ modified.? ~ created.? ~ id.? <> (Entity, Entity.unapply _)
+    def * = name ~ description ~ typ ~ modified.? ~ created ~ id.? <> (Entity, Entity.unapply _)
   }
 
   object Traits extends Table[(Long,Long,Symbol,Clob)]("traits") {

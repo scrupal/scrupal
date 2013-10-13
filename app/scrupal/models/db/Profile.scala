@@ -27,7 +27,7 @@ import scrupal.api.{Creatable, Component}
  */
 case class Profile(
   override val id : Option[Long],
-  override val created : Option[DateTime],
+  override val created : DateTime,
   principal : Long
 ) extends Creatable[Profile]{
   def forId(id: Long) = Profile(Some(id), created, principal)

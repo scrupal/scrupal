@@ -1,0 +1,23 @@
+@(mod: scrupal.api.Module)(implicit request: RequestHeader)
+@import scrupal.views.html
+@import play.api.libs.json.Json
+@html.markedPage("Fetch Module " + mod.label) {
+# Module @mod.label
+@mod.description
+
+# Synopsis
+- *Method*: ```GET```
+- *URI*: ```/api/module/@mod.label```
+- *Version*: ```@mod.version.toString```
+- *Obsoletes*: ```@mod.obsoletes.toString```
+- *Details*: @mod.moreDetailsURL
+
+# Operation
+This API call returns information about the module named `@mod.label` . The JSON object
+returned from this call contains the necessary information about this module.
+
+# Result
+```
+@Json.prettyPrint(mod.toJson)
+```
+}

@@ -99,6 +99,12 @@ object Assets extends WebJarAssets(controllers.Assets)
     */
   def img(file: String) = fallback(images, file)
 
+  /** Get the correct favicon for the context
+    * TODO: Defaulted for now to a static result :(
+    * @return The /public/images/favicon.png file
+    */
+  def favicon = fallback(images, "favicon.png")
+
 	/**
 	 * A way to obtain a theme css file just by the name of the theme
 	 * @param name Name of the theme

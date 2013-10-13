@@ -20,6 +20,9 @@ package scrupal.api
 import play.api.libs.json.{JsValue, JsObject}
 
 abstract class Action(name: Symbol, description: String) extends Thing(name, description)
+{
+  lazy val label = name.name
+}
 
 /** An action against an Entity that is parameterized by a JSON object and returns a JSON object as its result. */
 abstract class MutatingAction(name: Symbol, description: String) extends Action(name, description) {

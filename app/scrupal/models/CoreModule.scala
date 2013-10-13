@@ -19,7 +19,7 @@ package scrupal.models
 
 import scrupal.api._
 import scala.collection.immutable.HashMap
-import scrupal.models.db.ScrupalSchema
+import org.joda.time.DateTime
 
 /** Scrupal's Core Module.
   * This is the base module of all modules. It provides the various abstractions that permit other modules to extend
@@ -29,6 +29,7 @@ import scrupal.models.db.ScrupalSchema
 object CoreModule extends Module (
   'Core,
   "Scrupal's Core module for basic site functionality.",
+  new DateTime(2013,10,13,3,13),
   Version(0,1,0),
   Version(0,0,0)
 ) {
@@ -40,9 +41,9 @@ object CoreModule extends Module (
 
   /** Settings for the core
     */
-  override val settings = BundleType('Core, "Scrupal Core Module Settings",
+  override val settings = BundleType(CoreModule, 'Core, "Scrupal Core Module Settings", created,
     traits = HashMap (
-      'instance -> TraitType('instance, "Settings for the current instance of Scrupal",
+      'instance -> TraitType(CoreModule, 'instance, "Settings for the current instance of Scrupal", created,
         fields = HashMap (
           'owner -> LegalName_t
         ),

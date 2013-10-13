@@ -29,12 +29,11 @@ require.config({
         'marked'    : { exports: "marked" },
         'angular'   : { exports: 'angular' },
         'jsrouts'   : { exports: "jsRoutes" },
-        'domReady'  : { exports: "domReady" },
-        "ui-router" : { exports: "uiRouter", deps : ['angular'] }
+        'domReady'  : { exports: "domReady" }
     },
 
     /** This is the really important part. RequireJS reads this file first because it is the only javascript file
-     * referenced from the `<script> ` tag in main.scala.html. Instead of risking script load ordering issues, we
+     * referenced from the `<script> ` tag in plainPage.scala.html.html. Instead of risking script load ordering issues, we
      * do not put the ng-app directive in the HTML file. Instead we tell requirJs that it depends on
      * bootstrap-angular.js which it will load as part of processing this configuration. That javascript is what
      * bootstrap's AngularJS, not the ng-app directive.
@@ -47,6 +46,7 @@ define("jsroutes",      ["/assets/javascripts/jsroutes.js"],function(jsRoutes) {
 define("jquery",        ["webjars!jquery.js"],              function() { return $; });
 define("angular",       ["webjars!angular.js"],             function() { return angular; });
 define("angular-ui",    ["webjars!angular-ui.js"],          function(angularUI) { return angularUI; })
+define("ui-router",     ["webjars!angular-ui-router.js"],   function(uiRouter) { return uiRouter; })
 define("uiBootstrap",   ["webjars!angular-ui-bootstrap.js"],function(uiBootstrap) { return uiBootstrap; })
 define("marked",        ["webjars!marked.js"],              function(marked) { return marked; });
 define("domReady"       ["webjars!domReady.js"],            function(domReady) { return domReady; });

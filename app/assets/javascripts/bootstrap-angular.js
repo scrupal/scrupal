@@ -30,7 +30,29 @@ define(['require'], function (require) {
     require(['webjars!domReady', 'angular', '/assets/javascripts/scrupal/scrupal.js'], function (domReady, ng, scrupal ) {
         /** Invoke domReady as a wrapper around the Angular bootstrapping so we don't go off half-cocked */
         domReady(function() {
+
+            /** We always bootstrap the scrupal module into the document. This gives us a variety of tools that are
+             * shared across other Angular modules. For example, the marked.js module is loaded by scrupal and made
+             * available with the <marked></marked> elements. This is a fundamental capability we want for all
+             * Scrupal pages, so it goes in the scrupal module and therefore does not need to be specially loaded
+             * by other modules.
+             */
             ng.bootstrap(window.document, ['scrupal']);
+
+            /** In the angularPage.scala.html template we defined the angular/scrupal module that the page wants to
+             * use. This basically sets up a require/scrupal/angular module as a one-page-ap. The module is specified
+             * as the window variable `scrupal_module_to_load`. So, if we find that value, we load the corresponding
+             * module and bootstrap it to the element with the same ID. Easy Peasy. :)
+             */
+            if ("scrupal_module_to_load" in window) {
+                var mod = window.scrupal_module_to_load
+                if (mod != "scrupal") {
+                    requirejs(["/assets/javascripts/" + mod + "/" + mod + ".js"], function(the_module) {
+                        var body_selector = "#" + mod
+                        ng.bootstrap( window.document.body.querySelector(body_selector), [mod])
+                    })
+                }
+            }
         })
     });
 });

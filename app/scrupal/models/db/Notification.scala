@@ -125,7 +125,7 @@ case class Alert (
   cssClass : String,
   expires: DateTime,
   override val modified : Option[DateTime] = Some(DateTime.now()),
-  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val created : DateTime = DateTime.now(),
   override val id : Option[Long] = None
 
 ) extends Thing[Alert](name, description, modified, created, id)
@@ -142,7 +142,7 @@ case class Alert (
    * @param alertKind The kind of alert
    */
   def this(name: Symbol, description : String, message: String, alertKind: AlertKind.Value = AlertKind.Note,
-           modified: Option[DateTime] = None, created : Option[DateTime] = None, id: Option[Long] = None) =
+           modified: Option[DateTime] = None, created : DateTime = DateTime.now(), id: Option[Long] = None) =
   {
     this(name, description, message, alertKind, toIcon(alertKind),  toPrefix(alertKind), toCss(alertKind),
          toExpiry(alertKind), modified, created, id)
@@ -185,7 +185,7 @@ trait NotificationComponent extends Component { self : Component =>
     def expires =     column[DateTime](tableName + "_expires")
     def expires_index = index(tableName + "_expires_index", expires, unique=false)
     def * = name ~ description  ~ message ~ alertKind  ~ iconKind ~ prefix ~ cssClass ~ expires ~
-            modified.? ~ created.? ~ id.? <> (Alert.tupled, Alert.unapply _ )
+            modified.? ~ created ~ id.? <> (Alert.tupled, Alert.unapply _ )
 
     lazy val unexpiredQuery = for { expires <- Parameters[DateTime] ; alrt <- this if alrt.expires > expires  } yield alrt
 

@@ -39,7 +39,7 @@ case class Module (
   minVer: Int,
   enabled: Boolean = false,
   override val modified: Option[DateTime] = Some(DateTime.now()),
-  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val created: DateTime = DateTime.now(),
   override val id: Option[Long] = None
 ) extends Thing[Module](name, description, modified, created, id) {
   def forId(id: Long) = Module(name, description, majVer, minVer, enabled,  modified, created, Some(id))
@@ -49,7 +49,7 @@ case class Type(
   override val name: Symbol,
   override val description: String,
   moduleId: Long,
-  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val created: DateTime = DateTime.now(),
   override val id: Option[Long] = None
 ) extends DescribedThing[Type](name, description, created, id) {
   def forId(id: Long) = Type(name, description, moduleId, created, Some(id))
@@ -61,7 +61,7 @@ case class Bundle (
   typeId: Long,
   payload: Clob,
   override val modified: Option[DateTime] = Some(DateTime.now()),
-  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val created: DateTime = DateTime.now(),
   override val id: Option[Long] = None
 ) extends Thing[Bundle](name, description, modified, created, id) {
   def forId(id: Long) = Bundle(name, description, typeId, payload, modified, created, Some(id))
@@ -78,21 +78,21 @@ trait CoreComponent extends Component { self: Sketch =>
     def majVer = column[Int](tableName + "_majVer")
     def minVer = column[Int](tableName + "_minVer")
     def enabled = column[Boolean](tableName + "_enabled", O.Default(false))
-    def * =  name ~ description ~ majVer ~ minVer ~ enabled ~ modified.? ~ created.? ~ id.?  <>
+    def * =  name ~ description ~ majVer ~ minVer ~ enabled ~ modified.? ~ created ~ id.?  <>
       (Module.tupled, Module.unapply _)
   }
 
   object Types extends DescribedThingTable[Type]("types") {
     def moduleId = column[Long](tableName + "_moduleId")
     def moduleId_fkey = foreignKey(tableName + "_moduleId_fkey", moduleId, Modules)(_.id)
-    def * = name ~ description ~ moduleId ~ created.? ~ id.? <> (Type.tupled, Type.unapply _)
+    def * = name ~ description ~ moduleId ~ created ~ id.? <> (Type.tupled, Type.unapply _)
   }
 
   object Bundles extends ThingTable[Bundle]("bundles") {
     def typeId = column[Long](tableName + "_typeId")
     def typeId_fkey = foreignKey(tableName + "_typeId_fkey", typeId, Types)(_.id)
     def payload = column[Clob](tableName + "_payload", O.NotNull)
-    def * = name ~ description ~ typeId ~ payload ~ modified.? ~ created.? ~ id.? <>
+    def * = name ~ description ~ typeId ~ payload ~ modified.? ~ created ~ id.? <>
       (Bundle.tupled, Bundle.unapply _)
   }
 

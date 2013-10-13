@@ -1,6 +1,6 @@
 @(message: String)(implicit request: RequestHeader)
-@import scrupal.views.html.main
-@main("Welcome to Scrupal") {
+@import scrupal.views.html
+@html.plainPage("Welcome to Scrupal") {
 <div class="alert-info">This will eventually contain the main index.</div>
 <div>
 	<i class="icon-forward" style="color: lawngreen;"></i>

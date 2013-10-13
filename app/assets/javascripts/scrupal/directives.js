@@ -31,12 +31,25 @@ define(['angular', 'marked'], function(angular, marked) {
 
     mod.directive('marked', function($compile) {
         return {
-            restrict: 'E',
-            link: function(scope, element, attrs) {
+            restrict: 'EAC',
+            // priority: 99,
+            link: function (scope, element, attrs) {
+                if (attrs.marked) {
+                    scope.$watch(attrs.marked, function (newVal) {
+                        var html = newVal ? marked(newVal) : '';
+                        element.html(html);
+                    });
+                } else {
+                    var html = marked(element.text());
+                    element.html(html);
+                }
+            }
+/*            link: function(scope, element, attrs) {
+                alert("calling marked(" + element.text() + ")" )
                 var htmlText = "<div class=\"marked\">" + marked(element.text()) + "</div>";
                 var e = $compile(htmlText)(scope);
                 element.replaceWith(e);
-            }
+            } */
         }
     });
 

@@ -2,8 +2,7 @@
 
 @import scrupal.views.html
 
-@html.main("Administration") {
-<div id="Admin">
+@html.angularPage("Administration", "admin") {
 <div class="navbar">
     <div class="navbar-inner">
         <ul class="nav nav-pills">
@@ -20,6 +19,5 @@
     <div class="span12">
         <div class="well" ng-view ng-animate="{enter: 'enter-animation', leave: 'leave-animation'}"></div>
     </div>
-</div>
 </div>
 }

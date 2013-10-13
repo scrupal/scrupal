@@ -1,0 +1,18 @@
+@(title: String, module: String = "scrupal")(content: Html)(implicit request: RequestHeader)
+
+@import scrupal.views.html
+@import scrupal.controllers.routes.Assets
+
+@html.basicPage(title) {
+<style type="text/css">
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+display: none !important;
+}
+</style>
+} {
+<body ng-cloak>
+<div id="@module" class="container">@content</div>
+<script>var scrupal_module_to_load="@module"</script>
+@helper.requireJs(core = Assets.requirejs().url, module = Assets.js_s("require-data-main").url)
+</body>
+}

@@ -15,26 +15,16 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-define([
-    'angular',
-    './controllers.js',
-    './directives.js',
-    './filters.js',
-    './services.js'
-], function (ng) {
-    'use strict';
+'use strict';
 
-    /**
-     * Declare the scrupal module. This is fundamental to Scrupal applications and this module provides all the basic
-     * elements and capabilities that any Scrupal application needs. What it doesn't do is provide any particular
-     * application level constructs, just facilities applications can utilize.
-     */
-    var scrupal = ng.module('scrupal', [
-        'scrupal.services',
-        'scrupal.controllers',
-        'scrupal.filters',
-        'scrupal.directives'
-    ]);
+/* Services */
 
-    return scrupal
-});
+define(['angular'], function(angular) {
+
+
+// Demonstrate how to register services
+// In this case it is a simple value service.
+angular.module('apidoc.services', []).
+    value('version', '0.1');
+
+})

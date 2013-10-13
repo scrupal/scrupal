@@ -29,26 +29,38 @@ define(['angular'], function(angular) {
     }]);
 
     mod.controller('Modules', ['$scope', '$http', function ScrupalModulesController($scope, $http)  {
-        $scope.modules = [
-            { name : "Core", description: "The Scrupal Core Module", version: "0.1.0" },
-            { name : "Foo", description: "Some made up thing", version: "0.0.0" }
-        ]
+        $http.get("/api/modules").success(function(data) { $scope.modules = data })
     }]);
+    mod.controller('Module', ['$scope', '$http', '$routeParams', function ScrupalModuleController($scope, $http, $routeParams) {
+        $http.get("/api/modules/" + $routeParams.modName).success(function(data) { $scope.module = data })
+    }])
 
     mod.controller('Sites', ['$scope', '$http', function ScrupalSitesController($scope, $http)  {
-        $scope.sites = { One: { domain : 'one.site.org' }, Two: { domain: 'two.fer.com' } }
+        $http.get("/api/sites").success(function(data) { $scope.sites = data })
     }]);
+    mod.controller('Site', ['$scope', '$http', '$routeParams', function ScrupalModuleController($scope, $http, $routeParams) {
+        $http.get("/api/sites/" + $routeParams.modName).success(function(data) { $scope.site = data })
+    }])
 
     mod.controller('Entities', ['$scope', '$http', function ScrupalEntitiesController($scope, $http)  {
-        $scope.entities = { Core: { version : '0.1.0' }, Foo: { version: '0.0.0' } }
+        $http.get("/api/entities").success(function(data) { $scope.entities = data })
     }]);
+    mod.controller('Entity', ['$scope', '$http', '$routeParams', function ScrupalModuleController($scope, $http, $routeParams) {
+        $http.get("/api/entities/" + $routeParams.modName).success(function(data) { $scope.entity = data })
+    }])
 
     mod.controller('Traits', ['$scope', '$http', function ScrupalTraitsController($scope, $http)  {
-        $scope.traits= { Core: { version : '0.1.0' }, Foo: { version: '0.0.0' } }
+        $http.get("/api/traits").success(function(data) { $scope.traits = data })
     }]);
+    mod.controller('Entity', ['$scope', '$http', '$routeParams', function ScrupalModuleController($scope, $http, $routeParams) {
+        $http.get("/api/traits/" + $routeParams.modName).success(function(data) { $scope.trait = data })
+    }])
 
     mod.controller('Types', ['$scope', '$http', function ScrupalTypesController($scope, $http)  {
-        $scope.types = { Core: { version : '0.1.0' }, Foo: { version: '0.0.0' } }
+        $http.get("/api/types").success(function(data) { $scope.types = data })
     }]);
+    mod.controller('Type', ['$scope', '$http', '$routeParams', function ScrupalModuleController($scope, $http, $routeParams) {
+        $http.get("/api/types/" + $routeParams.modName).success(function(data) { $scope.type = data })
+    }])
 
 });

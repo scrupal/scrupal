@@ -18,6 +18,7 @@
 package scrupal.api
 
 import org.joda.time.DateTime
+import play.api.libs.json.{JsObject, JsValue}
 
 /** Something that is identifiable by a long integer as a unique ID within some realm (e.g. a database) */
 trait Identifiable[T <: Identifiable[T]] {
@@ -30,13 +31,20 @@ trait Identifiable[T <: Identifiable[T]] {
     * @return A new instance of type T of this Thing with the new identifier in Identifiable.id field
     */
   def forId(id : Long) : T
+
+  /** All things are inherently convertible to Json.
+    * We allow each subclass to define the most efficient way to convert itself to Json. Only JsObject may be
+    * returned.
+   * This default implementation yields a NotImplemented exception .. by design.
+   * @return The JsObject representing this "thing"
+   */
+  def toJson : JsObject = ???
 }
 
 /** Something that can be created and keeps track of its modification time */
 trait Creatable[T <: Creatable[T]] extends Identifiable[T] {
-  val created : Option[DateTime] = None
-  def isCreated = created.isDefined
-  def exists = isIdentified && isCreated
+  val created : DateTime = DateTime.now()
+  def exists = isIdentified
 }
 
 /** Something that can be modified and keeps track of its time of modification */
@@ -68,7 +76,7 @@ trait Describable {
   */
 abstract class ImmutableThing[T <: ImmutableThing[T]] (
   override val name: Symbol,
-  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val created : DateTime = DateTime.now(),
   override val id : Option[Long] = None
 ) extends Equals with Creatable[T] with Nameable {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[ImmutableThing[T]]
@@ -77,10 +85,9 @@ abstract class ImmutableThing[T <: ImmutableThing[T]] (
       case that: ImmutableThing[T] => { (this eq that) || (
         that.canEqual(this) &&
           ( this.isIdentified == that.isIdentified) &&
-          ( this.isCreated == that.isCreated) &&
           ( this.isNamed == that.isNamed) &&
           ( ! this.isIdentified || this.id.get.equals(that.id.get)) &&
-          ( ! this.isCreated || this.created.get.equals(that.created.get) ) &&
+          this.created.equals(that.created) &&
           ( ! this.isNamed || this.name.equals(that.name))
         )
       }
@@ -101,7 +108,7 @@ abstract class ImmutableThing[T <: ImmutableThing[T]] (
 abstract class DescribedThing[T <: DescribedThing[T]] (
   override val name: Symbol,
   override val description: String,
-  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val created : DateTime = DateTime.now(),
   override val id : Option[Long] = None
 ) extends ImmutableThing[T](name, created, id) with Describable
 {
@@ -119,6 +126,22 @@ abstract class DescribedThing[T <: DescribedThing[T]] (
   }
 }
 
+/** A Described, Immutable, and Unsavable thing.
+  * This just adds a default definition for the forId method that throws an exception in case it gets invoked. The
+  * idea her is that subclasses of UnsavableThing are memory only objects that cannot be saved elsewhere and
+  * consequently have no need for implementing forId to obtain their identifier. This class also terminates the need
+  * for having type parameters
+  */
+abstract class UnsavableThing[T <: UnsavableThing[T]] (
+  override val name: Symbol,
+  override val description: String,
+  override val created : DateTime = DateTime.now(),
+  override val id : Option[Long] = None
+) extends DescribedThing[T](name, description, created, id) {
+  override def forId(id: Long) : T = throw new IllegalAccessError("You shouldn't call forId on a type!")
+}
+
+
 /** The Basic `Thing` that we can model with Scrupal
   * Generally the things that are interesting are identifiable, creatable, modifiable,
   * named and described. These traits hold for most of the `Thing`s that Scrupal will manipulate.
@@ -133,7 +156,7 @@ abstract class Thing[T <: Thing[T]] (
   override val name: Symbol,
   override val description: String,
   override val modified : Option[DateTime] = Some(DateTime.now()),
-  override val created : Option[DateTime] = Some(DateTime.now()),
+  override val created : DateTime = DateTime.now(),
   override val id : Option[Long] = None
 )  extends DescribedThing[T](name, description, created, id) with Modifiable {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[Thing[T]]

@@ -37,7 +37,7 @@ import scrupal.utils.Hash
  */
 case class Principal(
   override val id: Option[Long],
-  override val created: Option[DateTime],
+  override val created: DateTime,
   email: String,
   password: String,
   hasher: String,
@@ -51,7 +51,7 @@ case class ProfileType(
   override val name: Symbol,
   override val description: String,
   override val modified: Option[DateTime] = Some(DateTime.now()),
-  override val created: Option[DateTime] = Some(DateTime.now()),
+  override val created: DateTime = DateTime.now(),
   override val id: Option[Long] = None
 ) extends Thing[ProfileType](name, description, modified, created, id) {
   def forId(id: Long) = ProfileType(name, description, modified, created, Some(id))
@@ -75,7 +75,7 @@ trait UserComponent extends Component { self: Sketch =>
     def hasher = column[String]("hasher")
     def salt = column[String]("salt")
     def complexity = column[Long]("complexity")
-    def * = id.? ~ created.? ~ email ~ password ~ hasher ~ salt ~ complexity <> (Principal.tupled,
+    def * = id.? ~ created ~ email ~ password ~ hasher ~ salt ~ complexity <> (Principal.tupled,
       Principal.unapply _)
   }
 
@@ -108,7 +108,7 @@ trait UserComponent extends Component { self: Sketch =>
 
 
   object ProfileTypes extends ThingTable[ProfileType]("profile_types") {
-    def * = name ~ description ~ modified.? ~ created.? ~ id.? <> (ProfileType.tupled, ProfileType.unapply _)
+    def * = name ~ description ~ modified.? ~ created ~ id.? <> (ProfileType.tupled, ProfileType.unapply _)
   }
 
   def userDDL : DDL = Principals.ddl ++ Handles.ddl ++ Tokens.ddl ++ ProfileTypes.ddl

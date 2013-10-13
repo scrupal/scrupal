@@ -25,7 +25,7 @@ import play.api.Logger
  * Mix this in to anything you want to register and define the "id"; then pass that object to the Registrar you want
  */
 trait Registrable {
-  def registration_id: Symbol
+  val registration_id: Symbol
 }
 
 /**
@@ -37,6 +37,8 @@ trait Registry[T <: Registrable] {
   protected val registryName = "Registry"
   protected val registrantsName = "Registrable"
   private[scrupal] val registrants = new HashMap[Symbol, T]()
+
+  def all = registrants.values.toSeq
 
   def register(thing : T) : Unit = {
     Logger.debug("Registering " + thing.getClass().getCanonicalName() + " as " + thing.registration_id.name + " with registrants = " +

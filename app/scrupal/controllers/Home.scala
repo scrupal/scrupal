@@ -26,17 +26,24 @@ import scrupal.api.Module
  * A controller to provide the Introduction To Scrupal content
  * Further description here.
  */
-object Home extends Controller
-{
-	def index = Action { implicit request: RequestHeader =>
+object Home extends ScrupalController {
+
+  /** The home page */
+	def index = Action { implicit request =>
 		Ok(html.index("Welcome To Scrupal"))
 	}
 
-  def admin = Action { implicit request: RequestHeader =>
-    Ok(html.admin.index(Module.all))
+  /** The admin application */
+  def admin = Action { implicit request =>
+    Ok(html.admin(Module.all))
   }
 
-  def jsRoutes(varName: String = "jsRoutes") = Action { implicit request : RequestHeader =>
+  /** The apidoc application */
+  def apidoc = Action { implicit request =>
+    Ok(html.apidoc(Module.all))
+  }
+
+  def jsRoutes(varName: String = "jsRoutes") = Action { implicit request =>
     Ok(
       Routes.javascriptRouter(varName)(
         routes.javascript.Home.index,
@@ -49,12 +56,19 @@ object Home extends Controller
         routes.javascript.Assets.img,
         routes.javascript.Assets.theme,
 
-        routes.javascript.Entity.create,
-        routes.javascript.Entity.read,
-        routes.javascript.Entity.update,
-        routes.javascript.Entity.delete,
-        routes.javascript.Entity.info,
-        routes.javascript.Entity.options
+        routes.javascript.API.createAll,
+        routes.javascript.API.fetchAll,
+        routes.javascript.API.updateAll,
+        routes.javascript.API.deleteAll,
+        routes.javascript.API.summarizeAll,
+        routes.javascript.API.optionsOfAll,
+
+        routes.javascript.API.create,
+        routes.javascript.API.fetch,
+        routes.javascript.API.update,
+        routes.javascript.API.delete,
+        routes.javascript.API.summarize,
+        routes.javascript.API.optionsOf
       )
     ).as(JAVASCRIPT)
   }

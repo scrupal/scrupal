@@ -32,6 +32,7 @@ abstract class Handler (
     require(event.category == category, "Event category " + event.category + " for Handler requiring " + category)
     require(event.name == name, "Event " + event.name + " for handler requiring " + name)
   }
+  lazy val label = name.name
 }
 
 /** Abstract definition of a Handler for a specific kind of event

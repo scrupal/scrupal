@@ -1,0 +1,7 @@
+@(title: String)(md1: Html)(ht: Html)(md2: Html)(implicit request: RequestHeader)
+@import scrupal.views.html
+@html.angularPage(title) {
+<marked>@md1</marked>
+@ht
+<marked>@md2</marked>
+}

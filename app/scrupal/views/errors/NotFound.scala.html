@@ -1,0 +1,8 @@
+@(what: String)(implicit request: RequestHeader )
+
+@import scrupal.views.html
+
+@html.markedPage("Not Found - " + what) {
+# There's A Hole In The Fabric Of The InterWebz!
+Sorry, we couldn't find "@what" for you. Try something else? [Maybe, this?](/doc/api)
+}

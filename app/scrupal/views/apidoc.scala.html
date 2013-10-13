@@ -1,0 +1,7 @@
+@(modules : Iterable[scrupal.api.Module])(implicit request: RequestHeader)
+@import scrupal.views.html
+@html.angularPage("Scrupal API Documentation", "apidoc") {
+<div class="row span12">
+<div class="well" ng-view></div>
+</div>
+}

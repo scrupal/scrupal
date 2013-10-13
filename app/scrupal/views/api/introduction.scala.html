@@ -1,0 +1,13 @@
+@(modules: Seq[scrupal.api.Module], types: Seq[scrupal.api.Type])(implicit request: RequestHeader)
+<h1>Modules</h1>
+<dl>
+@for(m <- modules) {
+<dt><a href="/apidoc#/api/module/@m.label">@m.label</a></dt><dd>@m.description</dd>
+}
+</dl>
+<h1>Types</h1>
+<dl>
+@for(t <- types) {
+<dt><a href="/apidocs#/api/type/@t.label">@t.label</a></dt><dd>@t.description</dd>
+}
+</dl>

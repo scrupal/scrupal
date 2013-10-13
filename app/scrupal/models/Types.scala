@@ -25,9 +25,7 @@ import scrupal.api._
 import scala.collection.immutable.HashMap
 import scala.util.matching.Regex
 import java.sql.{SQLException, DriverManager}
-import specs2.text
-import views.html.helper.repeat
-import play.api.libs.ws.WS
+import org.joda.time.DateTime
 
 object Patterns {
   /** Join a sequence of patterns together */
@@ -75,16 +73,19 @@ object Patterns {
 import Patterns._
 
 /** The Scrupal Type for the identifier of things */
-object Identifier_t extends StringType('Identifier, "Scrupal Identifier", anchored(Identifier),64)
+object Identifier_t extends StringType(CoreModule, 'Identifier, "Scrupal Identifier",
+  new DateTime(2013,10,13,2,40), anchored(Identifier),64)
 
 /** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
-object DomainName_t extends StringType('DomainName, "RFC compliant Domain Name", anchored(DomainName), 253)
+object DomainName_t extends StringType(CoreModule, 'DomainName, "RFC compliant Domain Name",
+  new DateTime(2013,10,13,2,40), anchored(DomainName), 253)
 
 /** The Scrupal Type for TCP port numbers */
-object TcpPort_t extends RangeType('TcpPort, "A type for TCP port numbers", 1, 65535)
+object TcpPort_t extends RangeType(CoreModule, 'TcpPort, "A type for TCP port numbers",
+  new DateTime(2013,10,13,2,40), 1, 65535)
 
 /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-object URI_t extends Type('URI, "Uniform Resource Identifier") {
+object URI_t extends Type(CoreModule, 'URI, "Uniform Resource Identifier", new DateTime(2013,10,13,2,40)) {
   override def validate(value: JsValue) : JsResult[Boolean]= {
     value match {
       case v: JsString => {
@@ -94,6 +95,7 @@ object URI_t extends Type('URI, "Uniform Resource Identifier") {
       case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
     }
   }
+  override def kind = "URI"
 }
 
 /** What constitutes a valid JDBC URL for Scrupal.
@@ -101,7 +103,7 @@ object URI_t extends Type('URI, "Uniform Resource Identifier") {
   * that the validity of JDBC URL types is context sensitive, depending on which drivers are accessible from the
   * classpath.
   */
-object JDBC_URL_t extends Type('JDBC_URL, "Java Database Connection URL") {
+object JDBC_URL_t extends Type(CoreModule, 'JDBC_URL, "Java Database Connection URL", new DateTime(2013,10,13,2,40)) {
   override def validate(value: JsValue) : JsResult[Boolean]= {
     value match {
       case v: JsString => {
@@ -114,18 +116,23 @@ object JDBC_URL_t extends Type('JDBC_URL, "Java Database Connection URL") {
       case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
     }
   }
+  override def kind = "JDBC_URL"
 }
 
 /** The Scrupal Type for IP version 4 addresses */
-object IPv4Address_t extends StringType('IPv4Address, "A type for IP v4 Addresses", anchored(IPv4Address), 15)
+object IPv4Address_t extends StringType(CoreModule, 'IPv4Address, "A type for IP v4 Addresses",
+  new DateTime(2013,10,13,2,40), anchored(IPv4Address), 15)
 
 /** The Scrupal Type for Email addresses */
-object EmailAddress_t extends StringType('EmailAddress, "An email address", anchored(EmailAddress), 253)
+object EmailAddress_t extends StringType(CoreModule, 'EmailAddress, "An email address",
+  new DateTime(2013,10,13,2,40), anchored(EmailAddress), 253)
 
-object LegalName_t extends StringType('LegalName, "The name of a person or corporate entity", anchored(LegalName), 128)
+object LegalName_t extends StringType(CoreModule, 'LegalName, "The name of a person or corporate entity",
+  new DateTime(2013,10,13,2,40), anchored(LegalName), 128)
 
 /** The Scrupal Type for information about Sites */
-object SiteInfo_t extends TraitType('SiteInfo, "Basic information about a site that Scrupal will serve.",
+object SiteInfo_t extends TraitType(CoreModule, 'SiteInfo, "Basic information about a site that Scrupal will serve.",
+  new DateTime(2013,10,13,2,40),
   fields = HashMap(
     'name -> Identifier_t,
     'title -> Identifier_t,
