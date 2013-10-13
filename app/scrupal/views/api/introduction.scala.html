@@ -1,4 +1,6 @@
 @(modules: Seq[scrupal.api.Module], types: Seq[scrupal.api.Type])(implicit request: RequestHeader)
+@import scrupal.views.html
+@html.plainPage("Scrupal API Documentation") {
 <h1>Modules</h1>
 <dl>
 @for(m <- modules) {
@@ -11,3 +13,4 @@
 <dt><a href="/apidocs#/api/type/@t.label">@t.label</a></dt><dd>@t.description</dd>
 }
 </dl>
+}

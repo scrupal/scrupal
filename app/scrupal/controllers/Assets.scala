@@ -20,7 +20,7 @@ package scrupal.controllers
 import play.api.mvc.{Action,AnyContent}
 import play.api.Play.current
 import controllers.WebJarAssets
-import play.api.{Play, Mode}
+import play.api.{http, Play, Mode}
 import java.lang.IllegalArgumentException
 
 /**
@@ -107,11 +107,23 @@ object Assets extends WebJarAssets(controllers.Assets)
 
 	/**
 	 * A way to obtain a theme css file just by the name of the theme
+   * @param source The web source for the theme
 	 * @param name Name of the theme
 	 * @return path to the theme's .css file
 	 */
 	def theme(name: String, min: Boolean = true) = {
     resolve(themes, minify(name,".css", min))
+  }
+
+  def themeURL(source: String, name: String) : String = {
+    source.toLowerCase() match {
+      case "bootswatch" => {
+        "http://bootswatch.com/" + name + "/bootstrap.min.css"
+      }
+      case _ => {
+        "/assets/stylesheets/bootstrap.min.css"
+      }
+    }
   }
 
   /** Serve AngularJS Partial Chunks of HTML
