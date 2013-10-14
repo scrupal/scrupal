@@ -17,16 +17,16 @@
 
 package scrupal.controllers
 
-import play.api.mvc.{Action,AnyContent}
+import play.api.mvc._
 import play.api.Play.current
 import controllers.WebJarAssets
-import play.api.{http, Play, Mode}
+import play.api.{Play, Mode}
 import java.lang.IllegalArgumentException
 
 /**
  * Asset controller for core assets. This one gets used by the templates
  */
-object Assets extends WebJarAssets(controllers.Assets)
+object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
 {
   // Save the Play AssetBuilder object under a new name so we can refer to it without referring to ourself!
   val assetBuilder = controllers.Assets
@@ -107,21 +107,26 @@ object Assets extends WebJarAssets(controllers.Assets)
 
 	/**
 	 * A way to obtain a theme css file just by the name of the theme
-   * @param source The web source for the theme
+   * @param provider The web source for the theme
 	 * @param name Name of the theme
 	 * @return path to the theme's .css file
 	 */
-	def theme(name: String, min: Boolean = true) = {
-    resolve(themes, minify(name,".css", min))
-  }
-
-  def themeURL(source: String, name: String) : String = {
-    source.toLowerCase() match {
-      case "bootswatch" => {
-        "http://bootswatch.com/" + name + "/bootstrap.min.css"
+	def theme(provider: String, name: String, min: Boolean = true) : Action[AnyContent] =  {
+    (Global.ScrupalIsConfigured || Global.DataYouShouldNotModify.devMode) match {
+      case true => {
+        provider.toLowerCase() match {
+          case "scrupal"    => {
+            // TODO: Look it up in the database first and if that does not work forward on to static resolution
+            resolve(themes, minify(name,".css", min))
+          }
+          case "bootswatch" =>  Action { request:RequestHeader =>
+            MovedPermanently("http://bootswatch.com/" + name + "/" + minify("bootstrap", ".css", min))
+          }
+          case _ =>  resolve(stylesheets, "boostrap.min.css")
+        }
       }
-      case _ => {
-        "/assets/stylesheets/bootstrap.min.css"
+      case false => Action { request: RequestHeader =>
+        MovedPermanently("http://bootswatch.com/bower_components/bootstrap/dist/css/bootstrap.min.css")
       }
     }
   }

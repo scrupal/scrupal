@@ -1,4 +1,4 @@
-@(mod: scrupal.api.Module)(implicit request: RequestHeader)
+@(mod: scrupal.api.Module)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
 @import play.api.libs.json.Json
 @html.markedPage("Fetch Module " + mod.label) {
@@ -6,10 +6,8 @@
 @mod.description
 
 # Synopsis
-- *Method*: ```GET```
-- *URI*: ```/api/module/@mod.label```
-- *Version*: ```@mod.version.toString```
-- *Obsoletes*: ```@mod.obsoletes.toString```
+- *URI*: ```GET http:///api/module/@mod.label```
+- *Version*: **@mod.version.toString** *Obsoletes*: **@mod.obsoletes.toString**
 - *Details*: @mod.moreDetailsURL
 
 # Operation

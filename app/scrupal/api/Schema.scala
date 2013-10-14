@@ -167,6 +167,14 @@ trait Component extends Sketch { this : Sketch =>
 
   };
 
+  abstract class EnabledThingTable[C <: EnabledThing[C]](tableName : String) extends ThingTable[C](tableName) {
+    def enabled = column[Boolean](tableName + "_enabled", O.NotNull)
+    def enabled_index = index(tableName + "_enabled_index", enabled, unique=false)
+
+    lazy val enabledQuery = for { en <- this if en.enabled === true } yield en
+    def allEnabled()(implicit s: Session) : List[C] = enabledQuery.list
+  }
+
   /**
    * The base class of all correlation tables.
    * This allows many-to-many relationships to be established by simply listing the pairs of IDs

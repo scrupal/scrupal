@@ -21,6 +21,13 @@
 # Home page for Scrupal which provides setup instructions, etc.
 GET            /                                      scrupal.controllers.Home.index
 
+# Configuration main page for first-time or any-time configuration wizard
+GET            /config                                scrupal.controllers.Home.configIndex
+GET            /config/database                       scrupal.controllers.Home.configDatabase
+GET            /config/site                           scrupal.controllers.Home.configSite
+GET            /config/page                           scrupal.controllers.Home.configPage
+GET            /config/success                        scrupal.controllers.Home.configSuccess
+
 # Special handling for AngularJS modules that have partial HTML files that need to be served.
 GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunks(module,file)
 
@@ -40,11 +47,12 @@ GET            /assets/javascripts/jsroutes.js        scrupal.controllers.Home.j
 GET            /assets/javascripts/*file              scrupal.controllers.Assets.js_s(file)
 GET            /assets/stylesheets/*file              scrupal.controllers.Assets.css_s(file)
 GET            /assets/images/*file                   scrupal.controllers.Assets.img(file)
-GET            /assets/themes/*file                   scrupal.controllers.Assets.theme(file)
+GET            /assets/themes/:provider/*file         scrupal.controllers.Assets.theme(provider, file)
 GET            /assets/*file                          scrupal.controllers.Assets.fallback(path="/public", file)
 
 # Scrupal UI Applications routing
 GET            /admin                                 scrupal.controllers.Home.admin
+GET            /dump                                  scrupal.controllers.Home.dump
 GET            /apidoc                                scrupal.controllers.Home.apidoc
 
 # Provide A REST based API For Scrupal Entities
@@ -65,24 +73,26 @@ HEAD           /api/:kind                             scrupal.controllers.API.su
 OPTIONS        /api/:kind                             scrupal.controllers.API.optionsOfAll(kind)
 
 
-# Provide Documentation for the RESET based API For Scrupal Entities
+# Provide Documentation for Scrupal and the RESET based API For Scrupal Entities
+GET            /doc/scrupal                           scrupal.controllers.Home.docPage(path="introduction")
+GET            /doc/scrupal/*path                     scrupal.controllers.Home.docPage(path)
 GET            /doc/api                               scrupal.controllers.APIDoc.introduction()
 
-GET            /doc/api/:kind/:id/:action             scrupal.controllers.APIDoc.doTo(kind, id, action)
+GET            /doc/api/GET/:kind/:id/:action         scrupal.controllers.APIDoc.doTo(kind, id, action)
 
-GET            /doc/api/:kind/:id                     scrupal.controllers.APIDoc.fetch(kind, id)
-POST           /doc/api/:kind/:id                     scrupal.controllers.APIDoc.create(kind,id)
-PUT            /doc/api/:kind/:id                     scrupal.controllers.APIDoc.update(kind, id)
-DELETE         /doc/api/:kind/:id                     scrupal.controllers.APIDoc.delete(kind, id)
-HEAD           /doc/api/:kind/:id                     scrupal.controllers.APIDoc.summarize(kind, id)
-OPTIONS        /doc/api/:kind/:id                     scrupal.controllers.APIDoc.optionsOf(kind, id)
+GET            /doc/api/GET/:kind/:id                 scrupal.controllers.APIDoc.fetch(kind, id)
+GET            /doc/api/POST/:kind/:id                scrupal.controllers.APIDoc.create(kind,id)
+GET            /doc/api/PUT/:kind/:id                 scrupal.controllers.APIDoc.update(kind, id)
+GET            /doc/api/DELETE/:kind/:id              scrupal.controllers.APIDoc.delete(kind, id)
+GET            /doc/api/HEAD/:kind/:id                scrupal.controllers.APIDoc.summarize(kind, id)
+GET            /doc/api/OPTIONS/:kind/:id             scrupal.controllers.APIDoc.optionsOf(kind, id)
 
-GET            /doc/api/:kind                         scrupal.controllers.APIDoc.fetchAll(kind)
-POST           /doc/api/:kind                         scrupal.controllers.APIDoc.createAll(kind)
-PUT            /doc/api/:kind                         scrupal.controllers.APIDoc.updateAll(kind)
-DELETE         /doc/api/:kind                         scrupal.controllers.APIDoc.deleteAll(kind)
-HEAD           /doc/api/:kind                         scrupal.controllers.APIDoc.summarizeAll(kind)
-OPTIONS        /doc/api/:kind                         scrupal.controllers.APIDoc.optionsOfAll(kind)
+GET            /doc/api/GET/:kind                     scrupal.controllers.APIDoc.fetchAll(kind)
+GET            /doc/api/POST/:kind                    scrupal.controllers.APIDoc.createAll(kind)
+GET            /doc/api/PUT/:kind                     scrupal.controllers.APIDoc.updateAll(kind)
+GET            /doc/api/DELETE/:kind                  scrupal.controllers.APIDoc.deleteAll(kind)
+GET            /doc/api/HEAD/:kind                    scrupal.controllers.APIDoc.summarizeAll(kind)
+GET            /doc/api/OPTIONS/:kind                 scrupal.controllers.APIDoc.optionsOfAll(kind)
 
 
 

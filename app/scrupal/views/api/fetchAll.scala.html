@@ -1,15 +1,17 @@
-@(singular: String, plural: String, description: String, module: String)(implicit request: RequestHeader)
+@(singular: String, plural: String, description: String, module: String)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@html.MarkedHtmlMarkedPage("Fetch All " + singular) {
+@html.angularPage("Fetch All " + singular) {
+<marked>
 # Summary
-} {
+</marked>
 <table class="span10 table table-bordered table-condensed">
     <thead><tr><th>URI</th><th>Operation</th><th>JSON Result</th><th> Module</th></tr></thead>
     <tbody><tr><td>GET:/api/@plural</td><td>fetchAll</td><td>[ @singular ] </td><td>@module</td></tr></tbody>
 </table>
-} {
+<marked>
 # Synopsis
 This API call returns the entire set @plural that Scrupal knows about.
 # Description of @singular
 @description
+</marked>
 }

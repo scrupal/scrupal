@@ -20,12 +20,9 @@ package scrupal.api
 import scrupal.utils.{Registry, Registrable}
 
 import scala.collection.immutable.HashMap
-import scala.collection.mutable
 import play.api.Logger
 import play.api.libs.json._
 import org.joda.time.DateTime
-import scrupal.api.BundleType
-import scrupal.api.Version
 import scala.Some
 
 /** A modular plugin to Scrupal to extend its functionality.

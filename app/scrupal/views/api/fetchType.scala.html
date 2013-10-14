@@ -1,14 +1,13 @@
-@(typ: scrupal.api.Type)(implicit request: RequestHeader)
+@(typ: scrupal.api.Type)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
 @import play.api.libs.json.Json
 @html.markedPage("Fetch Type " + typ.label) {
 # Type @typ.label
 @typ.description
 # Synopsis
-- *Method*: ```GET```
-- *URI*: ```/api/type/@typ.label```
-- *Kind*: ```@typ.kind```
-- *Plural*: ```@typ.plural```
+- *URI*: ```GET http:///api/type/@typ.label```
+- *Kind*: **@typ.kind**
+- *Plural*: **@typ.plural**
 
 # Operation
 This API call returns information about the type named `@typ.label` which is a kind of `@typ.kind`. The JSON object

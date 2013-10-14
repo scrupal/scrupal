@@ -23,19 +23,23 @@ define(['angular', 'marked'], function(angular, marked) {
 
     var mod = angular.module('apidoc.controllers', [])
 
-
     mod.controller('Intro', ['$scope', '$http', '$routeParams', '$compile',
         function ApiDocIntroCntl($scope, $http, $routeParams, $compile )  {
             $http.get("/doc/api").
                 success(function(data, status, headers) {
-                    $scope.index = data
-/*                    var elem = window.document.body.querySelector("#index-placeholder");
-                    var content = $compile(data)($scope);
+                    /* Find the element we want to replace with a query selector */
+                    var elem = window.document.getElementById("index-placeholder");
+                    var par = elem.parent
+                    /* Now replace that the data we got  */
+                    elem.html(data)
+
+                    /* Get angular to process this block */
+                    var fnLink = $compile(elem);     // returns a Link function used to bind template to the scope
+                    var content = fnLink($scope);
+                    render()
                     alert('content=" + content');
-                    elem.replaceWith(content)
-*/
                 }).
-               error(function(data,status, headers) {
+                error(function(data,status, headers) {
                     alert("Failed with: " + status + " " + headers + " data=" + data)
                 })
         }

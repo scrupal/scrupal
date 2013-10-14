@@ -1,16 +1,36 @@
-@(modules: Seq[scrupal.api.Module], types: Seq[scrupal.api.Type])(implicit request: RequestHeader)
+@(modules: Seq[scrupal.api.Module], types: Seq[scrupal.api.Type])(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@html.plainPage("Scrupal API Documentation") {
-<h1>Modules</h1>
+@html.angularPage("Scrupal API Documentation") {
+<marked>
+# Welcome To Scrupal API Documentation
+Since you're reading this, you must have used the ```/doc/api``` URL in your browser. Congratulations! You've learned
+how to access the API documentation for Scrupal. As you may have noted, all you need to do is put ```/doc``` in
+front of the API call that you want to get information about. Below you'll find links to documentation about the
+various kinds of API calls that this site supports.
+
+# Modules
+</marked>
 <dl>
 @for(m <- modules) {
-<dt><a href="/apidoc#/api/module/@m.label">@m.label</a></dt><dd>@m.description</dd>
+<dt><a href="/doc/api/module/@m.label">@m.label</a></dt><dd>@m.description</dd>
 }
 </dl>
-<h1>Types</h1>
-<dl>
+<marked>
+# Types
+</marked>
+<table class="span10 table table-striped table-bordered table-condensed">
+<thead><tr><th>Type</th><th>URI</th><th>Kind</th></th><th>Description</th></tr></thead>
 @for(t <- types) {
-<dt><a href="/apidocs#/api/type/@t.label">@t.label</a></dt><dd>@t.description</dd>
+<tbody><tr>
+    <td><a href="/doc/api/type/@t.label">@t.label</a></td>
+    <td>GET http:///api/type/@t.label</td>
+    <td>@t.kind</td>
+    <td>@t.description</td></tr></tbody>
 }
-</dl>
+</table>
+<marked>
+# Events
+The following set of Events are recognized by
+</marked>
+
 }

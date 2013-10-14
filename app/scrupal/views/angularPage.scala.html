@@ -1,4 +1,4 @@
-@(title: String, module: String = "scrupal")(content: Html)(implicit request: RequestHeader)
+@(title: String, module: String = "scrupal")(content: Html)(implicit context : scrupal.controllers.Context)
 
 @import scrupal.views.html
 @import scrupal.controllers.routes.Assets

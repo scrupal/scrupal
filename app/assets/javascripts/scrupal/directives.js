@@ -36,17 +36,16 @@ define(['angular', 'marked'], function(angular, marked) {
             link: function (scope, element, attrs) {
                 if (attrs.marked) {
                     scope.$watch(attrs.marked, function (newVal) {
-                        var html = newVal ? marked(newVal) : '';
-                        element.html(html);
+                        var html = newVal ? "<div class=\"marked\">" + marked(newVal) + "</div>" : '';
+                        element.replaceWith(html);
                     });
                 } else {
-                    var html = marked(element.text());
-                    element.html(html);
+                    var html = "<div class=\"marked\">" + marked(element.text()) + "</div>";
+                    element.replaceWith(html);
                 }
             }
 /*            link: function(scope, element, attrs) {
                 alert("calling marked(" + element.text() + ")" )
-                var htmlText = "<div class=\"marked\">" + marked(element.text()) + "</div>";
                 var e = $compile(htmlText)(scope);
                 element.replaceWith(e);
             } */

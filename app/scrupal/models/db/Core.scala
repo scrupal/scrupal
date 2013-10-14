@@ -23,6 +23,37 @@ import scrupal.api._
 import scala.Some
 import scrupal.api.Component
 import java.sql.Clob
+import scala.slick.direct.AnnotationMapper.column
+
+/** Information about one site that Scrupal is serving.
+  * Sites are associated with a port number that Play! is configured to listen on. We configure play's ports by
+  * scanning this table and collecting all the port numbers that are configured for active sites.
+  * @param name The name of the `Thing`
+  * @param description A brief description of the `Thing`
+  * @param listenPort The port number that Play! should listen on for this site
+  * @param urlDomain The domain name to use in generated urls
+  * @param urlPort The port number to use in generated urls
+  * @param urlHttps The HTTP method to use in generated urls (e.g. https or http)
+  * @param enabled Whether the site is enabled for serving or not
+  * @param modified The time of last modification of the `Thing`
+  * @param created The time at which the `Thing` was created
+  * @param id The unique identifier of the `Thing` within its storage realm.
+  */
+case class Site (
+  override val name: Symbol,
+  override val description: String,
+  listenPort: Short,
+  urlDomain: String,
+  urlPort: Short,
+  urlHttps: Boolean = false,
+  override val enabled: Boolean = false,
+  override val modified: Option[DateTime] = Some(DateTime.now()),
+  override val created: DateTime = DateTime.now(),
+  override val id: Option[Long] = None
+) extends EnabledThing[Site](name, description, enabled, modified, created, id) {
+  def forId(id: Long) = Site(name, description, listenPort, urlDomain, urlPort, urlHttps,
+                               enabled, modified, created, Some(id))
+}
 
 /**
  * Representation of a module in the database. Modules are plug-in extensions to Scrupal.
@@ -73,6 +104,16 @@ trait CoreComponent extends Component { self: Sketch =>
 
   // Get the TypeMapper for DateTime
   import CommonTypeMappers._
+
+  object Sites extends EnabledThingTable[Site]("sites") {
+    def listenPort = column[Short](tableName + "_listenPort")
+    def listenPort_index = index(tableName + "_listenPort_index", listenPort, unique=true)
+    def urlDomain = column[String](tableName + "_urlDomain")
+    def urlPort = column[Short](tableName + "_urlPort")
+    def urlHttps = column[Boolean](tableName + "_urlHttps")
+    def * = name ~ description ~ listenPort ~ urlDomain ~ urlPort ~ urlHttps ~ enabled ~ modified.? ~ created ~ id.? <>
+      (Site.tupled, Site.unapply _)
+  }
 
   object Modules extends ThingTable[Module]("modules") {
     def majVer = column[Int](tableName + "_majVer")

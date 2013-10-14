@@ -1,4 +1,4 @@
-@(alert: Option[scrupal.models.db.Alert] = None)(implicit request: RequestHeader)
+@(alert: Option[scrupal.models.db.Alert] = None)(implicit context : scrupal.controllers.Context)
 
 @if(alert.isDefined && alert.get.unexpired) {
 <div class="alert alert-dismissible @alert.get.cssClass">
@@ -6,12 +6,12 @@
 	<strong>@alert.get.iconHtml&nbsp;@alert.get.prefix</strong>&nbsp;@alert.get.message
 </div>
 }
-@if(request.flash.get("error").isDefined) {
-@request.flash.get("error").map { msg => <div class="alert alert-error">@Messages(msg)</div> }
+@if(context.request.flash.get("error").isDefined) {
+@context.request.flash.get("error").map { msg => <div class="alert alert-error">@Messages(msg)</div> }
 }
-@if(request.flash.get("warning").isDefined) {
-@request.flash.get("warning").map { msg => <div class="alert alert-warning">@Messages(msg)</div> }
+@if(context.request.flash.get("warning").isDefined) {
+@context.request.flash.get("warning").map { msg => <div class="alert alert-warning">@Messages(msg)</div> }
 }
-@if(request.flash.get("success").isDefined) {
-@request.flash.get("success").map { msg => <div class="alert alert-success">@Messages(msg)</div> }
+@if(context.request.flash.get("success").isDefined) {
+@context.request.flash.get("success").map { msg => <div class="alert alert-success">@Messages(msg)</div> }
 }

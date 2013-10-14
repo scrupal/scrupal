@@ -1,0 +1,9 @@
+@()(implicit context : scrupal.controllers.Context)
+@import scrupal.views.html
+@import scrupal.controllers.routes.Home
+@html.angularPage("Create Your First Page") {
+<marked>
+# Create Your First Page
+</marked>
+<p><a href="@Home.configSuccess">You're Done</a></p>
+}

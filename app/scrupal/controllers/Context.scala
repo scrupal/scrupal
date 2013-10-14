@@ -15,28 +15,49 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.controllers
 
-import play.api.libs.json.{Json, JsObject}
-import scrupal.models.db.{AlertKind, Alert}
+import scrupal.models.db.{Site, Alert}
+import play.api.mvc.RequestHeader
+import scrupal.api.{Module}
+import scrupal.models.CoreModule
 
 
 /**
  * A context for the views so they can obtain various bits of information without a large number of parameters.
  */
-case class Context(obj: JsObject = Json.obj())
+case class Context(
+  site : Option[Site] = None,
+  modules: Seq[Module] = Seq(CoreModule),
+  appName : String = "Scrupal",
+  themeName: String = "cyborg",
+  themeProvider: String = "bootswatch",
+  user: String = "nobody",
+  instance: String = "instanceName"
+) (implicit val request: RequestHeader)
 {
   def alerts : Seq[Alert] = Seq()
-  val appName : String = "Scrupal"
-  val theme: String = "default"
 }
 
-/**
- * An instance of the Context with sensible defaults so the views can have a default object to use as the Context.
- */
-object Context
-{
-  var active : Context = new Context() {
-    val k = AlertKind.Note
+/** A trait for producing a Request's context
+  * This trait simply generates the request context information from what is provided by the RequestHeader. The
+  * essential piece of information is the port number on which the request was made. This is the key to the site that
+  * is being served by Scrupal. Once we know which site the
+  */
+trait ContextProvider {
+  implicit def context[A](implicit request: RequestHeader) : Context = {
+    if (Global.ScrupalIsConfigured) {
+      val afterColon : Array[String] = request.host.split(":").tail
+      val port : Short = if (afterColon.length != 1) 80 else afterColon(0).toShort
+      val site : Option[Site] = Global.DataYouShouldNotModify.sites.get(port)
+      Context(
+        site
+      )
+    }
+    else
+    {
+      Context()
+    }
   }
 }
+

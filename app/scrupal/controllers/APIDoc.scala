@@ -26,14 +26,14 @@ import scrupal.api.{Module, Type}
 /** One line sentence description here.
   * Further description here.
   */
-object APIDoc extends ScrupalController {
+object APIDoc extends ScrupalController  {
 
   /** Provide an introduction to the API */
-  def introduction() = Action { implicit request : RequestHeader =>
+  def introduction() = Action { implicit request: RequestHeader =>
     Ok(html.api.introduction(modules, types))
   }
 
-  def fetchAll(kind: String) = Action { implicit request : RequestHeader =>
+  def fetchAll(kind: String) = Action { implicit request: RequestHeader =>
     val (singular, description, module) = kind.toLowerCase() match {
       case "sites" =>    ("Site", "A site that Scrupal is configured to serve", "Core")
       case "modules" =>  ("Module", "A Scrupal Plug-in that extends it's functionality", "Core")
@@ -46,7 +46,7 @@ object APIDoc extends ScrupalController {
     Ok(html.api.fetchAll(singular, Pluralizer.pluralize(singular), description, module))
   }
 
-  def fetch(kind: String, id: String) = Action { implicit request =>
+  def fetch(kind: String, id: String) = Action { implicit request: RequestHeader =>
     kind.toLowerCase() match {
       case "type" =>  Type(Symbol(id)) match {
         case t: Some[Type] => Ok(html.api.fetchType(t.get))
@@ -60,47 +60,47 @@ object APIDoc extends ScrupalController {
     }
   }
 
-  def createAll(kind: String) = Action { implicit request =>
+  def createAll(kind: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Creation of " + kind))
   }
 
-  def create(kind: String, id: String) = Action { implicit request =>
+  def create(kind: String, id: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Creation of " + kind + " " + id))
   }
 
-  def deleteAll(kind: String) = Action { implicit requiest =>
+  def deleteAll(kind: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Deletion of all " + kind))
   }
 
-  def delete(kind: String, id: String) = Action { implicit request =>
+  def delete(kind: String, id: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Deletion of " + kind + " " + id))
   }
 
-  def updateAll(kind: String) = Action { implicit request =>
+  def updateAll(kind: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Update of " + kind ))
   }
 
-  def update(kind: String, id: String) = Action { implicit request =>
+  def update(kind: String, id: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Update of " + kind + " " + id))
   }
 
-  def summarizeAll(kind: String) = Action { implicit request =>
+  def summarizeAll(kind: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Info for " + kind ))
   }
 
-  def summarize(kind: String, id: String) = Action { implicit request =>
+  def summarize(kind: String, id: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Info for " + id + " of kind " + kind))
   }
 
-  def optionsOfAll(kind : String) = Action { implicit request =>
+  def optionsOfAll(kind : String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Options of " + kind ))
   }
 
-  def optionsOf(kind: String, id: String) = Action { implicit request =>
+  def optionsOf(kind: String, id: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Options of " + kind + " for " + id))
   }
 
-  def doTo(kind: String, id: String, action: String) = Action { implicit request =>
+  def doTo(kind: String, id: String, action: String) = Action { implicit request: RequestHeader =>
     notImplemented(JsString("Doing " + action + "to " + id + " of kind " + kind))
   }
 }

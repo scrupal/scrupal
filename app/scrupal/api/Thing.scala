@@ -172,3 +172,24 @@ abstract class Thing[T <: Thing[T]] (
     }
   }
 }
+
+abstract class EnabledThing[T <: EnabledThing[T]] (
+  override val name: Symbol,
+  override val description: String,
+  val enabled : Boolean = false,
+  override val modified : Option[DateTime] = Some(DateTime.now()),
+  override val created : DateTime = DateTime.now(),
+  override val id : Option[Long] = None
+) extends Thing[T](name, description, modified, created, id)  {
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[EnabledThing[T]]
+  override def equals(other: Any) : Boolean = {
+    other match {
+      case that: EnabledThing[T] => { (this eq that) || (
+        that.canEqual(this) && super.equals(that) &&
+          ( this.enabled == that.enabled)
+        )
+      }
+      case _ => false
+    }
+  }
+}
