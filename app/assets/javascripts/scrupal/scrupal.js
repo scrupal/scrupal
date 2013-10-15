@@ -42,20 +42,8 @@ define([
 
     scrupal.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
 
-        /** Check to see if they have a navigation map they would like to use and install the necessary routes. */
-        if ("scrupal_navigation_map" in window) {
-            var map = window.scrupal_navigation_map
-            for (var i in map) {
-                if (map.hasOwnProperty(i)) {
-                    if (i == "otherwise" ) {
-                      $routeProvider.otherwise( {redirectTo: map[i] } )
-                    } else {
-                      $routeProvider.when("/" + i, { templateUrl: map[i] } );
-                    }
-                }
-            }
-        }
         $locationProvider.html5Mode(true)
+
     }]);
 
     return scrupal

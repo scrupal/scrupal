@@ -1,28 +1,33 @@
-<div class="row">
-  <nav class="navbar navbar-default navbar-inverse" role="navigation">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="navbar-header">
-      <a class="navbar-brand" href="/doc#/top">Scrupal</a>
-    </div>
-
-    <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="collapse navbar-collapse navbar-ex1-collapse">
-      <ul class="nav navbar-nav">
-        <li class="active" active><a href="/doc#/top">Top</a></li>
-        <li><a href="/doc#/intro">Introduction</a></li>
-        <li><a href="/doc#/start">Gettings Started</a></li>
-        <li><a href="/doc#/tutorials">Tutorials</a></li>
-        <li><a href="/doc#/developers">Developers</a></li>
-        <li><a href="/doc#/!rtfm">!RTFM</a></li>
-      </ul>
-    </div>
-  </nav>
-</div>
-<div class="row">
+<tabset>
+<tab heading="Overview" active>
+  <div class="well"></div><div ng-include="'top.html'"></div></div>
+</tab>
+<tab heading="Introduction">
   <div class="well">
-    <div ng-view></div>
+    <div ng-include="'/assets/docs/intro/index.html'"></div>
   </div>
-</div>
+</tab>
+<tab heading="Starting">
+  <div class="well">
+    <div ng-include="'/assets/docs/starting/index.html'"></div>
+  </div>
+</tab>
+<tab heading="Tutorials">
+  <div class="well">
+    <div ng-include="'/assets/docs/tutorials/index.html'"></div>
+  </div>
+</tab>
+<tab heading="Developers">
+  <div class="well">
+    <div ng-include="'/assets/docs/developers/index.html'"></div>
+  </div>
+</tab>
+<tab heading="!RTFM">
+  <div class="well">
+    <div ng-include="'/assets/docs/!rtfm/index.html'"></div>
+  </div>
+</tab>
+</tabset>
 
 <script type="text/ng-template" id="top.html">
 <section id="top">
@@ -38,6 +43,7 @@ more.
 * **!RTFM** - If you know what !RTFM means and you agree, this section is for you. Otherwise, try one of the others.
 
 </marked>
+<hr/><div><a href="/doc"><i class="icon-level-up"></i> Return to Index</a></div>
 </section>
 </script>
 
