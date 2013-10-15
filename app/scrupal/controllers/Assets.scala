@@ -18,10 +18,10 @@
 package scrupal.controllers
 
 import play.api.mvc._
-import play.api.Play.current
 import controllers.WebJarAssets
-import play.api.{Play, Mode}
 import java.lang.IllegalArgumentException
+import play.api.{Mode, Play}
+import play.api.Play.current
 
 /**
  * Asset controller for core assets. This one gets used by the templates
@@ -39,6 +39,9 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
   val stylesheets = root + "/stylesheets"
   val images = root + "/images"
   val themes = root + "/themes"
+  val docs = root + "/docs"
+  val chunks = root + "/chunks"
+  val templates = root + "/templates"
 
   /** Resolve a path/file combination from either WebJars or the static/compiled resources Scrupal provides
     * Attempts to resolve the path/file combination using WebJars but if the file could not be located there then it
@@ -103,7 +106,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     * TODO: Defaulted for now to a static result :(
     * @return The /public/images/favicon.png file
     */
-  def favicon = fallback(images, "favicon.png")
+  def favicon = fallback(images, "viritude.ico")
 
 	/**
 	 * A way to obtain a theme css file just by the name of the theme
@@ -117,19 +120,26 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
         provider.toLowerCase() match {
           case "scrupal"    => {
             // TODO: Look it up in the database first and if that does not work forward on to static resolution
-            resolve(themes, minify(name,".css", min))
+            fallback(themes, minify(name,".css", min))
           }
           case "bootswatch" =>  Action { request:RequestHeader =>
+            // TODO: Deal with "NotModified" better here?
             MovedPermanently("http://bootswatch.com/" + name + "/" + minify("bootstrap", ".css", min))
           }
-          case _ =>  resolve(stylesheets, "boostrap.min.css")
+          case _ =>  fallback(stylesheets, "boostrap.min.css")
         }
       }
       case false => Action { request: RequestHeader =>
+        // TODO: Deal with "NotModified" better here?
         MovedPermanently("http://bootswatch.com/bower_components/bootstrap/dist/css/bootstrap.min.css")
       }
     }
   }
+
+  /** Server markdown fragments that provide the documentation
+    *
+    */
+  def doc(path: String) = fallback(docs, path)
 
   /** Serve AngularJS Partial Chunks of HTML
    * An accessor for getting Angular's partial/fragment/chunks of HTML for composed views. We store the HTML files in
@@ -139,8 +149,14 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
    * @param file The name of the file being requested
    * @return The content of the file
    */
-  def chunks(module: String, file: String) = fallback(root + "/chunks/" + module, file)
+  def chunk(module: String, file: String) = fallback(chunks + "/" + module, file)
 
+  /** ui-bootstrap requires template files to satisfy some of its directives.
+    *
+    * @param path Path to the template
+    * @return
+    */
+  def template(path: String) = resolve(root, "/template/" + path)
 
   /** The pattern for extracting the suffix from a file name */
   private lazy val suffix_r = "(\\.[^.]*)$".r

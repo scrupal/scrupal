@@ -1,20 +1,25 @@
 @(path: String)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
+@import scrupal.controllers.routes.Assets
 @html.angularPage("Scrupal Documentation") {
+@** Configure the navigation map for the documentation section **@
+<script type="text/javascript">
+var scrupal_navigation_map = {
+    top : 'top.html',
+    intro : '/assets/docs/intro/index.html',
+    start : '/assets/docs/start/index.html',
+    tutorials : '/assets/docs/tutorials/index.html',
+    developers : '/assets/docs/developers/index.html',
+    '/!rtfm' : '/assets/docs/!rtfm/index.html',
+    otherwise : '/top'
+};
+</script>
+}  {
 <div class="row span12">
-<marked>
-path=@path
-- domain = @context.request.domain
-- uri: @context.request.uri
-- path: @context.request.path
-- method: @context.request.method
-- version: @context.request.version
-- remote: @context.request.remoteAddress
-- host: @context.request.host
-- domain: @context.request.domain
-- flash: @context.request.flash.toString
-
-</marked>
+<div class="well">
+<div ng-include="@("'" + Assets.doc(path) + "'")" autoscroll></div>
+<hr/>
+<sub><sup>&copy; Copyright 2012-2013, viritude llc. All Rights Reserved.</sup></sub>
 </div>
-
+</div>
 }

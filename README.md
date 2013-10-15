@@ -25,4 +25,4 @@ Finally, just in case there was any doubt, Scrupal is not about screwing your pa
 combining `Scala` with `Drupal` with the obvious pun on scruple.
 
 - - -
-<sub><sup>&copy; Copyright 2013, Reid Spencer. All Rights Reserved.</sup></sub>
+<sub><sup>&copy; Copyright 2013, viritude llc. All Rights Reserved.</sup></sub>

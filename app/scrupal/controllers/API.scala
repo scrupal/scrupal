@@ -54,9 +54,9 @@ object API extends ScrupalController  {
       case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "type" =>    Type(Symbol(id)) match {
         case Some(t:Type) => Ok(Json.toJson[Type](t))
-        case _ => NotFound(Json.obj())
+        case _ => notFound(JsString("type " + id))
       }
-      case _ => {        NotFound  }
+      case _ => {        notFound(JsString(kind + " " + id))  }
     }
   }
 

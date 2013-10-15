@@ -15,23 +15,23 @@ import org.joda.time.format.ISODateTimeFormat
   */
 class ScrupalController extends Controller with ContextProvider {
 
-  def notImplemented(what: JsString)(implicit writeable: Writeable[JsString], request: RequestHeader) : SimpleResult = {
+  def notImplemented(what: JsString)(implicit writable: Writeable[JsString], request: RequestHeader) : SimpleResult = {
     NotImplemented(JsString("NotImplemented: " + what) )
   }
 
-  def notImplemented(what:String)(implicit writeable: Writeable[Html], request: RequestHeader ) : SimpleResult = {
+  def notImplemented(what:String)(implicit writable: Writeable[Html], request: RequestHeader ) : SimpleResult = {
     NotImplemented(html.errors.NotImplemented(spaces2underscores(what)))
   }
 
-  def notFound(what:String)(implicit writeable: Writeable[Html], request: RequestHeader) : SimpleResult = {
+  def notFound(what:String)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
     NotFound(html.errors.NotFound(spaces2underscores(what)))
   }
 
-  def notFound(what: JsString)(implicit writeable: Writeable[Html], request: RequestHeader) : SimpleResult = {
-    NotFound(JsString("NotFound: " + what))
+  def notFound(what: JsString)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
+    NotFound(JsString("NotFound: " + what.value))
   }
 
-  def movedPermanently(where: String)(implicit writeable: Writeable[Html], request: RequestHeader) : SimpleResult = {
+  def movedPermanently(where: String)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
      MovedPermanently(where)
   }
 

@@ -1,0 +1,27 @@
+@()(implicit context : scrupal.controllers.Context)
+@if(context.devMode){
+@** NOTE: This has to be HTML because it might get mixed into a non-angular page. *@
+<div class="span10 row" style="font-size: 0.5em">
+<table class="span10 table table-striped table-bordered table-condensed">
+    <caption style="font-size: 1.2em; font-weight: bold;">Context Details</caption>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+        <tr><th>Site</th><td>@context.site</td></tr>
+        <tr><th>User</th><td>@context.user</td></tr>
+        <tr><th>Theme Provider</th><td>@context.themeProvider</td></tr>
+        <tr><th>Theme Name</th><td>@context.themeName</td></tr>
+    </tbody>
+</table>
+<table class="span10 table table-striped table-bordered table-condensed">
+    <caption style="font-size: 1.2em; font-weight: bold;">Request Header Details</caption>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+        <tr><th>Request</th><td>@context.request.method: @context.request.uri</td></tr>
+        <tr><th>Version</th><td>@context.request.version</td></tr>
+        <tr><th>Remote</th><td>@context.request.remoteAddress</td></tr>
+        <tr><th>Flash</th><td>@context.request.flash.toString</td></tr>
+    </tbody>
+</table>
+</div>
+}
+

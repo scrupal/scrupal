@@ -106,7 +106,7 @@ object Dependencies
   val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.2.0"
   val requirejs               = "org.webjars"         % "requirejs"               % "2.1.8"
   val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1"
-  val bootstrap               = "org.webjars"         % "bootstrap"               % "3.0.0"
+  // val bootstrap               = "org.webjars"         % "bootstrap"               % "3.0.0"
   val angularjs               = "org.webjars"         % "angularjs"               % "1.1.5-1"
   val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-1"
   val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.6.0-1"

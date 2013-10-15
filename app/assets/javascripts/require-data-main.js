@@ -47,6 +47,6 @@ define("jquery",        ["webjars!jquery.js"],              function() { return 
 define("angular",       ["webjars!angular.js"],             function() { return angular; });
 define("angular-ui",    ["webjars!angular-ui.js"],          function(angularUI) { return angularUI; })
 define("ui-router",     ["webjars!angular-ui-router.js"],   function(uiRouter) { return uiRouter; })
-define("uiBootstrap",   ["webjars!angular-ui-bootstrap.js"],function(uiBootstrap) { return uiBootstrap; })
+define("ui-bootstrap",  ["webjars!angular-ui-bootstrap.js"],function(uiBootstrap) { return uiBootstrap; })
 define("marked",        ["webjars!marked.js"],              function(marked) { return marked; });
 define("domReady"       ["webjars!domReady.js"],            function(domReady) { return domReady; });

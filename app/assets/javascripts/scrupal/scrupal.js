@@ -20,8 +20,10 @@ define([
     './controllers.js',
     './directives.js',
     './filters.js',
-    './services.js'
-], function (ng) {
+    './services.js',
+    'webjars!ui-bootstrap.js',
+    'webjars!ui-bootstrap-tpls.js'
+], function (ng, controllers, directives, filters, services) {
     'use strict';
 
     /**
@@ -30,11 +32,31 @@ define([
      * application level constructs, just facilities applications can utilize.
      */
     var scrupal = ng.module('scrupal', [
+        'ui.bootstrap',
+        'ui.bootstrap.tpls',
         'scrupal.services',
         'scrupal.controllers',
         'scrupal.filters',
         'scrupal.directives'
-    ]);
+    ])
+
+    scrupal.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+
+        /** Check to see if they have a navigation map they would like to use and install the necessary routes. */
+        if ("scrupal_navigation_map" in window) {
+            var map = window.scrupal_navigation_map
+            for (var i in map) {
+                if (map.hasOwnProperty(i)) {
+                    if (i == "otherwise" ) {
+                      $routeProvider.otherwise( {redirectTo: map[i] } )
+                    } else {
+                      $routeProvider.when("/" + i, { templateUrl: map[i] } );
+                    }
+                }
+            }
+        }
+        $locationProvider.html5Mode(true)
+    }]);
 
     return scrupal
 });

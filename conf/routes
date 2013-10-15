@@ -29,7 +29,7 @@ GET            /config/page                           scrupal.controllers.Home.c
 GET            /config/success                        scrupal.controllers.Home.configSuccess
 
 # Special handling for AngularJS modules that have partial HTML files that need to be served.
-GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunks(module,file)
+GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
 
 # Special handling for the favicon
 GET            /favicon                               scrupal.controllers.Assets.favicon
@@ -48,7 +48,9 @@ GET            /assets/javascripts/*file              scrupal.controllers.Assets
 GET            /assets/stylesheets/*file              scrupal.controllers.Assets.css_s(file)
 GET            /assets/images/*file                   scrupal.controllers.Assets.img(file)
 GET            /assets/themes/:provider/*file         scrupal.controllers.Assets.theme(provider, file)
+GET            /assets/docs/*file                     scrupal.controllers.Assets.doc(file)
 GET            /assets/*file                          scrupal.controllers.Assets.fallback(path="/public", file)
+GET            /template/*file                        scrupal.controllers.Assets.template(file)
 
 # Scrupal UI Applications routing
 GET            /admin                                 scrupal.controllers.Home.admin
@@ -73,20 +75,20 @@ HEAD           /api/:kind                             scrupal.controllers.API.su
 OPTIONS        /api/:kind                             scrupal.controllers.API.optionsOfAll(kind)
 
 
-# Provide Documentation for Scrupal and the RESET based API For Scrupal Entities
-GET            /doc/scrupal                           scrupal.controllers.Home.docPage(path="introduction")
+# Routes that provide the Scrupal Documentation
+GET            /doc                                   scrupal.controllers.Home.docPage(path="index.html")
+GET            /doc/scrupal                           scrupal.controllers.Home.docPage(path="index.html")
 GET            /doc/scrupal/*path                     scrupal.controllers.Home.docPage(path)
+
+# Routes for the REST based API Documentation facility. Same as /api but all GET requests with METHOD inserted at start
 GET            /doc/api                               scrupal.controllers.APIDoc.introduction()
-
 GET            /doc/api/GET/:kind/:id/:action         scrupal.controllers.APIDoc.doTo(kind, id, action)
-
 GET            /doc/api/GET/:kind/:id                 scrupal.controllers.APIDoc.fetch(kind, id)
 GET            /doc/api/POST/:kind/:id                scrupal.controllers.APIDoc.create(kind,id)
 GET            /doc/api/PUT/:kind/:id                 scrupal.controllers.APIDoc.update(kind, id)
 GET            /doc/api/DELETE/:kind/:id              scrupal.controllers.APIDoc.delete(kind, id)
 GET            /doc/api/HEAD/:kind/:id                scrupal.controllers.APIDoc.summarize(kind, id)
 GET            /doc/api/OPTIONS/:kind/:id             scrupal.controllers.APIDoc.optionsOf(kind, id)
-
 GET            /doc/api/GET/:kind                     scrupal.controllers.APIDoc.fetchAll(kind)
 GET            /doc/api/POST/:kind                    scrupal.controllers.APIDoc.createAll(kind)
 GET            /doc/api/PUT/:kind                     scrupal.controllers.APIDoc.updateAll(kind)

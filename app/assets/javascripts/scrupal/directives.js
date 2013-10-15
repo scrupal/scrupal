@@ -44,11 +44,6 @@ define(['angular', 'marked'], function(angular, marked) {
                     element.replaceWith(html);
                 }
             }
-/*            link: function(scope, element, attrs) {
-                alert("calling marked(" + element.text() + ")" )
-                var e = $compile(htmlText)(scope);
-                element.replaceWith(e);
-            } */
         }
     });
 

@@ -63,7 +63,7 @@ object Home extends ScrupalController {
   }
 
   def docPage(path: String) = Action { implicit request =>
-    Ok(html.docPage(path + ".md"))
+    Ok(html.docPage(path))
   }
 
   def jsRoutes(varName: String = "jsRoutes") = Action { implicit request =>

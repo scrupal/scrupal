@@ -137,6 +137,7 @@ object Global extends GlobalSettings
   override def configuration: Configuration = {
     Configuration.empty ++ Configuration.from( Map(
       "application.global"  -> "scrupal.api.Global",
+      "application.home"    -> ".",
       "ehcacheplugin"       -> "disabled",
       "evolutionplugin"     -> "disabled",
       "http.port"           -> 8000,

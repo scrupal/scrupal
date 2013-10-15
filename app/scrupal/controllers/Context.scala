@@ -33,10 +33,22 @@ case class Context(
   themeName: String = "cyborg",
   themeProvider: String = "bootswatch",
   user: String = "nobody",
-  instance: String = "instanceName"
+  instance: String = "instanceName",
+  devMode: Boolean = Global.DataYouShouldNotModify.devMode
 ) (implicit val request: RequestHeader)
 {
   def alerts : Seq[Alert] = Seq()
+
+  def suggestURL : String = {
+    import routes.{Home => rHome}
+    import routes.{APIDoc => rAPIDoc}
+    request.path match {
+      case s if s.startsWith("/api") => rAPIDoc.introduction().url
+      case s if s.startsWith("/doc") => rAPIDoc.introduction().url
+      case s if s.startsWith("/config") => rHome.configIndex().url
+      case s if s.startsWith("/asset") => rHome.docPage("assets").url
+    }
+  }
 }
 
 /** A trait for producing a Request's context
