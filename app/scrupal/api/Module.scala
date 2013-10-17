@@ -17,7 +17,7 @@
 
 package scrupal.api
 
-import scrupal.utils.{Jsonic, Registry, Registrable}
+import scrupal.utils.{Version, Jsonic, Registry, Registrable}
 
 import scala.collection.immutable.HashMap
 import play.api.{Configuration, Logger}

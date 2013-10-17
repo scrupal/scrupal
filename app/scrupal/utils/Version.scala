@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.utils
 
 import org.joda.time.DateTime
 
@@ -36,13 +36,7 @@ import org.joda.time.DateTime
   * @param update The update version number that identifies the fix/patch level without introducing new features
   *               nor breaking backwards compatibility.
   */
-case class Version(
-  major : Int,
-  minor : Int,
-  update: Int,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends Ordered[Version] with Creatable {
+case class Version(major : Int, minor : Int, update: Int) extends Ordered[Version] {
 
 /** Compare to Version instances
     * Comparison only uses the minor and major numbers because updates are considered to be bug fixes that do not

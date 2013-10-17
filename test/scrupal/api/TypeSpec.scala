@@ -22,6 +22,7 @@ import play.api.libs.json._
 import play.api.libs.json.JsSuccess
 import scala.collection.immutable.HashMap
 import scrupal.models.{CoreModule}
+import scrupal.utils.Version
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {

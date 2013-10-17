@@ -20,6 +20,7 @@ package scrupal.api
 import org.specs2.mutable.Specification
 import scala.collection.immutable.HashMap
 import scrupal.api._
+import scrupal.utils.Version
 
 /** Test specifications for the API Module class */
 class ModuleSpec extends Specification {

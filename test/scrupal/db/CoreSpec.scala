@@ -26,6 +26,7 @@ import play.api.libs.json.JsObject
 import scrupal.api.{Instance}
 import scrupal.models.db.ScrupalSchema
 import scala.collection.immutable.HashMap
+import scrupal.utils.Version
 
 /**
  * One line sentence description here.

@@ -573,7 +573,7 @@ object Type extends Registry[Type] {
     * @param kind The symbol for the kind that ```name``` should be
     * @return true iff ```name``` is of kind ```kind```
     */
-  def isKind(name: Symbol, kind: Symbol) : Boolean = registrants.getOrElse(name,NotAType).kind == kind
+  def isKindOf(name: Symbol, kind: Symbol) : Boolean = registrants.getOrElse(name,NotAType).kind == kind
 
   lazy val NotAType = new Type('NotAType, "Not A Type", 'CoreModule) { override val kind = 'Cruel }
 

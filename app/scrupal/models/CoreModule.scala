@@ -24,10 +24,10 @@ import play.api.libs.json._
 import java.net.{URISyntaxException, URI}
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsString
-import scrupal.api.Version
 import java.sql.{SQLException, DriverManager}
 import Patterns._
 import org.joda.time.DateTime
+import scrupal.utils.Version
 
 
 /** Scrupal's Core Module.
