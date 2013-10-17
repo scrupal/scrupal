@@ -23,6 +23,7 @@ import scrupal.api.Component
 import java.sql.Clob
 import play.api.libs.json.{Json, JsObject}
 import scrupal.utils.Version
+import scala.slick.direct.AnnotationMapper.column
 
 trait CoreComponent extends Component {
 
@@ -47,50 +48,24 @@ trait CoreComponent extends Component {
     }}
   )
 
-  object Types extends ScrupalTable[EssentialType]("types")  {
-    def id = column[TypeIdentifier](nm("id"), O.PrimaryKey)
-    def description = column[String](nm("description"))
+  object Types extends ScrupalTable[EssentialType]("types") with SymbolicDescribableTable[EssentialType] {
     def moduleId = column[ModuleIdentifier](nm("moduleId"))
     def moduleId_fKey = foreignKey(fkn(Modules.tableName), moduleId, Modules)(_.id)
     def * = id ~ description ~ moduleId <> (EssentialType.tupled, EssentialType.unapply _)
-    lazy val fetchByIDQuery = for { id <- Parameters[TypeIdentifier] ; ty <- this if ty.id === id } yield ty
-
-    def fetch(id: TypeIdentifier) : Option[EssentialType] =  fetchByIDQuery(id).firstOption
-
-    def findAll() : Seq[EssentialType] = Query(this).list
-    def insert(ty: EssentialType) : TypeIdentifier = { *  insert(ty); ty.id  }
   }
 
-  object Modules extends ScrupalTable[EssentialModule]("modules") {
-    def id = column[ModuleIdentifier](nm("id"), O.PrimaryKey)
-    def description = column[String](nm("description"))
+  object Modules extends ScrupalTable[EssentialModule]("modules") with SymbolicDescribableTable[EssentialModule] {
     def version = column[Version](nm("version"))
     def obsoletes = column[Version](nm("obsoletes"))
     def enabled = column[Boolean](nm("enabled"))
     def * = id ~ description ~ version ~ obsoletes ~ enabled  <>
       (EssentialModule.tupled , EssentialModule.unapply _ )
-
-    lazy val fetchByIDQuery = for { id <- Parameters[ModuleIdentifier] ; ent <- this if ent.id === id } yield ent
-
-    def fetch(id: ModuleIdentifier) : Option[EssentialModule] =  fetchByIDQuery(id).firstOption
-
-    def findAll() : Seq[EssentialModule] = Query(this).list
-
-    def insert(mod: EssentialModule) : ModuleIdentifier = { * insert(mod) ; mod.id }
   }
 
-  object Entities extends ScrupalTable[EssentialEntity]("entities") {
-    def id = column[EntityIdentifier](nm("id"), O.PrimaryKey)
-    def description = column[String](nm("description"))
+  object Entities extends ScrupalTable[EssentialEntity]("entities") with SymbolicDescribableTable[EssentialEntity] {
     def typeId = column[TypeIdentifier](nm("typeId"))
     def typeId_fkey = foreignKey(fkn("typeId"), typeId, Types)(_.id)
     def * = id ~ description ~ typeId <> (EssentialEntity.tupled, EssentialEntity.unapply _ )
-    lazy val fetchByIDQuery = for { id <- Parameters[EntityIdentifier] ; ent <- this if ent.id === id } yield ent
-
-    def fetch(id: EntityIdentifier) : Option[EssentialEntity] =  fetchByIDQuery(id).firstOption
-
-    def findAll() : Seq[EssentialEntity] = Query(this).list
-    def insert(ent: EssentialEntity) : EntityIdentifier = { * insert(ent); ent.id }
   }
 
   object Instances extends ScrupalTable[Instance]("instances") with ThingTable[Instance] {

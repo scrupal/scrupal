@@ -22,22 +22,20 @@ import scrupal.utils.{Version, Jsonic, Registry, Registrable}
 import scala.collection.immutable.HashMap
 import play.api.{Configuration, Logger}
 import play.api.libs.json._
-import scala.Some
 import com.typesafe.config.ConfigRenderOptions
-import org.joda.time.DateTime
 
 case class EssentialModule(
   override val id: ModuleIdentifier,
-  val description: String,
-  val version: Version,
-  val obsoletes: Version,
-  val enabled: Boolean
+  override val description: String,
+  version: Version,
+  obsoletes: Version,
+  enabled: Boolean
   /* owner: String,
   contact_name: String,
   contact_url: String,
   contact_email: String,
   created: DateTime */
-) extends Registrable
+) extends SymbolicDescribable with Registrable
 {
 
 }

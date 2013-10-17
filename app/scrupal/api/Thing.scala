@@ -21,7 +21,7 @@ import org.joda.time.DateTime
 
 abstract class StorableThing (
   override val id: Option[Identifier] = None
-) extends Storable with Equals
+) extends NumericIdentifiable with Equals
 
 /** A Storable with a name and description
   *
@@ -33,7 +33,7 @@ abstract class NamedDescribedThing (
   override val name : Symbol,
   override val description : String,
   override val id : Option[Identifier] = None
-) extends StorableThing(id) with Nameable with Describable
+) extends StorableThing(id) with NumericNameable with NumericDescribable
 
 /** A Storable that just has an id and a timestamp
   *
@@ -43,13 +43,13 @@ abstract class NamedDescribedThing (
 abstract class CreatableThing (
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends StorableThing(id) with Creatable
+) extends StorableThing(id) with NumericCreatable
 
 abstract class ModifiableThing (
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends CreatableThing(created, id) with Modifiable
+) extends CreatableThing(created, id) with NumericModifiable
 
 /** The most basic thing Scrupal can represent: Identifiable, Creatable, and Nameable.
   * Notably, these are immutable things because we don't keep track of a modification time stamp. The only storage
@@ -61,7 +61,7 @@ abstract class ImmutableThing (
   override val name: Symbol,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends CreatableThing(created, id) with Nameable {
+) extends CreatableThing(created, id) with NumericNameable {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[ImmutableThing]
   override def equals(other: Any) : Boolean = {
     other match {
@@ -84,7 +84,7 @@ abstract class MutableThing (
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends ModifiableThing(modified, created, id) with Nameable
+) extends ModifiableThing(modified, created, id) with NumericNameable
 
 /** An `ImmutableThing` with a description.
   * Just adds a short textual description of the thing.
@@ -97,7 +97,7 @@ abstract class DescribableImmutableThing (
   override val description: String,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends ImmutableThing(name, created, id) with Describable
+) extends ImmutableThing(name, created, id) with NumericDescribable
 {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[DescribableImmutableThing]
   override def equals(other: Any) : Boolean = {
@@ -125,7 +125,7 @@ abstract class Thing (
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-)  extends MutableThing(name, modified, created, id) with Describable {
+)  extends MutableThing(name, modified, created, id) with NumericDescribable {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[Thing]
   override def equals(other: Any) : Boolean = {
     other match {
@@ -147,7 +147,7 @@ abstract class EnablableThing (
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends Thing(name, description, modified, created, id)  {
+) extends Thing(name, description, modified, created, id)  with NumericEnablable {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[EnablableThing]
   override def equals(other: Any) : Boolean = {
     other match {

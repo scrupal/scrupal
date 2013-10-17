@@ -26,14 +26,16 @@ import org.specs2.mutable.Specification
  */
 class ThingSpec extends Specification {
   case class TestCreatable(
-  ) extends Creatable {
+    override val id: Symbol = Symbol(""),
+    override val created: Option[DateTime] = None
+  ) extends SymbolicCreatable {
     def blah : Int = 3
   }
 
   case class Identified[FOO](it: FOO,
     override val id: Option[Long],
     override val created: Option[DateTime] = Some(DateTime.now())
-  ) extends Creatable {
+  ) extends NumericCreatable {
     def apply() : FOO = it
   }
 

@@ -28,7 +28,7 @@ case class EssentialEntity(
   id: Symbol,
   val description: String,
   val instanceTypeId: TypeIdentifier
-)
+) extends SymbolicDescribable
 
 case class StatusResult[TYPE](result: JsResult[TYPE], status: Int = Status.OK)
 

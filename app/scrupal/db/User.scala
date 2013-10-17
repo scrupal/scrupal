@@ -22,6 +22,7 @@ import scala.slick.lifted.DDL
 
 import scrupal.api._
 import scrupal.utils.Hash
+import scala.slick.direct.AnnotationMapper.column
 
 /**
  * Information about a Principal, the essential identify of a user of the system. Authentication of Principals requires
@@ -42,7 +43,7 @@ case class Principal(
   complexity: Long = 0,
   override val created: Option[DateTime] = None,
   override val id: Option[Identifier] = None
-) extends Creatable with Storable {
+) extends NumericCreatable  {
 }
 
 /**
@@ -57,7 +58,7 @@ trait UserComponent extends Component {
   /**
    * The table of principals which are simple identifiable objects.
    */
-  object Principals extends ScrupalTable[Principal]("principals") with CreatableTable[Principal]  {
+  object Principals extends ScrupalTable[Principal]("principals") with NumericCreatableTable[Principal]  {
     def email = column[String](nm("email"))
     def password = column[String](nm("password"))
     def hasher = column[String](nm("hasher"))
@@ -72,7 +73,7 @@ trait UserComponent extends Component {
    * Principal with one or more names. A given Principal can have multiple names and a given name can identify multiple
    * Principals.
    */
-  object Handles extends NamedStorableTable[Principal]("handles", Principals) {
+  object Handles extends NamedNumericTable[Principal]("handles", Principals) {
     def handles(identity: Long) = findKeys(identity)
     def principals(handle: String) = findValues(handle)
   }
@@ -80,7 +81,7 @@ trait UserComponent extends Component {
   /**
    * The table of temporary tokens by which a user is identified.
    */
-  object Tokens extends NamedStorableTable[Principal]("tokens", Principals) {
+  object Tokens extends NamedNumericTable[Principal]("tokens", Principals) {
     def expiration = column[DateTime](nm("expiration"))
     def tokens(principal: Long) = findKeys(principal)
     def principals(token: String) = findValues(token)

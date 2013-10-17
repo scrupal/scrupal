@@ -79,19 +79,42 @@ trait Component  {
 
     protected def idx(name: String) : String = nm(name + "_idx")
 
-    lazy val findAllQuery = for (ty <- this) yield ty
+    lazy val findAllQuery = for (e <- this) yield e
+
+     def findAll() : Seq[S] = findAllQuery.list()
+  }
+
+  trait SymbolicTable[S <: SymbolicIdentifiable] extends ScrupalTable[S] with AbstractStorage[Symbol,Symbol,S] {
+
+    def id = column[Symbol](nm("id"), O.PrimaryKey)
+
+    lazy val fetchByIDQuery = for { id <- Parameters[Symbol] ; ent <- this if ent.id === id } yield ent
+
+    override def fetch(id: Symbol) : Option[S] =  fetchByIDQuery(id).firstOption
+
+    override def insert(entity: S) : Symbol = { *  insert(entity) ; entity.id }
+
+    override def update(entity: S) : Int = this.filter(_.id === entity.id) update(entity)
+
+    override def delete(entity: S) : Boolean = delete(entity.id)
+
+    override def delete(id: Symbol) : Boolean =  {
+      this.filter(_.id === id).delete > 0
+    }
+  }
+
+  trait SymbolicDescribableTable[S <: SymbolicDescribable] extends ScrupalTable[S] with SymbolicTable[S] {
+    def description = column[String](nm("description"))
 
   }
 
-  trait StorableTable[S <: Storable] extends ScrupalTable[S] with StorageFor[S] {
+  trait NumericTable[S <: NumericIdentifiable] extends ScrupalTable[S] with StorageFor[S] {
 
-    def id = column[Identifier](nm( "id" ), O.PrimaryKey, O.AutoInc);
+    def id = column[Identifier](nm("id"), O.PrimaryKey, O.AutoInc)
 
-    lazy val fetchByIDQuery = for { id <- Parameters[Long] ; ent <- this if ent.id === id } yield ent
+    lazy val fetchByIDQuery = for { id <- Parameters[Identifier] ; ent <- this if ent.id === id } yield ent
 
     override def fetch(id: Identifier) : Option[S] =  fetchByIDQuery(id).firstOption
-
-    override def findAll() : Seq[S] = findAllQuery.list()
 
     override def insert(entity: S) : Identifier = * returning id insert(entity)
 
@@ -99,17 +122,17 @@ trait Component  {
 
     override def delete(entity: S) : Boolean = delete(entity.id)
 
-    // -- operations on rows
-    private def delete(id: Identifier) : Boolean =  {
+    protected def delete(oid: Option[Identifier]) : Boolean = {
+      oid match { case None => false; case Some(id) => delete(id) }
+    }
+
+    override def delete(id: Identifier) : Boolean =  {
       this.filter(_.id === id).delete > 0
     }
 
-    private def delete(oid: Option[Identifier]) : Boolean = {
-      oid match { case None => false; case Some(id) => delete(id) }
-    }
   }
 
-  trait CreatableTable[S <: Creatable] extends StorableTable[S] {
+  trait NumericCreatableTable[S <: NumericCreatable] extends NumericTable[S] {
 
     def created = column[DateTime](nm("created"), O.Nullable) // FIXME: Dynamic Date required!
 
@@ -121,7 +144,7 @@ trait Component  {
     case class CreatedSince(d: DateTime) extends FinderOf[S] { override def apply() = findSinceQuery(d).list }
   }
 
-  trait ModifiableTable[S <: Modifiable] extends StorableTable[S] {
+  trait NumericModifiableTable[S <: NumericModifiable] extends NumericTable[S] {
 
     def modified_index = index(nm("modified_index"), modified, unique=false)
 
@@ -135,7 +158,7 @@ trait Component  {
     case class ModifiedSince(d: DateTime) extends FinderOf[S] { override def apply() = modifiedSinceQuery(d).list }
   }
 
-  trait NameableTable[S <: Nameable] extends StorableTable[S] {
+  trait NumericNameableTable[S <: NumericNameable] extends NumericTable[S] {
     def name = column[Symbol](nm("name"), O.NotNull)
 
     def name_index = index(idx("name"), name, unique=true)
@@ -148,16 +171,24 @@ trait Component  {
     case class ByName(n: Symbol) extends FinderOf[S] { override def apply() = fetchByNameQuery(n).list }
   }
 
-  trait DescribableTable[S <: Describable] extends StorableTable[S] {
+  trait NumericDescribableTable[S <: NumericDescribable] extends NumericTable[S] {
     def description = column[String](nm("_description"), O.NotNull)
   }
 
-  trait NamedDescribedThingTable[S <: NamedDescribedThing] extends StorableTable[S] with NameableTable[S] with
-                                                                   DescribableTable[S]
+  trait NumericEnablableTable[S <: NumericEnablable] extends NumericTable[S] {
+    def enabled = column[Boolean](nm("enabled"), O.NotNull)
+    def enabled_index = index(idx("enabled"), enabled, unique=false)
 
-  trait ImmutableThingTable[S <: ImmutableThing] extends CreatableTable[S] with NameableTable[S]
+    lazy val enabledQuery = for { en <- this if en.enabled === true } yield en
+    def allEnabled() : List[S] = enabledQuery.list
+  }
 
-  trait MutableThingTable[S <: MutableThing] extends CreatableTable[S] with ModifiableTable[S] with NameableTable[S]
+  trait NamedDescribedThingTable[S <: NamedDescribedThing] extends NumericTable[S] with NumericNameableTable[S] with
+                                                                   NumericDescribableTable[S]
+
+  trait ImmutableThingTable[S <: ImmutableThing] extends NumericCreatableTable[S] with NumericNameableTable[S]
+
+  trait MutableThingTable[S <: MutableThing] extends NumericCreatableTable[S] with NumericModifiableTable[S] with NumericNameableTable[S]
 
   /**
    * The base class of all table definitions in Scrupal.
@@ -167,24 +198,18 @@ trait Component  {
    * @tparam S The case class that represents rows in this table
    */
   trait DescribableImmutableThingTable[S <: DescribableImmutableThing]
-    extends ImmutableThingTable[S] with  DescribableTable[S];
+    extends ImmutableThingTable[S] with  NumericDescribableTable[S];
 
-  trait ThingTable[S <: Thing] extends MutableThingTable[S] with DescribableTable[S]
+  trait ThingTable[S <: Thing] extends MutableThingTable[S] with NumericDescribableTable[S]
 
-  trait EnablableThingTable[S <: EnablableThing] extends ThingTable[S] {
-    def enabled = column[Boolean](nm("enabled"), O.NotNull)
-    def enabled_index = index(idx("enabled"), enabled, unique=false)
-
-    lazy val enabledQuery = for { en <- this if en.enabled === true } yield en
-    def allEnabled() : List[S] = enabledQuery.list
-  }
+  trait EnablableThingTable[S <: EnablableThing] extends ThingTable[S] with NumericEnablableTable[S]
 
   /**
    * The base class of all correlation tables.
    * This allows many-to-many relationships to be established by simply listing the pairs of IDs
    */
-  abstract class ManyToManyTable[A <: Storable, B <: Storable ] (tableName: String,
-      nameA: String, nameB: String, tableA: StorableTable[A], tableB:  StorableTable[B])
+  abstract class ManyToManyTable[A <: NumericIdentifiable, B <: NumericIdentifiable ] (tableName: String,
+      nameA: String, nameB: String, tableA: NumericTable[A], tableB: NumericTable[B])
       extends ScrupalTable[(Identifier,Identifier)](tableName) {
     def a_id = column[Identifier](nm(nameA + "_id"))
     def b_id = column[Identifier](nm(nameB + "_id"))
@@ -203,8 +228,8 @@ trait Component  {
    * The base class of all tables that provide a string key to reference some Identifiable table.
    * This allows a
    */
-  abstract class NamedStorableTable[ReferentType <: Storable](
-      tableName: String, valueTable: StorableTable[ReferentType])
+  abstract class NamedNumericTable[ReferentType <: NumericIdentifiable](
+      tableName: String, valueTable: NumericTable[ReferentType])
       extends ScrupalTable[(String,Identifier)](tableName) {
     def key = column[String](nm("key"))
     def value = column[Identifier](nm("value"))

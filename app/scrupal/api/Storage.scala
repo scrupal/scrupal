@@ -17,52 +17,30 @@
 
 package scrupal.api
 
-import play.api.libs.json.JsObject
 import scala.collection.mutable
 import scrupal.utils.{Registrable, Registry}
-
-/** How Scala things are identified
-  * A long integer has a large enough domain and is fast for comparison. Yet, it may ultimately prove to be limiting.
-  * So, in case we ever have to change this, we're calling it an Identifier throughout the api
-  */
-
-// class Identifier extends AbstractIdentifier
-
-/** Some Thing that is storable and identifiable by an Identifier (long integer) as a unique ID within some storage
-  * realm (e.g. adatabase).
-  */
-trait Storable  {
-
-  /** The identifier for this Identifiable.
-    * Note that it is optional and private and a variable. There's a reason for that. The storage system, not the
-    * creator of this object, gets to specify the ID that works for that storage system. If this was a public value
-    * then updating the ID after it was created in the database means we would have to create a whole new object,
-    * which could be HUGE, just to update on Identifier integer. The cost of that purely functional copying is just too
-    * high in this case and the clutter it introduces in the constructors of subclasses is unforgiving. So,
-    * we make it an optional var. Optional so it doesn't have to be specified at construction time. A var so it can
-    * be updated by the storage system once the thing is created in the DB. Private so that nobody but this class can
-    * do the modification -- i.e. if we're going to break the mutability rule, let's constrain the heck out of it!
-    * This is our attempt to not spam server memory with lots of database object duplication.
-    */
-  val id : Option[Identifier] = None
-
-  /** Mutation test.
-    * @return true if the object has been identified (had its id value set)
-    */
-  final def isIdentified = id.isDefined
-
-  /** All things are inherently convertible to Json.
-    * We allow each subclass to define the most efficient way to convert itself to Json. Only JsObject may be
-    * returned.
-    * This default implementation yields a NotImplemented exception .. by design.
-    * @return The JsObject representing this "thing"
-    */
-  def toJson : JsObject = ???
-}
 
 /** A generic trait for representing the multitude of ways a thing can be found for a storage system. */
 trait FinderOf[Storable] {
   def apply() : Seq[Storable]
+}
+
+trait AbstractStorage[ID, OID, T <: Identifiable[OID]] {
+  def fetch(id: ID) : Option[T]
+  def findAll() : Seq[T]
+  def insert(entity: T) : ID
+  def update(entity: T) : Int
+  def delete(id: ID) : Boolean
+  def delete(entity: T) : Boolean
+
+  final def fetch(oid: Option[ID]) : Option[T] = {
+    oid match { case None => None ; case Some(id) => fetch(id) }
+  }
+
+  final def find( finder: FinderOf[T] ) : Seq[T] = {
+    finder()
+  }
+
 }
 
 /** A mechanims for storing, retrieving, updating and deleting Storable things from some Storage system
@@ -71,26 +49,7 @@ trait FinderOf[Storable] {
   * to the cache and to the database. Modules decide how their entity types are stored.
   * @tparam S
   */
-trait StorageFor[S <: Storable] {
-
-  def fetch(id: Identifier) : Option[S]
-
-  def findAll() : Seq[S]
-
-  def insert(entity: S) : Identifier
-
-  def update(entity: S): Int
-
-  def delete(entity: S) : Boolean
-
-  final def fetch(oid: Option[Identifier]) : Option[S] = {
-    oid match { case None => None ; case Some(id) => fetch(id) }
-  }
-
-  final def find( finder: FinderOf[S] ) : Seq[S] = {
-    finder()
-  }
-
+trait StorageFor[S <: NumericIdentifiable] extends AbstractStorage[Identifier,Option[Identifier],S] {
   final def upsert(entity: S) : Identifier = {
     if (entity.id.isDefined) {
       update(entity) ; entity.id.get
@@ -148,8 +107,11 @@ class AbstractMemoryStorageFor[S <:Storable, INMEM]( to: S => INMEM, from: INMEM
   }
 
   def delete(entity: S): Boolean = {
-    assert(entity.id.isDefined)
-    store.remove(entity.id.get).isDefined
+    if (entity.id.isDefined) delete(entity.id.get) else false
+  }
+
+  def delete(id: Identifier) : Boolean = {
+    store.remove(id).isDefined
   }
 }
 

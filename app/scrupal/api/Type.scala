@@ -87,9 +87,9 @@ trait ObjectValidator {
 
 case class EssentialType (
   override val id : TypeIdentifier,
-  description: String,
+  override val description: String,
   moduleId: ModuleIdentifier
-) extends Registrable
+) extends SymbolicDescribable with Registrable
 
 /** A generic Type used as a placeholder for subclasses that compose types.
   * Note that the name of the Type is a Symbol. Symbols are interned so there is only ever one copy of the name of
