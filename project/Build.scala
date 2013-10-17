@@ -17,7 +17,7 @@
 
 import sbt._
 import sbt.Keys._
-//import play.Project._
+// import play.Project._
 
 /**
  * Settings for building Scrupal. These are common settings for each sub-project.
@@ -180,17 +180,10 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
         angular_ui_router, marked, fontawesome
       ),
       printClasspath <<= print_class_path
-    ) //++
-  //    angularAssets map { f : File => playAssetsDirectories <+= f }
-  //    ++
-      // playScalaSettings
-      /*
-      *:scalacOptions from *:scalacOptions
-      *:target from *:printClassPath
-      compile:fullClasspath from *:printClassPath
-      compile:compile from *:printClassPath
-      *:javacOptions from *:javacOptions
-     */
+    ) ++ play.Project.playScalaSettings
+
+    //    angularAssets map { f : File => playAssetsDirectories <+= f }
+    //    ++
   )
 
    override def rootProject = Some(scrupal)
