@@ -15,10 +15,10 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package models
+package scrupal.models
 
 import org.specs2.mutable.Specification
-import scrupal.models.CoreModule
+
 
 /** One line sentence description here.
   * Further description here.
