@@ -18,10 +18,8 @@
 package scrupal.controllers
 
 import play.api.mvc.{RequestHeader, Action}
-import scrupal.views.html
-import play.api.templates.Html
 import play.api.libs.json.{JsValue, JsString, Json}
-import scrupal.api.{Types, Modules, Type, Module}
+import scrupal.api.{Module, Type}
 
 /** The Controller For The Scrupal JSON API
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and
@@ -40,11 +38,17 @@ object API extends ScrupalController  {
     }
   }
 
+  /** Implement the HTTP GET method for an Entity.
+    * This method retrieves a specific instance of a kind of entity.
+    * @param kind
+    * @param id
+    * @return
+    */
   def fetch(kind: String, id: String) = Action { implicit request =>
     kind.toLowerCase() match {
       case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "module" =>   {
-        Modules(Symbol(id)) match {
+        Module(Symbol(id)) match {
           case Some(m:Module) => Ok(m.toJson)
           case _ => NotFound(Json.obj())
         }
@@ -52,7 +56,7 @@ object API extends ScrupalController  {
       case "entity" => Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "bundle" => Ok(Json.obj( "name" -> id))
       case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-      case "type" =>    Types(Symbol(id)) match {
+      case "type" =>    Type(Symbol(id)) match {
         case Some(t:Type) => Ok(t.toJson)
         case _ => notFound(JsString("type " + id))
       }
@@ -150,6 +154,23 @@ object API extends ScrupalController  {
     }
   }
 
+  /** Implements the OPTIONS HTTP Method for an entity or Scrupal in its entirety.
+    * @see [[http://greenbytes.de/tech/webdav/rfc2616.html#OPTIONS RFC 2616 - 9.2 OPTIONS ]]
+    * The OPTIONS method allows us to take some liberties. It says ''A 200 response should include any header fields
+    * that indicate optional features implemented by the server and applicable to that resource (e.g., Allow),
+    * possibly including extensions not defined by this specification.'' We utilize the **including extensions not
+    * defined by this specification** part heavily here. Options provides complete access to meta information about
+    * the entity.
+    *
+    * The request payload is expected to be a Json array that contains the names of the information fields that the
+    * client is interested in. If the array is empty, all fields will be returned. Each field provides one aspect of
+    * meta-information about the entity, for example, such things as the number of entities in the collection,
+    * access rights, etc.
+    *
+    * Most of the processing for this request can be handled by this Controller,
+    * but some help is needed for the fields that require entity help. The Entity method
+    * `option(name:String, id: InstanceId)` will be called to fill in the blanks as needed by the request
+   */
   def optionsOfAll(kind : String) = Action { implicit request =>
     kind.toLowerCase() match {
       case "sites" =>    notImplemented(JsString("Options of " + kind ))

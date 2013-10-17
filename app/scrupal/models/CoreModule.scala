@@ -62,7 +62,7 @@ object CoreModule extends Module (
         case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
       }
     }
-    override def kind = "URI"
+    override def kind = 'URI
   }
 
   /** What constitutes a valid JDBC URL for Scrupal.
@@ -83,7 +83,7 @@ object CoreModule extends Module (
         case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
       }
     }
-    override def kind = "JDBC_URL"
+    override def kind = 'JDBC_URL
   }
 
   /** The Scrupal Type for IP version 4 addresses */
@@ -97,7 +97,7 @@ object CoreModule extends Module (
     anchored(LegalName), 128)
 
   /** The Scrupal Type for information about Sites */
-  object SiteInfo_t extends  EntityType('SiteInfo, "Basic information about a site that Scrupal will serve.", id,
+  object SiteInfo_t extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.", id,
     fields = HashMap(
       'name -> Identifier_t,
       'title -> Identifier_t,
@@ -105,8 +105,7 @@ object CoreModule extends Module (
       'port -> TcpPort_t,
       'admin_email -> EmailAddress_t,
       'copyright -> Identifier_t
-    ),
-    actions = HashMap()
+    )
   )
 
   /** The core types that Scrupal provides to all modules */

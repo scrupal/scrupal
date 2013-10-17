@@ -23,9 +23,9 @@ import play.api.libs.json.Json
 import scrupal.fakes.{WithScrupal}
 import scrupal.api._
 import play.api.libs.json.JsObject
-import scrupal.api.{Entity}
-import scala.slick.lifted.Query
+import scrupal.api.{Instance}
 import scrupal.models.db.ScrupalSchema
+import scala.collection.immutable.HashMap
 
 /**
  * One line sentence description here.
@@ -33,8 +33,8 @@ import scrupal.models.db.ScrupalSchema
  */
 class CoreSpec extends Specification {
 
-  "Module Type and Entity " should {
-    "support CRud" in new WithScrupal {
+  "Module Type, Entity and Instance " should {
+    "support CRUD" in new WithScrupal {
       withScrupalSchema( { schema : ScrupalSchema =>
         import schema._
         val m_id = Modules.insert ( EssentialModule('foo, "Foo Man Chew", Version(0,1,0), Version(0,0,0), true) )
@@ -48,12 +48,21 @@ class CoreSpec extends Specification {
         ty_id must beEqualTo(ty2.id)
         ty2.moduleId must beEqualTo( 'foo )
 
+        val bun_id = Types.insert( new BundleType('Buns, "Buns Aye", m_id, HashMap('tie -> Type('Thai).get)))
+        val bun = Types.fetch(bun_id)
+        val bun2 = bun.get
+        bun2.id must beEqualTo('Buns)
+        bun_id must beEqualTo(bun2.id)
+
+        val e_id = Entities.insert( new Entity('Plun, "Plunderous Thundering Fun", 'Buns ) {})
         val clob : JsObject = Json.obj("type" -> "Thai" )
-        val entity = Entities.insert(Entity('Buns, "Buns Aye", 'Thai, clob))
-        val bun2 = Entities.fetch(entity).get
-        entity must beEqualTo(bun2.id.get)
-        bun2.name must beEqualTo('Buns)
-        bun2.entityTypeId must beEqualTo('Thai)
+        val instance = Instances.insert(Instance('Inst, "Instigating Instance", 'Plun, clob))
+        val i2 = Instances.fetch(instance).get
+        instance must beEqualTo(i2.id.get)
+        i2.name must beEqualTo('Inst)
+        i2.entityId must beEqualTo('Plun)
+
+        // FIXME: Do Update and Delete too!
       })
   } }
 }

@@ -105,8 +105,8 @@ object Global extends GlobalSettings
 	override def beforeStart(app: Application) {
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
-    require(Types.registryName == "Types")
-    require(Modules.registryName == "Modules")
+    require(Type.registryName == "Types")
+    require(Module.registryName == "Modules")
 
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require(CoreModule.id == 'Core)
@@ -115,7 +115,7 @@ object Global extends GlobalSettings
     DefaultGlobal.beforeStart(app)
 
     // We are now ready to process the registered modules
-    Modules.processModules
+    Module.processModules
 	}
 
 	/**

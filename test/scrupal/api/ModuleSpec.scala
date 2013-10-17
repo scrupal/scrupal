@@ -71,10 +71,10 @@ class ModuleSpec extends Specification {
 
   "Modules" should {
     "register three modules" in {
-      Modules.processModules()
-      Modules('Module1) must beEqualTo(Some(Module1))
-      Modules('Module2) must beEqualTo(Some(Module2))
-      Modules('Module3) must beEqualTo(Some(Module3))
+      Module.processModules()
+      Module('Module1) must beEqualTo(Some(Module1))
+      Module('Module2) must beEqualTo(Some(Module2))
+      Module('Module3) must beEqualTo(Some(Module3))
     }
   }
 }

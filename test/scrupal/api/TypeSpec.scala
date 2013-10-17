@@ -20,9 +20,8 @@ package scrupal.api
 import org.specs2.mutable.Specification
 import play.api.libs.json._
 import play.api.libs.json.JsSuccess
-import play.api.Logger
 import scala.collection.immutable.HashMap
-import scrupal.models.{CoreModule, Patterns}
+import scrupal.models.{CoreModule}
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {
@@ -198,29 +197,26 @@ class TypeSpec extends Specification {
     }
   }
 
-  object trait1 extends EntityType('trait1, "Trait example 1", TestModule.id,
+  object trait1 extends BundleType('trait1, "Trait example 1", TestModule.id,
     fields = HashMap (
       'even -> MiddlePeriod,
       'email -> CoreModule.EmailAddress_t,
       'range -> rangeTy,
       'real -> realTy,
       'enum -> enumTy
-    ),
-    actions = HashMap()
+    )
   )
 
-  object trait2 extends EntityType('trait2, "Trait example 2", TestModule.id,
+  object trait2 extends BundleType('trait2, "Trait example 2", TestModule.id,
     fields = HashMap(
       'list -> listTy,
       'set -> setTy,
       'map -> mapTy
-    ),
-    actions = HashMap()
+    )
   )
 
-  object AnEntity extends EntityType('AnEntity, "Entity example", TestModule.id,
-    fields = HashMap('trait1 -> trait1, 'trait2 -> trait2),
-    actions = HashMap()
+  object AnEntity extends BundleType('AnEntity, "Entity example", TestModule.id,
+    fields = HashMap('trait1 -> trait1, 'trait2 -> trait2)
   )
 
   val js1 = Json.obj(
@@ -249,6 +245,15 @@ class TypeSpec extends Specification {
     "accept reversed input" in {
       val js = Json.obj( "trait2" -> js2, "trait1" -> js1)
       AnEntity.validate(js).asOpt.isDefined must beTrue
+    }
+  }
+
+  "Types" should {
+    "identify TestModule as moduleof[AnEntity]" in {
+      val mod = Type.moduleOf('AnEntity)
+      mod.isDefined must beTrue
+      mod.get.id must beEqualTo('TestModule)
+      mod.get must beEqualTo(TestModule)
     }
   }
 }

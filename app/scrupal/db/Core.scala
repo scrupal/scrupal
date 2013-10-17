@@ -56,7 +56,7 @@ trait CoreComponent extends Component {
 
     def fetch(id: TypeIdentifier) : Option[EssentialType] =  fetchByIDQuery(id).firstOption
 
-    def findAll() : Seq[EssentialType] = Query(Types).list
+    def findAll() : Seq[EssentialType] = Query(this).list
     def insert(ty: EssentialType) : TypeIdentifier = { *  insert(ty); ty.id  }
   }
 
@@ -73,18 +73,31 @@ trait CoreComponent extends Component {
 
     def fetch(id: ModuleIdentifier) : Option[EssentialModule] =  fetchByIDQuery(id).firstOption
 
-    def findAll() : Seq[EssentialModule] = Query(Modules).list
+    def findAll() : Seq[EssentialModule] = Query(this).list
 
     def insert(mod: EssentialModule) : ModuleIdentifier = { * insert(mod) ; mod.id }
   }
 
-  object Entities extends ScrupalTable[Entity]("entities") with EnablableThingTable[Entity] {
+  object Entities extends ScrupalTable[EssentialEntity]("entities") {
+    def id = column[EntityIdentifier](nm("id"), O.PrimaryKey)
+    def description = column[String](nm("description"))
     def typeId = column[TypeIdentifier](nm("typeId"))
     def typeId_fkey = foreignKey(fkn("typeId"), typeId, Types)(_.id)
+    def * = id ~ description ~ typeId <> (EssentialEntity.tupled, EssentialEntity.unapply _ )
+    lazy val fetchByIDQuery = for { id <- Parameters[EntityIdentifier] ; ent <- this if ent.id === id } yield ent
+
+    def fetch(id: EntityIdentifier) : Option[EssentialEntity] =  fetchByIDQuery(id).firstOption
+
+    def findAll() : Seq[EssentialEntity] = Query(this).list
+    def insert(ent: EssentialEntity) : EntityIdentifier = { * insert(ent); ent.id }
+  }
+
+  object Instances extends ScrupalTable[Instance]("instances") with ThingTable[Instance] {
+    def entityId = column[TypeIdentifier](nm("entityId"))
+    def entityId_fkey = foreignKey(fkn("entityId"), entityId, Entities)(_.id)
     def payload = column[JsObject](nm("payload"), O.NotNull)
-    def forInsert = name ~ description ~ typeId ~ payload ~ enabled
-    def * = forInsert ~ modified.? ~ created.? ~ id.?  <>
-      (Entity.tupled, Entity.unapply _)
+    def forInsert = name ~ description ~ entityId ~ payload
+    def * = forInsert ~ modified.? ~ created.? ~ id.?  <> (Instance.tupled, Instance.unapply _)
   }
 
   object Sites extends ScrupalTable[Site]("sites") with EnablableThingTable[Site] {
@@ -97,5 +110,5 @@ trait CoreComponent extends Component {
             id.? <> (Site.tupled, Site.unapply _)
   }
 
-  def coreDDL : DDL = Types.ddl ++ Modules.ddl ++ Entities.ddl ++ Sites.ddl
+  def coreDDL : DDL = Types.ddl ++ Modules.ddl ++ Entities.ddl ++ Instances.ddl ++ Sites.ddl
 }

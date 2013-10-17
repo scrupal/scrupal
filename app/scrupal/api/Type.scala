@@ -125,13 +125,13 @@ abstract class Type (
   lazy val plural = Pluralizer.pluralize(label)
 
   /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
-  def kind :String = super.getClass.getSimpleName.replace("$","")
+  def kind :Symbol = Symbol(super.getClass.getSimpleName.replace("$",""))
 
   override def toJson : JsObject = ???
   override def fromJson( js: JsObject ) = ???
 
   /** Register this type with the registry of types (below) */
-  Types.register(this)
+  Type.register(this)
 
 }
 
@@ -165,10 +165,10 @@ class ReferenceType (
     }
   }
 
-  override def kind = "Reference"
+  override def kind = 'Reference
 
   override def toJson = Json.obj(
-      "kind" -> kind,
+      "kind" -> kind.name,
       "name" -> label,
       "plural" -> plural,
       "description" -> description,
@@ -202,10 +202,10 @@ class StringType (
     }
   }
 
-  override def kind = "String"
+  override def kind = 'String
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -239,10 +239,10 @@ class RangeType (
       case x => super.validate(value)
     }
   }
-  override def kind = "Range"
+  override def kind = 'Range
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -277,10 +277,10 @@ class RealType (
     }
   }
 
-  override def kind = "Real"
+  override def kind = 'Real
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -334,10 +334,10 @@ class BLOBType  (
     */
   def validate(uri: URI) : JsResult[Boolean] = JsSuccess(true)
 
-  override def kind = "BLOB"
+  override def kind = 'BLOB
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -370,11 +370,11 @@ class EnumType  (
   def valueOf(enum: Symbol) = enumerators.get(enum)
   def valueOf(enum: String) = enumerators.get(Symbol(enum))
 
-  override def kind = "Enum"
+  override def kind = 'Enum
 
   override def toJson = {
     Json.obj(
-      "kind" -> "Enum",
+      "kind" -> kind.name,
       "name" -> label,
       "plural" -> plural,
       "description" -> description,
@@ -416,10 +416,10 @@ class ListType  (
     }
   }
 
-  override def kind = "List"
+  override def kind = 'List
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -454,10 +454,10 @@ class SetType  (
     }
   }
 
-  override def kind = "Set"
+  override def kind = 'Set
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -491,10 +491,10 @@ class MapType  (
     }
   }
 
-  override def kind = "Map"
+  override def kind = 'Map
 
   override def toJson = Json.obj(
-    "kind" -> kind,
+    "kind" -> kind.name,
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
@@ -522,12 +522,11 @@ class MapType  (
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type
   */
-class EntityType (
+class BundleType (
   override val id : TypeIdentifier,
   override val description : String,
   override val moduleId: ModuleIdentifier,
-  fields : HashMap[Symbol, Type],
-  actions: HashMap[Symbol, Action] = HashMap()
+  fields : HashMap[Symbol, Type]
 ) extends Type( id, description, moduleId) with ObjectValidator {
   require(!fields.isEmpty)
 
@@ -538,33 +537,54 @@ class EntityType (
     }
   }
 
-  override def kind = "Trait"
+  override def kind = 'Bundle
 
   override def toJson = {
     Json.obj(
-      "kind" -> kind,
+      "kind" -> kind.name,
       "name" -> label,
       "plural" -> plural,
       "description" -> description,
-      "fields" -> (fields map { case (s:Symbol, t:Type) => (s.name, t.label ) }),
-      "actions" -> (actions map { case (s:Symbol, a:Action) => (s.name,a.label) })
+      "fields" -> (fields map { case (s:Symbol, t:Type) => (s.name, t.label ) })
     )
   }
 }
 
 /** A utility object for accessing the types registered by modules */
-object Types extends Registry[Type] {
+object Type extends Registry[Type] {
 
   override val registryName = "Types"
   override val registrantsName = "type"
 
+  /** Determine if a type exists
+    * Types are interned by the Registry[Type] utility. This means that types share a single global name space.
+    * Modules must cooperate on defining types in such a way that their names do not conflict.
+    * @param name The Symbol for the type to check
+    * @return true iff ```name``` is a registered type
+    */
   def exists(name: Symbol) : Boolean = registrants.contains(name)
 
+  /** Determine if a type is a certain kind
+    * While Scrupal defines a useful set of types that will suffice for many needs,
+    * Modules are free to create new kinds of types (i.e. subclass from Type itself,
+    * not create a new instance of Type). Types have a "kind" field that allows them to be categorized roughly by the
+    * nature of the subclass from Type. This method checks to see if a given type is a member of that category.
+    * @param name The symbol for the type to check
+    * @param kind The symbol for the kind that ```name``` should be
+    * @return true iff ```name``` is of kind ```kind```
+    */
+  def isKind(name: Symbol, kind: Symbol) : Boolean = registrants.getOrElse(name,NotAType).kind == kind
 
-  /** Retrieve the module in which a Type was defined */
+  lazy val NotAType = new Type('NotAType, "Not A Type", 'CoreModule) { override val kind = 'Cruel }
+
+  /** Retrieve the module in which a Type was defined
+    * Every Type is associated with a module. This utility helps you find the associated module for a given type id
+    * @param id The Symbol for the type to look up
+    * @return Some[Module] if the ```id``` was found, None otherwise
+    */
   def moduleOf(id: TypeIdentifier) : Option[Module] = {
     registrants.get(id) match {
-      case Some(ty) => Modules(ty.moduleId)
+      case Some(ty) => Module(ty.moduleId)
       case _ => None
     }
   }

@@ -15,23 +15,22 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.api
 
-/** The Module API to Scrupal.
-  * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
-  * is simply the "Core" module, this API provides essential everything needed to write Scrupal itself and any extension
-  * to Scrupal through the introduction of a new module.
-  *
-  * Rule: scrupal.api should be fundamental an stand alone. That means it should not import anything from other
-  * scrupal packages. Period.
+import org.joda.time.DateTime
+import play.api.libs.json.JsObject
+
+/** The basic unit of storage and operation in Scrupal
+  * Further description here.
   */
-package object api {
-
-  type Identifier = Long
-  type ModuleIdentifier = Symbol
-  type TypeIdentifier = Symbol
-  type EntityIdentifier = Symbol
-  type FeatureIdentifier = Identifier
-  type InstanceIdentifier = Identifier
-
+case class Instance(
+  override val name: Symbol,
+  override val description: String,
+  entityId: EntityIdentifier,
+  payload: JsObject,
+  override val modified : Option[DateTime] = None,
+  override val created : Option[DateTime] = None,
+  override val id : Option[Identifier] = None
+) extends Thing(name, description, modified, created, id) {
 }
+

@@ -15,23 +15,11 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.controllers
 
-/** The Module API to Scrupal.
-  * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
-  * is simply the "Core" module, this API provides essential everything needed to write Scrupal itself and any extension
-  * to Scrupal through the introduction of a new module.
-  *
-  * Rule: scrupal.api should be fundamental an stand alone. That means it should not import anything from other
-  * scrupal packages. Period.
+/** The Controller that
+  * Further description here.
   */
-package object api {
-
-  type Identifier = Long
-  type ModuleIdentifier = Symbol
-  type TypeIdentifier = Symbol
-  type EntityIdentifier = Symbol
-  type FeatureIdentifier = Identifier
-  type InstanceIdentifier = Identifier
+class Config {
 
 }

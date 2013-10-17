@@ -108,7 +108,7 @@ class Module(
   lazy val moreDetailsURL = "http://modules.scrupal.org/doc/" + label
 
   /** Register this module with the registry of modules */
-  Modules.register(this)
+  Module.register(this)
 
   /** Determine compatibility between `this` [[scrupal.api.Module]] and `that`.
     * This module is compatible with `that` if either `that` does not depend on `this` or the version `that` requires
@@ -151,7 +151,7 @@ class Module(
   * it will register itself with this module. Upon registration, the information it provides about the module is
   * amalgamated into this object for use by the rest of Scrupal.
   */
-object Modules extends Registry[Module] {
+object Module extends Registry[Module] {
 
   override val registryName = "Modules"
   override val registrantsName = "module"

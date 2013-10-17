@@ -17,21 +17,72 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import scala.collection.immutable.HashMap
+import play.api.libs.json._
 import play.api.libs.json.JsObject
+import play.api.http.Status
+import scrupal.utils.Registrable
 
-/** The basic unit of storage and operation in Scrupal
-  * Further description here.
+
+case class EssentialEntity(
+  id: Symbol,
+  val description: String,
+  val instanceTypeId: TypeIdentifier
+)
+
+case class StatusResult[TYPE](result: JsResult[TYPE], status: Int = Status.OK)
+
+/** The fundamental unit of storage, behavior and interaction in Scrupal
+  * An Entity brings together several things:The BundleType of an Instance's JSon payload, the web c
+  * definitions of the RESTful methods, security constraints, and extension actions for the REST API.
+  * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
+  * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
+  * There, a
   */
-case class Entity(
-  override val name: Symbol,
+abstract class Entity(
+  override val id: Symbol,
   override val description: String,
-  entityTypeId: TypeIdentifier,
-  payload: JsObject,
-  override val enabled : Boolean = true,
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None,
-  override val id : Option[EntityIdentifier] = None
-) extends EnablableThing(name, description, enabled, modified, created, id) {
+  override val instanceTypeId: TypeIdentifier
+) extends EssentialEntity(id, description, instanceTypeId) with Registrable {
+
+  /** Obtain the type of this Entity's Instance bundle. */
+  def instanceType : Type = Type(instanceTypeId).getOrElse(Type.NotAType)
+
+  /** Entity Instances must be defined as a Bundle. Enforce that here */
+  require(instanceType.kind == 'Bundle)
+
+  val actions: HashMap[Symbol, Action] = HashMap()
+
+  /** Fetch a single instance of this entity kind
+    * Presumably this entity is stored somewhere and this method retrieve it, puts the data into a JsObject and
+    * returns it.
+    * @param id The identifier of the instance to be retrieved
+    * @return The JsObject representing the payload of the entity retrieved
+    */
+  def fetch(id: InstanceIdentifier) : JsObject = ???
+
+  /** Create a single instance of this entity kind
+    * Presumably the entity
+    * @param instance
+    * @return
+    */
+  def create(instance: JsObject ) : StatusResult[InstanceIdentifier]  = ???
+
+  /** Update all or a few of the fields of an entity
+    *
+    * @param id
+    * @param fields
+    * @return
+    */
+  def update(id: InstanceIdentifier, fields: JsObject) : StatusResult[Long] = ???
+
+  /** Delete an entity */
+  def delete(id: InstanceIdentifier) : StatusResult[Boolean]  = ???
+
+  /** Get meta information about an entity */
+  def option(id: InstanceIdentifier, option: String) : StatusResult[JsValue] = ???
 
 }
+
+
+
