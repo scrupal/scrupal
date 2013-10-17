@@ -17,16 +17,11 @@
 
 package scrupal.models
 
-import java.net.{URISyntaxException, URI}
-
-import play.api.libs.json._
-
-import scrupal.api._
-import scala.collection.immutable.HashMap
 import scala.util.matching.Regex
-import java.sql.{SQLException, DriverManager}
-import org.joda.time.DateTime
 
+/** One line sentence description here.
+  * Further description here.
+  */
 object Patterns {
   /** Join a sequence of patterns together */
   def join(r: Regex*) : Regex = {
@@ -69,77 +64,3 @@ object Patterns {
   val IPv4Address =
     "(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])".r
 }
-
-import Patterns._
-
-/** The Scrupal Type for the identifier of things */
-object Identifier_t extends StringType(CoreModule, 'Identifier, "Scrupal Identifier",
-  new DateTime(2013,10,13,2,40), anchored(Identifier),64)
-
-/** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
-object DomainName_t extends StringType(CoreModule, 'DomainName, "RFC compliant Domain Name",
-  new DateTime(2013,10,13,2,40), anchored(DomainName), 253)
-
-/** The Scrupal Type for TCP port numbers */
-object TcpPort_t extends RangeType(CoreModule, 'TcpPort, "A type for TCP port numbers",
-  new DateTime(2013,10,13,2,40), 1, 65535)
-
-/** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-object URI_t extends Type(CoreModule, 'URI, "Uniform Resource Identifier", new DateTime(2013,10,13,2,40)) {
-  override def validate(value: JsValue) : JsResult[Boolean]= {
-    value match {
-      case v: JsString => {
-        try { new URI( v.value ); JsSuccess(true) }
-        catch { case xcptn: URISyntaxException => JsError(xcptn.getMessage) }
-      }
-      case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
-    }
-  }
-  override def kind = "URI"
-}
-
-/** What constitutes a valid JDBC URL for Scrupal.
-  * Note that we validate this empirically by asking JDBC's DriverManager for the corresponding driver. This means
-  * that the validity of JDBC URL types is context sensitive, depending on which drivers are accessible from the
-  * classpath.
-  */
-object JDBC_URL_t extends Type(CoreModule, 'JDBC_URL, "Java Database Connection URL", new DateTime(2013,10,13,2,40)) {
-  override def validate(value: JsValue) : JsResult[Boolean]= {
-    value match {
-      case v: JsString => {
-        try {
-          DriverManager.getDriver(v.value)
-          JsSuccess(true)
-        }
-        catch { case xcptn: SQLException => JsError(xcptn.getMessage) }
-      }
-      case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
-    }
-  }
-  override def kind = "JDBC_URL"
-}
-
-/** The Scrupal Type for IP version 4 addresses */
-object IPv4Address_t extends StringType(CoreModule, 'IPv4Address, "A type for IP v4 Addresses",
-  new DateTime(2013,10,13,2,40), anchored(IPv4Address), 15)
-
-/** The Scrupal Type for Email addresses */
-object EmailAddress_t extends StringType(CoreModule, 'EmailAddress, "An email address",
-  new DateTime(2013,10,13,2,40), anchored(EmailAddress), 253)
-
-object LegalName_t extends StringType(CoreModule, 'LegalName, "The name of a person or corporate entity",
-  new DateTime(2013,10,13,2,40), anchored(LegalName), 128)
-
-/** The Scrupal Type for information about Sites */
-object SiteInfo_t extends TraitType(CoreModule, 'SiteInfo, "Basic information about a site that Scrupal will serve.",
-  new DateTime(2013,10,13,2,40),
-  fields = HashMap(
-    'name -> Identifier_t,
-    'title -> Identifier_t,
-    'domain -> DomainName_t,
-    'port -> TcpPort_t,
-    'admin_email -> EmailAddress_t,
-    'copyright -> Identifier_t
-  ),
-  actions = HashMap()
-)

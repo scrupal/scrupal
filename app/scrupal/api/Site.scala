@@ -15,22 +15,34 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.DDL
-import scrupal.api.{Sketch, Schema}
-import scala.slick.session.Session
+import org.joda.time.DateTime
 
-/**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
- */
-class ScrupalSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with CoreComponent with UserComponent  with NotificationComponent
-{
-
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ userDDL ++ notificationDDL
-  }
-
+/** Information about one site that Scrupal is serving.
+  * Sites are associated with a port number that Play! is configured to listen on. We configure play's ports by
+  * scanning this table and collecting all the port numbers that are configured for active sites.
+  * @param name The name of the `Thing`
+  * @param description A brief description of the `Thing`
+  * @param listenPort The port number that Play! should listen on for this site
+  * @param urlDomain The domain name to use in generated urls
+  * @param urlPort The port number to use in generated urls
+  * @param urlHttps The HTTP method to use in generated urls (e.g. https or http)
+  * @param enabled Whether the site is enabled for serving or not
+  * @param modified Modification time, optional
+  * @param created Creation time, optional
+  * @param id Identifier, optional
+  */
+case class Site (
+  override val name: Symbol,
+  override val description: String,
+  listenPort: Short,
+  urlDomain: String,
+  urlPort: Short,
+  urlHttps: Boolean = false,
+  override val enabled: Boolean = false,
+  override val modified: Option[DateTime] = None,
+  override val created: Option[DateTime] = None,
+  override val id: Option[Identifier] = None
+) extends EnablableThing(name, description, enabled, modified, created, id) {
 }

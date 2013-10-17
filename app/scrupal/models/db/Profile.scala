@@ -17,8 +17,6 @@
 
 package scrupal.models.db
 
-import org.joda.time.DateTime
-
 import scrupal.api.{Creatable, Component}
 
 /**
@@ -26,11 +24,8 @@ import scrupal.api.{Creatable, Component}
  * Further description here.
  */
 case class Profile(
-  override val id : Option[Long],
-  override val created : DateTime,
   principal : Long
-) extends Creatable[Profile]{
-  def forId(id: Long) = Profile(Some(id), created, principal)
+) extends Creatable {
 }
 
 trait ProfileComponent extends Component {

@@ -19,7 +19,7 @@ package scrupal.api
 
 import play.api.libs.json.{JsValue, JsObject}
 
-abstract class Action(name: Symbol, description: String) extends Thing(name, description)
+abstract class Action(name: Symbol, description: String) extends StorableThing()
 {
   lazy val label = name.name
 }

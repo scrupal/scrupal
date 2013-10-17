@@ -15,22 +15,36 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.DDL
-import scrupal.api.{Sketch, Schema}
-import scala.slick.session.Session
+import scrupal.utils.{Registry, Registrable}
 
-/**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
- */
-class ScrupalSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with CoreComponent with UserComponent  with NotificationComponent
-{
+/** A Feature of a Module.
+  * Features are things that can be enabled or disabled that affect how a Module does its work. Scrupal handles the
+  * administration of features for the Module. Modules simply declare the list of features they have and Scrupal
+  * deals with the rest. To check for a feature being enabled, just use the FEature.apply method like so:
+  * ```if (Feature('FeatureName))``` Because the if-expression requires a Boolean, the implicit featureToBool will be
+  * used. This makes accessing the enabled state of a feature simple.
+  */
+class Feature(
+  override val id: Symbol,
+  val description: String,
+  private var enabled: Boolean = true
+) extends Registrable  {
+  def enable() = enabled = true
+  def disable() = enabled = false
+  def isEnabled = enabled
 
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ userDDL ++ notificationDDL
-  }
-
+  // Register ourself with the Feature Registry
+  Feature.register(this)
 }
+
+object Feature extends Registry[Feature] {
+  override val registrantsName = "feature"
+  override val registryName = "Features"
+  val NotAFeature : Feature = Feature('NotAFeature,"This is not a feature", false)
+  def apply(name: Symbol, description: String, enabled: Boolean) = new Feature(name, description, enabled)
+  implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
+  implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled
+}
+

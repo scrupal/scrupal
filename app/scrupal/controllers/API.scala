@@ -21,7 +21,7 @@ import play.api.mvc.{RequestHeader, Action}
 import scrupal.views.html
 import play.api.templates.Html
 import play.api.libs.json.{JsValue, JsString, Json}
-import scrupal.api.{Type, Module}
+import scrupal.api.{Types, Modules, Type, Module}
 
 /** The Controller For The Scrupal JSON API
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and
@@ -44,16 +44,16 @@ object API extends ScrupalController  {
     kind.toLowerCase() match {
       case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "module" =>   {
-        Module(Symbol(id)) match {
-          case Some(m:Module) => Ok(Json.toJson[Module](m))
+        Modules(Symbol(id)) match {
+          case Some(m:Module) => Ok(m.toJson)
           case _ => NotFound(Json.obj())
         }
       }
       case "entity" => Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "bundle" => Ok(Json.obj( "name" -> id))
       case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-      case "type" =>    Type(Symbol(id)) match {
-        case Some(t:Type) => Ok(Json.toJson[Type](t))
+      case "type" =>    Types(Symbol(id)) match {
+        case Some(t:Type) => Ok(t.toJson)
         case _ => notFound(JsString("type " + id))
       }
       case _ => {        notFound(JsString(kind + " " + id))  }

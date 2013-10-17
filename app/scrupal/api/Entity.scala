@@ -15,41 +15,23 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.test
+package scrupal.api
 
-import java.io.File
-import play.api.{db, Logger}
-import play.api.test._
-import scala.slick.session.{Session, Database}
-import scrupal.models.db.{ScrupalSchema}
-import org.specs2.execute.{Result, AsResult}
-import scrupal.api.Sketch
+import org.joda.time.DateTime
+import play.api.libs.json.JsObject
 
+/** The basic unit of storage and operation in Scrupal
+  * Further description here.
+  */
+case class Entity(
+  override val name: Symbol,
+  override val description: String,
+  entityTypeId: TypeIdentifier,
+  payload: JsObject,
+  override val enabled : Boolean = true,
+  override val modified : Option[DateTime] = None,
+  override val created : Option[DateTime] = None,
+  override val id : Option[EntityIdentifier] = None
+) extends EnablableThing(name, description, enabled, modified, created, id) {
 
-/**
- * One line sentence description here.
- * Further description here.
- */
-object FakeScrupal extends FakeApplication(
-  path = new File(".")
-) {
-
-  val url = "jdbc:h2:mem:test1"
-  val sketch = scrupal.models.db.DB.sketch4URL(url)
-  val db = Database.forURL(url, sketch.driverClass)
-}
-
-class WithDBSession(
-  val asketch : Sketch = FakeScrupal.sketch,
-  val schema: ScrupalSchema = new ScrupalSchema(FakeScrupal.sketch),
-  implicit val session: Session  = FakeScrupal.db.createSession()
-) extends WithApplication(FakeScrupal) {
-  override def around[T: AsResult](f: => T): Result = super.around {
-    try {
-      schema.create(session);
-      f
-    } finally {
-      session.close
-    }
-  }
 }

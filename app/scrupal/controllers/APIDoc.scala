@@ -21,7 +21,7 @@ import play.api.mvc._
 import scrupal.views.html
 import scrupal.utils.Pluralizer
 import play.api.libs.json.JsString
-import scrupal.api.{Module, Type}
+import scrupal.api.{Modules, Types, Type, Module}
 
 /** One line sentence description here.
   * Further description here.
@@ -48,11 +48,11 @@ object APIDoc extends ScrupalController  {
 
   def fetch(kind: String, id: String) = Action { implicit request: RequestHeader =>
     kind.toLowerCase() match {
-      case "type" =>  Type(Symbol(id)) match {
+      case "type" =>  Types(Symbol(id)) match {
         case t: Some[Type] => Ok(html.api.fetchType(t.get))
         case _ => notFound("Type " + id)
       }
-      case "module" => Module(Symbol(id)) match {
+      case "module" => Modules(Symbol(id)) match {
         case m: Some[Module] => Ok(html.api.fetchModule(m.get))
         case _ => notFound("Module " + id)
       }

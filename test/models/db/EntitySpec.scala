@@ -18,11 +18,12 @@
 package scrupal.models.db
 
 import org.specs2.mutable.Specification
-import org.joda.time.DateTime
 import scala.slick.lifted.DDL
-import scrupal.test.{WithDBSession, FakeScrupal}
-import scrupal.api.{Thing, Component, Sketch, Schema}
+import scrupal.api._
 import scala.slick.lifted
+import scrupal.fakes.{WithScrupal}
+import org.joda.time.DateTime
+import scala.slick.session.Session
 
 
 /**
@@ -33,33 +34,32 @@ case class SomeValue(x: Short, y: Short)
 case class TestEntity(
   override val name: Symbol,
   override val description: String,
-  override val modified: Option[DateTime] = None,
-  override val created: Option[DateTime] = None,
-  override val id: Option[Long],
-  testVal : SomeValue
-) extends Thing[TestEntity](name, description, modified, created, id) {
-  def forId(id: Long) : TestEntity = TestEntity(name, description, modified, created, Some(id), testVal)
+  testVal : SomeValue,
+  override val modified : Option[DateTime] = None,
+  override val created : Option[DateTime] = None,
+  override val id : Option[Identifier] = None
+) extends Thing(name, description, modified, created, id) {
 }
 
-trait TestComponent extends Component { self : Sketch =>
-  import profile.simple._
+trait TestComponent extends Component {
+  import sketch.profile.simple._
 
   implicit val someValueMapper = lifted.MappedTypeMapper.base[SomeValue,Int](
     { v => v.x << 16 + v.y }, { i => SomeValue((i >> 16).toShort, (i & 0x0FFFF).toShort) } )
 
-  object TestEntities extends ThingTable[TestEntity]("test_entities") {
+  object TestEntities extends ScrupalTable[TestEntity]("test_entities") with ThingTable[TestEntity] {
     def testVal = column[SomeValue]("test_val")
-    def * = name ~ description ~ modified.? ~ created.? ~ id.? ~ testVal <> (TestEntity, TestEntity.unapply _)
+    def * = name ~ description ~ testVal ~modified.? ~ created.? ~ id.? <> (TestEntity.tupled, TestEntity.unapply _)
   }
 }
 
-class TestSchema(sketch: Sketch) extends Schema(sketch) with TestComponent {
+class TestSchema(sketch: Sketch)(implicit session: Session) extends Schema(sketch) with TestComponent {
   val ddl : DDL = TestEntities.ddl
 }
 
 class EntitySpec extends Specification
 {
-	val te = new TestEntity('Test, "This is a test", None, None, None, SomeValue(1,2))
+	val te =  TestEntity('Test, "This is a test", SomeValue(1,2))
 
 	"Entity" should {
 		"fail to compare against a non-entity" in {
@@ -67,18 +67,23 @@ class EntitySpec extends Specification
 			te.equals(other) must beFalse
 			te.equals(te) must beTrue
 		}
-    "save, load and delete from DB" in new WithDBSession {
-      import schema._
-      val ts = new TestSchema(FakeScrupal.sketch)
-      ts.create
-      import ts._
-      val te2 = TestEntities.upsert(te)
-      val te3 = TestEntities.fetch(te2.id.get)
-      te3.isDefined must beTrue
-      val te4 = te3.get
-      te4.id.equals(te2.id) must beTrue
-      te4.testVal.equals(te4.testVal) must beTrue
-      TestEntities.delete(te4.id) must beTrue
+    "save, load and delete from DB" in new WithScrupal {
+      withDBSession { implicit session : Session =>
+        val ts = new TestSchema(fake_scrupal.sketch)
+        ts.create
+        import ts._
+        val te2 = TestEntities.upsert(te)
+        val te3 = TestEntities.fetch(te2)
+        te3.isDefined must beTrue
+        val te4 = te3.get
+        te4.id.get must beEqualTo(te2)
+        te4.testVal.equals(te4.testVal) must beTrue
+        val te5 = TestEntity('Test, "This is a test", SomeValue(2,3), None, None, te4.id)
+        TestEntities.update(te5)
+        te4.testVal.equals(te5.testVal) must beFalse
+        te5.id must beEqualTo(te4.id)
+        TestEntities.delete(te5) must beTrue
+      }
     }
   }
 }

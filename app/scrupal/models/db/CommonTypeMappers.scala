@@ -19,6 +19,12 @@ package scrupal.models.db
 
 import scala.slick.lifted.MappedTypeMapper
 import scala.util.matching.Regex
+import scrupal.api.Identifier
+import org.joda.time.DateTime
+import java.sql.{Clob, Timestamp}
+import org.joda.time.DateTimeZone._
+import play.api.libs.json.{Json, JsObject}
+import scala.slick.session.Session
 
 /**
  * This object just collects together a variety of Slick TypeMappers that are used to convert between database
@@ -31,4 +37,15 @@ object CommonTypeMappers {
     { r => r.pattern.pattern() },
     { s => new Regex(s) }
   )
+
+  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
+  { d => new Timestamp( d getMillis ) },
+  { t => new DateTime (t getTime, UTC)  }
+  )
+
+  implicit lazy val symbolMapper = MappedTypeMapper.base[Symbol,String] (
+    { s => s.name},
+    { s => Symbol(s) }
+  )
+
 }

@@ -19,10 +19,13 @@ package scrupal.models
 
 import org.specs2.mutable.Specification
 
-import scrupal.test.{WithDBSession}
-import scrupal.models.db.{Bundle, Type, Module}
-import play.api.libs.json.{Json, JsNumber, JsObject}
-import java.sql.Clob
+import play.api.libs.json.Json
+import scrupal.fakes.{WithScrupal}
+import scrupal.api._
+import play.api.libs.json.JsObject
+import scrupal.api.{Entity}
+import scala.slick.lifted.Query
+import scrupal.models.db.ScrupalSchema
 
 /**
  * One line sentence description here.
@@ -30,24 +33,27 @@ import java.sql.Clob
  */
 class CoreSpec extends Specification {
 
-  "Module, Type, Bundle" should {
-    "save to and fetch from the DB" in new WithDBSession {
-      import schema._
-      val mod = Modules.insert(Module('foo, "Foo Man Chew", 1, 0))
-      mod.name must beEqualTo('foo)
-      val mod2 = Modules.fetch(mod.id.get).get
-      mod.id must beEqualTo(mod2.id)
-      val ty = Types.insert(Type('Thai, "Thai Foon", mod.id.get ))
-      ty.name must beEqualTo('Thai)
-      val ty2 = Types.fetch(ty.id.get).get
-      ty.id must beEqualTo(ty2.id)
-      ty2.moduleId must beEqualTo( mod2.id.get )
-      val clob : Clob = schema.toClob(Json.obj("type" -> JsNumber(ty.id.get)))
-      val bundle = Bundles.insert(Bundle('Buns, "Buns Aye", ty.id.get, clob))
-      bundle.name must beEqualTo('Buns)
-      val bun2 = Bundles.fetch(bundle.id.get).get
-      bundle.id must beEqualTo(bun2.id)
-      bun2.typeId must beEqualTo(ty2.id.get)
-    }
-  }
+  "Module Type and Entity " should {
+    "support CRud" in new WithScrupal {
+      withScrupalSchema( { schema : ScrupalSchema =>
+        import schema._
+        val m_id = Modules.insert ( EssentialModule('foo, "Foo Man Chew", Version(0,1,0), Version(0,0,0), true) )
+        m_id must beEqualTo('foo)
+        println("Module ID=" + m_id)
+
+        val ty_id = Types.insert(new StringType('Thai, "Thai Foon", m_id, ".*".r ))
+        val ty = Types.fetch(ty_id)
+        val ty2 = ty.get
+        ty2.id must beEqualTo('Thai)
+        ty_id must beEqualTo(ty2.id)
+        ty2.moduleId must beEqualTo( 'foo )
+
+        val clob : JsObject = Json.obj("type" -> "Thai" )
+        val entity = Entities.insert(Entity('Buns, "Buns Aye", 'Thai, clob))
+        val bun2 = Entities.fetch(entity).get
+        entity must beEqualTo(bun2.id.get)
+        bun2.name must beEqualTo('Buns)
+        bun2.entityTypeId must beEqualTo('Thai)
+      })
+  } }
 }

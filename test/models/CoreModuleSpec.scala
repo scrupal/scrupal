@@ -27,10 +27,9 @@ class CoreModuleSpec extends Specification {
 
   "CoreModule" should {
     "define types" in {
-      CoreModule.types.isEmpty should beFalse
-    }
-    "define settings" in {
-      CoreModule.settings.traits.isEmpty should beFalse
+      val cm = CoreModule
+      val ty = cm.types
+      ty.isEmpty should beFalse
     }
   }
 

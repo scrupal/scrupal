@@ -22,13 +22,15 @@ import play.api.libs.json._
 import play.api.libs.json.JsSuccess
 import play.api.Logger
 import scala.collection.immutable.HashMap
-import scrupal.models.{Patterns, EmailAddress_t}
+import scrupal.models.{CoreModule, Patterns}
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {
 
+  object TestModule extends Module('TestModule, "Test Module", Version(0,1,0), Version(0,0,0) )
+
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-  object MiddlePeriod extends Type('URI, "A type for validating URI strings.") {
+  object MiddlePeriod extends Type('MiddlePeriod, "A type for validating URI strings.", TestModule.id) {
     override def validate(value: JsValue) : JsResult[Boolean]= {
       value match {
         case v: JsString => {
@@ -60,7 +62,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  val rangeTy = RangeType('tenerval, "Ten from 10", 10, 20)
+  object rangeTy extends RangeType('aRange, "Ten from 10", TestModule.id, 10, 20)
 
   "RangeType(10,20)" should {
     "accept 17" in {
@@ -80,7 +82,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  val realTy = RealType('tenerval, "Ten from 10", 10.1, 20.9)
+  object realTy extends RealType('aReal, "Ten from 10", TestModule.id, 10.1, 20.9)
 
   "RangeType(10.1,20.9)" should {
     "accept 17.0" in {
@@ -100,8 +102,8 @@ class TypeSpec extends Specification {
     }
   }
 
-  val enumTy = EnumType('enum, "Enum example", HashMap(
-    "one" -> 1, "two" -> 2, "three" -> 3, "four" -> 5, "five" -> 8, "six" -> 13
+  object enumTy extends EnumType('enumTy, "Enum example", TestModule.id, HashMap(
+    'one -> 1, 'two -> 2, 'three -> 3, 'four -> 5, 'five -> 8, 'six -> 13
   ))
 
   "EnumType(fibonacci)" should {
@@ -116,7 +118,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  val blobTy = BLOBType('blob, "Blob example", "application/binary", 2, 4)
+  object blobTy extends BLOBType('blobTy, "Blob example", TestModule.id, "application/binary", 2, 4)
 
   "BLOBType(2,4)" should {
     "accept valid URI" in {
@@ -129,7 +131,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  val listTy = ListType('list, "List example", enumTy)
+  object listTy extends ListType('listTy, "List example", TestModule.id, enumTy)
 
   "ListType(enumTy)" should {
     "reject JsArray(JsNumber)" in {
@@ -154,7 +156,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  val setTy = SetType('set, "Set example", rangeTy)
+  object setTy extends SetType('setTy, "Set example", TestModule.id, rangeTy)
 
   "SetType(rangeTy)" should {
     "reject JsArray(\"foo\")" in {
@@ -179,7 +181,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  val mapTy = MapType('map, "Map example", realTy)
+  object mapTy extends MapType('mapTy, "Map example", TestModule.id, realTy)
 
   "MapType(realTy)" should {
     "reject JsObject('foo' -> 17)" in {
@@ -196,10 +198,10 @@ class TypeSpec extends Specification {
     }
   }
 
-  object trait1 extends TraitType('trait1, "Trait example 1",
+  object trait1 extends EntityType('trait1, "Trait example 1", TestModule.id,
     fields = HashMap (
       'even -> MiddlePeriod,
-      'email -> EmailAddress_t,
+      'email -> CoreModule.EmailAddress_t,
       'range -> rangeTy,
       'real -> realTy,
       'enum -> enumTy
@@ -207,7 +209,7 @@ class TypeSpec extends Specification {
     actions = HashMap()
   )
 
-  object trait2 extends TraitType('trait2, "Trait example 2",
+  object trait2 extends EntityType('trait2, "Trait example 2", TestModule.id,
     fields = HashMap(
       'list -> listTy,
       'set -> setTy,
@@ -216,8 +218,8 @@ class TypeSpec extends Specification {
     actions = HashMap()
   )
 
-  object AnEntity extends BundleType('entity, "Entity example",
-    traits = HashMap('trait1 -> trait1, 'trait2 -> trait2),
+  object AnEntity extends EntityType('AnEntity, "Entity example", TestModule.id,
+    fields = HashMap('trait1 -> trait1, 'trait2 -> trait2),
     actions = HashMap()
   )
 

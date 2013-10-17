@@ -21,7 +21,16 @@ package scrupal
   * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
   * is simply the "Core" module, this API provides essential everything needed to write Scrupal itself and any extension
   * to Scrupal through the introduction of a new module.
+  *
+  * Rule: scrupal.api should be fundamental an stand alone. That means it should not import anything from other
+  * scrupal packages. Period.
   */
 package object api {
+
+  type Identifier = Long
+  type ModuleIdentifier = Symbol
+  type TypeIdentifier = Symbol
+  type EntityIdentifier = Identifier
+  type FeatureIdentifier = Identifier
 
 }

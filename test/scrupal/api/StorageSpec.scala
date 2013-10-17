@@ -15,46 +15,78 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.DDL
-import org.joda.time.DateTime
-import scrupal.api.{Thing,  Component}
-import java.sql.Clob
-import scala.slick.direct.AnnotationMapper.column
+import org.specs2.mutable.Specification
+import play.api.Logger
 
-case class Entity (
-  override val name : Symbol,
-  override val description : String,
-  typ : Symbol,
-  override val modified : Option[DateTime] = Some(DateTime.now()),
-  override val created : DateTime = DateTime.now(),
-  override val id : Option[Long] = None
-) extends Thing[Entity](name, description, modified, created, id) {
-  def forId(id: Long) = Entity(name, description, typ, modified, created, Some(id))
+case class Empty() extends Storable
+case class One(o:Int) extends Storable
+case class Two(o:Int, s: String) extends Storable
+
+object Store {
+
+  type IdentityFakeStorage[T <: Storable] = scrupal.api.SimpleMemoryStorageFor[T]
+
+  val e = new IdentityFakeStorage[Empty]()
+  val o = new IdentityFakeStorage[One]()
+  val t = new IdentityFakeStorage[Two]()
+
 }
 
-/**
- * One line sentence description here.
- * Further description here.
- */
-trait EntityComponent extends Component {
+/** One line sentence description here.
+  * Further description here.
+  */
 
-  import profile.simple._
+class StorageSpec extends Specification {
 
-  object Entities extends ThingTable[Entity]("entities") {
-    def typ = column[Symbol](tableName + "typ")
-    def * = name ~ description ~ typ ~ modified.? ~ created ~ id.? <> (Entity, Entity.unapply _)
+/*
+  "Empty" should {
+    "support CRUD operations on FakeStorage" in {
+      val e = Empty()
+      val e2 = Store.e.insert(e)
+      Logger.debug("e.id = " + e.id)
+      e.id.get == e2 must beTrue
+      val e3 = Store.e.fetch(e2)
+      e3.isDefined must beTrue
+      e3.get.id == e2 must beTrue
+      val e4 = Store.e.update(e3.get)
+      e4 must beGreaterThan(0)
+      Store.e.delete(e) must beTrue
+      Store.e.fetch(e2).isDefined must beFalse
+    }
   }
 
-  object Traits extends Table[(Long,Long,Symbol,Clob)]("traits") {
-    def tid = column[Long](tableName + "_tid", O.PrimaryKey)
-    def eid = column[Long](tableName + "_eid")
-    def eid_fkey = foreignKey(tableName + "_eid_fkey", eid, Entities)(_.id)
-    def typ = column[Symbol](tableName + "_typ")
-    def payload = column[Clob](tableName + "_payload")
-    def * = tid ~ eid ~ typ ~ payload
+  "One" should {
+    "support CRUD operations on FakeStorage" in {
+      val e = One(42)
+      val e2 = Store.o.insert(e)
+      Logger.debug("e.id = " + e.id)
+      e.id.get == e2 must beTrue
+      val e3 = Store.o.fetch(e2)
+      e3.isDefined must beTrue
+      e3.get.id.get == e2 must beTrue
+      val e4 = Store.o.update(e3.get)
+      e4 must beGreaterThan(0)
+      Store.o.delete(e) must beTrue
+      Store.o.fetch(e2).isDefined must beFalse
+    }
   }
 
-  def entityDDL : DDL = Entities.ddl ++ Traits.ddl
+  "Two" should {
+    "support CRUD operations on FakeStorage" in {
+      val e = Two(42, " is the answer!")
+      val e2 = Store.t.insert(e)
+      Logger.debug("e.id = " + e.id)
+      e.id.get == e2 must beTrue
+      val e3 = Store.t.fetch(e2)
+      e3.isDefined must beTrue
+      e3.get.id.get == e2 must beTrue
+      val e4 = Store.t.update(e3.get)
+      e4 must beGreaterThan(0)
+      Store.t.delete(e) must beTrue
+      Store.t.fetch(e2).isDefined must beFalse
+    }
+  }
+  */
 }

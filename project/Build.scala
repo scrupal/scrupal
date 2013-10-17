@@ -17,7 +17,7 @@
 
 import sbt._
 import sbt.Keys._
-import play.Project._
+//import play.Project._
 
 /**
  * Settings for building Scrupal. These are common settings for each sub-project.
@@ -81,7 +81,7 @@ object ShellPrompt
 }
 
 
-object Resolvers
+trait Resolvers
 {
   // val scrupal_org_releases    = "Scrupal.org Releases" at "http://scrupal.github.org/mvn/releases"
   val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
@@ -94,7 +94,7 @@ object Resolvers
   val all_resolvers           = Seq ( typesafe_releases, google_sedis  )
 }
 
-object Dependencies
+trait Dependencies
 {
   // Databass, Caches, Data Storage stuff
   val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
@@ -132,17 +132,14 @@ object Dependencies
 
 }
 
-object ScrupalBuild extends Build {
+object ScrupalBuild extends Build  with Resolvers with Dependencies {
 
   import BuildSettings._
-  import Resolvers._
-  import Dependencies._
 
   addCommandAlias("tq", "test-quick")
   addCommandAlias("tm", "test-only scrupal.models")
   addCommandAlias("tu", "test-only scrupal.utils")
   addCommandAlias("tc", "test-only scrupal.controllers")
-
 
   val printClasspath = TaskKey[File]("print-class-path")
 
@@ -163,15 +160,16 @@ object ScrupalBuild extends Build {
     appName,
     path = file("."),
     settings = buildSettings ++ Seq (
-      requireJs += "scrupal.js",
-      requireJsShim += "scrupal.js",
+      //requireJs += "scrupal.js",
+      //requireJsShim += "scrupal.js",
       resolvers := all_resolvers,
+      fork in (Test) := false,
       // playAssetsDirectories <+= baseDirectory / "foo",
       libraryDependencies := Seq (
-        jdbc,
-        cache,
-        filters,
-        component("play-test"),
+        play.Keys.jdbc,
+        play.Keys.cache,
+        play.Keys.filters,
+        play.Keys.component("play-test"),
         specs2,
         play_plugins_redis,
         mailer_plugin,
@@ -182,10 +180,17 @@ object ScrupalBuild extends Build {
         angular_ui_router, marked, fontawesome
       ),
       printClasspath <<= print_class_path
-    ) ++
+    ) //++
   //    angularAssets map { f : File => playAssetsDirectories <+= f }
   //    ++
-      playScalaSettings
+      // playScalaSettings
+      /*
+      *:scalacOptions from *:scalacOptions
+      *:target from *:printClassPath
+      compile:fullClasspath from *:printClassPath
+      compile:compile from *:printClassPath
+      *:javacOptions from *:javacOptions
+     */
   )
 
    override def rootProject = Some(scrupal)

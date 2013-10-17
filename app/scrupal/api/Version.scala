@@ -17,6 +17,8 @@
 
 package scrupal.api
 
+import org.joda.time.DateTime
+
 /** Version numbering for Scrupal Modules.
   * Versions are ordered by major and minor number; update is not factored into the ordering as it is intended to be
   * used only for those changes that do not add features but just fix bugs. Consequently if major and minor version
@@ -37,10 +39,12 @@ package scrupal.api
 case class Version(
   major : Int,
   minor : Int,
-  update: Int
-) extends Ordered[Version] {
+  update: Int,
+  override val created : Option[DateTime] = None,
+  override val id : Option[Identifier] = None
+) extends Ordered[Version] with Creatable {
 
-  /** Compare to Version instances
+/** Compare to Version instances
     * Comparison only uses the minor and major numbers because updates are considered to be bug fixes that do not
     * provide new functionality but just correct existing functionality. Consequently versions with the same major
     * and minor numbers will yield 0 from this function

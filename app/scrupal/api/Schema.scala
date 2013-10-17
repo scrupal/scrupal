@@ -17,16 +17,19 @@
 
 package scrupal.api
 
-import scala.slick.driver.ExtendedProfile
-import scala.slick.lifted.{ForeignKeyAction, DDL}
+import scala.slick.lifted.{ForeignKeyAction, Projection, ColumnBase, DDL}
 import org.joda.time.DateTime
-import org.joda.time.DateTimeZone.UTC
-import play.api.Logger
+
 import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery0, StaticQuery}
-import scala.slick.direct.AnnotationMapper.column
 import java.sql.{Clob, Timestamp}
-import play.api.libs.json.{JsObject, Json, JsValue}
+import play.api.libs.json.{Json, JsValue}
+import scala.Predef._
+import scala.Some
+import scala.Tuple2
+import scala.slick.session.{Session, Database}
+import play.api.Logger
+import scala.slick.direct.AnnotationMapper.column
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -41,6 +44,7 @@ trait Sketch {
   val profile : ExtendedProfile
   val driverClass : String
   val schema : Option[String] = None
+  val database: scala.slick.session.Database
   def driver = Class.forName(driverClass).newInstance()
   def makeSchema : StaticQuery0[Int] = throw new NotImplementedError("Making DB Schema for " + driverClass )
   override def toString = { "{" + driverClass + ", " + schema + "," + profile }
@@ -54,143 +58,143 @@ trait Sketch {
  * all database entities to have a particular shape, that shape is enforced in the EntityTable class. Note that
  * Component extends Sketch which is mixed in to other components but resolved by the Schema class.
  */
-trait Component extends Sketch { this : Sketch =>
+trait Component  {
 
+  val sketch : Sketch
   // So we can define the Table items and queries, we import the Slick database profile here
-  import profile.simple._
+  import sketch.profile.simple._
 
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-    { d => new Timestamp( d getMillis ) },
-    { t => new DateTime (t getTime, UTC)  }
-  )
+  import scrupal.models.db.CommonTypeMappers._
 
-  implicit lazy val symbolMapper = MappedTypeMapper.base[Symbol,String] (
-    { s => s.name},
-    { s => Symbol(s) }
-  )
+  implicit val session: Session
 
-  abstract class IdentifiableTable[C <: Identifiable[C]](val tname: String) extends Table[C](schema, tname ) {
-    def id = column[Long](tableName + "_id", O.PrimaryKey, O.AutoInc);
+  abstract class ScrupalTable[S](tName: String) extends Table[S](sketch.schema, tName) {
+    protected def nm(columnName: String) : String = {
+      (if (schemaName.isDefined) schemaName.get + "." else "") + tableName + "_" + columnName
+    }
+
+    protected def fkn(foreignTableName: String ) : String = {
+      nm( foreignTableName + "_fkey")
+    }
+
+    protected def idx(name: String) : String = nm(name + "_idx")
+
+    lazy val findAllQuery = for (ty <- this) yield ty
+
+  }
+
+  trait StorableTable[S <: Storable] extends ScrupalTable[S] with StorageFor[S] {
+
+    def id = column[Identifier](nm( "id" ), O.PrimaryKey, O.AutoInc);
 
     lazy val fetchByIDQuery = for { id <- Parameters[Long] ; ent <- this if ent.id === id } yield ent
 
-    def fetch(id: Long)(implicit s: Session) : Option[C] = fetchByIDQuery(id).firstOption
+    override def fetch(id: Identifier) : Option[S] =  fetchByIDQuery(id).firstOption
 
-    def fetch(oid: Option[Long])(implicit s: Session) : Option[C] = {
-      oid match { case None => None ; case Some(id) => fetch(id) }
-    }
+    override def findAll() : Seq[S] = findAllQuery.list()
 
-    def insert(entity: C)( implicit s: Session ) : C = {
-      val resulting_id = * returning id insert(entity)
-      entity.forId(resulting_id)
-    }
+    override def insert(entity: S) : Identifier = * returning id insert(entity)
 
-    def update(entity: C)(implicit s: Session ) : C = {
-      this.filter(_.id === entity.id) update(entity)
-      entity
-    }
+    override def update(entity: S) : Int = this.filter(_.id === entity.id) update(entity)
 
-    def delete(entity: C)(implicit s: Session) : Boolean = delete(entity.id)
+    override def delete(entity: S) : Boolean = delete(entity.id)
 
     // -- operations on rows
-    def delete(id: Long)(implicit s: Session ) : Boolean =  {
+    private def delete(id: Identifier) : Boolean =  {
       this.filter(_.id === id).delete > 0
     }
 
-    def delete(oid: Option[Long])(implicit s: Session) : Boolean = {
+    private def delete(oid: Option[Identifier]) : Boolean = {
       oid match { case None => false; case Some(id) => delete(id) }
     }
-
-    lazy val findAllQuery = for (entity <- this) yield entity
-
-    def findAll() (implicit s: Session) : List[C] = {
-      findAllQuery.list
-    }
-
-    def upsert(entity: C)(implicit s: Session) : C = {
-      if (entity.id.isDefined) update(entity) else insert(entity)
-    }
   }
 
-  abstract class CreatableTable[C <: Creatable[C]](tname: String) extends IdentifiableTable[C](tname) {
-    def created = column[DateTime](tableName + "_created", O.Nullable) // FIXME: Dynamic Date required!
+  trait CreatableTable[S <: Creatable] extends StorableTable[S] {
 
-    lazy val findSinceQuery = for {  created <- Parameters[DateTime] ; e <- this if e.created >= created } yield e
+    def created = column[DateTime](nm("created"), O.Nullable) // FIXME: Dynamic Date required!
 
-    def findSince(dt: DateTime)(implicit s: Session ) : List[C] = findSinceQuery(dt).list
+    lazy val findSinceQuery = for {
+      created <- Parameters[DateTime] ;
+      e <- this if (e.created > created)
+    } yield e
 
+    case class CreatedSince(d: DateTime) extends FinderOf[S] { override def apply() = findSinceQuery(d).list }
   }
 
-  abstract class ImmutableThingTable[C <: ImmutableThing[C]](tname: String) extends CreatableTable[C](tname) {
-    def name = column[Symbol](tableName + "_name", O.NotNull)
+  trait ModifiableTable[S <: Modifiable] extends StorableTable[S] {
 
-    def name_index = index(tableName + "_name_index", name, unique=true)
+    def modified_index = index(nm("modified_index"), modified, unique=false)
 
-    lazy val fetchByNameQuery = for { n <- Parameters[Symbol] ; e <- this if e.name === n } yield e
+    def modified = column[DateTime](nm("modified"), O.Nullable) // FIXME: Dynamic Date required!
 
-    def fetch(aName: Symbol)(implicit s: Session) : Option[C] = fetchByNameQuery(aName).firstOption
+    lazy val modifiedSinceQuery = for {
+      chg <- Parameters[DateTime];
+      mt <- this if mt.modified > chg
+    } yield mt
 
+    case class ModifiedSince(d: DateTime) extends FinderOf[S] { override def apply() = modifiedSinceQuery(d).list }
   }
+
+  trait NameableTable[S <: Nameable] extends StorableTable[S] {
+    def name = column[Symbol](nm("name"), O.NotNull)
+
+    def name_index = index(idx("name"), name, unique=true)
+
+    lazy val fetchByNameQuery = for {
+      n <- Parameters[Symbol] ;
+      e <- this if e.name === n
+    } yield e
+
+    case class ByName(n: Symbol) extends FinderOf[S] { override def apply() = fetchByNameQuery(n).list }
+  }
+
+  trait DescribableTable[S <: Describable] extends StorableTable[S] {
+    def description = column[String](nm("_description"), O.NotNull)
+  }
+
+  trait NamedDescribedThingTable[S <: NamedDescribedThing] extends StorableTable[S] with NameableTable[S] with
+                                                                   DescribableTable[S]
+
+  trait ImmutableThingTable[S <: ImmutableThing] extends CreatableTable[S] with NameableTable[S]
+
+  trait MutableThingTable[S <: MutableThing] extends CreatableTable[S] with ModifiableTable[S] with NameableTable[S]
 
   /**
    * The base class of all table definitions in Scrupal.
    * Most tables in the Scrupal database represent some form of entity that can be manipulated through the
    * index interface. To ensure a certain level of consistency across all such entities, we enforce the structure
    * of the entities with this class. Every entity table should subclass from EntityTable
-   * @param tableName The name of the table in the database
-   * @tparam C The case class that represents rows in this table
+   * @tparam S The case class that represents rows in this table
    */
-  abstract class DescribedThingTable[C <: DescribedThing[C]](tableName: String)
-    extends ImmutableThingTable[C] (tableName) {
+  trait DescribableImmutableThingTable[S <: DescribableImmutableThing]
+    extends ImmutableThingTable[S] with  DescribableTable[S];
 
-    def description = column[String](tableName + "_description", O.NotNull)
+  trait ThingTable[S <: Thing] extends MutableThingTable[S] with DescribableTable[S]
 
-  };
-
-  abstract class ThingTable[C <: Thing[C]](tableName: String)
-    extends DescribedThingTable[C](tableName) {
-
-    def modified = column[DateTime](tableName + "_modified", O.Nullable)
-
-    def modified_index = index(tableName + "_modified_index", modified, unique=false)
-
-    override def update(thing: C)(implicit s: Session ) : C = {
-      val selected = this.where(_.id === thing.id)
-      selected.update(thing)
-      selected.map(t => t.modified).update(DateTime.now())
-      thing
-    }
-
-    lazy val modifiedSinceQuery = for { chg <- Parameters[DateTime]; mt <- this if mt.modified > chg } yield mt
-
-    def modifiedSince(chg: DateTime)(implicit s: Session) : List[C] = modifiedSinceQuery(chg).list
-
-  };
-
-  abstract class EnabledThingTable[C <: EnabledThing[C]](tableName : String) extends ThingTable[C](tableName) {
-    def enabled = column[Boolean](tableName + "_enabled", O.NotNull)
-    def enabled_index = index(tableName + "_enabled_index", enabled, unique=false)
+  trait EnablableThingTable[S <: EnablableThing] extends ThingTable[S] {
+    def enabled = column[Boolean](nm("enabled"), O.NotNull)
+    def enabled_index = index(idx("enabled"), enabled, unique=false)
 
     lazy val enabledQuery = for { en <- this if en.enabled === true } yield en
-    def allEnabled()(implicit s: Session) : List[C] = enabledQuery.list
+    def allEnabled() : List[S] = enabledQuery.list
   }
 
   /**
    * The base class of all correlation tables.
    * This allows many-to-many relationships to be established by simply listing the pairs of IDs
    */
-  abstract class ManyToManyTable[A <: Identifiable[A], B <: Identifiable[B] ] (tableName: String,
-      nameA: String, nameB: String, tableA: IdentifiableTable[A], tableB:  IdentifiableTable[B])
-      extends Table[(Long,Long)](schema, tableName) {
-    def a_id = column[Long](tableName + "_" + nameA + "_id")
-    def b_id = column[Long](tableName + "_" + nameB + "_id")
-    def a_fkey = foreignKey(tableName + "_" + nameA + "_fkey", a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
-    def b_fkey = foreignKey(tableName + "_" + nameB + "_fkey", b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
-    def a_b_uniqueness = index(tableName + "_uniqueness", (a_id, b_id), unique= true)
+  abstract class ManyToManyTable[A <: Storable, B <: Storable ] (tableName: String,
+      nameA: String, nameB: String, tableA: StorableTable[A], tableB:  StorableTable[B])
+      extends ScrupalTable[(Identifier,Identifier)](tableName) {
+    def a_id = column[Identifier](nm(nameA + "_id"))
+    def b_id = column[Identifier](nm(nameB + "_id"))
+    def a_fkey = foreignKey(fkn(nameA), a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def b_fkey = foreignKey(fkn(nameB), b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def a_b_uniqueness = index(idx(nameA + "_" + nameB), (a_id, b_id), unique= true)
     lazy val findBsQuery = for { aId <- Parameters[Long]; a <- this if a.a_id === aId; b <- tableB if b.id === a.b_id } yield b
     lazy val findAsQuery = for { bId <- Parameters[Long]; b <- this if b.b_id === bId; a <- tableA if a.id === b.a_id } yield a
-    def selectAssociatedA(b: B)(implicit s: Session) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
-    def selectAssociatedB(a: A)(implicit s: Session) : List[B] = { if (a.id.isDefined) findBsQuery(a.id.get).list else List() }
+    def selectAssociatedA(b: B) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
+    def selectAssociatedB(a: A) : List[B] = { if (a.id.isDefined) findBsQuery(a.id.get).list else List() }
     def * = a_id ~ b_id
 
   };
@@ -199,21 +203,22 @@ trait Component extends Sketch { this : Sketch =>
    * The base class of all tables that provide a string key to reference some Identifiable table.
    * This allows a
    */
-  abstract class NamedIdentifiableTable[ReferentType <: Identifiable[ReferentType]](
-      tableName: String, valueTable: IdentifiableTable[ReferentType])
-      extends Table[(String,Long)](schema, tableName) {
-    def key = column[String](tableName + "_key")
-    def value = column[Long](tableName + "_value")
-    def value_fkey = foreignKey(tableName + "_value_fkey", value, valueTable)(_.id, onDelete = ForeignKeyAction.Cascade)
-    def key_value_index = index(tableName + "_key_value_index", on=(key, value), unique=true)
+  abstract class NamedStorableTable[ReferentType <: Storable](
+      tableName: String, valueTable: StorableTable[ReferentType])
+      extends ScrupalTable[(String,Identifier)](tableName) {
+    def key = column[String](nm("key"))
+    def value = column[Identifier](nm("value"))
+    def value_fkey = foreignKey(fkn(valueTable.tableName), value, valueTable)(_.id,
+      onDelete = ForeignKeyAction.Cascade)
+    def key_value_index = index(idx("key_value"), on=(key, value), unique=true)
     def * = key ~ value
 
-    def insert( pair: (String, Long) )( implicit s: Session)  = { * insert pair }
+    def insert( pair: (String, Long) )  = { * insert pair }
 
-    def insert(k: String, v: Long)( implicit s: Session ) : Unit = insert( Tuple2(k, v) )
+    def insert(k: String, v: Long) : Unit = insert( Tuple2(k, v) )
 
     // -- operations on rows
-    def delete(k: String)(implicit s: Session ) : Boolean =  {
+    def delete(k: String) : Boolean =  {
       this.filter(_.key === k).delete > 0
     }
 
@@ -223,14 +228,14 @@ trait Component extends Sketch { this : Sketch =>
       vt <- valueTable if ni.value === vt.id
     } yield vt
 
-    def findValues(aKey: String)(implicit s: Session) : List[ReferentType] = findValuesQuery(aKey).list
+    def findValues(aKey: String): List[ReferentType] = findValuesQuery(aKey).list
 
     lazy val findKeysQuery = for {
       id <- Parameters[Long];
       ni <- this if ni.value === id
     } yield ni.key
 
-    def findKeys(id : Long)(implicit s: Session) : List[String] = findKeysQuery(id).list
+    def findKeys(id : Long) : List[String] = findKeysQuery(id).list
   }
 }
 
@@ -247,19 +252,21 @@ trait Component extends Sketch { this : Sketch =>
  * any particular database, schema name or DB driver.
  * @param sketch
  */
-abstract class Schema(val sketch: Sketch ) extends Sketch
+abstract class Schema(val sketch: Sketch )(override implicit val session: Session) extends  Component
 {
   // The primary reason for this class to exist is to give concrete values to ScrupalSketch's members based on
   // an instance not inheritance. ScrupalSketch is abstract and has no concrete members. We want to have those members
   // be filled out from
-  override val profile: ExtendedProfile = sketch.profile
-  override val schema: Option[String] = sketch.schema
-  override val driverClass : String = sketch.driverClass
+  val profile: ExtendedProfile = sketch.profile
+  val schema: Option[String] = sketch.schema
+  val driverClass : String = sketch.driverClass
+
+  // override implicit val session : Session = sketch.database.createSession()
 
   // This is where the magic happens :)
   import profile.simple._
 
-  def toClob(js: JsValue)(implicit session: Session) : Clob = {
+  def toClob(js: JsValue) : Clob = {
     val clob = session.conn.createClob()
     clob.setString(1, Json.stringify(js));
     clob
@@ -280,6 +287,7 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
       val update = sketch.makeSchema
       update.execute
     }
+    Logger.debug("Creating Schema: \n" + (ddl.createStatements mkString("\n")))
     ddl.create
   }
 }
@@ -289,10 +297,11 @@ abstract class Schema(val sketch: Sketch ) extends Sketch
  * The Sketch for H2 Database
  * @param schema - optional schema name for the profile
  */
-case class H2Sketch(override val schema: Option[String] = None ) extends Sketch
+case class H2Sketch(url: String, override val schema: Option[String] = None ) extends Sketch
 {
   override val profile: ExtendedProfile = H2Driver
   override val driverClass : String = "org.h2.Driver"
+  override val database = Database.forURL(url, driverClass)
   override def makeSchema : StaticQuery0[Int] = StaticQuery.u + "SET TRACE_LEVEL_FILE 4; CREATE SCHEMA IF NOT EXISTS " + schema.get
 }
 
@@ -300,28 +309,46 @@ case class H2Sketch(override val schema: Option[String] = None ) extends Sketch
  * The Sketch for H2 Database
  * @param schema - optional schema name for the profile
  */
-case class MySQLSketch (override val schema: Option[String] = None )  extends Sketch {
+case class MySQLSketch (url: String, override val schema: Option[String] = None )  extends Sketch {
   override val profile: ExtendedProfile = MySQLDriver
   override val driverClass : String = "com.mysql.jdbc.Driver"
+  override val database = Database.forURL(url, driverClass)
 }
 
 /**
  * The Sketch for SQLite Database
  * @param schema - optional schema name for the profile
  */
-class SQLiteSketch (override val schema: Option[String] = None ) extends Sketch {
+class SQLiteSketch (url: String, override val schema: Option[String] = None ) extends Sketch {
   override val profile: ExtendedProfile = SQLiteDriver
   override val driverClass : String = "org.sqlite.JDBC"
-
+  override val database = Database.forURL(url, driverClass)
 }
 
 /**
  * The Sketch for Postgres Database
  * @param schema - optional schema name for the profile
  */
-class PostgresSketch (override val schema: Option[String] = None ) extends Sketch {
+class PostgresSketch (url: String, override val schema: Option[String] = None ) extends Sketch {
   override val profile: ExtendedProfile = PostgresDriver
   override val driverClass : String = "org.postgresql.Driver"
+  override val database = Database.forURL(url, driverClass)
+}
 
+object Sketch {
+  /** Convert a URL into a Database Sketch by examining its prefix
+   * @param url - The JDBC Connection URL for the database we should connect to
+   * @return A Sketch for the corresponding database type
+   */
+  def apply(url: String, schema: Option[String] = None ) : Sketch = {
+    Logger.debug("Creating Sketch With: " + url )
+    url match {
+      case s if s.startsWith("jdbc:h2:") => return new H2Sketch(url, schema)
+      case s if s.startsWith("jdbc:mysql:") => return new MySQLSketch(url, schema)
+      case s if s.startsWith("jdbc:sqllite:") => return new SQLiteSketch(url, schema)
+      case s if s.startsWith("jdbc:postgresql:") => return new PostgresSketch(url, schema)
+      case _ => throw new UnsupportedOperationException("JDBC Url (" + url + ") is not for a supported database.")
+    }
+  }
 }
 

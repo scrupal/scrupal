@@ -15,22 +15,72 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.api
 
-import scala.slick.lifted.DDL
-import scrupal.api.{Sketch, Schema}
-import scala.slick.session.Session
+import org.joda.time.DateTime
+import org.specs2.mutable.Specification
 
 /**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
+ * One line sentence description here.
+ * Further description here.
  */
-class ScrupalSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with CoreComponent with UserComponent  with NotificationComponent
-{
-
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ userDDL ++ notificationDDL
+class ThingSpec extends Specification {
+  case class TestCreatable(
+  ) extends Creatable {
+    def blah : Int = 3
   }
 
+  case class Identified[FOO](it: FOO,
+    override val id: Option[Long],
+    override val created: Option[DateTime] = Some(DateTime.now())
+  ) extends Creatable {
+    def apply() : FOO = it
+  }
+
+  "Creatable" should {
+    "report existence with both id and timestamp" in {
+      val t = TestCreatable()
+      t.exists must beFalse
+      val o = new Identified(TestCreatable(),Some(1))
+      o.exists must beTrue
+      o().blah must beEqualTo(3)
+    }
+
+    "report non-existence without id" in {
+      val t = TestCreatable()
+      t.exists must beFalse
+    }
+
+    "report non-existence without timestamp" in {
+      val t = TestCreatable()
+      t.exists must beFalse
+    }
+  }
+
+  case class TestModifiable(override val modified: Option[DateTime] = Some(DateTime.now()) )
+    extends Modifiable
+
+  "Modifiable" should {
+    "report modification when changed" in {
+      val t = TestModifiable()
+      t.isModified must beTrue
+    }
+    "report non-modification when unchanged" in {
+      val t= TestModifiable(None)
+      t.isModified must beFalse
+    }
+  }
+
+  case class TestThing(
+    override val name: Symbol,
+    override val description: String
+  ) extends Thing(name, description) {
+  }
+
+  "Thing" should {
+    "instantiate with simple arguments" in {
+      val t = TestThing('test, "Testing")
+      t.isNamed && t.isDescribed must beTrue
+    }
+  }
 }

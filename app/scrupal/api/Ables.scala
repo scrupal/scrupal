@@ -18,63 +18,42 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-import org.specs2.mutable.Specification
 
-/**
- * One line sentence description here.
- * Further description here.
- */
-class ThingSpec extends Specification {
-  case class TestCreatable(
-    override val id : Option[Long] = Some(1),
-    override val created : Option[DateTime] = Some(DateTime.now())
-  ) extends Creatable[TestCreatable] {
-    def forId(id: Long) = TestCreatable(Some(id), created)
-  }
+/** Something that can be created and keeps track of its modification time.
+  * For reasons similar to [[scrupal.api.Storable]], the data provided by this trait is accessible to everyone
+  * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Creatable uses
+  * the same justifications for this design as does [[scrupal.api.Storable]]
+  */
+trait Creatable extends Storable {
+  val created : Option[DateTime] = None;
+  def isCreated = created.isDefined
+  def exists = isCreated
+}
 
-  "Creatable" should {
-    "report existence with both id and timestamp" in {
-      val t = TestCreatable()
-      t.exists must beTrue
-    }
+/** Something that can be modified and keeps track of its time of modification
+  * For reasons similar to [[scrupal.api.Storable]], the data provided by this trait is accessible to everyone
+  * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Modifiable uses
+  * the same justifications for this design as does [[scrupal.api.Storable]]
+  */
+trait Modifiable extends Storable {
+  val modified : Option[DateTime] = None
+  def isModified = modified.isDefined
+  def changed = isModified
+}
 
-    "report non-existence without id" in {
-      val t = TestCreatable(None)
-      t.exists must beFalse
-    }
+/** Something that can be named with a Symbol  */
+trait Nameable extends Storable {
+  val name : Symbol
+  def isNamed : Boolean = ! name.name.isEmpty
+}
 
-    "report non-existence without timestamp" in {
-      val t = TestCreatable( created = None )
-      t.exists must beFalse
-    }
-  }
+/** Something that has a short textual description */
+trait Describable extends Storable {
+  val description : String
+  def isDescribed : Boolean = ! description.isEmpty
+}
 
-  case class TestModifiable(override val modified: Option[DateTime] = Some(DateTime.now()) )
-    extends Modifiable
-
-  "Modifiable" should {
-    "report modification when changed" in {
-      val t = TestModifiable()
-      t.isModified must beTrue
-    }
-    "report non-modification when unchanged" in {
-      val t= TestModifiable(None)
-      t.isModified must beFalse
-    }
-  }
-
-  case class TestThing(override val name: Symbol, override val description: String,
-    override val modified: Option[DateTime] = None,
-    override val created: Option[DateTime] = None,
-    override val id: Option[Long] = None)
-    extends Thing[TestThing](name, description, modified, created, id) {
-    def forId(id: Long) = TestThing(name, description, modified, created, Some(id))
-  }
-
-  "Thing" should {
-    "instantiate with simple arguments" in {
-      val t = TestThing('test, "Testing")
-      t.isNamed && t.isDescribed must beTrue
-    }
-  }
+trait Enablable extends Storable {
+  val enabled : Boolean
+  def isEnabled : Boolean = enabled
 }

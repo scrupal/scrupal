@@ -15,22 +15,50 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package api
 
-import scala.slick.lifted.DDL
-import scrupal.api.{Sketch, Schema}
-import scala.slick.session.Session
+import org.specs2.mutable.Specification
+import scrupal.api.Feature
 
-/**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
- */
-class ScrupalSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with CoreComponent with UserComponent  with NotificationComponent
-{
+/** Test cases for the scrupal.api.Feature class
+  * Further description here.
+  */
+class FeatureSpec extends Specification {
 
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ userDDL ++ notificationDDL
+  val on = Feature('TestFeatureOn, "Testing Feature: On", true)
+  val off = Feature('TestFeatureOff, "Testing Feature: Off", false)
+
+  "Feature" should {
+    "create with three arguments" in {
+      on.isEnabled must beTrue
+    }
+    "access with one argument" in {
+      val truth = Feature('TestFeatureOn)
+      truth.isDefined must beTrue
+      val t = truth.get
+      t.isEnabled must beTrue
+      val truth2 = Feature('TestFeatureOff)
+      truth2.isDefined must beTrue
+      val t2 = truth2.get
+      t2.isEnabled must beFalse
+    }
+    "enable and disable on request" in {
+      val f = Feature('TestFeature, "Testing Feature", false)
+      f.enable()
+      f.isEnabled must beTrue
+      f.disable()
+      f.isEnabled must beFalse
+    }
+    "convert to boolean implicitly" in {
+      Feature.featureToBool(on) must beTrue
+      off.isEnabled must beFalse
+      if (Feature('TestFeatureOn)) {
+        success
+      }
+      else
+      {
+        failure
+      }
+    }
   }
-
 }

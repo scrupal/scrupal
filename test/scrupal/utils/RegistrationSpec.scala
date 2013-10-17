@@ -18,63 +18,33 @@
 package scrupal.utils
 
 import org.specs2.mutable.Specification
-import java.security.SecureRandom
-import play.api.Logger
-import scala.collection.immutable.Range.Double
-
 
 /**
  * One line sentence description here.
  * Further description here.
  */
-class HasherSpec extends Specification {
-  val password = new String(SecureRandom.getInstance("SHA1PRNG", "SUN").generateSeed(16))
-  Hash.fastMode = true
+class RegistrationSpec extends Specification {
 
-  "Hasher" should {
-    "pick random hashers" in {
-      val list : Seq[Symbol] = for ( i <- 1 to 10 ) yield Hash.pick.registration_id
-      list.distinct.size >= 3 must beTrue
-    }
-
-    "PBKDF2 works " in {
-      val start = System.currentTimeMillis()
-      val result = PBKDF2Hasher.hash(password)
-      val check = Hash.check(result, password) must beTrue
-      Logger.debug("PBKDF2: " + (System.currentTimeMillis() - start) + " milliseconds.")
-      check
-    }
-
-    "Right & Wrong Password Guesses Take the Same Time To Compute" in {
-      val result = PBKDF2Hasher.hash(password)
-      val t1 = System.currentTimeMillis()
-      val check1 = Hash.check(result, password)
-      val t2 = System.currentTimeMillis()
-      val check2 = Hash.check(result, "a")
-      val t3 = System.currentTimeMillis()
-      Logger.debug("t1=" + t1 + ", t2=" + t2 + ", t3=" + t3 + ", t2-t1=" + (t2-t1) + ", t3-t2=" + (t3-t2))
-      val avg = ((t2 - t1) + (t3 - t2)) / 2
-      val delta = Math.abs((t2 - t1) - (t3 - t2))
-      val ratio = delta.toDouble / avg.toDouble
-      Logger.debug("avg=" + avg + ", delta=" + delta + ", ratio=" + ratio)
-      ratio must beLessThan( 0.10 ) // Less than 10% difference in timing
-    }
-
-    "BCrypt works" in {
-      val start = System.currentTimeMillis()
-      val result = BCryptHasher.hash(password)
-      val check = Hash.check(result, password) must beTrue
-      Logger.debug("BCrypt: " + (System.currentTimeMillis() - start) + " milliseconds.")
-      check
-    }
-
-    "SCrypt works" in {
-      val start = System.currentTimeMillis()
-      val result = BCryptHasher.hash(password)
-      val check = Hash.check(result, password) must beTrue
-      Logger.debug("SCrypt: " + (System.currentTimeMillis() - start) + " milliseconds.")
-      check
-
+  "Registration" should {
+    "allow Registrable to be mixed in" in {
+      abstract class Test_Registrable extends Registrable
+      object one extends Test_Registrable {
+        override val id = 'one
+      }
+      object two extends Test_Registrable {
+        override val id = 'two
+      }
+      object registry extends Registry[Test_Registrable] {
+        override val registryName = "Test-Registry"
+        override val registrantsName = "Test-Registrable"
+      }
+      registry.register(one)
+      registry.register(two)
+      registry.size must beEqualTo(2)
+      registry.unRegister(two)
+      registry.size must beEqualTo(1)
+      registry.unRegister(one)
+      registry.size must beEqualTo(0)
     }
   }
 }

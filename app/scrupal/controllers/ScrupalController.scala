@@ -4,7 +4,7 @@ import scrupal.views.html
 import play.api.mvc._
 import play.api.http.Writeable
 import play.api.templates.Html
-import scrupal.api.{Type, Module}
+import scrupal.api.{Modules, Type, Module}
 import play.api.libs.json.JsString
 import play.api.mvc.SimpleResult
 import org.joda.time.DateTime
@@ -37,11 +37,11 @@ class ScrupalController extends Controller with ContextProvider {
 
   def spaces2underscores(what: String) = what.replaceAll(" ","_")
 
-  def modules = Module.all
-  def moduleNames : Seq[String]  = Module.all map { module: Module => module.label }
+  def modules = Modules.all
+  def moduleNames : Seq[String]  = Modules.all map { module: Module => module.label }
   def moduleTypeNames(mod:Module)  : Seq[String] = mod.types map { typ => typ.label }
 
-  def types       : Seq[Type]    = Module.all flatMap { module => module.types }
+  def types       : Seq[Type]    = Modules.all flatMap { module => module.types }
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 
   def dateStr(millis: Long) : String = new DateTime(millis).toString(ISODateTimeFormat.dateTime)

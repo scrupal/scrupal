@@ -21,7 +21,7 @@ import play.api.mvc.{Action, RequestHeader}
 import play.api.{Play, Routes}
 import play.api.Play.current
 import scrupal.views.html
-import scrupal.api.{Module}
+import scrupal.api.{Modules, Module}
 import org.joda.time. Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
@@ -54,12 +54,12 @@ object Home extends ScrupalController {
 
   /** The admin application */
   def admin = Action { implicit request =>
-    Ok(html.admin(Module.all))
+    Ok(html.admin(Modules.all))
   }
 
   /** The apidoc application */
   def apidoc = Action { implicit request =>
-    Ok(html.apidoc(Module.all))
+    Ok(html.apidoc(Modules.all))
   }
 
   def docPage(path: String) = Action { implicit request =>

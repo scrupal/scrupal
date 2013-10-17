@@ -22,10 +22,15 @@ import scala.collection.immutable.HashMap
 import play.api.libs.json._
 import play.api.data.validation.ValidationError
 import java.net.{URI, URISyntaxException}
-import scrupal.utils.{Registrable, Registry, Pluralizer}
+import scrupal.utils._
 import scala.collection.mutable
-import scrupal.models.CoreModule
-import org.joda.time.DateTime
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsString
+import scala.Some
+import play.api.data.validation.ValidationError
+import play.api.libs.json.JsNumber
+import play.api.libs.json.JsObject
 
 
 /** A trait to define the validate method for objects that can validate a JsValue */
@@ -80,24 +85,30 @@ trait ObjectValidator {
   }
 }
 
+case class EssentialType (
+  override val id : TypeIdentifier,
+  description: String,
+  moduleId: ModuleIdentifier
+) extends Registrable
+
 /** A generic Type used as a placeholder for subclasses that compose types.
   * Note that the name of the Type is a Symbol. Symbols are interned so there is only ever one copy of the name of
   * the type. This is important because type linkage is done by indirectly referencing the name, not the actual type
   * object and name reference equality is the same as type equality.  Scrupal also interns the Type objects that
   * modules provide so they can be looked up by name quickly. This allows inter-module integration without sharing
   * code and provides rapid determination of type equality.
-  * @param name The name of the type
+  * @param id
+  * @param description
+  * @param moduleId
   */
 abstract class Type (
-  val module: Module,
-  override val name : Symbol,
-  override val description: String,
-  override val created : DateTime
-) extends UnsavableThing[Type](name, description, created) with ValueValidator with Registrable {
-  require(!name.name.isEmpty)
+  id : TypeIdentifier,
+  description: String,
+  moduleId: ModuleIdentifier
+) extends EssentialType(id, description, moduleId) with ValueValidator  with Jsonic {
+  require(!label.isEmpty)
   require(!description.isEmpty)
-
-  override val registration_id : Symbol = name
+  require(!moduleId.name.isEmpty)
 
   /** By default the validate method returns an error
     * @param value The JSON value to be validated
@@ -113,14 +124,14 @@ abstract class Type (
     */
   lazy val plural = Pluralizer.pluralize(label)
 
-  /** Cache the string version of the Symbol whenever it gets requested */
-  lazy val label = name.name
-
   /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
   def kind :String = super.getClass.getSimpleName.replace("$","")
 
+  override def toJson : JsObject = ???
+  override def fromJson( js: JsObject ) = ???
+
   /** Register this type with the registry of types (below) */
-  Type.register(this)
+  Types.register(this)
 
 }
 
@@ -128,17 +139,16 @@ abstract class Type (
   * By default, all nested types are stored in JSON by value. In this way, complex data structures can be created and
   * validated by composing the various subclasses of Type --- with one exception, this `ReferenceType` class. This
   * Type refers to some other value stored outside of the object in which the `ReferenceType` occurs.
-  * @param name The name of the reference type
+  * @param id The name of the reference type
   * @param description A description of the reference type
   * @param typ The type of the value to which the this object refers
   */
-case class ReferenceType (
-  override val module: Module,
-  override val name : Symbol,
-  override val description: String,
-  override val created : DateTime,
-  typ : Type
-) extends Type(module, name, description, created) {
+class ReferenceType (
+  id : TypeIdentifier,
+  description: String,
+  moduleId: ModuleIdentifier,
+  val typ : Type
+) extends Type(id, description, moduleId) {
   override def validate(value : JsValue) = {
     value match {
       case v : JsObject => {
@@ -162,26 +172,24 @@ case class ReferenceType (
       "name" -> label,
       "plural" -> plural,
       "description" -> description,
-      "created" -> created,
-      "type" -> typ
+      "type" -> typ.label
     )
 }
 
 /** A String type constrains a string by defining its content with a regular expression and a maximum length.
   *
-  * @param name THe name of the string type
+  * @param id THe name of the string type
   * @param description A brief expression of the string type
   * @param regex The regular expression that specifies legal values for the string type
   * @param maxLen The maximum length of this string type
   */
-case class StringType (
-  override val module: Module,
-  override val name : Symbol,
-  override val description : String,
-  override val created : DateTime,
-  regex : Regex,
-  maxLen : Int = Int.MaxValue
-) extends Type(module, name, description, created) {
+class StringType (
+  id : TypeIdentifier,
+  description : String,
+  moduleId: ModuleIdentifier,
+  val regex : Regex,
+  val maxLen : Int = Int.MaxValue
+) extends Type(id, description, moduleId) {
   require(maxLen >= 0)
 
   override def validate(value : JsValue) = {
@@ -201,7 +209,6 @@ case class StringType (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "regex" -> regex.pattern.pattern,
     "maxLen" -> maxLen
   )
@@ -209,19 +216,18 @@ case class StringType (
 
 /** A Range type constrains Long Integers between a minimum and maximum value
   *
-  * @param name
+  * @param id
   * @param description
   * @param min
   * @param max
   */
-case class RangeType (
-  override val module: Module,
-  override val name : Symbol,
-  override val description : String,
-  override val created : DateTime,
-  min : Long = Int.MinValue,
-  max : Long = Int.MaxValue
-) extends Type(module, name, description, created) {
+class RangeType (
+  id : TypeIdentifier,
+  description : String,
+  moduleId: ModuleIdentifier,
+  val min : Long = Int.MinValue,
+  val max : Long = Int.MaxValue
+) extends Type(id, description, moduleId) {
 
   override def validate(value : JsValue) = {
     value match {
@@ -240,7 +246,6 @@ case class RangeType (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "min" -> min,
     "max" -> max
   )
@@ -248,19 +253,18 @@ case class RangeType (
 
 /** A Real type constrains Double values between a minimum and maximum value
   *
-  * @param name
+  * @param id
   * @param description
   * @param min
   * @param max
   */
-case class RealType (
-  override val module: Module,
-  override val name : Symbol,
-  override val description : String,
-  override val created : DateTime,
-  min : Double = Double.MinValue,
-  max : Double = Double.MaxValue
-) extends Type(module, name, description, created) {
+class RealType (
+  id : TypeIdentifier,
+  description : String,
+  moduleId: ModuleIdentifier,
+  val min : Double = Double.MinValue,
+  val max : Double = Double.MaxValue
+) extends Type(id, description, moduleId) {
 
   override def validate(value : JsValue) = {
     value match {
@@ -280,7 +284,6 @@ case class RealType (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "min" -> min,
     "max" -> max
   )
@@ -288,21 +291,20 @@ case class RealType (
 
 /** A BLOB type has a specified MIME content type and a minimum and maximum length
   *
-  * @param name
+  * @param id
   * @param description
   * @param mime
   * @param minLen
   * @param maxLen
   */
-case class BLOBType  (
-  override val module: Module,
-  override val name : Symbol,
-  override val description : String,
-  override val created : DateTime,
-  mime : String,
-  minLen : Int = 0,
-  maxLen : Long = Long.MaxValue
-) extends Type(module, name, description, created) {
+class BLOBType  (
+  id : TypeIdentifier,
+  description : String,
+  moduleId: ModuleIdentifier,
+  val mime : String,
+  val minLen : Int = 0,
+  val maxLen : Long = Long.MaxValue
+) extends Type(id, description, moduleId) {
   assert(minLen >= 0)
   assert(maxLen >= 0)
   assert(mime.contains("/"))
@@ -339,7 +341,6 @@ case class BLOBType  (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "mine" -> mime,
     "minLen" -> minLen,
     "axnLen" -> maxLen
@@ -349,13 +350,12 @@ case class BLOBType  (
 /** An Enum type allows a selection of one enumerator from a list of enumerators.
   * Each enumerator is assigned an integer value.
   */
-case class EnumType  (
-  override val module: Module,
-  override val name : Symbol,
-  override val description : String,
-  override val created : DateTime,
-  enumerators : HashMap[Symbol, Int]
-) extends Type(module, name, description, created) {
+class EnumType  (
+  id : TypeIdentifier,
+  description : String,
+  moduleId: ModuleIdentifier,
+  val enumerators : HashMap[Symbol, Int]
+) extends Type(id, description, moduleId) {
   require(!enumerators.isEmpty)
 
   override def validate(value : JsValue) = {
@@ -378,7 +378,6 @@ case class EnumType  (
       "name" -> label,
       "plural" -> plural,
       "description" -> description,
-      "created" -> created,
       "enumerators" -> (enumerators map { case (name:Symbol, value: Int) => (name.name, value) })
     )
   }
@@ -386,31 +385,29 @@ case class EnumType  (
 
 /** Abstract base class of Types that refer to another Type that is the element type of the compound type
   *
-  * @param name
+  * @param id
   * @param description
   * @param elemType
   */
 abstract class CompoundType (
-  module: Module,
-  name : Symbol,
+  id : TypeIdentifier,
   description : String,
-  created : DateTime,
+  moduleId: ModuleIdentifier,
   val elemType : Type
-) extends Type(module, name, description, created)
+) extends Type(id, description, moduleId)
 
 /** A List type allows a non-exclusive list of elements of other types to be constructed
   *
-  * @param name
+  * @param id
   * @param description
   * @param elemType
   */
-case class ListType  (
-  override val module: Module,
-  override val name : Symbol,
+class ListType  (
+  override val id : TypeIdentifier,
   override val description : String,
-  override val created : DateTime,
+  override val moduleId: ModuleIdentifier,
   override val elemType : Type
-) extends CompoundType(module, name, description, created, elemType) with ArrayValidator {
+) extends CompoundType( id, description, moduleId, elemType ) with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -426,7 +423,6 @@ case class ListType  (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "elementType" -> elemType.label
   )
 }
@@ -434,17 +430,16 @@ case class ListType  (
 
 /** A Set type allows an exclusive Set of elements of other types to be constructed
   *
-  * @param name
+  * @param id
   * @param description
   * @param elemType
   */
-case class SetType  (
-  override val module: Module,
-  override val name : Symbol,
+class SetType  (
+  override val id : TypeIdentifier,
   override val description : String,
-  override val created : DateTime,
+  override val moduleId: ModuleIdentifier,
   override val elemType : Type
-) extends CompoundType(module, name, description, created, elemType) with ArrayValidator {
+) extends CompoundType( id, description, moduleId, elemType) with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -466,29 +461,28 @@ case class SetType  (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "elementType" -> elemType.label
   )
 }
 
 /** A Map is a set whose elements are named with an arbitrary string
   *
-  * @param name
+  * @param id
   * @param description
   * @param elemType
   */
-case class MapType  (
-  override val module: Module,
-  override val name : Symbol,
+class MapType  (
+  override val id : TypeIdentifier,
   override val description : String,
-  override val created : DateTime,
+  override val moduleId: ModuleIdentifier,
   override val elemType : Type
-) extends CompoundType(module, name, description, created, elemType) {
+) extends CompoundType( id, description, moduleId, elemType) {
 
   override def validate(value : JsValue) = {
     value match {
       case v: JsObject => {
-        if (v.value exists { case ( key: String, elem: JsValue ) => key.isEmpty || !elemType.validate(elem).asOpt.isDefined } )
+        if (v.value exists { case ( key: String, elem: JsValue ) =>
+                             key.isEmpty || !elemType.validate(elem).asOpt.isDefined } )
           JsError("Not all elements match element type")
         else
           JsSuccess(true)
@@ -504,36 +498,37 @@ case class MapType  (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "created" -> created,
     "elementType" -> elemType.label
   )
 }
 
 /** A group of named and typed fields that are related in some way.
-  * A trait is the fundamental unit of construction in Scrupal. Traits are analogous to tables in
-  * relational databases. That is, they define the names and types of a group of fields (columns) that are in some
+  * An entity type defines the structure of the fundamental unit of storage in Scrupal: An entity.  EntityTypes
+  * are analogous to table definitions in relational databases, but with one important difference. An EntityType can
+  * define itself recursively. That is, one of the fields of an Entity can be of Entity Type. In this way it is
+  * possible to assemble entities from a large collection of smaller entity concepts (traits if you will).
+  * Like relational tables, entity types define the names and types of a group of fields (columns) that are in some
   * way related. For example, a street name, city name, country and postal code are fields of an address trait
   * because they are related by the common purpose of specifying a location.
   *
-  * Note that Traits, along with List, Set and Map types make the type system fully composable. You can create
-  * an arbitrarily complex data structure (not that we recommend that you do so).
+  * Note that EntityTypes, along with ListType, SetType and MapType make the type system fully composable. You
+  * can create an arbitrarily complex data structure (not that we recommend that you do so).
   *
-  * Traits also have actions associated with them. Actions can
+  * EntityTypes also have actions associated with them. Actions can
   * - transform the fields of the Trait into arbitrary JSON (map)
   * - access the fields of the Trait to reduce its content (reduce)
   * - mutate the fields of the Trait to produce a new instance of the Trait (mutate)
-  * @param name The name of the trait
+  * @param id The name of the trait
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type
   */
-case class TraitType (
-  override val module: Module,
-  override val name : Symbol,
+class EntityType (
+  override val id : TypeIdentifier,
   override val description : String,
-  override val created : DateTime,
+  override val moduleId: ModuleIdentifier,
   fields : HashMap[Symbol, Type],
-  actions: HashMap[Symbol, Action]
-) extends Type(module, name, description, created) with ObjectValidator {
+  actions: HashMap[Symbol, Action] = HashMap()
+) extends Type( id, description, moduleId) with ObjectValidator {
   require(!fields.isEmpty)
 
   override def validate(value: JsValue) : JsResult[Boolean] = {
@@ -551,97 +546,28 @@ case class TraitType (
       "name" -> label,
       "plural" -> plural,
       "description" -> description,
-      "created" -> created,
       "fields" -> (fields map { case (s:Symbol, t:Type) => (s.name, t.label ) }),
       "actions" -> (actions map { case (s:Symbol, a:Action) => (s.name,a.label) })
     )
   }
 }
 
-/** A set of named traits that is the unit of storage.
-  * Bundles are simply assemblies of traits. While Traits have tight cohesion, bundles of traits are not cohesive but
-  * simply coupled together to describe different aspects of some thing. If Traits can represent an address then a
-  * bundle permits a business, for example, to have an address for each of its locations,
-  * as well as traits for employees, products, etc. Every Entity is a Bundle and Bundles are the unit of storage
-  * @param name The name of the type
-  * @param description
-  * @param traits
-  */
-case class BundleType(
-  override val module: Module,
-  override val name: Symbol,
-  override val description: String,
-  override val created : DateTime,
-  traits : HashMap[Symbol,TraitType],
-  actions : HashMap[Symbol,Action] = HashMap()
-) extends Type(module, name, description, created) with ObjectValidator {
-
-  override def validate(value: JsValue) : JsResult[Boolean] = {
-    value match {
-      case v: JsObject => validate(v, traits)
-      case x => super.validate(value)
-    }
-  }
-
-  override def kind = "Bundle"
-
-  override def toJson = {
-    Json.obj(
-      "kind" -> kind,
-      "name" -> label,
-      "plural" -> plural,
-      "description" -> description,
-      "created" -> created,
-      "traits" ->  (traits map { case (s:Symbol,t:TraitType) => (s.name, t.label) } ),
-      "actions" -> (actions map { case (s:Symbol, a:Action) => (s.name, a.label) } )
-    )
-  }
-}
-
 /** A utility object for accessing the types registered by modules */
-object Type extends Registry[Type] {
+object Types extends Registry[Type] {
 
   override val registryName = "Types"
   override val registrantsName = "type"
 
+  def exists(name: Symbol) : Boolean = registrants.contains(name)
 
-  /** Lookup Type by name
-    * This handy application allows constructs like `Type('foo)` to return the Scrupal Type for `foo`
-    * @param name The Symbol for the type you want to look up
-    * @return The corresponding Type object
-    */
-  def apply(name: Symbol) : Option[Type] = {
-    registrants.get(name) match {
-      case x: Some[Type] => x
-      case None => None
-    }
-  }
-
-  def exists(name: Symbol) : Boolean = types.contains(name)
-
-  /** Allow only objects in the scrupal.api package to insert Type instances into the list of types
-    *
-    * @param ty
-    * @param mod
-    * @return The previous incarnation of the type
-    */
-  private[api] def apply(ty: Type, mod: Module) : Option[(Type,Module)] = {
-    this.types.put(ty.name, (ty,mod))
-  }
 
   /** Retrieve the module in which a Type was defined */
-  def moduleOf(name: Symbol) : Option[Module] = {
-    registrants.get(name) match {
-      case Some(ty) => Some(ty.module)
+  def moduleOf(id: TypeIdentifier) : Option[Module] = {
+    registrants.get(id) match {
+      case Some(ty) => Modules(ty.moduleId)
       case _ => None
     }
   }
-
-  val EmptyBundleType = BundleType(CoreModule, 'Empty, " ",
-    new DateTime(2013,10,13,2,40), HashMap[Symbol,TraitType]())
-
-  /** The mutable list of Types that Scrupal can operate on */
-  private val types = mutable.HashMap[Symbol,(Type,Module)]()
 
   implicit lazy val typeWriter : Writes[Type] = new Writes[Type] {
     def writes(typ: Type) = typ.toJson

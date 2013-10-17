@@ -56,7 +56,7 @@ trait Hasher extends Registrable {
    * @return true if the password matches, false otherwise.
    */
   def matches(result: Hasher#HashingResult, suppliedPassword: String): Boolean = {
-    (result.hasher == registration_id) && {
+    (result.hasher == id) && {
       val attempt = hash(suppliedPassword, Some(result.salt), Some(result.complexity))
       attempt.hasher == result.hasher &&
       fullEqualityComparison(attempt.salt, result.salt) &&
@@ -133,7 +133,7 @@ object HasherKinds extends Enumeration {
 object PBKDF2Hasher extends Hasher {
 
   // Provide the name of this hasher
-  override val registration_id = 'PBKDF2
+  override val id = 'PBKDF2
 
   val defaultIterations = if ( Hash.fastMode ) 1 else 25000
 
@@ -146,7 +146,7 @@ object PBKDF2Hasher extends Hasher {
     val iterations = complexity.getOrElse(timeBasedComplexity(baseIterations, baseTime))
     val salt = saltine.getOrElse( Hash.salt )
     val encrypted = PBKDF2(plainText, salt, iterations.toInt, keyLengthInBytes)
-    HashingResult(registration_id, encrypted, salt, iterations)
+    HashingResult(id, encrypted, salt, iterations)
   }
 }
 
@@ -156,7 +156,7 @@ object PBKDF2Hasher extends Hasher {
 object BCryptHasher extends Hasher {
 
   // Provide the name of this hasher
-  override val registration_id = 'BCrypt
+  override val id = 'BCrypt
 
   val defaultRounds = if ( Hash.fastMode ) 1 else 10
 
@@ -167,7 +167,7 @@ object BCryptHasher extends Hasher {
     val newComplexity = timeBasedComplexity(initialRounds, initialTime)
     val log_rounds : Long = complexity.getOrElse(MathHelpers.log2(newComplexity))
     val salt = saltine.getOrElse(BCrypt.gensalt(log_rounds.toInt, Hash.getSecureRandom()))
-    HashingResult(registration_id, BCrypt.hashpw(plainText, salt), salt, log_rounds)
+    HashingResult(id, BCrypt.hashpw(plainText, salt), salt, log_rounds)
   }
 }
 
@@ -176,7 +176,7 @@ object BCryptHasher extends Hasher {
  */
 object SCryptHasher extends Hasher {
 
-  override val registration_id = 'SCrypt
+  override val id = 'SCrypt
 
   val default_args = if (Hash.fastMode)  (10000 << 16) | (1 << 8) | 1  else (1024 << 16) | (8 << 8) | 1
 
@@ -188,7 +188,7 @@ object SCryptHasher extends Hasher {
     val r : Int = ((args & (0x0FFFF)) >> 8).toInt
     val p : Int = (args & 0x00FF).toInt
     val result : String = new String( SCrypt.scrypt(plainText.getBytes(), salt.getBytes(), N, r, p, dkLen) )
-    HashingResult(registration_id, result, salt, args)
+    HashingResult(id, result, salt, args)
   }
 }
 

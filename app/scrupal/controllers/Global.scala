@@ -23,9 +23,10 @@ import java.io.File
 import play.api.mvc._
 import scrupal.models.CoreModule
 import scala.collection.mutable
-import scrupal.models.db.Site
 import scrupal.utils.Registry
-import scrupal.api.{Module, Type}
+import scrupal.api._
+import scrupal.api.Module
+import scrupal.api.Site
 
 object Global extends GlobalSettings
 {
@@ -67,10 +68,13 @@ object Global extends GlobalSettings
     var devMode : Boolean = true // FIXME: Default should be false!
 
     val typeRegistry = new AnyRef with Registry[Type] {
-
+      val registrantsName = "type"
+      val registryName = "Types"
     }
 
     val moduleRegistry = new AnyRef with Registry[Module] {
+      val registrantsName = "module"
+      val registryName = "Modules"
 
     }
 
@@ -99,14 +103,19 @@ object Global extends GlobalSettings
 	 * @param app the application
 	 */
 	override def beforeStart(app: Application) {
-    // Do whatever Play wants to do, first.
-		DefaultGlobal.beforeStart(app)
+    // We do a lot of stuff in API objects and they need to be instantiated in the right order,
+    // so "touch" them now because they are otherwise initialized randomly as used
+    require(Types.registryName == "Types")
+    require(Modules.registryName == "Modules")
 
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
-    require(CoreModule.registration_id == 'Core)
+    require(CoreModule.id == 'Core)
+
+    // Do whatever Play wants to do, first.
+    DefaultGlobal.beforeStart(app)
 
     // We are now ready to process the registered modules
-    Module.processModules
+    Modules.processModules
 	}
 
 	/**

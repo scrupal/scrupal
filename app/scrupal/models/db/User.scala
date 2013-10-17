@@ -28,54 +28,42 @@ import scrupal.utils.Hash
  * either one or more authentication factors. The first factor (something the Principal knows) is embodied in this object
  * via the password, hasher algorithm, salt and complexity fields. Subsequent authentication factors are dealt with in
  * separate objects. Each Principal is associated with an email address and a unique identifier (long number).
- * @param id The unique identifier of this Identity
- * @param created The timestamp when this Identity was created
+ * @param email The principal's Email address
  * @param password The Principal's hashed password
  * @param hasher The Hasher algorithm used
  * @param salt The salt used in generation of the principal's hashed password
  * @param complexity The complexity factor for the Hasher algorithm
  */
 case class Principal(
-  override val id: Option[Long],
-  override val created: DateTime,
   email: String,
   password: String,
   hasher: String,
   salt: String = Hash.salt,
-  complexity: Long = 0
-) extends Creatable[Principal] {
-  def forId(id: Long) = Principal(Some(id), created, email, password, hasher, salt, complexity)
-}
-
-case class ProfileType(
-  override val name: Symbol,
-  override val description: String,
-  override val modified: Option[DateTime] = Some(DateTime.now()),
-  override val created: DateTime = DateTime.now(),
-  override val id: Option[Long] = None
-) extends Thing[ProfileType](name, description, modified, created, id) {
-  def forId(id: Long) = ProfileType(name, description, modified, created, Some(id))
+  complexity: Long = 0,
+  override val created: Option[DateTime] = None,
+  override val id: Option[Identifier] = None
+) extends Creatable with Storable {
 }
 
 /**
  * A database component for user related information.
  */
-trait UserComponent extends Component { self: Sketch =>
+trait UserComponent extends Component {
 
-  import profile.simple._
+  import sketch.profile.simple._
 
   import CommonTypeMappers._
 
   /**
    * The table of principals which are simple identifiable objects.
    */
-  object Principals extends CreatableTable[Principal]("identities") {
-    def email = column[String]("email")
-    def password = column[String]("password")
-    def hasher = column[String]("hasher")
-    def salt = column[String]("salt")
-    def complexity = column[Long]("complexity")
-    def * = id.? ~ created ~ email ~ password ~ hasher ~ salt ~ complexity <> (Principal.tupled,
+  object Principals extends ScrupalTable[Principal]("principals") with CreatableTable[Principal]  {
+    def email = column[String](nm("email"))
+    def password = column[String](nm("password"))
+    def hasher = column[String](nm("hasher"))
+    def salt = column[String](nm("salt"))
+    def complexity = column[Long](nm("complexity"))
+    def * =  email ~ password ~ hasher ~ salt ~ complexity ~ created.? ~ id.? <> (Principal.tupled,
       Principal.unapply _)
   }
 
@@ -84,18 +72,18 @@ trait UserComponent extends Component { self: Sketch =>
    * Principal with one or more names. A given Principal can have multiple names and a given name can identify multiple
    * Principals.
    */
-  object Handles extends NamedIdentifiableTable[Principal]("handles", Principals) {
-    def handles(identity: Long)(implicit s: Session) = findKeys(identity)
-    def principals(handle: String)(implicit s: Session) = findValues(handle)
+  object Handles extends NamedStorableTable[Principal]("handles", Principals) {
+    def handles(identity: Long) = findKeys(identity)
+    def principals(handle: String) = findValues(handle)
   }
 
   /**
    * The table of temporary tokens by which a user is identified.
    */
-  object Tokens extends NamedIdentifiableTable[Principal]("tokens", Principals) {
-    def expiration = column[DateTime]("expiration")
-    def tokens(principal: Long)(implicit s: Session) = findKeys(principal)
-    def principals(token: String)(implicit s: Session) = findValues(token)
+  object Tokens extends NamedStorableTable[Principal]("tokens", Principals) {
+    def expiration = column[DateTime](nm("expiration"))
+    def tokens(principal: Long) = findKeys(principal)
+    def principals(token: String) = findValues(token)
 
     lazy val unexpiredQuery = for {
       k <- Parameters[String];
@@ -103,14 +91,10 @@ trait UserComponent extends Component { self: Sketch =>
       p <- Principals if token.value === p.id
     } yield p.id
 
-    def unexpired(token: String)(implicit s: Session) : List[Long] = { unexpiredQuery(token).list }
+    def unexpired(token: String) : List[Long] = { unexpiredQuery(token).list }
   }
 
 
-  object ProfileTypes extends ThingTable[ProfileType]("profile_types") {
-    def * = name ~ description ~ modified.? ~ created ~ id.? <> (ProfileType.tupled, ProfileType.unapply _)
-  }
-
-  def userDDL : DDL = Principals.ddl ++ Handles.ddl ++ Tokens.ddl ++ ProfileTypes.ddl
+  def userDDL : DDL = Principals.ddl ++ Handles.ddl ++ Tokens.ddl
 
 }

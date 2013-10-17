@@ -25,20 +25,6 @@ import scrupal.api._
  */
 object DB {
 
-  /**
-   * Convert a URL into a Database Sketch by examining its prefix
-   * @param url - The JDBC Connection URL for the database we should connect to
-   * @return A Sketch for the corresponding database type
-   */
-  def sketch4URL(url: String, schema: Option[String] = None ) : Sketch = {
-    url match {
-      case s if s.startsWith("jdbc:h2:") => return new H2Sketch(schema)
-      case s if s.startsWith("jdbc:mysql:") => return new MySQLSketch(schema)
-      case s if s.startsWith("jdbc:sqllite:") => return new SQLiteSketch(schema)
-      case s if s.startsWith("jdbc:postgresql:") => return new PostgresSketch(schema)
-      case _ => throw new UnsupportedOperationException("JDBC Url (" + url + ") is not for a supported database.")
-    }
-  }
 
   val scrupal_schema : Option[ScrupalSchema] = None
 
