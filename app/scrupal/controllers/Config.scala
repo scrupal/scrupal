@@ -51,15 +51,22 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
         if (sites.isEmpty)
           One_Specify_Databases
         else {
-          val valid = for (
-            (site: String, (url: String, error: Option[String])) <- sites if !error.isDefined
-          ) yield (site, url)
-          if (valid.isEmpty)
-            One_Specify_Databases
-          else {
-            Logger.debug("SiteBootstrap has returned: " + valid )
-            Three_DBS_Connected
-          }
+          val invalid = for (
+            (site: String, (url: String, e: Option[String])) <- sites if e.isDefined
+          ) yield e
+
+          if (invalid.isEmpty) {
+            val valid = for (
+              (site: String, (url: String, e: Option[String])) <- sites if !e.isDefined
+            ) yield (site, url)
+            if (!valid.isEmpty) {
+              Logger.debug("SiteBootstrap has returned: " + valid )
+              Three_DBS_Connected
+            }
+            else
+              One_Specify_Databases
+          } else
+            Two_DBS_Validated
         }
       }
     }

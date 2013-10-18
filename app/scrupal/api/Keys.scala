@@ -23,6 +23,6 @@ import scala.collection.immutable.SortedSet
   *
   */
 object ConfigKey {
-  val db_config = "scrupal.db.config"
+  val site_bootstrap_file = "scrupal.site.bootstrap.file"
 
 }

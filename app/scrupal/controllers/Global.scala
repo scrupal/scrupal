@@ -161,7 +161,7 @@ object Global extends GlobalSettings
       "smtp.mock"	          -> true,
 
       // Now Scrupal's defaults
-      ConfigKey.db_config   -> new File(".", "/conf/db.config")
+      ConfigKey.site_bootstrap_file   -> new File(".", "/conf/SiteBootstrap.conf")
     ))
   }
 
@@ -182,8 +182,11 @@ object Global extends GlobalSettings
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 
-    // Our configuration comes from the database. All we need is a URL for the database. We store that in a special
-    // file named scrupal_db.conf in the
+    // Scrupal is configured from the database, except for the databases that we need to connect to. Since each
+    // site's data can live in a separate database, we need to locate possibly many databases. To do this we use the
+    // special scrupal.site.SIteBootstrap class
+    // configuration comes from the database. All we need is a URL for the database. We store that in a special
+    // file named conf/db.config (by default).
     newconf
 	}
 

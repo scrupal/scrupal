@@ -18,10 +18,9 @@
 package scrupal.controllers
 
 import org.specs2.mutable.Specification
-import play.api.mvc.{Request, Headers, RequestHeader}
-import scrupal.fakes.WithScrupal
+import play.api.mvc.RequestHeader
 import scrupal.api.ConfigKey
-import play.api.libs.json.JsString
+import play.api.Configuration
 
 /** This is the test suite for the Config.Step class
   *
@@ -40,27 +39,37 @@ class ConfigStepSpec extends Specification {
     def version: String = ???
   }
 
+  def simpleContext(file: String)(implicit request: RequestHeader ) : Context = Context(
+    config = Configuration.empty ++ play.api.Configuration.from(
+      Map (
+        ConfigKey.site_bootstrap_file -> file
+      )
+    )
+  )
+
 
   "Config.Step" should {
-    "Identify Step 1" in new WithScrupal(
-   //   additionalConfiguration = Map(ConfigKey.db_config -> "test/resources/db/config/empty.conf")
-    ) {
+    "Identify Step 1" in {
       implicit val request : RequestHeader = nullRequest
-      implicit val context = Context()
+      implicit val context = simpleContext("test/resources/db/config/empty.conf")
       val step = Config.Step(context)
       step must beEqualTo(Config.Step.One_Specify_Databases)
     }
 
-    "Identify Step 2" in new WithScrupal(
-  //    additionalConfiguration =Map("db" -> Map( "config" -> "test/resources/db/config/haveDB.conf") )
-    ) {
+    "Identify Step 3" in {
       implicit val request : RequestHeader = nullRequest
-      implicit val context = Context()
-      val step = Config.Step(context)
-      // FIXME: SHould be Two_DBs_Validated ! Configuration above is not working!
-      step must beEqualTo(Config.Step.One_Specify_Databases)
+      implicit val context = simpleContext( "test/resources/db/config/bad.conf" )
 
+      val step = Config.Step(context)
+      step must beEqualTo(Config.Step.Two_DBS_Validated)
     }
 
+    "Identify Step 3" in {
+      implicit val request : RequestHeader = nullRequest
+      implicit val context = simpleContext( "test/resources/db/config/haveDB.conf" )
+
+      val step = Config.Step(context)
+      step must beEqualTo(Config.Step.Three_DBS_Connected)
+    }
   }
 }

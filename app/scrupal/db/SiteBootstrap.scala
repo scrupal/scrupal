@@ -17,14 +17,13 @@
 
 package scrupal.db
 
-import java.io._
 import scrupal.api.ConfigKey
-import java.sql.{SQLException, DriverManager}
+import java.sql.DriverManager
 import scrupal.controllers.Context
 import scala.Some
 import java.util.Properties
-import scala.io.{BufferedSource, Source}
-import play.api.Logger
+import scala.io.Source
+import java.io.File
 
 
 /** Bootstrapping mechanism for getting the initial set of sites and corresponding JDBC URLs for them.
@@ -90,10 +89,6 @@ object  SiteBootstrap {
         tup: (String,ParseResult) => tup._1.length > 0 || tup._2._1.length > 0 }*/ ).toMap
   }
 
-  def get(is: InputStream) : Site2Jdbc = {
-    get(Source.fromInputStream(is))
-  }
-
   def get(fileContent: String) : Site2Jdbc = {
     get(Source.fromString(fileContent))
   }
@@ -104,7 +99,7 @@ object  SiteBootstrap {
   }
 
   def get ( context: Context) : Site2Jdbc = {
-    get(new File(context.config.getString(ConfigKey.db_config).getOrElse("./conf/db.config")))
+    get(new File(context.config.getString(ConfigKey.site_bootstrap_file).getOrElse("./conf/SiteBootstrap.conf")))
   }
 
   def get( context: Context, name: String) : Option[ParseResult] = {

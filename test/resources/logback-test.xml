@@ -1,7 +1,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss:SSS} - [%level] (%thread) - %message%n%xException</pattern>
+            <pattern>{HH:mm:ss:SSS} - [%level] - %message%n%xException</pattern>
         </encoder>
     </appender>
 
