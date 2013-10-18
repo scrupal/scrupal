@@ -24,6 +24,7 @@ import scrupal.controllers.Context
 import scala.Some
 import java.util.Properties
 import scala.io.{BufferedSource, Source}
+import play.api.Logger
 
 
 /** Bootstrapping mechanism for getting the initial set of sites and corresponding JDBC URLs for them.
@@ -61,7 +62,6 @@ object  SiteBootstrap {
                try {
                 val driver = DriverManager.getDriver(url)
                 val conn = driver.connect(url, new Properties())
-                // looks good, return it
                 (tsite, (url,None))
               }
               catch {
@@ -86,8 +86,8 @@ object  SiteBootstrap {
   }
 
   def get(s: Source) : Site2Jdbc = {
-    (s.getLines() filter { p: String => p.length > 0 } map { line: String => getOne(line) } filter {
-        tup: (String,ParseResult) => tup._1.length > 0 && tup._2._1.length > 0 }).toMap
+    (s.getLines() filter { p: String => p.length > 0 } map { line: String => getOne(line) } /*filter {
+        tup: (String,ParseResult) => tup._1.length > 0 || tup._2._1.length > 0 }*/ ).toMap
   }
 
   def get(is: InputStream) : Site2Jdbc = {

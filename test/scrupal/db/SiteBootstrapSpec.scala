@@ -25,15 +25,54 @@ class SiteBootstrapSpec extends Specification {
 
   val testLineNoNL = "foo\tjdbc:h2:mem:"
 
+  def expectValid(data: String, expected_site: String) = {
+    val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get(data)
+    sites.size must beEqualTo(1)
+    val siteo = sites.get(expected_site)
+    siteo.isDefined must beTrue
+    val site = siteo.get
+    site._1.startsWith("jdbc:") must beTrue
+    site._2.isDefined must beFalse
+  }
+
+  def expectInvalid(data: String, expected_site: String, error_contains: String) = {
+    val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get(data)
+    sites.size must beEqualTo(1)
+    val siteo = sites.get(expected_site)
+    siteo.isDefined must beTrue
+    val site = siteo.get
+    site._2.isDefined must beTrue
+    site._2.get.contains(error_contains)
+  }
+
+  def expectNothing(data:String) = {
+    val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get(data)
+    sites.size must beEqualTo(0)
+  }
+
   "SiteBootstrap" should {
     "parse simple test line correctly" in {
-      val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get("foo\tjdbc:h2:mem:")
-      sites.size must beEqualTo(1)
-      val siteo = sites.get("foo")
-      siteo.isDefined must beTrue
-      val site = siteo.get
-      site._1 must beEqualTo("jdbc:h2:mem:")
-      site._2.isDefined must beFalse
+      expectValid("foo\tjdbc:h2:mem:", "foo")
+    }
+
+    "ignores leading white space" in {
+      expectValid("  foo\tjdbc:h2:mem:", "foo")
+    }
+
+    "ignores trailing white space" in {
+      expectValid("foo\tjdbc:h2:mem:  ", "foo")
+    }
+
+    "expects url to start with jdbc:" in {
+      expectInvalid("foo\thttp://h2:mem:", "foo", "JDBC")
+    }
+
+    "return correct error for empty site part" in {
+      expectInvalid(" \tjdbc:h2:mem:", "", "Wrong number")
+    }
+
+    "elide junk" in {
+      expectNothing("")
     }
   }
 }

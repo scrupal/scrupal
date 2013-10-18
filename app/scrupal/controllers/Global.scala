@@ -161,7 +161,7 @@ object Global extends GlobalSettings
       "smtp.mock"	          -> true,
 
       // Now Scrupal's defaults
-      "scrupal.db.config.file" -> new File(".", "/conf/db.config")
+      ConfigKey.db_config   -> new File(".", "/conf/db.config")
     ))
   }
 
