@@ -27,7 +27,11 @@ import sbt.Keys._
 object BuildSettings
 {
   val appName = "scrupal"
-  val buildVersion = "0.1"
+
+  import com.typesafe.config._
+  val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
+  val buildVersion = conf.getString("app.version")
+
   val buildSettings = Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     javacOptions ++= Seq(
