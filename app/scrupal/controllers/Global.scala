@@ -158,7 +158,10 @@ object Global extends GlobalSettings
       "redis.host"	        -> "localhost",
       "redis.maxIdle"	      -> 8,
       "redis.port"	        -> 6379,
-      "smtp.mock"	          -> true
+      "smtp.mock"	          -> true,
+
+      // Now Scrupal's defaults
+      "scrupal.db.config.file" -> new File(".", "/conf/db.config")
     ))
   }
 

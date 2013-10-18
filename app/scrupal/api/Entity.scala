@@ -22,6 +22,8 @@ import play.api.libs.json._
 import play.api.libs.json.JsObject
 import play.api.http.Status
 import scrupal.utils.Registrable
+import scrupal.controllers.ScrupalController
+import play.api.mvc.Action
 
 
 case class EssentialEntity(
@@ -43,7 +45,7 @@ abstract class Entity(
   override val id: Symbol,
   override val description: String,
   override val instanceTypeId: TypeIdentifier
-) extends EssentialEntity(id, description, instanceTypeId) with Registrable {
+) extends EssentialEntity(id, description, instanceTypeId) with ScrupalController with Registrable {
 
   /** Obtain the type of this Entity's Instance bundle. */
   def instanceType : Type = Type(instanceTypeId).getOrElse(Type.NotAType)
@@ -51,7 +53,7 @@ abstract class Entity(
   /** Entity Instances must be defined as a Bundle. Enforce that here */
   require(instanceType.kind == 'Bundle)
 
-  val actions: HashMap[Symbol, Action] = HashMap()
+  // val actions: HashMap[Symbol, Action] = HashMap()
 
   /** Fetch a single instance of this entity kind
     * Presumably this entity is stored somewhere and this method retrieve it, puts the data into a JsObject and
@@ -59,29 +61,53 @@ abstract class Entity(
     * @param id The identifier of the instance to be retrieved
     * @return The JsObject representing the payload of the entity retrieved
     */
-  def fetch(id: InstanceIdentifier) : JsObject = ???
+  def fetch(id: String) : Action[JsObject] = ???
 
   /** Create a single instance of this entity kind
     * Presumably the entity
     * @param instance
     * @return
     */
-  def create(instance: JsObject ) : StatusResult[InstanceIdentifier]  = ???
+  def create(instance: JsObject ) : Action[JsObject]  = ???
 
   /** Update all or a few of the fields of an entity
-    *
     * @param id
     * @param fields
     * @return
     */
-  def update(id: InstanceIdentifier, fields: JsObject) : StatusResult[Long] = ???
+  def update(id: String, fields: JsObject) : Action[JsObject] = ???
 
-  /** Delete an entity */
-  def delete(id: InstanceIdentifier) : StatusResult[Boolean]  = ???
+  /** Delete an entity
+    * @param id
+    * @return
+    */
+  def delete(id: String) : Action[JsObject]  = ???
 
-  /** Get meta information about an entity */
-  def option(id: InstanceIdentifier, option: String) : StatusResult[JsValue] = ???
+  /** Get meta information about an entity
+    *
+    * @param id
+    * @param option
+    * @return
+    */
+  def option(id: String, option: String) : Action[JsObject] = ???
 
+  /** Extension of fetch to retrieve not the entity but some aspect, or invoke some functionality
+    *
+    * @param id
+    * @param what
+    * @param data
+    * @return
+    */
+  def get(id: String, what: String, data: JsObject) : Action[JsObject] = ???
+
+  /** Extension of update to send data as parameter to functionality or update something that is not part of the entity
+    *
+    * @param id
+    * @param what
+    * @param data
+    * @return
+    */
+  def put(id: String, what: String, data: JsObject) : StatusResult[JsObject] = ???
 }
 
 

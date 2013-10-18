@@ -82,13 +82,18 @@ class Module(
     */
   lazy val types = Seq[Type]()
 
+  /** The entities that this module supports.
+    * An entity combines together a BundleType for storage, a set of REST API handlers,
+    * additional operations that can be requested, and
+    */
+  lazy val entities = Seq[Entity]()
+
   /** The set of handlers for the events this module is interested in.
     * Interest is expressed by providing a handler for each event the module wishes to intercept. When the event occurs
     * the module's handler will be invoked. Multiple modules can register for interest in the same event but there is
     * no defined order in which the handlers are invoked.
     */
   lazy val handlers = Seq[HandlerFor[Event]]()
-
 
   /** The set of configuration settings for the Module grouped into named sections.
     * We use the Play! Configuration class here. It is a Scala wrapper around the very lovely Typesafe Configuration

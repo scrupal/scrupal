@@ -83,15 +83,16 @@ object Home extends ScrupalController {
         routes.javascript.API.fetchAll,
         routes.javascript.API.updateAll,
         routes.javascript.API.deleteAll,
-        routes.javascript.API.summarizeAll,
         routes.javascript.API.optionsOfAll,
 
         routes.javascript.API.create,
         routes.javascript.API.fetch,
         routes.javascript.API.update,
         routes.javascript.API.delete,
-        routes.javascript.API.summarize,
-        routes.javascript.API.optionsOf
+        routes.javascript.API.optionsOf,
+
+        routes.javascript.API.get,
+        routes.javascript.API.put
       )
     ).as(JAVASCRIPT)
   }

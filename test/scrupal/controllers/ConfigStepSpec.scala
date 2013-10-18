@@ -17,58 +17,30 @@
 
 package scrupal.controllers
 
-import scrupal.api.{ConfigKey, Entity}
-import play.api.libs.json.{Json, JsObject}
-import play.api.mvc.{AnyContent, RequestHeader, Action}
-import scrupal.db.SiteBootstrap
-import play.api.Logger
+import org.specs2.mutable.Specification
+import play.api.mvc.{Request, Headers, RequestHeader}
+import scrupal.fakes.WithScrupal
 
-/** The Entity definition for the Configuration workflow/wizard.
-  * This controller handles first-time configuration and subsequent reconfiguration of the essentials of Scrupal. It
-  * makes very few assumptions about the running state of Scrupal and has to operate from initial conditions where
-  * not even a database is configured.
-  * Further description here.
+/** This is the test suite for the Config.Step class
+  *
   */
-object Config extends Entity('Config, "Scrupal System Configuration Entity", 'EmptyBundle ) {
+class ConfigStepSpec extends Specification {
 
-  type SiteMap = Map[Symbol,String]
-
-  object Step extends Enumeration {
-    type Kind = Value
-    val One_Specify_Databases = Value
-    val Two_DBS_Validated = Value
-    val Three_DBS_Connected = Value
-    val Four_DB_Schema = Value
-    val Five_Site_Created = Value
-    val Six_Entity_Created = Value
-
-    /** Determine which step we are at based on the Context provided */
-    def apply(context: Context) : Step.Kind = {
-      if (context.site.isDefined) {
-        Five_Site_Created
-      } else {
-        val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get(context)
-        if (sites.isEmpty)
-          One_Specify_Databases
-        else {
-          val valid = for (
-            (site: String, (url: String, error: Option[String])) <- sites if !error.isDefined
-          ) yield (site, url)
-          if (valid.isEmpty)
-            One_Specify_Databases
-          else {
-            Logger.debug("SiteBootstrap has returned: " + valid )
-            Three_DBS_Connected
-          }
-        }
-      }
+  "Config.Step" should {
+    "Identify Step 1" in new WithScrupal {
+      implicit val context = Context()(new RequestHeader() {
+        def headers: play.api.mvc.Headers = ???
+        def id: Long = ???
+        def method: String = ???
+        def path: String = ???
+        def queryString: Map[String,Seq[String]] = ???
+        def remoteAddress: String = ???
+        def tags: Map[String,String] = ???
+        def uri: String = ???
+        def version: String = ???
+      } )
+      val step = Config.Step(context)
+      step must beEqualTo(Config.Step.One_Specify_Databases)
     }
   }
-
-  def get(id: String, what: String) : Action[AnyContent] = Action { implicit request : RequestHeader =>
-
-    val step = Step(context)
-    Ok(Json.obj( "state" -> step.toString) )
-  }
-
 }

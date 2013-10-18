@@ -21,6 +21,8 @@ import scrupal.models.db.{Alert}
 import play.api.mvc.RequestHeader
 import scrupal.api.{Site, Module}
 import scrupal.models.CoreModule
+import play.api.Configuration
+import play.api.Play.current
 
 
 /**
@@ -34,7 +36,8 @@ case class Context(
   themeProvider: String = "bootswatch",
   user: String = "nobody",
   instance: String = "instanceName",
-  devMode: Boolean = Global.DataYouShouldNotModify.devMode
+  devMode: Boolean = Global.DataYouShouldNotModify.devMode,
+  config: Configuration = current.configuration
 ) (implicit val request: RequestHeader)
 {
   def alerts : Seq[Alert] = Seq()
@@ -57,7 +60,8 @@ case class Context(
   * is being served by Scrupal. Once we know which site the
   */
 trait ContextProvider {
-  implicit def context[A](implicit request: RequestHeader) : Context = {
+
+  implicit def context(implicit request: RequestHeader) : Context = {
     if (Global.ScrupalIsConfigured) {
       val afterColon : Array[String] = request.host.split(":").tail
       val port : Short = if (afterColon.length != 1) 80 else afterColon(0).toShort

@@ -19,6 +19,18 @@ package scrupal.api
 
 import org.joda.time.DateTime
 
+/** A correlaton between a site name and the database where it can be found.
+  * While this information may be in a table in the same database as the site's database,
+  * it doesn't have to be. This allows us to have a small bootstrap database that perhaps is really just a
+  * configuration file that's written in its entirety on each update :)
+  * @param id
+  * @param jdbcUrl
+  */
+case class SiteBootstrapInfo(
+  val id: Symbol,
+  val jdbcUrl: String
+) extends SymbolicIdentifiable
+
 /** Information about one site that Scrupal is serving.
   * Sites are associated with a port number that Play! is configured to listen on. We configure play's ports by
   * scanning this table and collecting all the port numbers that are configured for active sites.

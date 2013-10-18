@@ -27,6 +27,13 @@ class ExtendedConfiguration(config : Configuration) {
 
   import ClassHelpers._
 
+  /** Convert any class name into an instance of that class, assuming it has an empty args constructor
+    *
+    * @param name The class name
+    * @param m A manifest for the class
+    * @tparam C The kind of class expected, a base class
+    * @return An instance of C that is of class `name` or None if it couldn't be instantiated.
+    */
   def getInstance[C<:AnyRef](name: String)(implicit m: Manifest[C]) : Option[C] = {
     try
     {

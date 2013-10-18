@@ -58,20 +58,19 @@ GET            /dump                                  scrupal.controllers.Home.d
 GET            /apidoc                                scrupal.controllers.Home.apidoc
 
 # Provide A REST based API For Scrupal Entities
-GET            /api/:kind/:id/:action                 scrupal.controllers.API.doTo(kind, id, action)
+GET            /api/:kind/:id/:what                   scrupal.controllers.API.get(kind, id, what)
+PUT            /opi/:kind/:id/:what                   scrupal.controllers.API.put(kind, id, what)
 
 GET            /api/:kind/:id                         scrupal.controllers.API.fetch(kind, id)
 POST           /api/:kind/:id                         scrupal.controllers.API.create(kind,id)
 PUT            /api/:kind/:id                         scrupal.controllers.API.update(kind, id)
 DELETE         /api/:kind/:id                         scrupal.controllers.API.delete(kind, id)
-HEAD           /api/:kind/:id                         scrupal.controllers.API.summarize(kind, id)
 OPTIONS        /api/:kind/:id                         scrupal.controllers.API.optionsOf(kind, id)
 
 GET            /api/:kind                             scrupal.controllers.API.fetchAll(kind)
 POST           /api/:kind                             scrupal.controllers.API.createAll(kind)
 PUT            /api/:kind                             scrupal.controllers.API.updateAll(kind)
 DELETE         /api/:kind                             scrupal.controllers.API.deleteAll(kind)
-HEAD           /api/:kind                             scrupal.controllers.API.summarizeAll(kind)
 OPTIONS        /api/:kind                             scrupal.controllers.API.optionsOfAll(kind)
 
 

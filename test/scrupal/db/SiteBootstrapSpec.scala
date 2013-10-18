@@ -15,25 +15,25 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.db
 
-import play.api.libs.json.{JsValue, JsObject}
+import org.specs2.mutable.Specification
 
-abstract class Action(name: Symbol, description: String) extends StorableThing()
-{
-  lazy val label = name.name
+/** Test cases for the SiteBootstrap class.
+  */
+class SiteBootstrapSpec extends Specification {
+
+  val testLineNoNL = "foo\tjdbc:h2:mem:"
+
+  "SiteBootstrap" should {
+    "parse simple test line correctly" in {
+      val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get("foo\tjdbc:h2:mem:")
+      sites.size must beEqualTo(1)
+      val siteo = sites.get("foo")
+      siteo.isDefined must beTrue
+      val site = siteo.get
+      site._1 must beEqualTo("jdbc:h2:mem:")
+      site._2.isDefined must beFalse
+    }
+  }
 }
-
-/** An action against an Entity that is parameterized by a JSON object and returns a JSON object as its result. */
-abstract class MutatingAction(name: Symbol, description: String) extends Action(name, description) {
-  def apply(in: JsObject ) : JsObject
-}
-
-abstract class ReducingAction(name: Symbol, description: String) extends Action(name, description) {
-  def apply(in: JsObject) : JsValue
-}
-
-abstract class EventingAction(name: Symbol, description: String) extends Action(name, description) {
-  def apply(in: JsObject) : Event
-}
-

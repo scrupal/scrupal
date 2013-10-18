@@ -575,7 +575,10 @@ object Type extends Registry[Type] {
     */
   def isKindOf(name: Symbol, kind: Symbol) : Boolean = registrants.getOrElse(name,NotAType).kind == kind
 
-  lazy val NotAType = new Type('NotAType, "Not A Type", 'CoreModule) { override val kind = 'Cruel }
+  lazy val CoreModuleId : Symbol = 'Core
+  lazy val NotAType = new Type('NotAType, "Not A Type", CoreModuleId) { override val kind = 'Cruel }
+
+  lazy val EmptyBundle = new BundleType('EmptyBundle, "An Empty Bundle Type", CoreModuleId, HashMap())
 
   /** Retrieve the module in which a Type was defined
     * Every Type is associated with a module. This utility helps you find the associated module for a given type id

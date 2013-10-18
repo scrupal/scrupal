@@ -193,8 +193,27 @@ object API extends ScrupalController  {
     }
   }
 
-  def doTo(kind: String, id: String, action: String) = Action { implicit request =>
-    notImplemented(JsString("Doing " + action + "to " + id + " of kind " + kind))
+  /** The extension of fetching an entity. You can get any of its fields or even other information including the
+    * result of doing some processing. This permits extension of the REST API above. These requests are forwarded to
+    * the entity involved.
+    * @param kind
+    * @param id
+    * @param what
+    * @return
+    */
+  def get(kind: String, id: String, what: String) = Action { implicit request =>
+    notImplemented(JsString("Getting " + what + " from " + kind + " " + id ))
+  }
+
+  /** THe extension of updating an entity. You can put any of its fields or even other information including
+    * supporting complicated JSON based requests.
+    * @param kind
+    * @param id
+    * @param what
+    * @return
+    */
+  def put(kind: String, id: String, what: String) = Action { implicit request =>
+    notImplemented(JsString("Putting " + what + " to " + kind + " " + id ))
   }
 
 }

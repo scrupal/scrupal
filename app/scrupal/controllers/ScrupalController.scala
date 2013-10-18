@@ -13,7 +13,7 @@ import org.joda.time.format.ISODateTimeFormat
 /** One line sentence description here.
   * Further description here.
   */
-class ScrupalController extends Controller with ContextProvider {
+trait ScrupalController extends Controller with ContextProvider {
 
   def notImplemented(what: JsString)(implicit writable: Writeable[JsString], request: RequestHeader) : SimpleResult = {
     NotImplemented(JsString("NotImplemented: " + what) )
