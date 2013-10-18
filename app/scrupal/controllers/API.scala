@@ -34,7 +34,7 @@ object API extends ScrupalController  {
       case "entities" => Ok(Json.arr("One", "Two"))
       case "types" =>    Ok(Json.toJson(typeNames))
       case "users" =>    Ok(Json.arr("One", "Two", "Three"))
-      case _ => {        NotFound  }
+      case _ => {        notFound(JsString(kind))  }
     }
   }
 
@@ -60,7 +60,7 @@ object API extends ScrupalController  {
         case Some(t:Type) => Ok(t.toJson)
         case _ => notFound(JsString("type " + id))
       }
-      case _ => {        notFound(JsString(kind + " " + id))  }
+      case _ => {        notFound(kind + " " + id)  }
     }
   }
 

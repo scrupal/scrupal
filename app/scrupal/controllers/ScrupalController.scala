@@ -5,7 +5,7 @@ import play.api.mvc._
 import play.api.http.Writeable
 import play.api.templates.Html
 import scrupal.api.{Module, Type}
-import play.api.libs.json.JsString
+import play.api.libs.json.{Json, JsObject, JsString}
 import play.api.mvc.SimpleResult
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
@@ -28,7 +28,7 @@ trait ScrupalController extends Controller with ContextProvider {
   }
 
   def notFound(what: JsString)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
-    NotFound(JsString("NotFound: " + what.value))
+    NotFound(Json.obj( "error" -> "404: NOT_FOUND", "what" ->  what))
   }
 
   def movedPermanently(where: String)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
