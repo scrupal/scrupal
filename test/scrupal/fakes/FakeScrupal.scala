@@ -25,6 +25,7 @@ import scrupal.api.Sketch
 import scrupal.models.db.ScrupalSchema
 import play.api.Logger
 import play.libs.F
+import play.api.mvc.Handler
 
 
 trait Specs2ExampleGenerator {
@@ -35,16 +36,32 @@ trait Specs2ExampleGenerator {
  * One line sentence description here.
  * Further description here.
  */
-class FakeScrupal extends FakeApplication(
-  path = new File(".")
-) {
+class FakeScrupal(
+  override val path: java.io.File = new java.io.File("."),
+  override val classloader: ClassLoader = classOf[FakeApplication].getClassLoader,
+  override val additionalPlugins: Seq[String] = Nil,
+  override val withoutPlugins: Seq[String] = Nil,
+  override val additionalConfiguration: Map[String, _ <: Any] = Map.empty,
+  override val withGlobal: Option[play.api.GlobalSettings] = None,
+  override val withRoutes: PartialFunction[(String, String), Handler] = PartialFunction.empty
+) extends FakeApplication(path, classloader, additionalPlugins, withoutPlugins, additionalConfiguration, withGlobal,
+    withRoutes) {
   private var count = 0
   def sharedurl() : String ={ count = count + 1 ; "jdbc:h2:mem:test" + count  }
   def url : String = "jdbc:h2:mem:"
   val sketch: Sketch = Sketch(url)
 }
 
-class WithScrupal() extends WithApplication(new FakeScrupal) {
+class WithScrupal(
+  path: java.io.File = new java.io.File("."),
+  classloader: ClassLoader = classOf[FakeApplication].getClassLoader,
+  additionalPlugins: Seq[String] = Nil,
+  withoutPlugins: Seq[String] = Nil,
+  additionalConfiguration: Map[String, _ <: Any] = Map.empty,
+  withGlobal: Option[play.api.GlobalSettings] = None,
+  withRoutes: PartialFunction[(String, String), Handler] = PartialFunction.empty
+) extends WithApplication(new FakeScrupal(path, classloader, additionalPlugins, withoutPlugins,
+  additionalConfiguration, withGlobal, withRoutes)) {
   override def around[T: AsResult](f: => T): Result = {
     super.around { f }
   }
