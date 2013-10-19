@@ -11,5 +11,6 @@ out/
 defunkt/
 bower_components
 diff.out
+diffs
 application.home_IS_UNDEFINED/
 conf/heroku.conf
