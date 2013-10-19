@@ -118,3 +118,26 @@ trait Enablable  {
 
 trait NumericEnablable extends Enablable with NumericIdentifiable
 trait SymbolicEnablable extends Enablable with SymbolicIdentifiable
+
+trait NumericCreatableModifiableNameableDescribable
+  extends NumericIdentifiable
+          with Creatable
+          with Modifiable
+          with Nameable
+          with Describable
+
+trait SymbolicCreatableModifiableNameableDescribable
+  extends SymbolicIdentifiable
+          with Creatable
+          with Modifiable
+          with Nameable
+          with Describable
+
+trait SymbolicCreatableModifiableNameableDescribableEnablable
+  extends SymbolicCreatableModifiableNameableDescribable
+          with Enablable
+
+trait NumericCreatableModifiableNameableDescribableEnablable
+  extends NumericCreatableModifiableNameableDescribable
+          with Enablable
+

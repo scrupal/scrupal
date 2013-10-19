@@ -17,7 +17,7 @@
 
 package scrupal.api
 
-import scala.slick.lifted.{ForeignKeyAction, Projection, ColumnBase, DDL}
+import scala.slick.lifted.{ForeignKeyAction, DDL}
 import org.joda.time.DateTime
 
 import scala.slick.driver._
@@ -29,7 +29,6 @@ import scala.Some
 import scala.Tuple2
 import scala.slick.session.{Session, Database}
 import play.api.Logger
-import scala.slick.direct.AnnotationMapper.column
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -64,7 +63,7 @@ trait Component  {
   // So we can define the Table items and queries, we import the Slick database profile here
   import sketch.profile.simple._
 
-  import scrupal.models.db.CommonTypeMappers._
+  import scrupal.db.CommonTypeMappers._
 
   implicit val session: Session
 
@@ -103,11 +102,6 @@ trait Component  {
     }
   }
 
-  trait SymbolicDescribableTable[S <: SymbolicDescribable] extends ScrupalTable[S] with SymbolicTable[S] {
-    def description = column[String](nm("description"))
-
-  }
-
   trait NumericTable[S <: NumericIdentifiable] extends ScrupalTable[S] with StorageFor[S] {
 
     def id = column[Identifier](nm("id"), O.PrimaryKey, O.AutoInc)
@@ -132,7 +126,7 @@ trait Component  {
 
   }
 
-  trait NumericCreatableTable[S <: NumericCreatable] extends NumericTable[S] {
+  trait CreatableTable[S <: Creatable] extends ScrupalTable[S] {
 
     def created = column[DateTime](nm("created"), O.Nullable) // FIXME: Dynamic Date required!
 
@@ -144,7 +138,7 @@ trait Component  {
     case class CreatedSince(d: DateTime) extends FinderOf[S] { override def apply() = findSinceQuery(d).list }
   }
 
-  trait NumericModifiableTable[S <: NumericModifiable] extends NumericTable[S] {
+  trait ModifiableTable[S <: Modifiable] extends ScrupalTable[S] {
 
     def modified_index = index(nm("modified_index"), modified, unique=false)
 
@@ -158,7 +152,7 @@ trait Component  {
     case class ModifiedSince(d: DateTime) extends FinderOf[S] { override def apply() = modifiedSinceQuery(d).list }
   }
 
-  trait NumericNameableTable[S <: NumericNameable] extends NumericTable[S] {
+  trait NameableTable[S <: Nameable] extends ScrupalTable[S] {
     def name = column[Symbol](nm("name"), O.NotNull)
 
     def name_index = index(idx("name"), name, unique=true)
@@ -171,11 +165,11 @@ trait Component  {
     case class ByName(n: Symbol) extends FinderOf[S] { override def apply() = fetchByNameQuery(n).list }
   }
 
-  trait NumericDescribableTable[S <: NumericDescribable] extends NumericTable[S] {
+  trait DescribableTable[S <: Describable] extends ScrupalTable[S] {
     def description = column[String](nm("_description"), O.NotNull)
   }
 
-  trait NumericEnablableTable[S <: NumericEnablable] extends NumericTable[S] {
+  trait EnablableTable[S <: Enablable] extends ScrupalTable[S] {
     def enabled = column[Boolean](nm("enabled"), O.NotNull)
     def enabled_index = index(idx("enabled"), enabled, unique=false)
 
@@ -183,26 +177,25 @@ trait Component  {
     def allEnabled() : List[S] = enabledQuery.list
   }
 
-  trait NamedDescribedThingTable[S <: NamedDescribedThing] extends NumericTable[S] with NumericNameableTable[S] with
-                                                                   NumericDescribableTable[S]
+  trait NumericThingTable[S <: NumericThing]
+    extends NumericTable[S]
+    with NameableTable[S]
+    with CreatableTable[S]
+    with ModifiableTable[S]
+    with DescribableTable[S]
 
-  trait ImmutableThingTable[S <: ImmutableThing] extends NumericCreatableTable[S] with NumericNameableTable[S]
+  trait NumericEnablableThingTable[S <: NumericEnablableThing]
+    extends NumericThingTable[S] with EnablableTable[S]
 
-  trait MutableThingTable[S <: MutableThing] extends NumericCreatableTable[S] with NumericModifiableTable[S] with NumericNameableTable[S]
+  trait SymbolicThingTable[S <: SymbolicThing]
+    extends SymbolicTable[S]
+    with CreatableTable[S]
+    with ModifiableTable[S]
+    with DescribableTable[S]
 
-  /**
-   * The base class of all table definitions in Scrupal.
-   * Most tables in the Scrupal database represent some form of entity that can be manipulated through the
-   * index interface. To ensure a certain level of consistency across all such entities, we enforce the structure
-   * of the entities with this class. Every entity table should subclass from EntityTable
-   * @tparam S The case class that represents rows in this table
-   */
-  trait DescribableImmutableThingTable[S <: DescribableImmutableThing]
-    extends ImmutableThingTable[S] with  NumericDescribableTable[S];
+  trait SymbolicEnablableThingTable[S <: SymbolicEnablableThing]
+    extends SymbolicThingTable[S] with EnablableTable[S]
 
-  trait ThingTable[S <: Thing] extends MutableThingTable[S] with NumericDescribableTable[S]
-
-  trait EnablableThingTable[S <: EnablableThing] extends ThingTable[S] with NumericEnablableTable[S]
 
   /**
    * The base class of all correlation tables.

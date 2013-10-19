@@ -17,7 +17,7 @@
 
 package scrupal.controllers
 
-import scrupal.models.db.{Alert}
+import scrupal.db.{Alert}
 import play.api.mvc.RequestHeader
 import scrupal.api.{Site, Module}
 import scrupal.models.CoreModule

@@ -17,11 +17,14 @@
 
 package scrupal.controllers
 
-import scrupal.api.{ConfigKey, Entity}
+import scrupal.api.{Site, ConfigKey, Entity}
 import play.api.libs.json.{Json, JsObject}
 import play.api.mvc.{AnyContent, RequestHeader, Action}
 import scrupal.db.SiteBootstrap
 import play.api.Logger
+import scrupal.models.CoreModule
+import com.typesafe.config.ConfigObject
+import play.Configuration
 
 /** The Entity definition for the Configuration workflow/wizard.
   * This controller handles first-time configuration and subsequent reconfiguration of the essentials of Scrupal. It
@@ -42,11 +45,27 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
     val Five_Site_Created = Value
     val Six_Entity_Created = Value
 
+    /** Determine if the schema is valid at a given URL */
+    def schemaIsValid(site: String, url: String) : Boolean = {
+      false
+    }
+
+
     /** Determine which step we are at based on the Context provided */
     def apply(context: Context) : Step.Kind = {
-      if (context.site.isDefined) {
+      if (context.site.isDefined || Site.size > 0) {
         Five_Site_Created
       } else {
+        One_Specify_Databases
+      }
+    }
+  }
+
+/*
+          val dbs = db_config.get()
+
+          context.config.getConfig("db")
+          val sites : Map[String,String] = Configuration.from(db_config.get())
         val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get(context)
         if (sites.isEmpty)
           One_Specify_Databases
@@ -60,8 +79,13 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
               (site: String, (url: String, e: Option[String])) <- sites if !e.isDefined
             ) yield (site, url)
             if (!valid.isEmpty) {
-              Logger.debug("SiteBootstrap has returned: " + valid )
-              Three_DBS_Connected
+              if (valid.foldLeft(true)( (b,e) => b && schemaIsValid(e._1, e._2))) {
+                Four_DB_Schema
+              } else {
+                // CoreModule.validateSchema
+                Logger.debug("SiteBootstrap has returned: " + valid )
+                Three_DBS_Connected
+              }
             }
             else
               One_Specify_Databases
@@ -71,7 +95,7 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
       }
     }
   }
-
+  */
   def get(id: String, what: String) : Action[AnyContent] = Action { implicit request : RequestHeader =>
 
     val step = Step(context)

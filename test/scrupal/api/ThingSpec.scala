@@ -73,15 +73,15 @@ class ThingSpec extends Specification {
     }
   }
 
-  case class TestThing(
+  case class TestNumericThing(
     override val name: Symbol,
     override val description: String
-  ) extends Thing(name, description) {
+  ) extends NumericThing(name, description) {
   }
 
   "Thing" should {
     "instantiate with simple arguments" in {
-      val t = TestThing('test, "Testing")
+      val t = TestNumericThing('test, "Testing")
       t.isNamed && t.isDescribed must beTrue
     }
   }

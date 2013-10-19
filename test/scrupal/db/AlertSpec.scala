@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
-package scrupal.models.db
+package scrupal.db
 
 import org.specs2.mutable.Specification
 import scrupal.utils.Icons
 import org.joda.time.{Duration, DateTime}
-import scrupal.fakes.{WithScrupal}
+import scrupal.fakes.{WithFakeScrupal}
 
 /**
  * One line sentence description here.
@@ -71,7 +71,7 @@ class AlertSpec extends Specification
 			val alert = new Alert('A, "A", "<span>Html Message</span>")
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
-    "save to and fetch from the DB" in  new WithScrupal {
+    "save to and fetch from the DB" in  new WithFakeScrupal {
       withScrupalSchema { schema: ScrupalSchema =>
         import schema._
         val a1 = Alerts.insert(new Alert('foo, "Alert", "Message" ))

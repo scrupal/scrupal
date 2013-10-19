@@ -22,11 +22,13 @@ import play.api.Mode
 import java.io.File
 import play.api.mvc._
 import scrupal.models.CoreModule
-import scala.collection.mutable
-import scrupal.utils.Registry
 import scrupal.api._
 import scrupal.api.Module
 import scrupal.api.Site
+import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
+import scrupal.utils.ExtendedConfiguration
+import scala.util.matching.Regex
+import scala.collection.immutable.TreeMap
 
 object Global extends GlobalSettings
 {
@@ -55,7 +57,7 @@ object Global extends GlobalSettings
       * Note that the type is a HashMap[Short,Site] because we want to index it quickly by the port number we are
       * serving so as to avoid a scan of this data structure on every request.
       */
-    val sites : mutable.HashMap[Short,Site] = mutable.HashMap[Short,Site]()
+    var sites : Map[Short,Site] = Map[Short,Site]()
 
 
     /** Developer Mode Controls Some Aspects of Scrupal Functionality
@@ -66,18 +68,6 @@ object Global extends GlobalSettings
       * what they need to know next. :)
       */
     var devMode : Boolean = true // FIXME: Default should be false!
-
-    val typeRegistry = new AnyRef with Registry[Type] {
-      val registrantsName = "type"
-      val registryName = "Types"
-    }
-
-    val moduleRegistry = new AnyRef with Registry[Module] {
-      val registrantsName = "module"
-      val registryName = "Modules"
-
-    }
-
   }
 
   val Copyright = "2013 viritude llc"
@@ -118,6 +108,10 @@ object Global extends GlobalSettings
     Module.processModules
 	}
 
+  def reload(app: Application) {
+    DataYouShouldNotModify.sites = Site.load(app.configuration)
+  }
+
 	/**
 	 * Called once the application is started.
 	 *
@@ -125,6 +119,10 @@ object Global extends GlobalSettings
 	 */
 	override def onStart(app: Application) {
 		DefaultGlobal.onStart(app)
+
+    // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
+    // those is for a site configuration so we should be able to load the sites now.
+    reload(app)
 	}
 
 	/**
@@ -158,11 +156,17 @@ object Global extends GlobalSettings
       "redis.host"	        -> "localhost",
       "redis.maxIdle"	      -> 8,
       "redis.port"	        -> 6379,
-      "smtp.mock"	          -> true,
-
-      // Now Scrupal's defaults
-      ConfigKey.site_bootstrap_file   -> new File(".", "/conf/SiteBootstrap.conf")
+      "smtp.mock"	          -> true
     ))
+  }
+
+  type FlatConfig =  TreeMap[String,ConfigValue]
+
+  def interestingConfig(config: Configuration) : FlatConfig = {
+    val elide : Regex = "^(akka|java|sun|user|awt|os|path|line).*".r
+    val entries = config.entrySet.toSeq
+    val filtered = entries filter { case (x,y) =>  !elide.findPrefixOf(x).isDefined }
+    TreeMap[String,ConfigValue](filtered.toSeq:_*)
   }
 
   /** Merge the Scrupal Configuration with the Play Configuration
@@ -182,13 +186,13 @@ object Global extends GlobalSettings
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 
-    // Scrupal is configured from the database, except for the databases that we need to connect to. Since each
-    // site's data can live in a separate database, we need to locate possibly many databases. To do this we use the
-    // special scrupal.site.SIteBootstrap class
-    // configuration comes from the database. All we need is a URL for the database. We store that in a special
-    // file named conf/db.config (by default).
+    Logger.debug("STARTUP CONFIGURATION VALUES")
+    interestingConfig(newconf) foreach { case (key: String, value: ConfigValue) =>
+      Logger.debug ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
+    }
+
     newconf
-	}
+ 	}
 
 	/**
 	 * Called Just before the action is used.

@@ -17,15 +17,12 @@
 
 package scrupal.fakes
 
-import java.io.File
 import play.api.test._
 import scala.slick.session.{Session}
 import org.specs2.execute.{Result, AsResult}
 import scrupal.api.Sketch
-import scrupal.models.db.ScrupalSchema
-import play.api.Logger
-import play.libs.F
 import play.api.mvc.Handler
+import scrupal.db.ScrupalSchema
 
 
 trait Specs2ExampleGenerator {
@@ -36,23 +33,7 @@ trait Specs2ExampleGenerator {
  * One line sentence description here.
  * Further description here.
  */
-class FakeScrupal(
-  override val path: java.io.File = new java.io.File("."),
-  override val classloader: ClassLoader = classOf[FakeApplication].getClassLoader,
-  override val additionalPlugins: Seq[String] = Nil,
-  override val withoutPlugins: Seq[String] = Nil,
-  override val additionalConfiguration: Map[String, _ <: Any] = Map.empty,
-  override val withGlobal: Option[play.api.GlobalSettings] = None,
-  override val withRoutes: PartialFunction[(String, String), Handler] = PartialFunction.empty
-) extends FakeApplication(path, classloader, additionalPlugins, withoutPlugins, additionalConfiguration, withGlobal,
-    withRoutes) {
-  private var count = 0
-  def sharedurl() : String ={ count = count + 1 ; "jdbc:h2:mem:test" + count  }
-  def url : String = "jdbc:h2:mem:"
-  val sketch: Sketch = Sketch(url)
-}
-
-class WithScrupal(
+abstract class WithFakeScrupal(
   path: java.io.File = new java.io.File("."),
   classloader: ClassLoader = classOf[FakeApplication].getClassLoader,
   additionalPlugins: Seq[String] = Nil,
@@ -60,22 +41,22 @@ class WithScrupal(
   additionalConfiguration: Map[String, _ <: Any] = Map.empty,
   withGlobal: Option[play.api.GlobalSettings] = None,
   withRoutes: PartialFunction[(String, String), Handler] = PartialFunction.empty
-) extends WithApplication(new FakeScrupal(path, classloader, additionalPlugins, withoutPlugins,
+) extends WithApplication(new FakeApplication(path, classloader, additionalPlugins, withoutPlugins,
   additionalConfiguration, withGlobal, withRoutes)) {
-  override def around[T: AsResult](f: => T): Result = {
-    super.around { f }
-  }
 
-  val fake_scrupal : FakeScrupal = app.asInstanceOf[FakeScrupal]
+  // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
+  // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
+
+  lazy val sketch: Sketch = Sketch("jdbc:h2:mem:test")
 
   def withDBSession[T : AsResult]( f: Session => T) : T = {
-    implicit val session : Session = fake_scrupal.sketch.database.createSession()
+    implicit val session : Session = sketch.database.createSession()
     try { f(session)  } finally { if (session != null) session.close() }
   }
 
   def withScrupalSchema[T : AsResult]( f: ScrupalSchema => T ) : T = {
     withDBSession { implicit session : Session =>
-      implicit val schema : ScrupalSchema = new ScrupalSchema(fake_scrupal.sketch)(session)
+      implicit val schema : ScrupalSchema = new ScrupalSchema(sketch)(session)
       schema.create(session)
       f(schema)
     }

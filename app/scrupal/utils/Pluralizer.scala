@@ -19,12 +19,13 @@ package scrupal.utils
 
 import java.util.regex.{Matcher, Pattern}
 
-
-/**
- * Competently find the plural of most common English words.
- * Inspired by: https://github.com/atteo/evo-inflector/blob/master/src/main/java/org/atteo/evo/inflector/TwoFormInflector.java
- * Rules from: http://www.barstow.edu/lrc/tutorserv/handouts/015%20Irregular%20Plural%20Nouns.pdf
- * Oxford Rules: http://oxforddictionaries.com/words/plurals-of-nouns
+/** Competently find the plural of most common English words.
+  * In dealing with logged messages, error messages, and other output that people see,
+  * it is always nice to have the correct plural form of nouns be used. This class attempts to get pretty good
+  * coverage for the english language based on a variety of pluralization rules.
+  * Inspired by: [[https://github.com/atteo/evo-inflector/blob/master/src/main/java/org/atteo/evo/inflector/TwoFormInflector.java]]
+  * Rules from: [[]]http://www.barstow.edu/lrc/tutorserv/handouts/015%20Irregular%20Plural%20Nouns.pdf]]
+  * Oxford Rules: [[http://oxforddictionaries.com/words/plurals-of-nouns]]
  */
 abstract class Pluralizer
 {
@@ -32,11 +33,11 @@ abstract class Pluralizer
 
 	val rules : scala.collection.mutable.ListBuffer[Rule] = new scala.collection.mutable.ListBuffer[Rule]
 
-	/**
-	 * The main interface to this class. Call pluralize to pluralize any word and return its plural form.
-	 * @param word The word to be pluralized
-	 * @return The plural form of word
-	 */
+	/** The main interface to this class.
+    * Call pluralize to pluralize any word and return its plural form.
+	  * @param word The word to be pluralized
+	  * @return The plural form of word
+	  */
 	def pluralize(word: String) : String =
 	{
 		rules.map { rule =>
@@ -48,21 +49,21 @@ abstract class Pluralizer
 		word
 	}
 
-	/**
-	 * Subclasses can register a word here that does not have a plural form. The plural word will be the same
-	 * as the singular word.
-	 * @param word The word whose plural form is the same as its singular form
-	 */
+	/** Declaration of a non-plural word.
+	  * Subclasses can register a word here that does not have a plural form. The plural word will be the same
+	  * as the singular word.
+	  * @param word The word whose plural form is the same as its singular form
+	  */
   protected def noplural(word: String) : Unit =
   {
 	  rules += new Rule(Pattern.compile("(?i)(" + word + ")$"), "$1")
   }
 
-	/**
-	 * Subclasses can register a list of words that do not have plural forms. The plural words will each be the
-	 * same as their singular word counterpart.
-	 * @param word_list A list of worlds whose plural form is the same as its singular form.
-	 */
+	/** Declaration of a list of non-plural words.
+	  * Subclasses can register a list of words that do not have plural forms. The plural words will each be the
+	  * same as their singular word counterpart.
+	  * @param word_list A list of worlds whose plural form is the same as its singular form.
+	  */
 	protected def noplural(word_list : List[String]) : Unit =
 	{
 		val builder : StringBuilder = new StringBuilder()
@@ -74,13 +75,12 @@ abstract class Pluralizer
 		rules += new Rule(Pattern.compile(builder.toString()), "$1")
   }
 
-	/**
-	 * Subclasses can register a pair of words that have an irregular plural form. That is, it is not easy to
-	 * convert the singular to the plural so both must be specified.
-	 * @param singular The singular form of the word
-	 * @param plural The plural form of the word
-	 */
-
+	/** Declaration of an irregular wwhose plural just doesn't match a rule
+	  * Subclasses can register a pair of words that have an irregular plural form. That is, it is not easy to
+	  * convert the singular to the plural so both must be specified.
+	  * @param singular The singular form of the word
+	  * @param plural The plural form of the word
+	  */
 	protected def irregular(singular: String, plural: String) : Unit = {
     if (singular.charAt(0) == plural.charAt(0)) {
       rules += new Rule(Pattern.compile("(?i)(" + singular.charAt(0) + ")" + singular.substring(1)
@@ -118,8 +118,16 @@ abstract class Pluralizer
   }
 }
 
+/** Interface to Pluralizer
+  * This object allows us to write {{{Pluralizer("word")}}} to obtain the plural form or
+  * {{{Pluralizer("word",count}}} if we want it to be based on the value of count.
+  * This class also calls all the base class methods to install the rules.
+  */
 object Pluralizer extends Pluralizer
 {
+  def apply(word: String, count : Int = 2) = pluralize(word, count)
+  def apply(word: Symbol) = pluralize(word.name)
+
   def pluralize(word : Symbol) : String = pluralize(word.name)
 
 	def pluralize(word: String, count: Int = 2) : String =

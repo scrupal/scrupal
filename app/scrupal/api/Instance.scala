@@ -31,6 +31,6 @@ case class Instance(
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends Thing(name, description, modified, created, id) {
+) extends NumericThing(name, description, modified, created, id) {
 }
 

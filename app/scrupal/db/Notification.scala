@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.db
 
 import play.api.templates.Html
 import scala.xml.{Elem, NodeSeq, Node}
@@ -25,7 +25,7 @@ import org.joda.time.{Duration, DateTime}
 import scala.slick.lifted.{ DDL}
 
 import scrupal.utils.Icons
-import scrupal.api.{Identifier, Thing, Component}
+import scrupal.api.{Identifier, NumericThing, Component}
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
@@ -124,7 +124,7 @@ case class Alert (
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends Thing(name, description, modified, created, id)
+) extends NumericThing(name, description, modified, created, id)
 {
   /**
    * A shorthand constructor for Alerts.
@@ -168,7 +168,7 @@ trait NotificationComponent extends Component {
   implicit val alertTM = MappedTypeMapper.base[AlertKind.Value,Int]( { alert => alert.id }, { id => AlertKind(id) } )
 
 
-  object Alerts extends ScrupalTable[Alert]("alerts") with ThingTable[Alert] {
+  object Alerts extends ScrupalTable[Alert]("alerts") with NumericThingTable[Alert] {
     def message =     column[String](tableName + "_message")
     def alertKind =   column[AlertKind.Value](tableName + "_alertKind")
     def iconKind =    column[Icons.Value](tableName + "_iconKind")

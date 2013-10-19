@@ -15,6 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
+import com.typesafe.sbt.SbtNativePackager.packageArchetype
 import sbt._
 import sbt.Keys._
 // import play.Project._
@@ -35,6 +36,8 @@ object BuildSettings
   val buildSettings = Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     javacOptions ++= Seq(
+      "-encoding", "utf8",
+      "-g",
       "-J-Xmx1024m",
 	    "-Xlint"
     ),
@@ -156,10 +159,6 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
     out
   }
 
-  // lazy val angularAssets =
-  //  (baseDirectory map { base: File => (( base / "assets/javascripts") ** "/chunks/*.html") })
-
-
   lazy val scrupal = play.Project(
     appName,
     path = file("."),
@@ -167,13 +166,13 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
       //requireJs += "scrupal.js",
       //requireJsShim += "scrupal.js",
       resolvers := all_resolvers,
-      fork in (Test) := false,
       // playAssetsDirectories <+= baseDirectory / "foo",
       libraryDependencies := Seq (
         play.Keys.jdbc,
         play.Keys.cache,
         play.Keys.filters,
         play.Keys.component("play-test"),
+        play.Keys.component("play-docs"),
         specs2,
         play_plugins_redis,
         mailer_plugin,
@@ -184,7 +183,11 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
         angular_ui_router, marked, fontawesome
       ),
       printClasspath <<= print_class_path
-    ) ++ play.Project.playScalaSettings
+    ) ++  play.Project.playScalaSettings ++ Seq (
+      // This bit of nonsense brought to you by https://github.com/playframework/playframework/issues/1813
+      // and its related friend at
+      fork in (Test) := false
+    )
 
     //    angularAssets map { f : File => playAssetsDirectories <+= f }
     //    ++

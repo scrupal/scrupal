@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.db
 
 import scala.slick.lifted.DDL
 import scrupal.api.{Sketch, Schema}

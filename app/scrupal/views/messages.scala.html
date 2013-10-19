@@ -1,4 +1,4 @@
-@(alert: Option[scrupal.models.db.Alert] = None)(implicit context : scrupal.controllers.Context)
+@(alert: Option[scrupal.db.Alert] = None)(implicit context : scrupal.controllers.Context)
 
 @if(alert.isDefined && alert.get.unexpired) {
 <div class="alert alert-dismissible @alert.get.cssClass">

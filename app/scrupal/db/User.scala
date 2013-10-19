@@ -15,14 +15,12 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.db
 
 import org.joda.time.DateTime
 import scala.slick.lifted.DDL
-
 import scrupal.api._
 import scrupal.utils.Hash
-import scala.slick.direct.AnnotationMapper.column
 
 /**
  * Information about a Principal, the essential identify of a user of the system. Authentication of Principals requires
@@ -58,7 +56,8 @@ trait UserComponent extends Component {
   /**
    * The table of principals which are simple identifiable objects.
    */
-  object Principals extends ScrupalTable[Principal]("principals") with NumericCreatableTable[Principal]  {
+  object Principals extends ScrupalTable[Principal]("principals") with
+                            NumericTable[Principal] with CreatableTable[Principal]  {
     def email = column[String](nm("email"))
     def password = column[String](nm("password"))
     def hasher = column[String](nm("hasher"))

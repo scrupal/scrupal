@@ -15,13 +15,13 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.db
 
 import org.specs2.mutable.Specification
 import scala.slick.lifted.DDL
 import scrupal.api._
 import scala.slick.lifted
-import scrupal.fakes.{WithScrupal}
+import scrupal.fakes.{WithFakeScrupal}
 import org.joda.time.DateTime
 import scala.slick.session.Session
 
@@ -38,7 +38,7 @@ case class TestEntity(
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends Thing(name, description, modified, created, id) {
+) extends NumericThing(name, description, modified, created, id) {
 }
 
 trait TestComponent extends Component {
@@ -47,7 +47,7 @@ trait TestComponent extends Component {
   implicit val someValueMapper = lifted.MappedTypeMapper.base[SomeValue,Int](
     { v => v.x << 16 + v.y }, { i => SomeValue((i >> 16).toShort, (i & 0x0FFFF).toShort) } )
 
-  object TestEntities extends ScrupalTable[TestEntity]("test_entities") with ThingTable[TestEntity] {
+  object TestEntities extends ScrupalTable[TestEntity]("test_entities") with NumericThingTable[TestEntity] {
     def testVal = column[SomeValue]("test_val")
     def * = name ~ description ~ testVal ~modified.? ~ created.? ~ id.? <> (TestEntity.tupled, TestEntity.unapply _)
   }
@@ -67,9 +67,9 @@ class EntitySpec extends Specification
 			te.equals(other) must beFalse
 			te.equals(te) must beTrue
 		}
-    "save, load and delete from DB" in new WithScrupal {
+    "save, load and delete from DB" in new WithFakeScrupal {
       withDBSession { implicit session : Session =>
-        val ts = new TestSchema(fake_scrupal.sketch)
+        val ts = new TestSchema(sketch)
         ts.create
         import ts._
         val te2 = TestEntities.upsert(te)

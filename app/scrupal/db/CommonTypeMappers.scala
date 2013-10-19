@@ -15,16 +15,15 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.db
 
 import scala.slick.lifted.MappedTypeMapper
 import scala.util.matching.Regex
-import scrupal.api.Identifier
 import org.joda.time.DateTime
-import java.sql.{Clob, Timestamp}
+import java.sql.{ Timestamp}
 import org.joda.time.DateTimeZone._
 import play.api.libs.json.{Json, JsObject}
-import scala.slick.session.Session
+
 
 /**
  * This object just collects together a variety of Slick TypeMappers that are used to convert between database

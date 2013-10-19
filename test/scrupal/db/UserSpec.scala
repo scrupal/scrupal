@@ -15,13 +15,12 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package models.db
+package scrupal.db
 
 
 import org.specs2.mutable.Specification
-import scrupal.models.db.{ScrupalSchema, Principal}
 import scrupal.utils.HasherKinds
-import scrupal.fakes.{WithScrupal}
+import scrupal.fakes.{WithFakeScrupal}
 import scrupal.api.Identifier
 
 
@@ -32,7 +31,7 @@ import scrupal.api.Identifier
 class UserSpec extends Specification
 {
 	"Principal" should {
-		"save, load and delete from DB" in new WithScrupal {
+		"save, load and delete from DB" in new WithFakeScrupal {
       withScrupalSchema { schema: ScrupalSchema =>
         import schema._
         val p = new Principal("nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
@@ -48,7 +47,7 @@ class UserSpec extends Specification
   }
 
   "Handle" should {
-    "save, load and delete from DB" in new WithScrupal {
+    "save, load and delete from DB" in new WithFakeScrupal {
       withScrupalSchema { schema: ScrupalSchema =>
         import schema._
         val p = new Principal("nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
@@ -63,7 +62,7 @@ class UserSpec extends Specification
       }
     }
 
-    "allow many-to-many relations with Principal" in new WithScrupal {
+    "allow many-to-many relations with Principal" in new WithFakeScrupal {
       withScrupalSchema { schema: ScrupalSchema =>
         import schema._
         val p1 = new Principal( "nobody@nowhere.ex", "openpw", HasherKinds.SCrypt.toString() )

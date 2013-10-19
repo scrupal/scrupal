@@ -60,6 +60,7 @@ trait Registry[R <: Registrable] {
   val rand = new Random(System.currentTimeMillis())
 
   def size = registrants.size
+  def isEmpty = registrants.isEmpty
 
   def pick : R = {
     val random_index = rand.nextInt(registrants.size)

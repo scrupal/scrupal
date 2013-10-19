@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
+package scrupal.db
 
 import scala.slick.lifted.DDL
 import scrupal.api._
@@ -23,7 +23,6 @@ import scrupal.api.Component
 import java.sql.Clob
 import play.api.libs.json.{Json, JsObject}
 import scrupal.utils.Version
-import scala.slick.direct.AnnotationMapper.column
 
 trait CoreComponent extends Component {
 
@@ -48,13 +47,17 @@ trait CoreComponent extends Component {
     }}
   )
 
-  object Types extends ScrupalTable[EssentialType]("types") with SymbolicDescribableTable[EssentialType] {
+  object Types extends ScrupalTable[EssentialType]("types")
+                       with SymbolicTable[EssentialType]
+                       with DescribableTable[EssentialType] {
     def moduleId = column[ModuleIdentifier](nm("moduleId"))
     def moduleId_fKey = foreignKey(fkn(Modules.tableName), moduleId, Modules)(_.id)
     def * = id ~ description ~ moduleId <> (EssentialType.tupled, EssentialType.unapply _)
   }
 
-  object Modules extends ScrupalTable[EssentialModule]("modules") with SymbolicDescribableTable[EssentialModule] {
+  object Modules extends ScrupalTable[EssentialModule]("modules")
+                         with SymbolicTable[EssentialModule]
+                         with DescribableTable[EssentialModule] {
     def version = column[Version](nm("version"))
     def obsoletes = column[Version](nm("obsoletes"))
     def enabled = column[Boolean](nm("enabled"))
@@ -62,13 +65,15 @@ trait CoreComponent extends Component {
       (EssentialModule.tupled , EssentialModule.unapply _ )
   }
 
-  object Entities extends ScrupalTable[EssentialEntity]("entities") with SymbolicDescribableTable[EssentialEntity] {
+  object Entities extends ScrupalTable[EssentialEntity]("entities")
+                          with SymbolicTable[EssentialEntity]
+                          with DescribableTable[EssentialEntity] {
     def typeId = column[TypeIdentifier](nm("typeId"))
     def typeId_fkey = foreignKey(fkn("typeId"), typeId, Types)(_.id)
     def * = id ~ description ~ typeId <> (EssentialEntity.tupled, EssentialEntity.unapply _ )
   }
 
-  object Instances extends ScrupalTable[Instance]("instances") with ThingTable[Instance] {
+  object Instances extends ScrupalTable[Instance]("instances") with NumericThingTable[Instance] {
     def entityId = column[TypeIdentifier](nm("entityId"))
     def entityId_fkey = foreignKey(fkn("entityId"), entityId, Entities)(_.id)
     def payload = column[JsObject](nm("payload"), O.NotNull)
@@ -76,14 +81,15 @@ trait CoreComponent extends Component {
     def * = forInsert ~ modified.? ~ created.? ~ id.?  <> (Instance.tupled, Instance.unapply _)
   }
 
-  object Sites extends ScrupalTable[Site]("sites") with EnablableThingTable[Site] {
+  object Sites extends ScrupalTable[EssentialSite]("sites") with SymbolicEnablableThingTable[EssentialSite] {
     def listenPort = column[Short](nm("listenPort"))
     def listenPort_index = index(idx("listenPort"), listenPort, unique=true)
     def urlDomain = column[String](nm("urlDomain"))
     def urlPort = column[Short](nm("urlPort"))
     def urlHttps = column[Boolean](nm("urlHttps"))
-    def * = name ~ description ~ listenPort ~ urlDomain ~ urlPort ~ urlHttps ~ enabled ~ modified.? ~ created.? ~
-            id.? <> (Site.tupled, Site.unapply _)
+    def * = id ~ description ~ listenPort ~ urlDomain ~ urlPort ~ urlHttps ~ enabled ~ modified.? ~ created.? <>
+      (EssentialSite.tupled, EssentialSite.unapply _)
+
   }
 
   def coreDDL : DDL = Types.ddl ++ Modules.ddl ++ Entities.ddl ++ Instances.ddl ++ Sites.ddl

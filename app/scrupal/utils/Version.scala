@@ -17,8 +17,6 @@
 
 package scrupal.utils
 
-import org.joda.time.DateTime
-
 /** Version numbering for Scrupal Modules.
   * Versions are ordered by major and minor number; update is not factored into the ordering as it is intended to be
   * used only for those changes that do not add features but just fix bugs. Consequently if major and minor version

@@ -75,10 +75,12 @@ object CoreModule extends Module (
       value match {
         case v: JsString => {
           try {
-            DriverManager.getDriver(v.value)
+            val sketch = Sketch(v.value)
+            // NOTE: We do not want to do the following here. This is a syntactical check, not a connection check
+            // sketch.database.createSession().close()
             JsSuccess(true)
           }
-          catch { case xcptn: SQLException => JsError(xcptn.getMessage) }
+          catch { case xcptn: Throwable => JsError(xcptn.getMessage) }
         }
         case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
       }

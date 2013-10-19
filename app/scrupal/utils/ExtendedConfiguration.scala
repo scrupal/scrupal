@@ -53,5 +53,5 @@ class ExtendedConfiguration(config : Configuration) {
 
 object ExtendedConfiguration
 {
-  implicit def extendYoConfiguration(config: Configuration) = new ExtendedConfiguration(config)
+  implicit def extendYoConfig(config: Configuration) = new ExtendedConfiguration(config)
 }

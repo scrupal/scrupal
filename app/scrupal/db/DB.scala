@@ -15,9 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models.db
-
-import scrupal.api._
+package scrupal.db
 
 /**
  * A collection of utilities for dealing with the Scrupal database. This is where we find the initialization code

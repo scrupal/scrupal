@@ -119,17 +119,17 @@ abstract class DescribableImmutableThing (
   * @param name The name of the `Thing`
   * @param description A brief description of the `Thing`
   */
-abstract class Thing (
+abstract class NumericThing (
   override val name: Symbol,
   override val description: String,
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
 )  extends MutableThing(name, modified, created, id) with NumericDescribable {
-  override def canEqual(other: Any) : Boolean = other.isInstanceOf[Thing]
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[NumericThing]
   override def equals(other: Any) : Boolean = {
     other match {
-      case that: Thing => { (this eq that) || (
+      case that: NumericThing => { (this eq that) || (
         that.canEqual(this) && super.equals(that) &&
           ( this.isModified == that.isModified) &&
           ( ! this.isModified || this.modified.get.equals(that.modified.get))
@@ -140,18 +140,56 @@ abstract class Thing (
   }
 }
 
-abstract class EnablableThing (
+abstract class NumericEnablableThing (
   override val name: Symbol,
   override val description: String,
   val enabled : Boolean = false,
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends Thing(name, description, modified, created, id)  with NumericEnablable {
-  override def canEqual(other: Any) : Boolean = other.isInstanceOf[EnablableThing]
+) extends NumericThing(name, description, modified, created, id)  with NumericEnablable {
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[NumericEnablableThing]
   override def equals(other: Any) : Boolean = {
     other match {
-      case that: EnablableThing => { (this eq that) || (
+      case that: NumericEnablableThing => { (this eq that) || (
+        that.canEqual(this) && super.equals(that) &&
+          ( this.enabled == that.enabled)
+        )
+      }
+      case _ => false
+    }
+  }
+}
+
+abstract class SymbolicThing (
+  override val id: Symbol,
+  override val description: String,
+  override val modified : Option[DateTime] = None,
+  override val created : Option[DateTime] = None
+) extends Equals with Describable with Modifiable with Creatable
+          with SymbolicIdentifiable {
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[SymbolicThing]
+  override def equals(other: Any) : Boolean = {
+    other match {
+      case that: SymbolicThing => { (this eq that) || (
+        that.canEqual(this) && super.equals(that))
+      }
+      case _ => false
+    }
+  }
+}
+
+abstract class SymbolicEnablableThing (
+  override val id: Symbol,
+  override val description: String,
+  val enabled : Boolean = false,
+  override val modified : Option[DateTime] = None,
+  override val created : Option[DateTime] = None
+) extends SymbolicThing(id, description, modified, created) with Enablable {
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[SymbolicEnablableThing]
+  override def equals(other: Any) : Boolean = {
+    other match {
+      case that: SymbolicEnablableThing => { (this eq that) || (
         that.canEqual(this) && super.equals(that) &&
           ( this.enabled == that.enabled)
         )

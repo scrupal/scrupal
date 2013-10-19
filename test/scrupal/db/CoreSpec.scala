@@ -15,16 +15,15 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.models
+package scrupal.db
 
 import org.specs2.mutable.Specification
 
 import play.api.libs.json.Json
-import scrupal.fakes.{WithScrupal}
+import scrupal.fakes.{WithFakeScrupal}
 import scrupal.api._
 import play.api.libs.json.JsObject
 import scrupal.api.{Instance}
-import scrupal.models.db.ScrupalSchema
 import scala.collection.immutable.HashMap
 import scrupal.utils.Version
 
@@ -35,7 +34,7 @@ import scrupal.utils.Version
 class CoreSpec extends Specification {
 
   "Module Type, Entity and Instance " should {
-    "support CRUD" in new WithScrupal {
+    "support CRUD" in new WithFakeScrupal {
       withScrupalSchema( { schema : ScrupalSchema =>
         import schema._
         val m_id = Modules.insert ( EssentialModule('foo, "Foo Man Chew", Version(0,1,0), Version(0,0,0), true) )

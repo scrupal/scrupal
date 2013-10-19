@@ -1,4 +1,4 @@
-@(alerts: Seq[scrupal.models.db.Alert])(implicit context : scrupal.controllers.Context)
+@(alerts: Seq[scrupal.db.Alert])(implicit context : scrupal.controllers.Context)
 
 @for(alert <- alerts) {
 @if(alert.unexpired) {
