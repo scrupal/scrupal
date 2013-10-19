@@ -19,9 +19,11 @@ package scrupal.controllers
 
 import org.specs2.mutable.Specification
 import play.api.mvc.RequestHeader
-import scrupal.api.ConfigKey
+import scrupal.api.{Sketch, ConfigKey}
 import play.api.{Logger, Configuration}
 import scala.util.Success
+import scrupal.db.ScrupalSchema
+import scala.slick.session.Session
 
 /** This is the test suite for the Config.Step class
   *
@@ -63,6 +65,15 @@ class ConfigStepSpec extends Specification {
 
     }
 
+    "Identify Step 2 - bad config" in {
+      implicit val request : RequestHeader = nullRequest
+      implicit val context = simpleContext(
+        Map( "db" -> Map( "default" -> Map( "url" -> "not-a-url")))
+      )
+      val step = Config.Step(context)
+      step must beEqualTo((Config.Step.Two_Connect_Databases,None))
+    }
+
     "Identify Step 2 - no such db" in {
       implicit val request : RequestHeader = nullRequest
       implicit val context = simpleContext(
@@ -81,6 +92,29 @@ class ConfigStepSpec extends Specification {
       step must beEqualTo((Config.Step.Three_Install_Schemas,None)) or beEqualTo((Config.Step.Two_Connect_Databases,
         None))
     }
+
+    "Identify Step 4 - missing site instances " in {
+      implicit val request : RequestHeader = nullRequest
+      implicit val context = simpleContext(
+        Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:mem:no_sites;DB_CLOSE_DELAY=2")))
+      )
+
+      // Get a DB Sketch with the same config values as specified above
+      val sketch = Sketch( context.config.getConfig("db.default").get )
+
+      // Install the Scrupal Schema
+      sketch.withSession { implicit session: Session =>
+        val schema = new ScrupalSchema(sketch)
+        schema.create(session)
+      }
+
+      // Now let's see if it validates that all the tables are there.
+      val step = Config.Step(context)
+
+      step must beEqualTo((Config.Step.Four_Create_Site,None))
+    }
+
+
 
   }
 }
