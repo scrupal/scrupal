@@ -1,9 +1,0 @@
-<component name="CopyrightManager">
-  <copyright>
-    <option name="notice" value="This file is part of Scrupal a Web Application Framework.&#10;&#10;Copyright (c) &amp;#36;today.year, Reid Spencer and viritude llc. All Rights Reserved.&#10;&#10;Scrupal is free software: you can redistribute it and/or modify it under the terms &#10;of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, &#10;or (at your option) any later version.&#10;&#10;Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied &#10;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more &#10;details.&#10;&#10;You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:&#10;http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0." />
-    <option name="keyword" value="Copyright" />
-    <option name="allowReplaceKeyword" value="" />
-    <option name="myName" value="Scrupal" />
-    <option name="myLocal" value="true" />
-  </copyright>
-</component>

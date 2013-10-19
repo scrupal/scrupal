@@ -20,7 +20,7 @@ package scrupal.api
 import org.joda.time.DateTime
 import scrupal.utils.{Registry, Registrable}
 import play.api.{Logger, Configuration}
-import scala.slick.session.Database
+
 
 /** Information about one site that Scrupal is serving.
   * Sites are associated with a port number that Play! is configured to listen on. We configure play's ports by

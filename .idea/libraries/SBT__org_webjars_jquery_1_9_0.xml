@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="SBT: org.webjars:jquery:1.9.0">
-    <CLASSES>
-      <root url="jar:///usr/local/Cellar/play/2.2.0/libexec/repository/cache/org.webjars/jquery/jars/jquery-1.9.0.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
