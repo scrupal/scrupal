@@ -1,5 +1,6 @@
 .history
-.idea/workspace.xml
+.idea/
+.idea*
 dist
 logs
 project/project
