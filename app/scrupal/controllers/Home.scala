@@ -25,6 +25,7 @@ import scrupal.api.{Module}
 import org.joda.time. Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
+import scrupal.controllers.Config.Step
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -44,12 +45,6 @@ object Home extends ScrupalController {
       TemporaryRedirect("/config") // Scrupal needs to be configured !
     }
 	}
-
-  def configIndex = Action { implicit request => Ok(html.config.index()) }
-  def configDatabase = Action { implicit request => Ok(html.config.database()) }
-  def configSite = Action { implicit request => Ok(html.config.site()) }
-  def configPage = Action { implicit request => Ok(html.config.page()) }
-  def configSuccess = Action { implicit request => Ok(html.config.success()) }
 
 
   /** The admin application */

@@ -1,10 +1,9 @@
-@()(implicit context : scrupal.controllers.Context)
+@(step: scrupal.controllers.Config.Step.Kind, lastError: Option[Throwable])(
+    implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
 @import scrupal.controllers.routes.Home
-@html.angularPage("Scrupal Database Configuration") {
-}  {
-<marked>
-# Scrupal Database Configuration
+@html.configPage("Welcome to Scrupal", step, lastError)  {
+    <marked>
+        # Scrupal Database Configuration
 </marked>
-<p><a href="@Home.configSite">Next: Define Your Site</a></p>
 }

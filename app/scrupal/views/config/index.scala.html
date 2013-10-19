@@ -1,23 +1,16 @@
-@()(implicit context : scrupal.controllers.Context)
+@(step: scrupal.controllers.Config.Step.Kind, lastError: Option[Throwable])(
+    implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.Home
-@html.angularPage("Welcome to Scrupal") {
-}  {
+@html.configPage("Welcome to Scrupal", step, lastError)  {
 <marked>
 # Thank you for choosing Scrupal!
 And, congratulations on getting it installed. Wasn't that easy?
 
-You are seeing this page because your configuration of Scrupal is not yet complete. The remaining things for you to do
-are:
-</marked>
-<ol>
-    <li><a href="@Home.configDatabase"><i href="icon-step-forward"></i> Configure Your Database</a></li>
-    <li><a href="@Home.configSite"><i href="icon-step-forward"></i> Define Your Site</a></li>
-    <li><a href="@Home.configPage"><i href="icon-step-forward"></i> Create Your First Page</a></li>
-</ol>
-<marked>
-Once those three steps are complete, your site will be up and running. Ready to get started? Select a link above to
-get started.
+You are seeing this page because your configuration of Scrupal is not yet complete. There are some configuration
+steps (5 of them) for you to take before Scrupal is up and running. Ready to get started?
+<button>Configure</button>
+    <button>Skipe</button>
+    <button>Default</button>
 </marked>
 
 }

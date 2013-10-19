@@ -1,11 +1,9 @@
-@()(implicit context : scrupal.controllers.Context)
-@import scrupal.views.html
+@(step: scrupal.controllers.Config.Step.Kind, lastError: Option[Throwable])(
+    implicit context : scrupal.controllers.Context)
+    @import scrupal.views.html
 @import scrupal.controllers.routes.Home
-@html.angularPage("Define Your Site") {
-}  {
+    @html.configPage("Welcome to Scrupal", step, lastError)  {
 <marked>
 # Define Your Site
 </marked>
-<p><a href="@Home.configPage">Next: Create Your First Page</a></p>
-
 }

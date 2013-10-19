@@ -26,9 +26,10 @@ import scrupal.api._
 import scrupal.api.Module
 import scrupal.api.Site
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
-import scrupal.utils.ConfigHelper
+
 import scala.util.matching.Regex
 import scala.collection.immutable.TreeMap
+import play.mvc.With
 
 object Global extends GlobalSettings
 {
@@ -78,12 +79,7 @@ object Global extends GlobalSettings
     * proceed normally.
     * @return
     */
-  def ScrupalIsConfigured : Boolean = {
-    /* 1: Database IS Configured */
-    /* 2: */ !DataYouShouldNotModify.sites.isEmpty
-    /* 3: Page Was Created */
-  }
-
+  def ScrupalIsConfigured : Boolean = !DataYouShouldNotModify.sites.isEmpty
 
   /**
 	 * Called before the application starts.
@@ -211,11 +207,17 @@ object Global extends GlobalSettings
 	 * @return an action to handle this request - if no action is returned, a 404 not found result will be sent to client
 	 * @see onActionNotFound
 	 */
+  private val pathsOkayWhenUnconfigured = "^(/assets/|/webjars/|/configure)".r
 	override def onRouteRequest(request: RequestHeader): Option[play.api.mvc.Handler] = {
-    DefaultGlobal.onRouteRequest(request)
+    if (ScrupalIsConfigured || pathsOkayWhenUnconfigured.findFirstMatchIn(request.path).isDefined )
+      DefaultGlobal.onRouteRequest(request)
+    else {
+      Logger.warn("Scrupal Is Not Configured. Request for " + request.path + " routed to configuration page.")
+      Some(scrupal.controllers.Config.configure())
+    }
 	}
 
-	/**
+  /**
 	 * Called when an exception occurred.
 	 *
 	 * The default is to send the framework default error page.

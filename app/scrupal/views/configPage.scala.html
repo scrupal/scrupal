@@ -1,0 +1,23 @@
+@(title: String, step: scrupal.controllers.Config.Step.Kind,
+    lastError: Option[Throwable])(body: Html)(implicit context : scrupal.controllers.Context)
+@import scrupal.views.html
+@import scrupal.controllers.Config.Step
+@import scrupal.controllers.routes.Config
+@html.angularPage(title) {
+} {
+<h1>@title</h1>
+<h3>Current Status</h3>
+<ul>
+    <li><em>Step: </em> @Step.stepNumber(step)</li>
+    <li><em>State: </em>@Step.currentState(step)</li>
+    <li><em>Next: </em>@Step.nextAction(step)</li>
+    @if(lastError.isDefined) {
+        <li>Error Type: @lastError.get.getClass().getSimpleName()</li>
+        <li>Error Message: @lastError.get.getMessage</li>
+    } else {
+        <li>Last Operation Was Successful</li>
+    }
+</ul>
+@body
+<p><a href="@Config.configure">Next Step</a></p>
+}

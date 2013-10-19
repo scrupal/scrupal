@@ -23,9 +23,9 @@ import play.api.mvc.{AnyContent, RequestHeader, Action}
 import play.api.Logger
 import scrupal.utils.ConfigHelper
 import scala.util.{Success, Failure, Try}
-import play.api.Play.current
 import scala.slick.session.Session
 import scrupal.db.ScrupalSchema
+import scrupal.views.html
 
 /** The Entity definition for the Configuration workflow/wizard.
   * This controller handles first-time configuration and subsequent reconfiguration of the essentials of Scrupal. It
@@ -33,21 +33,46 @@ import scrupal.db.ScrupalSchema
   * not even a database is configured.
   * Further description here.
   */
-object Config extends Entity('Config, "Scrupal System Configuration Entity", 'EmptyBundle ) {
+object Config extends ScrupalController {
 
   type SiteMap = Map[Symbol,String]
 
   object Step extends Enumeration {
     type Kind = Value
+    val Zero_Welcome = Value
     val One_Specify_Databases = Value
     val Two_Connect_Databases = Value
     val Three_Install_Schemas = Value
     val Four_Create_Site = Value
-    val Five_Create_Entity = Value
+    val Five_Create_Page = Value
+    val Six_Success = Value
 
-    /** Determine if the schema is valid at a given URL */
-    def schemaIsValid(site: String, url: String) : Boolean = {
-      false
+    def stepNumber(kind: Kind) = kind.id + 1
+
+    def currentState(kind: Kind) : String = {
+      kind match {
+        case Zero_Welcome          => "Unconfigured"
+        case One_Specify_Databases => "Database(s) Need To Be Defined"
+        case Two_Connect_Databases => "Database connection(s) are unverified"
+        case Three_Install_Schemas => "Database schemas and configuration needs to be installed"
+        case Four_Create_Site      => "The first Site needs to be created"
+        case Five_Create_Page      => "The first Page needs to be created"
+        case Six_Success           => "Configured"
+        case _                     => nextAction(Zero_Welcome)
+      }
+    }
+
+    def nextAction(kind: Kind) : String = {
+      kind match {
+        case Zero_Welcome          => "Specify database connection parameters"
+        case One_Specify_Databases => "Test database connections"
+        case Two_Connect_Databases => "Install database schemas and configuration"
+        case Three_Install_Schemas => "Create a site to contain data"
+        case Four_Create_Site      => "Create a page to server"
+        case Five_Create_Page    => "Show configuration results"
+        case Six_Success           => "Start using Scrupal!"
+        case _                     => nextAction(Zero_Welcome)
+      }
     }
 
     /** Determine which step we are at based on the Context provided */
@@ -55,7 +80,7 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
       Try {
         if (context.site.isDefined || Site.size > 0) {
           // Initial loading found sites so we can assume we've got DB & Schema, skip ahead to step 5 :)
-          (Five_Create_Entity,None)
+          (Five_Create_Page,None)
         } else {
           // Something is up with loading the Sites: Config, Database, Schema. Check each
           ConfigHelper(context.config).validateDBs match {
@@ -106,45 +131,29 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
     }
   }
 
-/*
-          val dbs = db_config.get()
-
-          context.config.getConfig("db")
-          val sites : Map[String,String] = Configuration.from(db_config.get())
-        val sites : SiteBootstrap.Site2Jdbc = SiteBootstrap.get(context)
-        if (sites.isEmpty)
-          One_Specify_Databases
-        else {
-          val invalid = for (
-            (site: String, (url: String, e: Option[String])) <- sites if e.isDefined
-          ) yield e
-
-          if (invalid.isEmpty) {
-            val valid = for (
-              (site: String, (url: String, e: Option[String])) <- sites if !e.isDefined
-            ) yield (site, url)
-            if (!valid.isEmpty) {
-              if (valid.foldLeft(true)( (b,e) => b && schemaIsValid(e._1, e._2))) {
-                Four_DB_Schema
-              } else {
-                // CoreModule.validateSchema
-                Logger.debug("SiteBootstrap has returned: " + valid )
-                Three_DBS_Connected
-              }
-            }
-            else
-              One_Specify_Databases
-          } else
-            Two_DBS_Validated
-        }
-      }
+  /** This Configuration action
+    * This is a special action that does not have a route. It is invoked from Global.onRouteRequest whenever that
+    * code decides that the administrator needs to configure the system. This is generally only true before the first
+    * site has been defined. After that normal routing occurs.
+    *
+    * In deciding what to do, it uses the Config.Step enumeration to determine the step in the configuration that
+    * corresponds to the state of affairs of Scrupal's installation.
+    * @return One of the Configuration Pages
+    */
+  def configure() = Action { implicit request : RequestHeader =>
+    val (step,error) : (Step.Kind,Option[Throwable]) = Config.Step.apply(context)
+    import Config.Step._
+    step match {
+      case Zero_Welcome          => Ok(html.config.index(step,error))
+      case One_Specify_Databases => Ok(html.config.database(step,error))
+      case Two_Connect_Databases => Ok(html.config.connect(step,error))
+      case Three_Install_Schemas => Ok(html.config.schema(step,error))
+      case Four_Create_Site      => Ok(html.config.site(step,error))
+      case Five_Create_Page      => Ok(html.config.page(step,error))
+      case Six_Success           => Ok(html.config.success(step,error))
+      case _                     => Ok(html.config.index(step,error)) // just in case
     }
   }
-  */
-  def get(id: String, what: String) : Action[AnyContent] = Action { implicit request : RequestHeader =>
 
-    val step = Step(context)
-    Ok(Json.obj( "state" -> step.toString) )
-  }
 
 }
