@@ -15,10 +15,8 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-import com.typesafe.sbt.SbtNativePackager.packageArchetype
 import sbt._
 import sbt.Keys._
-// import play.Project._
 
 /**
  * Settings for building Scrupal. These are common settings for each sub-project.
