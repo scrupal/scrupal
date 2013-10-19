@@ -20,14 +20,15 @@ package scrupal.controllers
 import org.specs2.mutable.Specification
 import play.api.mvc.RequestHeader
 import scrupal.api.ConfigKey
-import play.api.Configuration
+import play.api.{Logger, Configuration}
+import scala.util.Success
 
 /** This is the test suite for the Config.Step class
   *
   */
 class ConfigStepSpec extends Specification {
 
-  def nullRequest =  new RequestHeader() {
+  val nullRequest =  new RequestHeader() {
     def headers: play.api.mvc.Headers = ???
     def id: Long = ???
     def method: String = ???
@@ -39,39 +40,47 @@ class ConfigStepSpec extends Specification {
     def version: String = ???
   }
 
-  def simpleContext(file: String)(implicit request: RequestHeader ) : Context = Context(
-    config = Configuration.empty ++ play.api.Configuration.from(
-      Map (
-        ConfigKey.site_bootstrap_file -> file
-      )
-    )
+  def simpleContext(config: Map[String,Object])(implicit request: RequestHeader ) : Context = Context(
+    config = Configuration.empty ++ play.api.Configuration.from( config )
   )
 
 
   "Config.Step" should {
-    "Identify Step 1" in {
+    "Identify Step 1 - empty config" in {
       implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext("test/resources/db/config/empty.conf")
+      implicit val context = simpleContext(Map())
       val step = Config.Step(context)
-      step must beEqualTo(Config.Step.One_Specify_Databases)
+      step must beEqualTo((Config.Step.One_Specify_Databases,None))
     }
 
-    /*
-    "Identify Step 2" in {
+    "Identify Step 1 - wrong config" in {
       implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext( "test/resources/db/config/bad.conf" )
-
+      implicit val context = simpleContext(
+        Map( "db" -> Map( "default" -> Map( "foo" -> "bar")))
+      )
       val step = Config.Step(context)
-      step must beEqualTo(Config.Step.Two_DBS_Validated)
+      step must beEqualTo((Config.Step.One_Specify_Databases,None))
+
     }
 
-    "Identify Step 3" in {
+    "Identify Step 2 - no such db" in {
       implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext( "test/resources/db/config/haveDB.conf" )
+      implicit val context = simpleContext(
+        Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:not_an_existing_db;IFEXISTS=TRUE")))
+      )
+      val step = Config.Step(context)
+      step must beEqualTo((Config.Step.Two_Connect_Databases,None))
+    }
+
+    "Identify Step 3 - no schema" in {
+      implicit val request : RequestHeader = nullRequest
+      implicit val context = simpleContext( Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:mem:empty_test"))
+      ) )
 
       val step = Config.Step(context)
-      step must beEqualTo(Config.Step.Three_DBS_Connected)
+      step must beEqualTo((Config.Step.Three_Install_Schemas,None)) or beEqualTo((Config.Step.Two_Connect_Databases,
+        None))
     }
-    */
+
   }
 }

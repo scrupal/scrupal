@@ -2,9 +2,10 @@ package scrupal.api
 
 import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery, StaticQuery0}
-import scala.slick.session.Database
-import play.api.Logger
+import scala.slick.session.{Session, Database}
+import play.api.{Configuration, Logger}
 import java.util.Properties
+import com.typesafe.config.ConfigObject
 
 object SupportedDatabases extends Enumeration {
   type Kind = Value
@@ -70,6 +71,9 @@ abstract class Sketch (
   }
   def makeSchema : StaticQuery0[Int] = throw new NotImplementedError("Making DB Schema for " + driver )
   override def toString = { kind + ":{" + driver + ", " + schema + ", " + profile + ", " + url + "}"}
+
+  def withSession[T](f: Session => T): T = database.withSession(f)
+
 }
 
 /**
@@ -134,6 +138,20 @@ class PostgresSketch (
 }
 
 object Sketch {
+
+  /** Make a Sketch From a ConfigObject
+    * @param config A ConfigObject presumably extracted with `config.getObject("db")`
+    * @return The corrspondingly configured Sketch
+    */
+   def apply(config: Configuration) : Sketch = {
+    val url = config.getString("url").getOrElse("")
+    val driver = config.getString("driver")
+    val user = config.getString("user")
+    val pass = config.getString("pass")
+    val schemaName = config.getString("schema")
+    Sketch(url, user, pass, schemaName, driver)
+  }
+
   /** Convert a URL into a Database Sketch by examining its prefix
     * @param url - The JDBC Connection URL for the database we should connect to
     * @return A Sketch for the corresponding database type

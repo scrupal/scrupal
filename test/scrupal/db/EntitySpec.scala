@@ -55,6 +55,7 @@ trait TestComponent extends Component {
 
 class TestSchema(sketch: Sketch)(implicit session: Session) extends Schema(sketch) with TestComponent {
   val ddl : DDL = TestEntities.ddl
+  val tableNames = List(TestEntities.tableName)
 }
 
 class EntitySpec extends Specification

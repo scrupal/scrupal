@@ -85,19 +85,16 @@ object Site extends Registry[Site]{
       Map(
         {
           ConfigHelper(config).forEachDB {
-            case (site: String, siteConfig: Configuration) => {
-              val url = siteConfig.getString("url").getOrElse("")
-              val driver = siteConfig.getString("driver")
-              val user = siteConfig.getString("user")
-              val pass = siteConfig.getString("pass")
-              val schemaName = siteConfig.getString("schema")
-              Logger.debug("Found JDBC URL '" + url + "' for site " + site + ": attempting load" )
-              val sketch = Sketch(url, user, pass, schemaName, driver)
+            case (site: String, dbConfig: Configuration) => {
+              val sketch = Sketch(dbConfig)
+              val url = dbConfig.getString("url").getOrElse("")
+              Logger.debug("Found valid DB Config with  URL '" + url + "' for site " + site + ": attempting load" )
               implicit val session: Session = sketch.makeSession
               val schema = new ScrupalSchema(sketch)
               import schema._
               val sites = Sites.findAll.toSeq
               for (s: EssentialSite <- sites ) yield s.listenPort -> Site(s)
+              // FIXME: We need to handle sites configured for the same port here, only one should be allowed.
             }
           }. flatMap { s: Seq[(Short,Site)] => for ( ps <- s ) yield ps._1 -> ps._2 }.toSeq
         } : _* )

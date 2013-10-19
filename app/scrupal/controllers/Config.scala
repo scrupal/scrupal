@@ -17,12 +17,15 @@
 
 package scrupal.controllers
 
-import scrupal.api.{Site, Entity}
+import scrupal.api.{Sketch, Site, Entity}
 import play.api.libs.json.{Json}
 import play.api.mvc.{AnyContent, RequestHeader, Action}
 import play.api.Logger
 import scrupal.utils.ConfigHelper
 import scala.util.{Success, Failure, Try}
+import play.api.Play.current
+import scala.slick.session.Session
+import scrupal.db.ScrupalSchema
 
 /** The Entity definition for the Configuration workflow/wizard.
   * This controller handles first-time configuration and subsequent reconfiguration of the essentials of Scrupal. It
@@ -37,40 +40,68 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
   object Step extends Enumeration {
     type Kind = Value
     val One_Specify_Databases = Value
-    val Two_DBS_Validated = Value
-    val Three_DBS_Connected = Value
-    val Four_DB_Schema = Value
-    val Five_Site_Created = Value
-    val Six_Entity_Created = Value
+    val Two_Connect_Databases = Value
+    val Three_Install_Schemas = Value
+    val Four_Create_Site = Value
+    val Five_Create_Entity = Value
 
     /** Determine if the schema is valid at a given URL */
     def schemaIsValid(site: String, url: String) : Boolean = {
       false
     }
 
-
     /** Determine which step we are at based on the Context provided */
-    def apply(context: Context) : Step.Kind = {
+    def apply(context: Context) : (Step.Kind,Option[Throwable]) = {
       Try {
         if (context.site.isDefined || Site.size > 0) {
           // Initial loading found sites so we can assume we've got DB & Schema, skip ahead to step 5 :)
-          Five_Site_Created
+          (Five_Create_Entity,None)
         } else {
           // Something is up with loading the Sites: Config, Database, Schema. Check each
           ConfigHelper(context.config).validateDBs match {
-            case Success(x: Set[String]) => {
-              Logger.info("Got clean database config: " + x)
+            case Success(siteNames: Set[String]) => {
+              if (siteNames.isEmpty) {
+                (One_Specify_Databases,None)
+              } else {
+                Logger.info("Got clean database config: " + siteNames )
+                // Okay, we validated that we have a clean configuration. So, we can now look at each site and assess
+                // if there are URL, connection or schema issues.
+                val site_results: Set[(Step.Value,Option[Throwable])] = for ( site <- siteNames ) yield {
+                  try
+                  {
+                    context.config.getConfig("db." + site) match {
+                      case Some(config) => {
+                        val sketch = Sketch(config)
+                        sketch.withSession { implicit  session: Session =>
+                          val schema = new ScrupalSchema(sketch)
+                          val schema_was_validated = schema.validate
+                          schema_was_validated match {
+                            case Success(false) => (Three_Install_Schemas, None)
+                            case Success(true) => (Four_Create_Site, None)
+                            case Failure(x) => (Three_Install_Schemas,Some(x))
+                          }
+                        }
+                      }
+                      case None => (One_Specify_Databases, Some(context.config.reportError("db."+site,
+                        "No configuration found for this database")))
+                    }
+                  }
+                  catch { case x : Throwable => (Two_Connect_Databases,Some(x)) }
+                }
+                // We just collected together a list of the results for each site. now let's find the earliest
+                // step amongst them.
+                site_results.foldLeft[(Config.Step.Value,Option[Throwable])]((Four_Create_Site,None)) {
+                  case (step1:(Step.Kind, Option[Throwable]), step2:(Step.Kind, Option[Throwable])) =>
+                    if (step1._1 < step2._1) step1 else step2
+                }
+              }
             }
-            case Failure(e)  => Failure(e)
+            case Failure(x)  => (One_Specify_Databases, Some(x))
           }
-          One_Specify_Databases
         }
-      }
-    } match {
-      case Success(r) => r
-      case Failure(x) => {
-        Logger.warn("While computing Configuration Step: ", x)
-        One_Specify_Databases
+      } match {
+        case Success(s) => (s._1,None)
+        case Failure(x) => (One_Specify_Databases, Some(x))
       }
     }
   }

@@ -20,6 +20,7 @@ package scrupal.db
 import scala.slick.lifted.DDL
 import scrupal.api.{Sketch, Schema}
 import scala.slick.session.Session
+import scala.slick.jdbc.meta.MTable
 
 /**
  * The basic schema for Scrupal. This is composed by merging together the various Components.
@@ -33,4 +34,22 @@ class ScrupalSchema(sketch: Sketch)(implicit session: Session) extends Schema (s
     coreDDL ++ userDDL ++ notificationDDL
   }
 
+  // Tables In This Schema
+  val CoreTables = List(Types, Modules, Sites, Entities, Instances)
+  val UserTables = List(Principals, Handles, Tokens )
+  val NotificationTables = List( Alerts )
+
+  val tableNames : Seq[String] =
+    (for (t <- CoreTables) yield t.tableName) :::
+    (for (t <- UserTables) yield t.tableName ) :::
+    (for (t <- NotificationTables) yield t.tableName)
+
+  override def validateTables( tables: Map[String,MTable] )(implicit session: Session) : Boolean = {
+    val meta_tables_scan_results = (
+      for (tname: String <- tableNames )
+      yield tables.contains(tname)
+    )
+    val num_in_meta_tables = meta_tables_scan_results.count { b: Boolean => b }
+    num_in_meta_tables == tableNames.size
+  }
 }
