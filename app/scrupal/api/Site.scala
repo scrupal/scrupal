@@ -20,6 +20,9 @@ package scrupal.api
 import org.joda.time.DateTime
 import scrupal.utils.{Registry, Registrable}
 import play.api.{Logger, Configuration}
+import scala.util.{Failure, Success, Try}
+import scala.slick.session.Session
+import scrupal.db.ScrupalSchema
 
 
 /** Information about one site that Scrupal is serving.
@@ -59,6 +62,8 @@ class Site (
   created: Option[DateTime] = None
 ) extends EssentialSite(id, description, listenPort, urlDomain, urlPort, urlHttps, enabled,
   modified, created) with Registrable {
+  def this(e: EssentialSite) = this(e.id, e.description, e.listenPort, e.urlDomain, e.urlPort, e.urlHttps, e.enabled, e.modified,
+    e.created)
 }
 
 
@@ -67,6 +72,8 @@ object Site extends Registry[Site]{
   protected val registrantsName: String = "site"
   protected val registryName: String = "Sites"
 
+  def apply(esite: EssentialSite) = new Site(esite)
+
   /** Load the Sites from configuration
     * Site loading is based on the Play Database configuration. There should be a one-to-one correspondence between a
     * site name and its db url/driver pair per usual Play configuration. Note that multiple sites may utilize the
@@ -74,24 +81,25 @@ object Site extends Registry[Site]{
     * @param config The Scrupal Configuration to use to determine the initial loading
     */
   def load(config: Configuration) : Map[Short, Site] = {
-    val dbs_o: Option[Configuration] = config.getConfig("db")
-    val dbs = dbs_o.getOrElse(Configuration.empty)
-    val site_names: Set[String] = dbs.subKeys;
-    {
-      for ( site:String <- site_names ) yield (site, dbs.getConfig(site).getOrElse(Configuration.empty))
-    }.map { case (site: String, siteConfig: Configuration) =>
-      val url = siteConfig.getString("url").getOrElse("")
-      val driver = siteConfig.getString("driver").getOrElse("")
-      try
-      {
-        siteConfig.keys
-        // val database = Database.forURL(url, driver)
-        Logger.debug("Found valid db '" + url + "' for site " + site )
-      }
-      catch {
-        case x: Throwable => Logger.error("Caught error loading DB: ", x)
-      }
+    Try {
+      val dbs_o: Option[Configuration] = config.getConfig("db")
+      val dbs = dbs_o.getOrElse(Configuration.empty)
+      val site_names: Set[String] = dbs.subKeys
+      ((for ( site:String <- site_names ) yield (site, dbs.getConfig(site).getOrElse(Configuration.empty))) flatMap  {
+        case (site: String, siteConfig: Configuration) => {
+          val url = siteConfig.getString("url").getOrElse("")
+          Logger.debug("Found JDBC URL '" + url + "' for site " + site + ": attempting load" )
+          val sketch = Sketch(url)
+          implicit val session: Session = sketch.makeSession
+          val schema = new ScrupalSchema(sketch)
+          import schema._
+          val sites = Sites.findAll.toSeq
+          for (s: EssentialSite <- sites ) yield s.listenPort -> Site(s)
+        }
+      }).toMap
+    } match {
+      case Success(x) => x
+      case Failure(e) => Logger.error("Error while loading sites: ", e); Map[Short,Site]()
     }
-    Map()
   }
 }
