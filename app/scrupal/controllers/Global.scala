@@ -26,7 +26,7 @@ import scrupal.api._
 import scrupal.api.Module
 import scrupal.api.Site
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
-import scrupal.utils.ExtendedConfiguration
+import scrupal.utils.ConfigHelper
 import scala.util.matching.Regex
 import scala.collection.immutable.TreeMap
 

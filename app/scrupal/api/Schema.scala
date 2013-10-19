@@ -49,7 +49,7 @@ abstract class Schema(val sketch: Sketch )(override implicit val session: Sessio
   // be filled out from
   val profile: ExtendedProfile = sketch.profile
   val schema: Option[String] = sketch.schema
-  val driverClass : String = sketch.driverClass
+  val driverClass : String = sketch.driver
 
   // override implicit val session : Session = sketch.database.createSession()
 

@@ -17,14 +17,12 @@
 
 package scrupal.controllers
 
-import scrupal.api.{Site, ConfigKey, Entity}
-import play.api.libs.json.{Json, JsObject}
+import scrupal.api.{Site, Entity}
+import play.api.libs.json.{Json}
 import play.api.mvc.{AnyContent, RequestHeader, Action}
-import scrupal.db.SiteBootstrap
 import play.api.Logger
-import scrupal.models.CoreModule
-import com.typesafe.config.ConfigObject
-import play.Configuration
+import scrupal.utils.ConfigHelper
+import scala.util.{Success, Failure, Try}
 
 /** The Entity definition for the Configuration workflow/wizard.
   * This controller handles first-time configuration and subsequent reconfiguration of the essentials of Scrupal. It
@@ -53,9 +51,25 @@ object Config extends Entity('Config, "Scrupal System Configuration Entity", 'Em
 
     /** Determine which step we are at based on the Context provided */
     def apply(context: Context) : Step.Kind = {
-      if (context.site.isDefined || Site.size > 0) {
-        Five_Site_Created
-      } else {
+      Try {
+        if (context.site.isDefined || Site.size > 0) {
+          // Initial loading found sites so we can assume we've got DB & Schema, skip ahead to step 5 :)
+          Five_Site_Created
+        } else {
+          // Something is up with loading the Sites: Config, Database, Schema. Check each
+          ConfigHelper(context.config).validateDBs match {
+            case Success(x: Set[String]) => {
+              Logger.info("Got clean database config: " + x)
+            }
+            case Failure(e)  => Failure(e)
+          }
+          One_Specify_Databases
+        }
+      }
+    } match {
+      case Success(r) => r
+      case Failure(x) => {
+        Logger.warn("While computing Configuration Step: ", x)
         One_Specify_Databases
       }
     }

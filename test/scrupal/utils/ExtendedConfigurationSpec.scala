@@ -32,7 +32,7 @@ class ExtendedConfigurationSpec extends Specification {
   "ExtendedConfiguration" should {
     "allow java.lang.String instantiation" in {
       running(FakeApplication()) {
-        val config = new ExtendedConfiguration(configuration)
+        val config = new ConfigHelper(configuration)
         val obj = config.getInstance("java.lang.String")
         obj.isDefined must beTrue
       }

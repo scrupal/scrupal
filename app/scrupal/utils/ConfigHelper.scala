@@ -18,12 +18,14 @@
 package scrupal.utils
 
 import play.api.{Logger, Configuration}
+import scala.util.Try
+import scrupal.api.Sketch
 
 /**
  * Provide some extentions to the Play Configuration class via the pimp-my-library pattern
  * Further description here.
  */
-class ExtendedConfiguration(config : Configuration) {
+class ConfigHelper(config : Configuration) {
 
   import ClassHelpers._
 
@@ -49,9 +51,41 @@ class ExtendedConfiguration(config : Configuration) {
       case x: Throwable  => { throw x }
     }
   }
+
+  def validateDBs : Try[Set[String]] = {
+    Try {
+      forEachDB { (site: String, site_config: Configuration ) =>
+        val keys: Set[String] = site_config.subKeys
+        // Whatever keys are there they must all be strings so validate that (getString will throw if its not a string)
+        // and make sure they didn't provide a key with an empty value, also
+        for ( key <- keys ) yield site_config.getString(key).getOrElse {
+          throw config.reportError("db." + site, "Missing value for '" + key + "'.")
+        }
+        // The config needs to at least have a url key
+        if (!keys.contains("url")) {
+          throw config.reportError("db." + site, "Configuration must specify a value for 'url' key, at least")
+        }
+        // Okay, looks good, return the site name
+        site
+      }
+    }
+  }
+
+  def forEachDB[FOO](f: (String, Configuration) => FOO ) : Set[FOO] = {
+
+    // First, unpack the "db" configuration which is standardized by play
+    val dbs_o: Option[Configuration] = config.getConfig("db")
+    val dbs = dbs_o.getOrElse(Configuration.empty)
+    val site_names: Set[String] = dbs.subKeys
+
+    // Now map the site names to the config objects and then convert with the caller's function
+    for ( site:String <- site_names )
+    yield (f(site, dbs.getConfig(site).getOrElse(Configuration.empty)))
+  }
 }
 
-object ExtendedConfiguration
+object ConfigHelper
 {
-  implicit def extendYoConfig(config: Configuration) = new ExtendedConfiguration(config)
+  implicit def helpYoConfig(config: Configuration) = new ConfigHelper(config)
+  def apply(config: Configuration) = helpYoConfig(config)
 }

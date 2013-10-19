@@ -4,7 +4,41 @@ import scala.slick.driver._
 import scala.slick.jdbc.{StaticQuery, StaticQuery0}
 import scala.slick.session.Database
 import play.api.Logger
-import play.api.db.DB
+import java.util.Properties
+
+object SupportedDatabases extends Enumeration {
+  type Kind = Value
+  val H2 = Value
+  val MySQL = Value
+  val SQLite = Value
+  val Postgres = Value
+
+  def forJDBCUrl(url: String) : Option[Kind] = {
+    url match {
+      case s if s.startsWith("jdbc:h2") => Some(H2)
+      case s if s.startsWith("jdbc:mysql") => Some(MySQL)
+      case s if s.startsWith("jdbc:sqllite:") => Some(SQLite)
+      case s if s.startsWith("jdbc:postgresql:") => Some(Postgres)
+      case _ => None
+    }
+  }
+
+  def defaultDriverFor(kind: Kind) : String = {
+    kind match {
+      case H2 =>  "org.h2.Driver"
+      case MySQL => "com.mysql.jdbc.Driver"
+      case SQLite =>  "org.sqlite.JDBC"
+      case Postgres => "org.postgresql.Driver"
+      case _ => Logger.warn("Unrecognized SupportedDatabase.Kind !"); "not.a.db.driver"
+    }
+  }
+  def defaultDriverFor(kind: Option[Kind]) : String = {
+    kind match {
+      case Some(x) => defaultDriverFor(x)
+      case None => "org.h2.Driver" // Just because that's the default one Play uses
+    }
+  }
+}
 
 /**
  * A Sketch is a simple trait that sketches out some basic things we need to know about a particular database
@@ -15,29 +49,42 @@ import play.api.db.DB
  * schema in which the Scrupal tables live. This allows administrators to keep scrupal's tables separate from other
  * modules added to scrupal, while keeping all the data in the same database
  */
-trait Sketch {
-  val profile : ExtendedProfile
-  val driverClass : String
-  val schema : Option[String] = None
-  val database: scala.slick.session.Database
-  def driver = Class.forName(driverClass).newInstance()
+abstract class Sketch (
+  val kind: SupportedDatabases.Kind,
+  val url: String,
+  val driver: String,
+  val profile : ExtendedProfile,
+  val user : Option[String] = None,
+  val pass : Option[String] = None,
+  val schema : Option[String] = None,
+  val properties : Option[Properties] = None
+) {
+  val database: Database = Database.forURL(url, user.getOrElse(""), pass.getOrElse(""),
+    properties.getOrElse(new Properties()), driver)
+
+  def driverClass = Class.forName(driver).newInstance()
+
   def makeSession = {
-    Logger.debug("Creating DB Session for " + driverClass)
+    Logger.debug("Creating DB Session for " + driver)
     database.createSession()
   }
-  def makeSchema : StaticQuery0[Int] = throw new NotImplementedError("Making DB Schema for " + driverClass )
-  override def toString = { "{" + driverClass + ", " + schema + "," + profile }
+  def makeSchema : StaticQuery0[Int] = throw new NotImplementedError("Making DB Schema for " + driver )
+  override def toString = { kind + ":{" + driver + ", " + schema + ", " + profile + ", " + url + "}"}
 }
 
 /**
  * The Sketch for H2 Database
  * @param schema - optional schema name for the profile
  */
-case class H2Sketch(url: String, override val schema: Option[String] = None ) extends Sketch
-{
-  override val profile: ExtendedProfile = H2Driver
-  override val driverClass : String = "org.h2.Driver"
-  override val database = Database.forURL(url, user = "", password="", driver=driverClass)
+case class H2Sketch(
+  override val kind: SupportedDatabases.Kind,
+  override val url: String,
+  override val driver: String,
+  override val user : Option[String] = None,
+  override val pass : Option[String] = None,
+  override val schema : Option[String] = None,
+  override val properties : Option[Properties] = None
+) extends Sketch(kind, url, driver, H2Driver, user, pass, schema, properties) {
   override def makeSchema : StaticQuery0[Int] = StaticQuery.u + "SET TRACE_LEVEL_FILE 4; CREATE SCHEMA IF NOT EXISTS " + schema.get
 }
 
@@ -45,30 +92,45 @@ case class H2Sketch(url: String, override val schema: Option[String] = None ) ex
  * The Sketch for H2 Database
  * @param schema - optional schema name for the profile
  */
-case class MySQLSketch (url: String, override val schema: Option[String] = None )  extends Sketch {
-  override val profile: ExtendedProfile = MySQLDriver
-  override val driverClass : String = "com.mysql.jdbc.Driver"
-  override val database = Database.forURL(url, driver=driverClass)
+case class MySQLSketch (
+  override val kind: SupportedDatabases.Kind,
+  override val url: String,
+  override val driver: String,
+  override val user : Option[String] = None,
+  override val pass : Option[String] = None,
+  override val schema : Option[String] = None,
+  override val properties : Option[Properties] = None
+) extends Sketch(kind, url, driver, MySQLDriver, user, pass, schema, properties) {
 }
 
 /**
  * The Sketch for SQLite Database
  * @param schema - optional schema name for the profile
  */
-class SQLiteSketch (url: String, override val schema: Option[String] = None ) extends Sketch {
-  override val profile: ExtendedProfile = SQLiteDriver
-  override val driverClass : String = "org.sqlite.JDBC"
-  override val database = Database.forURL(url, driver=driverClass)
+class SQLiteSketch (
+  override val kind: SupportedDatabases.Kind,
+  override val url: String,
+  override val driver: String,
+  override val user : Option[String] = None,
+  override val pass : Option[String] = None,
+  override val schema : Option[String] = None,
+  override val properties : Option[Properties] = None
+) extends Sketch(kind, url, driver, SQLiteDriver, user, pass, schema, properties) {
 }
 
 /**
  * The Sketch for Postgres Database
  * @param schema - optional schema name for the profile
  */
-class PostgresSketch (url: String, override val schema: Option[String] = None ) extends Sketch {
-  override val profile: ExtendedProfile = PostgresDriver
-  override val driverClass : String = "org.postgresql.Driver"
-  override val database = Database.forURL(url, driver=driverClass)
+class PostgresSketch (
+  override val kind: SupportedDatabases.Kind,
+  override val url: String,
+  override val driver: String,
+  override val user : Option[String] = None,
+  override val pass : Option[String] = None,
+  override val schema : Option[String] = None,
+  override val properties : Option[Properties] = None
+) extends Sketch(kind, url, driver, PostgresDriver, user, pass, schema, properties) {
 }
 
 object Sketch {
@@ -76,14 +138,22 @@ object Sketch {
     * @param url - The JDBC Connection URL for the database we should connect to
     * @return A Sketch for the corresponding database type
     */
-  def apply(url: String, schema: Option[String] = None ) : Sketch = {
+  def apply(url: String, user: Option[String] = None, pass: Option[String] = None, schema: Option[String] = None,
+    driver: Option[String] = None, properties: Option[Properties] = None) : Sketch = {
     Logger.debug("Creating Sketch With: " + url )
-    url match {
-      case s if s.startsWith("jdbc:h2:") => return new H2Sketch(url, schema)
-      case s if s.startsWith("jdbc:mysql:") => return new MySQLSketch(url, schema)
-      case s if s.startsWith("jdbc:sqllite:") => return new SQLiteSketch(url, schema)
-      case s if s.startsWith("jdbc:postgresql:") => return new PostgresSketch(url, schema)
-      case _ => throw new UnsupportedOperationException("JDBC Url (" + url + ") is not for a supported database.")
+
+    val kind = SupportedDatabases.forJDBCUrl(url)
+
+    val d = driver.getOrElse(SupportedDatabases.defaultDriverFor(kind))
+
+    import SupportedDatabases._
+    kind match {
+      case Some(H2) => new H2Sketch(kind.get, url, d,  user, pass, schema, properties)
+      case Some(MySQL) => new MySQLSketch(kind.get, url, d,  user, pass, schema, properties)
+      case Some(SQLite) => new SQLiteSketch(kind.get, url, d,  user, pass, schema, properties)
+      case Some(Postgres) => new PostgresSketch(kind.get, url, d,  user, pass, schema, properties)
+      case Some(_) => throw new UnsupportedOperationException("JDBC Url (" + url + ") is not for a supported database.")
+      case None => throw new UnsupportedOperationException("JDBC Url (" + url + ") is not for a supported database.")
     }
   }
 }

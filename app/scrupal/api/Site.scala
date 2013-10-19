@@ -18,7 +18,7 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-import scrupal.utils.{Registry, Registrable}
+import scrupal.utils.{ConfigHelper, Registry, Registrable}
 import play.api.{Logger, Configuration}
 import scala.util.{Failure, Success, Try}
 import scala.slick.session.Session
@@ -82,24 +82,28 @@ object Site extends Registry[Site]{
     */
   def load(config: Configuration) : Map[Short, Site] = {
     Try {
-      val dbs_o: Option[Configuration] = config.getConfig("db")
-      val dbs = dbs_o.getOrElse(Configuration.empty)
-      val site_names: Set[String] = dbs.subKeys
-      ((for ( site:String <- site_names ) yield (site, dbs.getConfig(site).getOrElse(Configuration.empty))) flatMap  {
-        case (site: String, siteConfig: Configuration) => {
-          val url = siteConfig.getString("url").getOrElse("")
-          Logger.debug("Found JDBC URL '" + url + "' for site " + site + ": attempting load" )
-          val sketch = Sketch(url)
-          implicit val session: Session = sketch.makeSession
-          val schema = new ScrupalSchema(sketch)
-          import schema._
-          val sites = Sites.findAll.toSeq
-          for (s: EssentialSite <- sites ) yield s.listenPort -> Site(s)
-        }
-      }).toMap
+      Map(
+        {
+          ConfigHelper(config).forEachDB {
+            case (site: String, siteConfig: Configuration) => {
+              val url = siteConfig.getString("url").getOrElse("")
+              val driver = siteConfig.getString("driver")
+              val user = siteConfig.getString("user")
+              val pass = siteConfig.getString("pass")
+              val schemaName = siteConfig.getString("schema")
+              Logger.debug("Found JDBC URL '" + url + "' for site " + site + ": attempting load" )
+              val sketch = Sketch(url, user, pass, schemaName, driver)
+              implicit val session: Session = sketch.makeSession
+              val schema = new ScrupalSchema(sketch)
+              import schema._
+              val sites = Sites.findAll.toSeq
+              for (s: EssentialSite <- sites ) yield s.listenPort -> Site(s)
+            }
+          }. flatMap { s: Seq[(Short,Site)] => for ( ps <- s ) yield ps._1 -> ps._2 }.toSeq
+        } : _* )
     } match {
       case Success(x) => x
-      case Failure(e) => Logger.error("Error while loading sites: ", e); Map[Short,Site]()
+      case Failure(e) => Logger.warn("Error while loading sites: ", e); Map[Short,Site]()
     }
   }
 }

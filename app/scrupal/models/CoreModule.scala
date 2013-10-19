@@ -75,10 +75,13 @@ object CoreModule extends Module (
       value match {
         case v: JsString => {
           try {
-            val sketch = Sketch(v.value)
             // NOTE: We do not want to do the following here. This is a syntactical check, not a connection check
-            // sketch.database.createSession().close()
-            JsSuccess(true)
+            // database.createSession().close()
+            val supported = SupportedDatabases.forJDBCUrl(v.value)
+            if (supported.isEmpty)
+              JsError("URL not valid for Scrupal")
+            else
+              JsSuccess(supported.isDefined)
           }
           catch { case xcptn: Throwable => JsError(xcptn.getMessage) }
         }
