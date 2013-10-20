@@ -45,9 +45,9 @@ case class Principal(
 }
 
 /**
- * A database component for user related information.
+ * A database component for AAA (Authorization, Authentication, Auditing).
  */
-trait UserComponent extends Component {
+trait AAAComponent extends Component {
 
   import sketch.profile.simple._
 
@@ -95,6 +95,6 @@ trait UserComponent extends Component {
   }
 
 
-  def userDDL : DDL = Principals.ddl ++ Handles.ddl ++ Tokens.ddl
+  def aaaDDL : DDL = Principals.ddl ++ Handles.ddl ++ Tokens.ddl
 
 }

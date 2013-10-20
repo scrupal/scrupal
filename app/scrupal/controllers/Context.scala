@@ -45,7 +45,7 @@ case class Context(
   def suggestURL : String = {
     import routes.{Home => rHome}
     import routes.{APIDoc => rAPIDoc}
-    import routes.{Config => rConfig}
+    import routes.{ScrupalConfiguration => rConfig}
     request.path match {
       case s if s.startsWith("/api") => rAPIDoc.introduction().url
       case s if s.startsWith("/doc") => rAPIDoc.introduction().url

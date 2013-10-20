@@ -19,10 +19,9 @@ package scrupal.controllers
 
 import org.specs2.mutable.Specification
 import play.api.mvc.RequestHeader
-import scrupal.api.{Sketch, ConfigKey}
 import play.api.{Logger, Configuration}
 import scala.util.Success
-import scrupal.db.ScrupalSchema
+import scrupal.db.{CoreSchema,Sketch}
 import scala.slick.session.Session
 
 /** This is the test suite for the Config.Step class
@@ -48,11 +47,11 @@ class ConfigStepSpec extends Specification {
 
 
   "Config.Step" should {
-    "Identify Step 1 - empty config" in {
+    "Identify Step 0 - empty config" in {
       implicit val request : RequestHeader = nullRequest
       implicit val context = simpleContext(Map())
-      val step = Config.Step(context)
-      step must beEqualTo((Config.Step.One_Specify_Databases,None))
+      val step = ScrupalConfiguration.Step(context)._1
+      step must beEqualTo(ScrupalConfiguration.Step.Zero_Welcome)
     }
 
     "Identify Step 1 - wrong config" in {
@@ -60,18 +59,17 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext(
         Map( "db" -> Map( "default" -> Map( "foo" -> "bar")))
       )
-      val step = Config.Step(context)
-      step must beEqualTo((Config.Step.One_Specify_Databases,None))
-
+      val step = ScrupalConfiguration.Step(context)._1
+      step must beEqualTo(ScrupalConfiguration.Step.One_Specify_Databases)
     }
 
-    "Identify Step 2 - bad config" in {
+    "Identify Step 1 - bad config" in {
       implicit val request : RequestHeader = nullRequest
       implicit val context = simpleContext(
         Map( "db" -> Map( "default" -> Map( "url" -> "not-a-url")))
       )
-      val step = Config.Step(context)
-      step must beEqualTo((Config.Step.Two_Connect_Databases,None))
+      val step = ScrupalConfiguration.Step(context)._1
+      step must beEqualTo(ScrupalConfiguration.Step.One_Specify_Databases)
     }
 
     "Identify Step 2 - no such db" in {
@@ -79,8 +77,8 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext(
         Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:not_an_existing_db;IFEXISTS=TRUE")))
       )
-      val step = Config.Step(context)
-      step must beEqualTo((Config.Step.Two_Connect_Databases,None))
+      val step = ScrupalConfiguration.Step(context)._1
+      step must beEqualTo(ScrupalConfiguration.Step.Two_Connect_Databases)
     }
 
     "Identify Step 3 - no schema" in {
@@ -88,9 +86,8 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext( Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:mem:empty_test"))
       ) )
 
-      val step = Config.Step(context)
-      step must beEqualTo((Config.Step.Three_Install_Schemas,None)) or beEqualTo((Config.Step.Two_Connect_Databases,
-        None))
+      val step = ScrupalConfiguration.Step(context)._1
+      step must beEqualTo(ScrupalConfiguration.Step.Three_Install_Schemas) or beEqualTo(ScrupalConfiguration.Step.Two_Connect_Databases)
     }
 
     "Identify Step 4 - missing site instances " in {
@@ -104,17 +101,14 @@ class ConfigStepSpec extends Specification {
 
       // Install the Scrupal Schema
       sketch.withSession { implicit session: Session =>
-        val schema = new ScrupalSchema(sketch)
+        val schema = new CoreSchema(sketch)
         schema.create(session)
       }
 
       // Now let's see if it validates that all the tables are there.
-      val step = Config.Step(context)
+      val step = ScrupalConfiguration.Step(context)._1
 
-      step must beEqualTo((Config.Step.Four_Create_Site,None))
+      step must beEqualTo(ScrupalConfiguration.Step.Four_Create_Site)
     }
-
-
-
   }
 }

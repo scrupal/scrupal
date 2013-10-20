@@ -17,17 +17,24 @@
 
 package scrupal.models
 
-import scrupal.api._
+import java.net.{URISyntaxException, URI}
+import java.sql.{SQLException, DriverManager}
+
 import scala.collection.immutable.HashMap
+
 import play.api.Configuration
 import play.api.libs.json._
-import java.net.{URISyntaxException, URI}
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsString
-import java.sql.{SQLException, DriverManager}
-import Patterns._
+
 import org.joda.time.DateTime
+
+import scala.slick.session.Session
+
+import Patterns._
+import scrupal.api._
 import scrupal.utils.Version
+import scrupal.db.{SupportedDatabases,Sketch,Schema,CoreSchema}
 
 
 /** Scrupal's Core Module.
@@ -126,5 +133,7 @@ object CoreModule extends Module (
     Feature('DebugFooter, "Show tables of debug information at bottom of each page.", false)
   )
 
- // val schema = new ScrupalSchema
+  override def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( new CoreSchema(sketch) )
+
+ // val schema = new CoreSchema
 }

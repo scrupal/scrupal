@@ -19,7 +19,6 @@ package scrupal.utils
 
 import play.api.{Logger, Configuration}
 import scala.util.Try
-import scrupal.api.Sketch
 
 /**
  * Provide some extentions to the Play Configuration class via the pimp-my-library pattern

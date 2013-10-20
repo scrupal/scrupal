@@ -17,13 +17,38 @@
 
 package scrupal.db
 
-/**
- * A collection of utilities for dealing with the Scrupal database. This is where we find the initialization code
- * and various things to make using the database even easier.
- */
-object DB {
+import play.api.Logger
 
+object SupportedDatabases extends Enumeration {
+  type Kind = Value
+  val H2 = Value
+  val MySQL = Value
+  val SQLite = Value
+  val Postgres = Value
 
-  val scrupal_schema : Option[ScrupalSchema] = None
+  def forJDBCUrl(url: String) : Option[Kind] = {
+    url match {
+      case s if s.startsWith("jdbc:h2") => Some(H2)
+      case s if s.startsWith("jdbc:mysql") => Some(MySQL)
+      case s if s.startsWith("jdbc:sqllite:") => Some(SQLite)
+      case s if s.startsWith("jdbc:postgresql:") => Some(Postgres)
+      case _ => None
+    }
+  }
 
+  def defaultDriverFor(kind: Kind) : String = {
+    kind match {
+      case H2 =>  "org.h2.Driver"
+      case MySQL => "com.mysql.jdbc.Driver"
+      case SQLite =>  "org.sqlite.JDBC"
+      case Postgres => "org.postgresql.Driver"
+      case _ => Logger.warn("Unrecognized SupportedDatabase.Kind !"); "not.a.db.driver"
+    }
+  }
+  def defaultDriverFor(kind: Option[Kind]) : String = {
+    kind match {
+      case Some(x) => defaultDriverFor(x)
+      case None => "org.h2.Driver" // Just because that's the default one Play uses
+    }
+  }
 }

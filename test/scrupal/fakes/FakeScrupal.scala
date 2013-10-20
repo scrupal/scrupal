@@ -17,12 +17,14 @@
 
 package scrupal.fakes
 
-import play.api.test._
 import scala.slick.session.{Session}
-import org.specs2.execute.{Result, AsResult}
-import scrupal.api.Sketch
+
+import play.api.test._
 import play.api.mvc.Handler
-import scrupal.db.ScrupalSchema
+
+import org.specs2.execute.{Result, AsResult}
+
+import scrupal.db.{CoreSchema,Sketch}
 
 
 trait Specs2ExampleGenerator {
@@ -54,9 +56,9 @@ abstract class WithFakeScrupal(
     try { f(session)  } finally { if (session != null) session.close() }
   }
 
-  def withScrupalSchema[T : AsResult]( f: ScrupalSchema => T ) : T = {
+  def withCoreSchema[T : AsResult]( f: CoreSchema => T ) : T = {
     withDBSession { implicit session : Session =>
-      implicit val schema : ScrupalSchema = new ScrupalSchema(sketch)(session)
+      implicit val schema : CoreSchema = new CoreSchema(sketch)(session)
       schema.create(session)
       f(schema)
     }

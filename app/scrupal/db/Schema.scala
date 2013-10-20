@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.db
 
 import scala.slick.lifted.DDL
 
@@ -43,8 +43,8 @@ import scala.slick.jdbc.meta.MTable
  */
 abstract class Schema(val sketch: Sketch )(override implicit val session: Session) extends  Component
 {
-  // The primary reason for this class to exist is to give concrete values to ScrupalSketch's members based on
-  // an instance not inheritance. ScrupalSketch is abstract and has no concrete members. We want to have those members
+  // The primary reason for this class to exist is to give concrete values to Component's members based on
+  // an instance not inheritance. Component is a trait and has no concrete members. We want to have those members
   // be filled out from
   val profile: ExtendedProfile = sketch.profile
   val schema: Option[String] = sketch.schema

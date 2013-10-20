@@ -1,9 +1,67 @@
-@(step: scrupal.controllers.Config.Step.Kind, lastError: Option[Throwable])(
+@(step: scrupal.controllers.ScrupalConfiguration.Step.Kind, lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.Home
-@html.configPage("Welcome to Scrupal", step, lastError)  {
-    <marked>
-        # Scrupal Database Configuration
-</marked>
+@import scrupal.controllers.routes.ScrupalConfiguration
+@html.configPage("Database Configuration", step, lastError)  {
+<p>
+I'm going to help you select and configure your database now. Scrupal stores all its information in a database and
+picking the right one for your needs is important. You may choose from among the following databases:
+</p>
+<dl class="dl-horizontal">
+    <dt>H2</dt><dd>Fast, lightweight, easy to use. A good choice if you're evaluating,
+    testing or extending Scrupal. It's what the developers use!</dd>
+    <dt>MySQL</dt><dd>A mature, competent, stable and scalable open source database owned by Oracle. A good choice if
+    you are looking to host your Scrupal somewhere as MySQL is quite ubiquitous.</dd>
+    <dt>Postgres</dt><dd>A highly scalable database with many features the others don't have. A good choice if you
+    need access to advanced database features.</dd>
+    <dt>SQLite</dt><dd>Another competent open source database. A good choice if you're already familiar with it.</dd>
+</dl>
+<p>If you're not sure which database to select, choose H2. You can always change, without too much difficulty,
+    later on.</p>
+<form class="form-horizontal" role="form" action="@ScrupalConfiguration.configure" method="post">
+    <input type="hidden" name="step" value="@step">
+
+    <div class="form-group">
+        <label for="dbtype" class="col-lg-2 control-label">Type Of Databasee</label>
+        <div class="col-lg-2">
+            <select class="form-control" id="dbtype">
+                <option>H2</option>
+                <option>MySQL</option>
+                <option>Postgres</option>
+                <option>SQLite</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="host" class="col-lg-2 control-label">DB Host Name</label>
+        <div class="col-lg-6">
+            <input type="text" class="form-control" id="host" placeholder="Host your DB is on, or 'localhost'">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="port" class="col-lg-2 control-label">DB Port #</label>
+        <div class="col-lg-6">
+            <input type="text" class="form-control" id="port"
+            placeholder="Port number for DB,or leave blank for default">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="user" class="col-lg-2 control-label">DB User Name</label>
+        <div class="col-lg-6">
+            <input type="text" class="form-control" id="user" placeholder="User name to log into database with">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="pass" class="col-lg-2 control-label">Password</label>
+        <div class="col-lg-6">
+            <input type="text" class="form-control" id="pass" placeholder="Password for DB user">
+        </div>
+    </div>
+
+    <button class="btn btn-default col-lg-2" name="how" value="configure" type="submit">Continue</button>
+</form>
 }

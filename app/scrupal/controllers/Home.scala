@@ -25,7 +25,6 @@ import scrupal.api.{Module}
 import org.joda.time. Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
-import scrupal.controllers.Config.Step
 
 /**
  * A controller to provide the Introduction To Scrupal content

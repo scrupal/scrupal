@@ -19,7 +19,6 @@ package scrupal.db
 
 import scala.slick.lifted.DDL
 import scrupal.api._
-import scrupal.api.Component
 import java.sql.Clob
 import play.api.libs.json.{Json, JsObject}
 import scrupal.utils.Version

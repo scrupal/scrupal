@@ -1,23 +1,34 @@
-@(title: String, step: scrupal.controllers.Config.Step.Kind,
+@(title: String, step: scrupal.controllers.ScrupalConfiguration.Step.Kind,
     lastError: Option[Throwable])(body: Html)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.Config.Step
-@import scrupal.controllers.routes.Config
+@import scrupal.controllers.ScrupalConfiguration.Step
+@import scrupal.controllers.routes.ScrupalConfiguration
 @html.angularPage(title) {
 } {
-<h1>@title</h1>
-<h3>Current Status</h3>
-<ul>
-    <li><em>Step: </em> @Step.stepNumber(step)</li>
-    <li><em>State: </em>@Step.currentState(step)</li>
-    <li><em>Next: </em>@Step.nextAction(step)</li>
+<h2>@title</h2>
+<h3>Progress</h3>
+<div class="row-fluid">
+    <div class="span4">
+        <progress percent="@Step.progress(step)" class="progress-warning progress-striped active"></progress>
+    </div>
+    <div class="span8">
+        <small class="text-muted">Step @Step.stepNumber(step) of @Step.numberOfSteps.
+            <i class="icon-forward"></i> @Step.currentState(step)
+            </small>
+
+    </div>
     @if(lastError.isDefined) {
-        <li>Error Type: @lastError.get.getClass().getSimpleName()</li>
-        <li>Error Message: @lastError.get.getMessage</li>
+        <div class="alert-warning">Current Issue: @lastError.get.getMessage</div>
     } else {
-        <li>Last Operation Was Successful</li>
+        @if(step != Step.Zero_Welcome) {
+            <div class="text-success">Current Issue: None</div>
+        }
     }
-</ul>
+</div>
+<hr/>
+<div class="well">
 @body
-<p><a href="@Config.configure">Next Step</a></p>
+</div>
+<hr/>
+<p><a href="@ScrupalConfiguration.configure">Try This Step Again</a></p>
 }

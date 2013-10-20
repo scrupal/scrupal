@@ -22,7 +22,7 @@ import scrupal.utils.{ConfigHelper, Registry, Registrable}
 import play.api.{Logger, Configuration}
 import scala.util.{Failure, Success, Try}
 import scala.slick.session.Session
-import scrupal.db.ScrupalSchema
+import scrupal.db.{CoreSchema,Sketch}
 
 
 /** Information about one site that Scrupal is serving.
@@ -90,7 +90,7 @@ object Site extends Registry[Site]{
               val url = dbConfig.getString("url").getOrElse("")
               Logger.debug("Found valid DB Config with  URL '" + url + "' for site " + site + ": attempting load" )
               implicit val session: Session = sketch.makeSession
-              val schema = new ScrupalSchema(sketch)
+              val schema = new CoreSchema(sketch)
               import schema._
               val sites = Sites.findAll.toSeq
               for (s: EssentialSite <- sites ) yield s.listenPort -> Site(s)

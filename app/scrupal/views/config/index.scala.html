@@ -1,16 +1,29 @@
-@(step: scrupal.controllers.Config.Step.Kind, lastError: Option[Throwable])(
+@(step: scrupal.controllers.ScrupalConfiguration.Step.Kind, lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@html.configPage("Welcome to Scrupal", step, lastError)  {
+@import scrupal.controllers.routes.ScrupalConfiguration
+@html.configPage("Thank You For Choosing Me!", step, lastError)  {
+<large>
 <marked>
-# Thank you for choosing Scrupal!
-And, congratulations on getting it installed. Wasn't that easy?
+Hi!
 
-You are seeing this page because your configuration of Scrupal is not yet complete. There are some configuration
-steps (5 of them) for you to take before Scrupal is up and running. Ready to get started?
-<button>Configure</button>
-    <button>Skipe</button>
-    <button>Default</button>
+I'm the Scrupal Configuration Wizard. As you can see, I've recognized that this is your first configuration
+attempt, or at least you need to start from square one. Either way, relax, this is painless and you can't break
+anything ... cause I won't let you! :)
+
+To get Scrupal working (again?), it needs to use a database and that means you'll have to specify which one you want
+to use and where. If you'd rather I just do all this for you with a simple database I have built in, just use the
+**Take Short Cut** button below. Otherwise, press **Configure** to continue with the configuration.
+
 </marked>
-
+</large>
+<form class="form-inline" role="form" action="@ScrupalConfiguration.configure" method="post">
+    <input type="hidden" name="step" value="@step">
+    <div class="form-group">
+        <button class="btn btn-default" name="how" value="configure" type="submit">Continue</button>
+    </div>
+    <div class="form-group">
+        <button class="btn btn-default" name="how" value="shortcut" type="submit">Take Short Cut</button>
+    </div>
+</form>
 }

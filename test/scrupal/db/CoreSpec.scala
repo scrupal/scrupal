@@ -35,7 +35,7 @@ class CoreSpec extends Specification {
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in new WithFakeScrupal {
-      withScrupalSchema( { schema : ScrupalSchema =>
+      withCoreSchema( { schema : CoreSchema =>
         import schema._
         val m_id = Modules.insert ( EssentialModule('foo, "Foo Man Chew", Version(0,1,0), Version(0,0,0), true) )
         m_id must beEqualTo('foo)

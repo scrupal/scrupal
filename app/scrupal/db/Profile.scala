@@ -17,7 +17,7 @@
 
 package scrupal.db
 
-import scrupal.api.{Creatable, Component}
+import scrupal.api.Creatable
 
 /**
  * One line sentence description here.

@@ -24,7 +24,7 @@ case class Empty() extends Storable
 case class One(o:Int) extends Storable
 case class Two(o:Int, s: String) extends Storable
 
-object Store {
+object TestStore {
 
   type IdentityFakeStorage[T <: Storable] = scrupal.api.SimpleMemoryStorageFor[T]
 

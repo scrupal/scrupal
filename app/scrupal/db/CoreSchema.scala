@@ -18,20 +18,19 @@
 package scrupal.db
 
 import scala.slick.lifted.DDL
-import scrupal.api.{Sketch, Schema}
 import scala.slick.session.Session
 import scala.slick.jdbc.meta.MTable
 
 /**
  * The basic schema for Scrupal. This is composed by merging together the various Components.
  */
-class ScrupalSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with CoreComponent with UserComponent  with NotificationComponent
+class CoreSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
+  with CoreComponent with AAAComponent  with NotificationComponent
 {
 
   // Super class Schema requires us to provide the DDL from our tables
   override val ddl : DDL = {
-    coreDDL ++ userDDL ++ notificationDDL
+    coreDDL ++ aaaDDL ++ notificationDDL
   }
 
   // Tables In This Schema

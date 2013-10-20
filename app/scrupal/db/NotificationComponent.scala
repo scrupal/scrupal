@@ -25,7 +25,7 @@ import org.joda.time.{Duration, DateTime}
 import scala.slick.lifted.{ DDL}
 
 import scrupal.utils.Icons
-import scrupal.api.{Identifier, NumericThing, Component}
+import scrupal.api.{Identifier, NumericThing}
 
 /**
  * The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,

@@ -17,13 +17,18 @@
 
 package scrupal.api
 
-import scrupal.utils.{Version, Jsonic, Registry, Registrable}
-
 import scala.collection.immutable.HashMap
+
 import play.api.{Configuration, Logger}
 import play.api.libs.json._
-import com.typesafe.config.ConfigRenderOptions
 
+import com.typesafe.config.ConfigRenderOptions
+import scala.slick.session.Session
+
+import scrupal.utils.{Version, Jsonic, Registry, Registrable}
+import scrupal.db.{Schema,Sketch}
+
+/** The essential, storable, information in a Module */
 case class EssentialModule(
   override val id: ModuleIdentifier,
   override val description: String,
@@ -107,6 +112,12 @@ class Module(
     * functionality for when those events occur. See [[scrupal.api.Feature]]
     */
   lazy val features : Seq[Feature] = Seq()
+
+  /** The set of Database Schemas that this Module defines.
+    * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
+    * schemas.
+    */
+  def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( )
 
   lazy val moreDetailsURL = "http://modules.scrupal.org/doc/" + label
 

@@ -72,7 +72,7 @@ class AlertSpec extends Specification
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
     "save to and fetch from the DB" in  new WithFakeScrupal {
-      withScrupalSchema { schema: ScrupalSchema =>
+      withCoreSchema { schema: CoreSchema =>
         import schema._
         val a1 = Alerts.insert(new Alert('foo, "Alert", "Message" ))
         a1 must beGreaterThan(0L)

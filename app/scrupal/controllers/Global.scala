@@ -207,13 +207,13 @@ object Global extends GlobalSettings
 	 * @return an action to handle this request - if no action is returned, a 404 not found result will be sent to client
 	 * @see onActionNotFound
 	 */
-  private val pathsOkayWhenUnconfigured = "^(/assets/|/webjars/|/configure)".r
+  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc)".r
 	override def onRouteRequest(request: RequestHeader): Option[play.api.mvc.Handler] = {
     if (ScrupalIsConfigured || pathsOkayWhenUnconfigured.findFirstMatchIn(request.path).isDefined )
       DefaultGlobal.onRouteRequest(request)
     else {
       Logger.warn("Scrupal Is Not Configured. Request for " + request.path + " routed to configuration page.")
-      Some(scrupal.controllers.Config.configure())
+      Some(scrupal.controllers.ScrupalConfiguration.configure())
     }
 	}
 

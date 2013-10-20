@@ -32,7 +32,7 @@ class UserSpec extends Specification
 {
 	"Principal" should {
 		"save, load and delete from DB" in new WithFakeScrupal {
-      withScrupalSchema { schema: ScrupalSchema =>
+      withCoreSchema { schema: CoreSchema =>
         import schema._
         val p = new Principal("nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
         val p2 : Identifier = Principals.upsert(p)
@@ -48,7 +48,7 @@ class UserSpec extends Specification
 
   "Handle" should {
     "save, load and delete from DB" in new WithFakeScrupal {
-      withScrupalSchema { schema: ScrupalSchema =>
+      withCoreSchema { schema: CoreSchema =>
         import schema._
         val p = new Principal("nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString() )
         val p2 : Identifier = Principals.upsert(p)
@@ -63,7 +63,7 @@ class UserSpec extends Specification
     }
 
     "allow many-to-many relations with Principal" in new WithFakeScrupal {
-      withScrupalSchema { schema: ScrupalSchema =>
+      withCoreSchema { schema: CoreSchema =>
         import schema._
         val p1 = new Principal( "nobody@nowhere.ex", "openpw", HasherKinds.SCrypt.toString() )
         val p2 = new Principal("exempli@gratis.org", "openpw", HasherKinds.SCrypt.toString() )

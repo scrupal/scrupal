@@ -22,7 +22,8 @@
 GET            /                                      scrupal.controllers.Home.index
 
 # Configuration main page for first-time or any-time configuration wizard
-GET            /configure                             scrupal.controllers.Config.configure
+GET            /configure                             scrupal.controllers.ScrupalConfiguration.configure
+POST           /configure                             scrupal.controllers.ScrupalConfiguration.configAction
 
 # Special handling for AngularJS modules that have partial HTML files that need to be served.
 GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
@@ -41,7 +42,9 @@ GET            /assets/javascripts/jsroutes.js        scrupal.controllers.Home.j
 
 # Map static resources from the /assets folder to the /assets URL path
 GET            /assets/javascripts/*file              scrupal.controllers.Assets.js_s(file)
+#GET            /assets/javascripts-min/*file          scrupal.controllers.Assets.js_s(file, min=true)
 GET            /assets/stylesheets/*file              scrupal.controllers.Assets.css_s(file)
+#GET            /assets/stylesheets-min/*file          scrupal.controllers.Assets.css_s(file,min=true)
 GET            /assets/images/*file                   scrupal.controllers.Assets.img(file)
 GET            /assets/themes/:provider/*file         scrupal.controllers.Assets.theme(provider, file)
 GET            /assets/docs/*file                     scrupal.controllers.Assets.doc(file)
