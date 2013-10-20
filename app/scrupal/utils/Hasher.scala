@@ -135,7 +135,7 @@ object PBKDF2Hasher extends Hasher {
   // Provide the name of this hasher
   override val id = 'PBKDF2
 
-  val defaultIterations = if ( Hash.fastMode ) 1 else 25000
+  def defaultIterations = if ( Hash.fastMode ) 1 else 25000
 
 
   override def hash(plainText: String, saltine: Option[String], complexity: Option[Long]) = {
@@ -158,12 +158,13 @@ object BCryptHasher extends Hasher {
   // Provide the name of this hasher
   override val id = 'BCrypt
 
-  val defaultRounds = if ( Hash.fastMode ) 1 else 10
+  def defaultRounds = if ( Hash.fastMode ) 4 else 10
 
   // Set up some parameterization of the bcrypt algorithm
   override def hash(plainText: String, saltine: Option[String], complexity: Option[Long]) = {
     val initialTime = 1265000400L   // Feb 1, 2010 - when jBCrypt 0.3 was released
-    val initialRounds = Math.pow(2,10).toLong // Default log_rounds is 10, we compute 2**10 here for linear scaling
+    val initialRounds = Math.pow(2,defaultRounds).toLong
+    // Default log_rounds is 10, we compute 2**10 here for linear time-based scaling,
     val newComplexity = timeBasedComplexity(initialRounds, initialTime)
     val log_rounds : Long = complexity.getOrElse(MathHelpers.log2(newComplexity))
     val salt = saltine.getOrElse(BCrypt.gensalt(log_rounds.toInt, Hash.getSecureRandom()))
@@ -178,7 +179,7 @@ object SCryptHasher extends Hasher {
 
   override val id = 'SCrypt
 
-  val default_args = if (Hash.fastMode)  (10000 << 16) | (1 << 8) | 1  else (1024 << 16) | (8 << 8) | 1
+  def default_args = if (Hash.fastMode)  (10000 << 16) | (1 << 8) | 1  else (1024 << 16) | (8 << 8) | 1
 
   override def hash(plainText: String, saltine: Option[String], complexity: Option[Long]) = {
     val dkLen = 64

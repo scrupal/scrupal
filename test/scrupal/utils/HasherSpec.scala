@@ -33,8 +33,8 @@ class HasherSpec extends Specification {
 
   "Hasher" should {
     "pick random hashers" in {
-      val list : Seq[Symbol] = for ( i <- 1 to 10 ) yield Hash.pick.id
-      list.distinct.size >= 3 must beTrue
+      val list : Seq[Symbol] = for ( i <- 1 to 100 ) yield Hash.pick.id
+      list.distinct.size >= 2 must beTrue
     }
 
     "PBKDF2 works " in {
