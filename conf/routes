@@ -74,9 +74,8 @@ OPTIONS        /api/:kind                             scrupal.controllers.API.op
 
 
 # Routes that provide the Scrupal Documentation
-GET            /doc                                   scrupal.controllers.Home.docPage(path="index.html")
-GET            /doc/*path                             scrupal.controllers.Home.docPage(path)
-GET            /scaladoc$file<.*>                     scrupal.controllers.Home.scalaDoc(file)
+GET            /doc$path<.*>                          scrupal.controllers.Home.docPage(path)
+GET            /scaladoc$path<.*>                     scrupal.controllers.Home.scalaDoc(path)
 
 # Routes for the REST based API Documentation facility. Same as /api but all GET requests with METHOD inserted at start
 GET            /doc/api                               scrupal.controllers.APIDoc.introduction()

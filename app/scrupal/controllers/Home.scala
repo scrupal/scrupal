@@ -22,7 +22,7 @@ import play.api.{Mode, Play, Routes}
 import play.api.Play.current
 import scrupal.views.html
 import scrupal.api.{Module}
-import org.joda.time. Duration
+import org.joda.time.Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
 import java.io.File
@@ -57,13 +57,28 @@ object Home extends ScrupalController {
     Ok(html.apidoc(Module.all))
   }
 
+  lazy val indexAliases = "(^$)|^/(index|top|home)?$".r
+  private def gracefulIndex(pathAsRequested: String, index: String) = {
+    pathAsRequested match {
+      case s if indexAliases.findFirstMatchIn(s).isDefined  => index
+      case _    => pathAsRequested
+    }
+  }
+
   /** Serve the Scrupal documentation pages
     *
     * @param path Relative path to the page requested
     * @return
     */
   def docPage(path: String) = Action { implicit request =>
-    Ok(html.docPage(path))
+    val path_to_serve = gracefulIndex(path, "index.html")
+    Assets.isValidDocAsset(path_to_serve) match {
+      case true => Ok(html.docPage(path_to_serve))
+      case false => notFound("Scrupal Documentation", suggestions = Seq(
+        "Browse the documentation only with the links provided from the documentation pages.",
+        "Review `" + path + "` to see if it contains an error."
+      ))
+    }
   }
 
   /** Serve the generated documentation files.
@@ -72,24 +87,22 @@ object Home extends ScrupalController {
     * @param path Path to the requested documentation asset
     * @return The asset
     */
-  def scalaDoc(path: String) = Action { request =>
+  def scalaDoc(path: String) = Action { implicit request : RequestHeader =>
     def serveDocFile(rootPath: String, file: String) = {
       val fileToServe = new File(rootPath, file)
       if (fileToServe.exists) {
         Ok.sendFile(fileToServe, inline = true).withHeaders(CACHE_CONTROL -> "max-age=3600")
-      } else {
-        NotFound
+      } else  {
+        notFound("Scala Generated Documentation", Seq(
+          "used an old link from a previous version of the software that is no longer relevant?",
+          if (Play.current.mode != Mode.Prod) "forgot to build the scaladoc with the `play doc` command?"
+          else "moved the scaladoc from the share/doc/api directory?")
+        )
       }
     }
 
     // Deal with recalictrant paths :)
-    val path_to_serve = path match {
-      case s if s.equals("/")  => "index.html"
-      case s if s.equals("")   => "index.html"
-      case s if s.equals("/index") => "index.html"
-      case s if s.startsWith("/") => path
-      case _    => "/" + path
-    }
+    val path_to_serve = gracefulIndex(path,"index.html")
 
     Play.current.mode match {
       case Mode.Dev => serveDocFile("target/scala-2.10/api", path_to_serve)

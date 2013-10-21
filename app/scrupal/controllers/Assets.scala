@@ -24,6 +24,9 @@ import play.api.{Mode, Play}
 import play.api.Play.current
 import scala.util.matching.Regex
 import java.io.File
+import play.utils.UriEncoding
+import akka.actor.FSM.->
+import java.net.URL
 
 /**
  * Asset controller for core assets. This one gets used by the templates
@@ -142,6 +145,21 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     *
     */
   def doc(path: String) = fallback(docs, path)
+
+  def isValidDocAsset(path: String) : Boolean = {
+    resourceNameAt(docs, path).exists { resourceName: String => Play.resource(resourceName).exists { u: URL => true } }
+  }
+
+  private def resourceNameAt(path: String, file: String): Option[String] = {
+    val decodedFile = UriEncoding.decodePath(file, "utf-8")
+    val resourceName = Option(path + "/" + decodedFile).map(name => if (name.startsWith("/")) name else ("/" + name)).get
+    if (new File(resourceName).isDirectory || !new File(resourceName).getCanonicalPath.startsWith(new File(path).getCanonicalPath)) {
+      None
+    } else {
+      Some(resourceName)
+    }
+  }
+
 
   /** Serve AngularJS Partial Chunks of HTML
    * An accessor for getting Angular's partial/fragment/chunks of HTML for composed views. We store the HTML files in

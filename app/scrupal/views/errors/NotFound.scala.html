@@ -1,8 +1,23 @@
-@(what: String)(implicit context : scrupal.controllers.Context)
+@(what: String, causes: Seq[String] = Seq(), suggestions: Seq[String] =Seq())(implicit context : scrupal.controllers
+.Context)
 
 @import scrupal.views.html
 
 @html.markedPage("Not Found - " + what) {
 # There's A Hole In The Fabric Of The InterWebz!
-Sorry, we couldn't find "@what" for you. Try something else? [Maybe, this?](@context.suggestURL)
+Sorry, but we couldn't find the @what page you requested. This might have happened because you:
+
+@for(c <- causes) {
++ @c
+}
++ used an old bookmark for which the resource is no longer available
++ mis-typed the web address.
+
+We suggest you try one of these options:
+
+@for(s <- suggestions) {
++ @s
+}
++ Type in another URL, or
++ try to get lucky with [this suggestion](@context.suggestURL).
 }

@@ -40,8 +40,9 @@ trait ScrupalController extends Controller with ContextProvider {
     NotImplemented(html.errors.NotImplemented(spaces2underscores(what)))
   }
 
-  def notFound(what:String)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
-    NotFound(html.errors.NotFound(spaces2underscores(what)))
+  def notFound(what:String, causes: Seq[String] = Seq(), suggestions : Seq[String] = Seq() )(implicit
+      writable: Writeable[Html], request: RequestHeader) : SimpleResult = {
+    NotFound(html.errors.NotFound(what, causes, suggestions))
   }
 
   def notFound(what: JsString)(implicit writable: Writeable[Html], request: RequestHeader) : SimpleResult = {

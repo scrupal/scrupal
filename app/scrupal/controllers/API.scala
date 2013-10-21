@@ -60,7 +60,7 @@ object API extends ScrupalController  {
         case Some(t:Type) => Ok(t.toJson)
         case _ => notFound(JsString("type " + id))
       }
-      case _ => {        notFound(kind + " " + id)  }
+      case _ => {        notFound(JsString(kind + " " + id)) }
     }
   }
 

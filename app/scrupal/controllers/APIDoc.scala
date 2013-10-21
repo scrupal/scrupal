@@ -50,7 +50,7 @@ object APIDoc extends ScrupalController  {
     kind.toLowerCase() match {
       case "type" =>  Type(Symbol(id)) match {
         case t: Some[Type] => Ok(html.api.fetchType(t.get))
-        case _ => notFound("Type " + id)
+        case _ => notFound("Type " + id, Seq("You mis-typed '" + id + "'?"))
       }
       case "module" => Module(Symbol(id)) match {
         case m: Some[Module] => Ok(html.api.fetchModule(m.get))

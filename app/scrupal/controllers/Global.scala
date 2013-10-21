@@ -209,10 +209,11 @@ object Global extends GlobalSettings
 	 */
   private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc|scaladoc)".r
 	override def onRouteRequest(request: RequestHeader): Option[play.api.mvc.Handler] = {
-    if (ScrupalIsConfigured || pathsOkayWhenUnconfigured.findFirstMatchIn(request.path).isDefined )
+    if (ScrupalIsConfigured || pathsOkayWhenUnconfigured.findFirstMatchIn(request.path).isDefined ) {
+      Logger.trace("Standard Routing for: " + request.path)
       DefaultGlobal.onRouteRequest(request)
-    else {
-      Logger.warn("Scrupal Is Not Configured. Request for " + request.path + " routed to configuration page.")
+    } else {
+      Logger.trace("Configuration Routing for: " + request.path)
       Some(scrupal.controllers.ScrupalConfiguration.configure())
     }
 	}

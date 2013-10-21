@@ -51,6 +51,8 @@ case class Context(
       case s if s.startsWith("/doc") => rAPIDoc.introduction().url
       case s if s.startsWith("/config") => rConfig.configure().url
       case s if s.startsWith("/asset") => rHome.docPage("assets").url
+      case s if s.startsWith("/scaladoc") => rHome.scalaDoc("/").url
+      case _ => rHome.index().url
     }
   }
 }
