@@ -26,10 +26,15 @@ import java.util.regex.{Matcher, Pattern}
   * Inspired by: [[https://github.com/atteo/evo-inflector/blob/master/src/main/java/org/atteo/evo/inflector/TwoFormInflector.java]]
   * Rules from: [[]]http://www.barstow.edu/lrc/tutorserv/handouts/015%20Irregular%20Plural%20Nouns.pdf]]
   * Oxford Rules: [[http://oxforddictionaries.com/words/plurals-of-nouns]]
- */
+  */
 abstract class Pluralizer
 {
-	case class Rule(singular: Pattern, plural: String) {}
+
+  /** A rule is very simple, it maps a pattern to match with the substitution to make for that pattern.
+    * @param singular A regular expression with a substitution group to be replaced by `plural`
+    * @param plural The substitution for the group in `singular`
+    */
+  case class Rule(singular: Pattern, plural: String) {}
 
 	val rules : scala.collection.mutable.ListBuffer[Rule] = new scala.collection.mutable.ListBuffer[Rule]
 

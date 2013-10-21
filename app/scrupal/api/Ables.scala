@@ -18,13 +18,11 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-import play.api.libs.json.JsObject
 
-/** How Scala things are identified
-  * This works for both memory and database objects. The
+/** How Scrupal things are identified.
+  * Objects stored in This works for both memory and database objects. The
   * So, in case we ever have to change this, we're calling it an Identifier throughout the api
   */
-
 trait Identifiable[ID] {
   val id : ID
   def isIdentified : Boolean = true
