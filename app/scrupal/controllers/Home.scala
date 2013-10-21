@@ -18,13 +18,14 @@
 package scrupal.controllers
 
 import play.api.mvc.{Action, RequestHeader}
-import play.api.{Play, Routes}
+import play.api.{Mode, Play, Routes}
 import play.api.Play.current
 import scrupal.views.html
 import scrupal.api.{Module}
 import org.joda.time. Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
+import java.io.File
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -56,8 +57,44 @@ object Home extends ScrupalController {
     Ok(html.apidoc(Module.all))
   }
 
+  /** Serve the Scrupal documentation pages
+    *
+    * @param path Relative path to the page requested
+    * @return
+    */
   def docPage(path: String) = Action { implicit request =>
     Ok(html.docPage(path))
+  }
+
+  /** Serve the generated documentation files.
+    * In Dev mode these are in `target/scala-2.10/api/` but in production they are in the `share/doc/api` directory.
+    * Just match the difference and serve.
+    * @param path Path to the requested documentation asset
+    * @return The asset
+    */
+  def scalaDoc(path: String) = Action { request =>
+    def serveDocFile(rootPath: String, file: String) = {
+      val fileToServe = new File(rootPath, file)
+      if (fileToServe.exists) {
+        Ok.sendFile(fileToServe, inline = true).withHeaders(CACHE_CONTROL -> "max-age=3600")
+      } else {
+        NotFound
+      }
+    }
+
+    // Deal with recalictrant paths :)
+    val path_to_serve = path match {
+      case s if s.equals("/")  => "index.html"
+      case s if s.equals("")   => "index.html"
+      case s if s.equals("/index") => "index.html"
+      case s if s.startsWith("/") => path
+      case _    => "/" + path
+    }
+
+    Play.current.mode match {
+      case Mode.Dev => serveDocFile("target/scala-2.10/api", path_to_serve)
+      case _ => serveDocFile("share/doc/api", path_to_serve)
+    }
   }
 
   def jsRoutes(varName: String = "jsRoutes") = Action { implicit request =>

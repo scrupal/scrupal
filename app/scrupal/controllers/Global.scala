@@ -207,7 +207,7 @@ object Global extends GlobalSettings
 	 * @return an action to handle this request - if no action is returned, a 404 not found result will be sent to client
 	 * @see onActionNotFound
 	 */
-  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc)".r
+  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc|scaladoc)".r
 	override def onRouteRequest(request: RequestHeader): Option[play.api.mvc.Handler] = {
     if (ScrupalIsConfigured || pathsOkayWhenUnconfigured.findFirstMatchIn(request.path).isDefined )
       DefaultGlobal.onRouteRequest(request)

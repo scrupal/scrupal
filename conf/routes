@@ -47,7 +47,7 @@ GET            /assets/stylesheets/*file              scrupal.controllers.Assets
 #GET            /assets/stylesheets-min/*file          scrupal.controllers.Assets.css_s(file,min=true)
 GET            /assets/images/*file                   scrupal.controllers.Assets.img(file)
 GET            /assets/themes/:provider/*file         scrupal.controllers.Assets.theme(provider, file)
-GET            /assets/docs/*file                     scrupal.controllers.Assets.doc(file)
+GET            /assets/doc/*file                      scrupal.controllers.Assets.doc(file)
 GET            /assets/*file                          scrupal.controllers.Assets.fallback(path="/public", file)
 GET            /template/*file                        scrupal.controllers.Assets.template(file)
 
@@ -76,6 +76,7 @@ OPTIONS        /api/:kind                             scrupal.controllers.API.op
 # Routes that provide the Scrupal Documentation
 GET            /doc                                   scrupal.controllers.Home.docPage(path="index.html")
 GET            /doc/*path                             scrupal.controllers.Home.docPage(path)
+GET            /scaladoc$file<.*>                     scrupal.controllers.Home.scalaDoc(file)
 
 # Routes for the REST based API Documentation facility. Same as /api but all GET requests with METHOD inserted at start
 GET            /doc/api                               scrupal.controllers.APIDoc.introduction()
