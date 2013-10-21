@@ -214,7 +214,7 @@ object Global extends GlobalSettings
       DefaultGlobal.onRouteRequest(request)
     } else {
       Logger.trace("Configuration Routing for: " + request.path)
-      Some(scrupal.controllers.ScrupalConfiguration.configure())
+      Some(scrupal.controllers.ConfigWizard.configure())
     }
 	}
 

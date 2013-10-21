@@ -38,7 +38,7 @@ import scrupal.views.html
   * not even a database is configured.
   * Further description here.
   */
-object ScrupalConfiguration extends ScrupalController {
+object ConfigWizard extends ScrupalController {
 
   type SiteMap = Map[Symbol,String]
 
@@ -148,7 +148,7 @@ object ScrupalConfiguration extends ScrupalController {
                 }
                 // We just collected together a list of the results for each site. now let's find the earliest
                 // step amongst them.
-                site_results.foldLeft[(ScrupalConfiguration.Step.Value,Option[Throwable])]((Six_Success,None)) {
+                site_results.foldLeft[(ConfigWizard.Step.Value,Option[Throwable])]((Six_Success,None)) {
                   case (step1:(Step.Kind, Option[Throwable]), step2:(Step.Kind, Option[Throwable])) =>
                     if (step1._1 < step2._1) step1 else step2
                 }
@@ -174,8 +174,8 @@ object ScrupalConfiguration extends ScrupalController {
     * @return One of the Configuration Pages
     */
   def configure() = Action { implicit request : RequestHeader =>
-    val (step,error) : (Step.Kind,Option[Throwable]) = ScrupalConfiguration.Step.apply(context)
-    import ScrupalConfiguration.Step._
+    val (step,error) : (Step.Kind,Option[Throwable]) = ConfigWizard.Step.apply(context)
+    import ConfigWizard.Step._
     step match {
       case Zero_Welcome          => Ok(html.config.index(step,error))
       case One_Specify_Databases => Ok(html.config.database(step,error))
@@ -248,7 +248,7 @@ object ScrupalConfiguration extends ScrupalController {
       val steps = formData.get("step").getOrElse(Seq())
       if (steps.size==1) {
         val step = Step.withName(steps(0))
-        import ScrupalConfiguration.Step._
+        import ConfigWizard.Step._
         step match {
           case Zero_Welcome          => {
             if (formData.contains("how")) {

@@ -1,8 +1,8 @@
-@(title: String, step: scrupal.controllers.ScrupalConfiguration.Step.Kind,
+@(title: String, step: scrupal.controllers.ConfigWizard.Step.Kind,
     lastError: Option[Throwable])(body: Html)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.ScrupalConfiguration.Step
-@import scrupal.controllers.routes.ScrupalConfiguration
+@import scrupal.controllers.ConfigWizard.Step
+@import scrupal.controllers.routes.ConfigWizard
 @html.angularPage(title) {
 } {
 <h2>@title</h2>
@@ -30,5 +30,5 @@
 @body
 </div>
 <hr/>
-<p><a href="@ScrupalConfiguration.configure">Try This Step Again</a></p>
+<p><a href="@ConfigWizard.configure">Try This Step Again</a></p>
 }

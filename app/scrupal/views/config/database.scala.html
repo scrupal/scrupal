@@ -1,7 +1,7 @@
-@(step: scrupal.controllers.ScrupalConfiguration.Step.Kind, lastError: Option[Throwable])(
+@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.ScrupalConfiguration
+@import scrupal.controllers.routes.ConfigWizard
 @html.configPage("Database Configuration", step, lastError)  {
 <p>
 I'm going to help you select and configure your database now. Scrupal stores all its information in a database and
@@ -18,7 +18,7 @@ picking the right one for your needs is important. You may choose from among the
 </dl>
 <p>If you're not sure which database to select, choose H2. You can always change, without too much difficulty,
     later on.</p>
-<form class="form-horizontal" role="form" action="@ScrupalConfiguration.configure" method="post">
+<form class="form-horizontal" role="form" action="@ConfigWizard.configure" method="post">
     <input type="hidden" name="step" value="@step">
 
     <div class="form-group">

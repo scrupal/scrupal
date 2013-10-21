@@ -1,7 +1,7 @@
-@(step: scrupal.controllers.ScrupalConfiguration.Step.Kind, lastError: Option[Throwable])(
+@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.ScrupalConfiguration
+@import scrupal.controllers.routes.ConfigWizard
 @html.configPage("Thank You For Choosing Me!", step, lastError)  {
 <large>
 <marked>
@@ -17,7 +17,7 @@ to use and where. If you'd rather I just do all this for you with a simple datab
 
 </marked>
 </large>
-<form class="form-inline" role="form" action="@ScrupalConfiguration.configure" method="post">
+<form class="form-inline" role="form" action="@ConfigWizard.configure" method="post">
     <input type="hidden" name="step" value="@step">
     <div class="form-group">
         <button class="btn btn-default" name="how" value="configure" type="submit">Continue</button>

@@ -50,8 +50,8 @@ class ConfigStepSpec extends Specification {
     "Identify Step 0 - empty config" in {
       implicit val request : RequestHeader = nullRequest
       implicit val context = simpleContext(Map())
-      val step = ScrupalConfiguration.Step(context)._1
-      step must beEqualTo(ScrupalConfiguration.Step.Zero_Welcome)
+      val step = ConfigWizard.Step(context)._1
+      step must beEqualTo(ConfigWizard.Step.Zero_Welcome)
     }
 
     "Identify Step 1 - wrong config" in {
@@ -59,8 +59,8 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext(
         Map( "db" -> Map( "default" -> Map( "foo" -> "bar")))
       )
-      val step = ScrupalConfiguration.Step(context)._1
-      step must beEqualTo(ScrupalConfiguration.Step.One_Specify_Databases)
+      val step = ConfigWizard.Step(context)._1
+      step must beEqualTo(ConfigWizard.Step.One_Specify_Databases)
     }
 
     "Identify Step 1 - bad config" in {
@@ -68,8 +68,8 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext(
         Map( "db" -> Map( "default" -> Map( "url" -> "not-a-url")))
       )
-      val step = ScrupalConfiguration.Step(context)._1
-      step must beEqualTo(ScrupalConfiguration.Step.One_Specify_Databases)
+      val step = ConfigWizard.Step(context)._1
+      step must beEqualTo(ConfigWizard.Step.One_Specify_Databases)
     }
 
     "Identify Step 2 - no such db" in {
@@ -77,8 +77,8 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext(
         Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:not_an_existing_db;IFEXISTS=TRUE")))
       )
-      val step = ScrupalConfiguration.Step(context)._1
-      step must beEqualTo(ScrupalConfiguration.Step.Two_Connect_Databases)
+      val step = ConfigWizard.Step(context)._1
+      step must beEqualTo(ConfigWizard.Step.Two_Connect_Databases)
     }
 
     "Identify Step 3 - no schema" in {
@@ -86,8 +86,8 @@ class ConfigStepSpec extends Specification {
       implicit val context = simpleContext( Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:mem:empty_test"))
       ) )
 
-      val step = ScrupalConfiguration.Step(context)._1
-      step must beEqualTo(ScrupalConfiguration.Step.Three_Install_Schemas) or beEqualTo(ScrupalConfiguration.Step.Two_Connect_Databases)
+      val step = ConfigWizard.Step(context)._1
+      step must beEqualTo(ConfigWizard.Step.Three_Install_Schemas) or beEqualTo(ConfigWizard.Step.Two_Connect_Databases)
     }
 
     "Identify Step 4 - missing site instances " in {
@@ -106,9 +106,9 @@ class ConfigStepSpec extends Specification {
       }
 
       // Now let's see if it validates that all the tables are there.
-      val step = ScrupalConfiguration.Step(context)._1
+      val step = ConfigWizard.Step(context)._1
 
-      step must beEqualTo(ScrupalConfiguration.Step.Four_Create_Site)
+      step must beEqualTo(ConfigWizard.Step.Four_Create_Site)
     }
   }
 }
