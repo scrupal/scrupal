@@ -22,6 +22,8 @@ import controllers.WebJarAssets
 import java.lang.IllegalArgumentException
 import play.api.{Mode, Play}
 import play.api.Play.current
+import scala.util.matching.Regex
+import java.io.File
 
 /**
  * Asset controller for core assets. This one gets used by the templates
@@ -136,7 +138,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     }
   }
 
-  /** Server markdown fragments that provide the documentation
+  /** Serve markdown fragments that provide the documentation
     *
     */
   def doc(path: String) = fallback(docs, path)
