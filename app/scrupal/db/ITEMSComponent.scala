@@ -23,7 +23,14 @@ import java.sql.Clob
 import play.api.libs.json.{Json, JsObject}
 import scrupal.utils.Version
 
-trait CoreComponent extends Component {
+/** I.T.E.M.S Component
+  * We over used the term "Core" so this group of tables got a memorable acronym. This component defines the five
+  * central tables in Scrupal: Instances, Types, Entities, Modules, Sites. Logically,
+  * a site is configured with various modules. Modules define Entities and Types. Types give structure to Instances.
+  * Entities give functionality to Instance. Users create Instance from the allowed types. This is the basis of all
+  * information storage in Scrupal.
+  */
+trait ITEMSComponent extends Component {
 
   import sketch.profile.simple._
 
@@ -46,22 +53,20 @@ trait CoreComponent extends Component {
     }}
   )
 
+  object Instances extends ScrupalTable[Instance]("instances") with NumericThingTable[Instance] {
+    def entityId = column[TypeIdentifier](nm("entityId"))
+    def entityId_fkey = foreignKey(fkn("entityId"), entityId, Entities)(_.id)
+    def payload = column[JsObject](nm("payload"), O.NotNull)
+    def forInsert = name ~ description ~ entityId ~ payload
+    def * = forInsert ~ modified.? ~ created.? ~ id.?  <> (Instance.tupled, Instance.unapply _)
+  }
+
   object Types extends ScrupalTable[EssentialType]("types")
                        with SymbolicTable[EssentialType]
                        with DescribableTable[EssentialType] {
     def moduleId = column[ModuleIdentifier](nm("moduleId"))
     def moduleId_fKey = foreignKey(fkn(Modules.tableName), moduleId, Modules)(_.id)
     def * = id ~ description ~ moduleId <> (EssentialType.tupled, EssentialType.unapply _)
-  }
-
-  object Modules extends ScrupalTable[EssentialModule]("modules")
-                         with SymbolicTable[EssentialModule]
-                         with DescribableTable[EssentialModule] {
-    def version = column[Version](nm("version"))
-    def obsoletes = column[Version](nm("obsoletes"))
-    def enabled = column[Boolean](nm("enabled"))
-    def * = id ~ description ~ version ~ obsoletes ~ enabled  <>
-      (EssentialModule.tupled , EssentialModule.unapply _ )
   }
 
   object Entities extends ScrupalTable[EssentialEntity]("entities")
@@ -72,12 +77,14 @@ trait CoreComponent extends Component {
     def * = id ~ description ~ typeId <> (EssentialEntity.tupled, EssentialEntity.unapply _ )
   }
 
-  object Instances extends ScrupalTable[Instance]("instances") with NumericThingTable[Instance] {
-    def entityId = column[TypeIdentifier](nm("entityId"))
-    def entityId_fkey = foreignKey(fkn("entityId"), entityId, Entities)(_.id)
-    def payload = column[JsObject](nm("payload"), O.NotNull)
-    def forInsert = name ~ description ~ entityId ~ payload
-    def * = forInsert ~ modified.? ~ created.? ~ id.?  <> (Instance.tupled, Instance.unapply _)
+  object Modules extends ScrupalTable[EssentialModule]("modules")
+                         with SymbolicTable[EssentialModule]
+                         with DescribableTable[EssentialModule] {
+    def version = column[Version](nm("version"))
+    def obsoletes = column[Version](nm("obsoletes"))
+    def enabled = column[Boolean](nm("enabled"))
+    def * = id ~ description ~ version ~ obsoletes ~ enabled  <>
+      (EssentialModule.tupled , EssentialModule.unapply _ )
   }
 
   object Sites extends ScrupalTable[EssentialSite]("sites") with SymbolicEnablableThingTable[EssentialSite] {
@@ -91,5 +98,5 @@ trait CoreComponent extends Component {
 
   }
 
-  def coreDDL : DDL = Types.ddl ++ Modules.ddl ++ Entities.ddl ++ Instances.ddl ++ Sites.ddl
+  def coreDDL : DDL = Instances.ddl ++ Types.ddl ++ Entities.ddl ++  Modules.ddl ++ Sites.ddl
 }

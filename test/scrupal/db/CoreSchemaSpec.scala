@@ -17,55 +17,37 @@
 
 package scrupal.db
 
-import scala.slick.lifted.DDL
+import org.specs2.mutable.Specification
+import scrupal.fakes.WithFakeScrupal
 import scala.slick.session.Session
-import scala.slick.jdbc.meta.MTable
-import scrupal.models.CoreModule
-import scrupal.api.{Entity, Type}
 
-/**
- * The basic schema for Scrupal. This is composed by merging together the various Components.
- */
-class CoreSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with ITEMSComponent with AAAComponent  with NotificationComponent
-{
+/** One line sentence description here.
+  * Further description here.
+  */
+class CoreSchemaSpec extends Specification {
 
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ aaaDDL ++ notificationDDL
+  "CoreSchema" should {
+    "Accumulate table names correctly" in new WithFakeScrupal {
+      withDBSession { implicit session: Session =>
+        val schema : CoreSchema = new CoreSchema(sketch)(session)
+        schema.tableNames.contains(schema.Instances.tableName) must beTrue
+        schema.tableNames.contains(schema.Types.tableName) must beTrue
+        schema.tableNames.contains(schema.Entities.tableName) must beTrue
+        schema.tableNames.contains(schema.Modules.tableName) must beTrue
+        schema.tableNames.contains(schema.Sites.tableName) must beTrue
+        schema.tableNames.contains(schema.Alerts.tableName) must beTrue
+        schema.tableNames.contains(schema.Principals.tableName) must beTrue
+        schema.tableNames.contains(schema.Handles.tableName) must beTrue
+        schema.tableNames.contains(schema.Tokens.tableName) must beTrue
+      }
+    }
+
+    "Generate DDL SQL For Each Core Table" in new WithFakeScrupal {
+      withDBSession { implicit session: Session =>
+        val schema : CoreSchema = new CoreSchema(sketch)(session)
+        // TODO: Finish implementing
+        success
+      }
+    }
   }
-
-  // Tables In This Schema
-  val CoreTables = List(Types, Modules, Sites, Entities, Instances)
-  val UserTables = List(Principals, Handles, Tokens )
-  val NotificationTables = List( Alerts )
-
-  val tableNames : Seq[String] =
-    (for (t <- CoreTables) yield t.tableName) :::
-    (for (t <- UserTables) yield t.tableName ) :::
-    (for (t <- NotificationTables) yield t.tableName)
-
-  override def validateTables( tables: Map[String,MTable] )(implicit session: Session) : Boolean = {
-    // Simply validating that each of the table names we expect exists is sufficient for now
-    val meta_tables_scan_results =
-      for (tname: String <- tableNames )
-      yield tables.contains(tname)
-    val num_in_meta_tables = meta_tables_scan_results.count { b: Boolean => b }
-    num_in_meta_tables == tableNames.size
-  }
-
-  override def create(implicit session: Session): Unit = {
-    // First, call our super class to install our schema
-    super.create
-
-    // First, install the CoreModule itself
-    Modules.insert(CoreModule)
-
-    // Now, install all the CoreModule's types and entities
-    CoreModule.types foreach { ty : Type => Types.insert( ty ) }
-    CoreModule.entities foreach { en : Entity => Entities.insert( en ) }
-
-    // That's it!
-  }
-
 }
