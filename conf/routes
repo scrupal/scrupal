@@ -24,6 +24,7 @@ GET            /                                      scrupal.controllers.Home.i
 # Configuration main page for first-time or any-time configuration wizard
 GET            /configure                             scrupal.controllers.ConfigWizard.configure
 POST           /configure                             scrupal.controllers.ConfigWizard.configAction
+GET            /reconfigure                           scrupal.controllers.ConfigWizard.reconfigure
 
 # Special handling for AngularJS modules that have partial HTML files that need to be served.
 GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)

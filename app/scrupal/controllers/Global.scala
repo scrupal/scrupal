@@ -29,7 +29,6 @@ import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
 import scala.util.matching.Regex
 import scala.collection.immutable.TreeMap
-import play.mvc.With
 
 object Global extends GlobalSettings
 {
@@ -59,16 +58,6 @@ object Global extends GlobalSettings
       * serving so as to avoid a scan of this data structure on every request.
       */
     var sites : Map[Short,Site] = Map[Short,Site]()
-
-
-    /** Developer Mode Controls Some Aspects of Scrupal Functionality
-      * The administrator of the site(s) might be a developer building a new module or extending Scrupal itself. For
-      * such users, the developer mode can be set to relax some of Scrupal's security restrictions. Most notably when
-      * devMode is false and the site is not configured, every URL will take you to the configuration wizard. This may
-      * not be convenient for developers, but saves a lot of confusion for end users as the site directs them towards
-      * what they need to know next. :)
-      */
-    var devMode : Boolean = true // FIXME: Default should be false!
   }
 
   val Copyright = "2013 viritude llc"
@@ -107,6 +96,15 @@ object Global extends GlobalSettings
 
     // We are now ready to process the registered modules
     Module.processModules
+
+    // Set things from configuration
+    val config = app.configuration
+    config.getBoolean("scrupal.developer.mode") map { value => CoreModule.DevMode.enabled(value) }
+    config.getBoolean("scrupal.developer.footer") map { value =>CoreModule.DebugFooter.enabled(value) }
+
+    // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
+    // those is for a site configuration so we should be able to load the sites now.
+    reload(app)
   }
 
   def reload(app: Application) {
@@ -120,15 +118,6 @@ object Global extends GlobalSettings
 	 */
 	override def onStart(app: Application) {
 		DefaultGlobal.onStart(app)
-
-    // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
-    // those is for a site configuration so we should be able to load the sites now.
-    // ISSUE: Is this too late? Will requests be coming in at this point?
-    // FIXME: THis is it
-    // TODO: Something
-    // NOTE: SOmething else
-    // HELP: I don't understand this
-    reload(app)
 	}
 
 	/**
@@ -188,7 +177,12 @@ object Global extends GlobalSettings
 	 * @param mode The mode the application is running in
 	 * @return The configuration that the application should use
 	 */
-	override def onLoadConfig(config: Configuration, path: File, classloader: ClassLoader, mode: Mode.Mode): Configuration = {
+	override def onLoadConfig(
+    config: Configuration,
+    path: File,
+    classloader: ClassLoader,
+    mode: Mode.Mode
+  ): Configuration = {
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 

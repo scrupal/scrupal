@@ -22,11 +22,10 @@ import controllers.WebJarAssets
 import java.lang.IllegalArgumentException
 import play.api.{Mode, Play}
 import play.api.Play.current
-import scala.util.matching.Regex
 import java.io.File
 import play.utils.UriEncoding
-import akka.actor.FSM.->
 import java.net.URL
+import scrupal.models.CoreModule
 
 /**
  * Asset controller for core assets. This one gets used by the templates
@@ -120,7 +119,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
 	 * @return path to the theme's .css file
 	 */
 	def theme(provider: String, name: String, min: Boolean = true) : Action[AnyContent] =  {
-    (Global.ScrupalIsConfigured || Global.DataYouShouldNotModify.devMode) match {
+    (Global.ScrupalIsConfigured || CoreModule.DevMode) match {
       case true => {
         provider.toLowerCase() match {
           case "scrupal"    => {

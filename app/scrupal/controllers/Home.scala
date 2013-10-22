@@ -26,6 +26,7 @@ import org.joda.time.Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
 import java.io.File
+import scrupal.models.CoreModule
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -36,7 +37,7 @@ object Home extends ScrupalController {
   /** The home page */
 	def index = Action { implicit request =>
   // If we are not yet configured (no sites to serve) then every request leads us to /config. Period :)
-    if (Global.ScrupalIsConfigured || Global.DataYouShouldNotModify.devMode ) {
+    if (Global.ScrupalIsConfigured || CoreModule.DevMode ) {
       // TODO: Get the home page url that is defined for the current site
       NotImplemented("Site based main page")
     }

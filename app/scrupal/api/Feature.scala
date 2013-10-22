@@ -33,15 +33,19 @@ class Feature(
 ) extends Registrable  {
   def enable() = enabled = true
   def disable() = enabled = false
+  def enabled(how: Boolean): Unit = enabled = how
   def isEnabled = enabled
 
   // Register ourself with the Feature Registry
   Feature.register(this)
+
+  def apply() : Boolean = enabled
 }
 
 object Feature extends Registry[Feature] {
   override val registrantsName = "feature"
   override val registryName = "Features"
+  def enabled(name: Symbol) : Boolean = super.apply(name).getOrElse(NotAFeature).isEnabled
   def apply(name: Symbol, description: String, enabled: Boolean) = new Feature(name, description, enabled)
   implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
   implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled

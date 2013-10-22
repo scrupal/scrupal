@@ -18,7 +18,7 @@
 
     </div>
     @if(lastError.isDefined) {
-        <div class="alert-warning">Current Issue: @lastError.get.getMessage</div>
+        <div class="alert-info">Current Issue: @lastError.get.getMessage</div>
     } else {
         @if(step != Step.Zero_Welcome) {
             <div class="text-success">Current Issue: None</div>
@@ -30,5 +30,6 @@
 @body
 </div>
 <hr/>
-<p><a href="@ConfigWizard.configure">Try This Step Again</a></p>
+<p><a href="@ConfigWizard.configure">Try This Step Again</a>&nbsp;
+    <a href="@ConfigWizard.reconfigure">Start Over</a></p>
 }

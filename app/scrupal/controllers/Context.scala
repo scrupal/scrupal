@@ -36,7 +36,6 @@ case class Context(
   themeProvider: String = "bootswatch",
   user: String = "nobody",
   instance: String = "instanceName",
-  devMode: Boolean = Global.DataYouShouldNotModify.devMode,
   config: Configuration = current.configuration
 ) (implicit val request: RequestHeader)
 {
