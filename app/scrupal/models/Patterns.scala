@@ -56,7 +56,8 @@ object Patterns {
   val addr_spec = join(group(local_part), "@".r, group(domain_part))
 
   val EmailAddress = addr_spec
-  val Identifier = "[-A-Za-z0-9_+=|!.^@#%*?]+".r
+  val Identifier = "[-\\w_+=|!.^@#%*?]+".r
+  val Markdown = "[-\\s\\w~`!@#$%^&*()_+={}\\[]|\\\\:;\"'<>,.?/]*".r
   val LegalName =  join(Identifier,zeroOrMore(join(" ".r, Identifier)))
   val DomainName = "(?:(?:[a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9])\\.){0,126}(?:[A-Za-z0-9][-A-Za-z0-9]*[A-Za-z0-9])".r
   val TcpPort =

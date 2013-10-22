@@ -25,19 +25,19 @@ import scrupal.utils.Version
 /** Test specifications for the API Module class */
 class ModuleSpec extends Specification {
   object Module1 extends Module('Module1, "Module1 Description", Version(1,0,0), Version(0,8,20), true) {
-    override lazy val types = Seq(
+    override val types = Seq(
       new RangeType('Foo, "Fooness", id, 0, 0)
     )
   }
 
   object Module2 extends Module('Module2, "Module2 Description", Version(1,0,0), Version(0,9,1), true) {
-    override lazy val dependencies = HashMap[Symbol,Version](
+    override val dependencies = HashMap[Symbol,Version](
       'Module1 -> Version(0,8,21)
     )
   }
 
   object Module3 extends Module('Module3, "Module3 Description", Version(1,0,0), Version(0,9,1), true) {
-    override lazy val dependencies = HashMap[Symbol,Version](
+    override val dependencies = HashMap[Symbol,Version](
       'Module1 -> Version(0,9,10)
     )
   }

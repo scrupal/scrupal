@@ -69,8 +69,8 @@ class Site (
 
 object Site extends Registry[Site]{
 
-  protected val registrantsName: String = "site"
-  protected val registryName: String = "Sites"
+  val registrantsName: String = "site"
+  val registryName: String = "Sites"
 
   def apply(esite: EssentialSite) = new Site(esite)
 

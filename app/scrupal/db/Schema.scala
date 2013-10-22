@@ -17,16 +17,17 @@
 
 package scrupal.db
 
-import scala.slick.lifted.DDL
-
-import scala.slick.driver._
 import java.sql.Clob
 import play.api.libs.json.{Json, JsValue}
 import scala.Predef._
-import scala.slick.session.Session
 import play.api.Logger
 import scala.util.Try
+
+import scala.slick.lifted.DDL
+import scala.slick.driver._
+import scala.slick.session.Session
 import scala.slick.jdbc.meta.MTable
+
 
 
 /**
@@ -89,7 +90,7 @@ abstract class Schema(val sketch: Sketch )(override implicit val session: Sessio
       val update = sketch.makeSchema
       update.execute
     }
-    Logger.debug("Creating Schema: \n" + (ddl.createStatements mkString("\n")))
+    Logger.trace("Creating Schema: \n" + (ddl.createStatements mkString("\n")))
     ddl.create
   }
 

@@ -78,40 +78,40 @@ class Module(
     * modules should always depend on the latest version of Scrupal available at the time of their writing to ensure
     * the longest future lifespan before they become obsoleted.
     */
-  lazy val dependencies : Map[ModuleIdentifier,Version] = HashMap('Core -> Version(0,1,0))
+  def dependencies : Map[ModuleIdentifier,Version] = HashMap('Core -> Version(0,1,0))
 
   /** The set of data types this module defines.
     * There should be no duplicate types as there is overhead in managing them. Always prefer to depend on the module
     * that defines the type rather than respecify it here. This sequence includes all the Trait and Entity types that
     * the module defines.
     */
-  lazy val types = Seq[Type]()
+  def types = Seq[Type]()
 
   /** The entities that this module supports.
     * An entity combines together a BundleType for storage, a set of REST API handlers,
     * additional operations that can be requested, and
     */
-  lazy val entities = Seq[Entity]()
+  def entities = Seq[Entity]()
 
   /** The set of handlers for the events this module is interested in.
     * Interest is expressed by providing a handler for each event the module wishes to intercept. When the event occurs
     * the module's handler will be invoked. Multiple modules can register for interest in the same event but there is
     * no defined order in which the handlers are invoked.
     */
-  lazy val handlers = Seq[HandlerFor[Event]]()
+  def handlers = Seq[HandlerFor[Event]]()
 
   /** The set of configuration settings for the Module grouped into named sections.
     * We use the Play! Configuration class here. It is a Scala wrapper around the very lovely Typesafe Configuration
     * library written in Java. We provide, elsewhere, our own way to fetch and restore these things from the database
     * via Json serialization.
     * Java*/
-  lazy val settings : Configuration = Configuration.empty
+  def settings : Configuration = Configuration.empty
 
   /** The set of Features that this Module provides.
     * These features can be enabled and disabled through the admin interface and the module can provide its own
     * functionality for when those events occur. See [[scrupal.api.Feature]]
     */
-  lazy val features : Seq[Feature] = Seq()
+  def features : Seq[Feature] = Seq()
 
   /** The set of Database Schemas that this Module defines.
     * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
@@ -119,7 +119,7 @@ class Module(
     */
   def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( )
 
-  lazy val moreDetailsURL = "http://modules.scrupal.org/doc/" + label
+  val moreDetailsURL = "http://modules.scrupal.org/doc/" + label
 
   /** Register this module with the registry of modules */
   Module.register(this)
@@ -170,22 +170,20 @@ object Module extends Registry[Module] {
   override val registryName = "Modules"
   override val registrantsName = "module"
 
-  private[scrupal] def processModules() : Unit = registrants foreach { case (name: ModuleIdentifier, mod: Module) =>
-/*    // Put all the types that are not already there into the types map.
-    mod.types foreach { typ => Types(typ.id) match {
-      case Some(t:Type) => {
-        val m : Module = Modules(t.moduleId)
+  private[scrupal] def processModules() : Unit = {
+    // For each module ...
+    registrants foreach { case (name: ModuleIdentifier, mod: Module) =>
 
-        Logger.warn(
-        "Attempt to override type '" + t.label + "' from module " + m.label + " with version from " + "module " + mod
-          .name)
+      // For each type in the module ...
+      mod.types foreach { case typ: Type =>
+        // Touch the type by asking for it's id's length. This just makes sure it gets instantiated and thus registered
+        require(typ.id.name.length > 0)
       }
-      case _ => { /* do nothing on purpose */ }
-    }}
-
-    // Register all the handlers, creating the category maps as we go
-    // mod.handlers.foreach { handler => Handler(handler) }
-  */
+      mod.features foreach { case feature: Feature =>
+        // Touch the feature by asking for it's id's length. This just makes sure it gets instantiated & registered
+        require(feature.id.name.length > 0)
+      }
+    }
   }
   implicit lazy val moduleWrites : Writes[Module] = new Writes[Module]  {
     def writes(m: Module): JsValue = m.toJson

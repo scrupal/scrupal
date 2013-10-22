@@ -35,6 +35,7 @@ import Patterns._
 import scrupal.api._
 import scrupal.utils.Version
 import scrupal.db.{SupportedDatabases,Sketch,Schema,CoreSchema}
+import play.libs.F
 
 
 /** Scrupal's Core Module.
@@ -51,6 +52,10 @@ object CoreModule extends Module (
 ) {
   /** The Scrupal Type for the identifier of things */
   object Identifier_t extends StringType('Identifier, "Scrupal Identifier", id, anchored(Identifier), 64)
+
+  object Description_t extends StringType('Description, "Scrupal Description", id, anchored(Markdown), 1024)
+
+  object Markdown_t extends StringType('Markdown, "Markdown document type", id, anchored(Markdown))
 
   /** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
   object DomainName_t extends StringType('DomainName, "RFC compliant Domain Name", id, anchored(DomainName), 253)
@@ -120,17 +125,31 @@ object CoreModule extends Module (
     )
   )
 
+  object PageBundle_t extends BundleType('PageBundle, "Information bundle for a page entity.", id, fields = HashMap (
+    'name -> Identifier_t,
+    'description -> Markdown_t,
+    'body -> Markdown_t
+  ))
+
   /** The core types that Scrupal provides to all modules */
-  override lazy val types = Seq[Type](
-    Identifier_t, DomainName_t, TcpPort_t, URI_t, JDBC_URL_t, IPv4Address_t, EmailAddress_t, LegalName_t, SiteInfo_t
+  override def types = Seq[Type](
+    Identifier_t, Description_t, Markdown_t, DomainName_t, TcpPort_t, URI_t, JDBC_URL_t, IPv4Address_t, EmailAddress_t,
+    LegalName_t, SiteInfo_t, PageBundle_t
   )
 
+  object PageEntity extends Entity('Page, "An entity for simple HTML5 pages.", PageBundle_t.id)
+
+  override def entities = Seq[Entity](
+    PageEntity
+  )
   /** Settings for the core
     */
-  override lazy val settings = Configuration.empty
+  override def settings = Configuration.empty
 
-  override lazy val features = Seq(
-    Feature('DebugFooter, "Show tables of debug information at bottom of each page.", false)
+  object DebugFooter extends Feature('DebugFooter, "Show tables of debug information at bottom of each page.", false)
+
+  override def features = Seq(
+    DebugFooter
   )
 
   override def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( new CoreSchema(sketch) )

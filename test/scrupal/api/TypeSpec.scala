@@ -118,9 +118,9 @@ class TypeSpec extends Specification {
     }
   }
 
-  object blobTy extends BLOBType('blobTy, "Blob example", TestModule.id, "application/binary", 2, 4)
+  object blobTy extends BLOBType('blobTy, "Blob example", TestModule.id, "application/binary", 4)
 
-  "BLOBType(2,4)" should {
+  "BLOBType(4)" should {
     "accept valid URI" in {
       val url = JsString("http://foo.com/bar/baz.bin")
       blobTy.validate(url).asOpt.isDefined must beTrue

@@ -89,20 +89,25 @@ object Global extends GlobalSettings
 	 * @param app the application
 	 */
 	override def beforeStart(app: Application) {
+    DefaultGlobal.beforeStart(app)
+    oneTimeInitialization(app)
+	}
+
+  def oneTimeInitialization(app: Application) {
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
     require(Type.registryName == "Types")
     require(Module.registryName == "Modules")
+    require(Site.registryName == "Sites")
 
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require(CoreModule.id == 'Core)
 
-    // Do whatever Play wants to do, first.
-    DefaultGlobal.beforeStart(app)
+    // TODO: scan classpath for additional modules
 
     // We are now ready to process the registered modules
     Module.processModules
-	}
+  }
 
   def reload(app: Application) {
     DataYouShouldNotModify.sites = Site.load(app.configuration)
@@ -118,6 +123,11 @@ object Global extends GlobalSettings
 
     // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
     // those is for a site configuration so we should be able to load the sites now.
+    // ISSUE: Is this too late? Will requests be coming in at this point?
+    // FIXME: THis is it
+    // TODO: Something
+    // NOTE: SOmething else
+    // HELP: I don't understand this
     reload(app)
 	}
 
@@ -182,9 +192,9 @@ object Global extends GlobalSettings
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 
-    Logger.debug("STARTUP CONFIGURATION VALUES")
+    Logger.trace("STARTUP CONFIGURATION VALUES")
     interestingConfig(newconf) foreach { case (key: String, value: ConfigValue) =>
-      Logger.debug ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
+      Logger.trace ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
     }
 
     newconf
@@ -207,7 +217,6 @@ object Global extends GlobalSettings
 	 * @return an action to handle this request - if no action is returned, a 404 not found result will be sent to client
 	 * @see onActionNotFound
 	 */
-  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc|scaladoc)".r
 	override def onRouteRequest(request: RequestHeader): Option[play.api.mvc.Handler] = {
     if (ScrupalIsConfigured || pathsOkayWhenUnconfigured.findFirstMatchIn(request.path).isDefined ) {
       Logger.trace("Standard Routing for: " + request.path)
@@ -217,6 +226,7 @@ object Global extends GlobalSettings
       Some(scrupal.controllers.ConfigWizard.configure())
     }
 	}
+  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc|scaladoc)".r
 
   /**
 	 * Called when an exception occurred.

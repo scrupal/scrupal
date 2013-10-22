@@ -82,86 +82,259 @@ object ConfigWizard extends ScrupalController {
       }
     }
 
-    /** Determine which step we are at based on the Context provided */
-    def apply(context: Context) : (Step.Kind,Option[Throwable]) = {
-      Try {
-        val cfg = context.config
-        if (context.site.isDefined || Site.size > 0) {
-          // Initial loading found sites so we can assume we've got DB & Schema, skip ahead to step 5 :)
-          (Five_Create_Page,None)
-        } else if (cfg.getConfig("db").isEmpty) {
-          // There isn't even an attempt to configure a databasel, probably a fresh install
-          (Zero_Welcome,Some(cfg.reportError("db", "There is no configuration for any databases. This is " +
-            "probably because Scrupal is freshly installed.")))
-        } else {
-          // Something is up with loading the Sites: Config, Database, Schema. Check each
-          ConfigHelper(cfg).validateDBs match {
-            case Success(siteNames: Set[String]) => {
-              if (siteNames.isEmpty) {
-                (One_Specify_Databases,Some(cfg.reportError("db",
-                  """The database configuration is empty. Probably you erased it on a previous configuration attempt
-                    |or the configuration file was manually tampered with.""")))
-              } else {
-                Logger.info("Got clean database config: " + siteNames )
-                // Okay, we validated that we have a clean configuration. So, we can now look at each site and assess
-                // if there are URL, connection or schema issues.
-                val site_results: Set[(Step.Value,Option[Throwable])] = for ( site <- siteNames ) yield {
-                  try
-                  {
-                    if (site == "default") {
-                      (One_Specify_Databases, Some(new Exception("The default database configuration does not permit " +
-                        "storage on disk. A real database option must be chosen. ")))
-                    } else {
-                      context.config.getConfig("db." + site) match {
-                        case Some(config) => {
-                          val sketch = Sketch(config)
-                          sketch.withSession { implicit  session: Session =>
-                            val schema = new CoreSchema(sketch)
-                            val schema_was_validated = schema.validate
-                            schema_was_validated match {
-                              case Success(false) => (Three_Install_Schemas, None)
-                              case Success(true) => {
-                                // FIXME: These two queries use findAll which unloads the contents of the tables into
-                                // memory. Why isn't there a COUNT(*) facility available??????
-                                if ( schema.Sites.findAll.length > 0) {
-                                  if ( schema.Entities.findAll.length > 0) {
-                                    (Six_Success, None)
-                                  } else {
-                                    (Five_Create_Page, Some(new Exception("You have a site defined but there are no " +
-                                      "entities created yet so nothing will be served.")))
-                                  }
-                                } else {
-                                  (Four_Create_Site, Some(new Exception("The database is configured correctly but no " +
-                                    "sites have been defined yet.")))
-                                }
-                              }
-                              case Failure(x) => (Three_Install_Schemas,Some(x))
-                            }
-                          }
+    def apply(implicit context: Context) : (Step.Kind, Option[Throwable]) = computeState(context)
+  }
+
+  /** Get the names of the configured database, or error information
+    * Reads the database.conf file and validates the configuration information contained therein. If it checks out,
+    * returns the list of database names in the third part of the triple. Otherwise,
+    * the first to parts of the triple provide the current state and error message to go with it.
+    * @return A triple providing information for the next part of configuration
+    */
+  def getDatabaseNames(config: Configuration) : (Step.Kind, Option[Throwable], Set[String]) = {
+    import Step._
+    val cfg = Configuration(getDbConfig(config)._1)
+    val db_cfg = cfg.getConfig("db")
+    if (db_cfg.isEmpty)
+      (Zero_Welcome, Some(new Throwable("The database configuration is completely empty.")), Set.empty)
+    else if (db_cfg.get.getConfig("default").isDefined)
+      (Zero_Welcome, Some(new Throwable("The initial, default database configuration was detected.")), Set.empty)
+    else ConfigHelper(cfg).validateDBs match {
+      case Failure(x)  => (One_Specify_Databases, Some(x), Set.empty)
+      case Success(x)  => (Two_Connect_Databases, None, x)
+    }
+  }
+
+  def checkConnections(config: Configuration) : (Step.Kind, Option[Throwable], Set[String]) = {
+    val (state, err, names) = getDatabaseNames(config)
+    if (names.isEmpty)
+      (state, err, names)
+    else {
+      try {
+        names.foreach { db_name: String =>
+          config.getConfig("db." + db_name) match {
+            case Some(config) => {
+              val sketch = Sketch(config)
+              sketch.withSession { implicit  session: Session =>
+                true // result of the foreach
+              }
+            }
+            case None => throw new Exception("Could not find database configuration for '" + db_name)
+          }
+        }
+      } catch {
+        case x: Throwable => (Step.Two_Connect_Databases, Some(x), Set.empty)
+      }
+      (Step.Three_Install_Schemas, None, names)
+    }
+  }
+
+  def checkSchemas(config: Configuration) : (Step.Kind, Option[Throwable], Set[String]) = {
+    val (state, err, names) = getDatabaseNames(config)
+    if (names.isEmpty)
+      (state, err, names)
+    else {
+      // Okay, we validated that we have a clean configuration. So, we can now look at each site and assess
+      // if there are URL, connection or schema issues.
+      lazy val emptySet = Set.empty[String]
+      val db_results: Set[(Step.Value,Option[Throwable],Set[String])] = for ( db <- names ) yield {
+        try
+        {
+          val cfg = Configuration(getDbConfig(config)._1)
+          cfg.getConfig("db." + db) match {
+            case Some(config) => {
+              val sketch = Sketch(config)
+              sketch.withSession { implicit  session: Session =>
+                val schema = new CoreSchema(sketch)
+                val metaTables = schema.getMetaTables
+                if (metaTables.isEmpty) {
+                  (Step.Three_Install_Schemas, Some(new Exception("Database is empty")), emptySet)
+                } else {
+                  schema.validate match {
+                    case Success(false) =>
+                      (Step.Three_Install_Schemas, Some(new Exception("Schema validation failed.")), emptySet)
+                    case Success(true) => {
+                      // FIXME: These two queries use findAll which unloads the contents of the tables into
+                      // memory. Why isn't there a COUNT(*) facility available??????
+                      if ( schema.Sites.findAll.length > 0) {
+                        if ( schema.Instances.findAll.length > 0) {
+                          // Finally, at this point, we know everything is working.
+                          (Step.Six_Success, None, names)
+                        } else {
+                          (Step.Five_Create_Page, Some(new Exception("You have a site defined but there are no " +
+                            "entities created yet so nothing will be served.")), names)
                         }
-                        case None => (One_Specify_Databases, Some(context.config.reportError("db."+site,
-                          "No configuration found for this database")))
+                      } else {
+                        (Step.Four_Create_Site, Some(new Exception("The database is configured correctly but no " +
+                          "sites have been defined yet.")), names)
                       }
                     }
+                    case Failure(x) => (Step.Three_Install_Schemas,Some(x), emptySet)
                   }
-                  catch { case x : Throwable => (Two_Connect_Databases,Some(x)) }
-                }
-                // We just collected together a list of the results for each site. now let's find the earliest
-                // step amongst them.
-                site_results.foldLeft[(ConfigWizard.Step.Value,Option[Throwable])]((Six_Success,None)) {
-                  case (step1:(Step.Kind, Option[Throwable]), step2:(Step.Kind, Option[Throwable])) =>
-                    if (step1._1 < step2._1) step1 else step2
                 }
               }
             }
-            case Failure(x)  => (One_Specify_Databases, Some(x))
+            case None => (Step.One_Specify_Databases,
+              Some(new Exception("No configuration found for database '" + db + "'.")), emptySet)
           }
         }
-      } match {
-        case Success(x) => x
-        case Failure(x) => (One_Specify_Databases, Some(x))
+        catch { case x : Throwable => (Step.Two_Connect_Databases,Some(x), emptySet) }
+      }
+      // We just collected together a list of the results for each site. now let's find the earliest
+      // step amongst them.
+      db_results.foldLeft[(Step.Value,Option[Throwable],Set[String])]((Step.Six_Success,None,emptySet)) {
+        case (step1, step2) => if (step1._1 < step2._1) step1 else step2
       }
     }
+  }
+
+  /** Determine which step we are at based on the Context provided */
+  def computeState(implicit context: Context) : (Step.Kind,Option[Throwable]) = {
+    import Step._
+    val cfg = context.config
+    Try {
+      if (context.site.isDefined || Site.size > 0) {
+        // Initial loading found sites so we can assume we've got DB & Schema, skip ahead to step 5 :)
+        (Five_Create_Page,None)
+      } else if (cfg.getConfig("db").isEmpty) {
+        // There isn't even an attempt to configure a databasel, probably a fresh install
+        (Zero_Welcome,Some(cfg.reportError("db", "There is no configuration for any databases. This is " +
+          "probably because Scrupal is freshly installed.")))
+      } else {
+        // Something is up with loading the Sites: Config, Database, Schema. Check each
+        ConfigHelper(cfg).validateDBs match {
+          case Success(siteNames: Set[String]) => {
+            if (siteNames.isEmpty) {
+              (One_Specify_Databases,Some(cfg.reportError("db",
+                """The database configuration is empty. Probably you erased it on a previous configuration attempt
+                  |or the configuration file was manually tampered with.""")))
+            } else {
+              Logger.info("Got clean database config: " + siteNames )
+              // Okay, we validated that we have a clean configuration. So, we can now look at each site and assess
+              // if there are URL, connection or schema issues.
+              val site_results: Set[(Step.Value,Option[Throwable])] = for ( site <- siteNames ) yield {
+                try
+                {
+                  if (site == "default") {
+                    (One_Specify_Databases, Some(new Exception("The default database configuration does not permit " +
+                      "storage on disk. A real database option must be chosen. ")))
+                  } else {
+                    context.config.getConfig("db." + site) match {
+                      case Some(config) => {
+                        val sketch = Sketch(config)
+                        sketch.withSession { implicit  session: Session =>
+                          val schema = new CoreSchema(sketch)
+                          val schema_was_validated = schema.validate
+                          schema_was_validated match {
+                            case Success(false) => (Three_Install_Schemas, None)
+                            case Success(true) => {
+                              // FIXME: These two queries use findAll which unloads the contents of the tables into
+                              // memory. Why isn't there a COUNT(*) facility available??????
+                              if ( schema.Sites.findAll.length > 0) {
+                                if ( schema.Entities.findAll.length > 0) {
+                                  (Six_Success, None)
+                                } else {
+                                  (Five_Create_Page, Some(new Exception("You have a site defined but there are no " +
+                                    "entities created yet so nothing will be served.")))
+                                }
+                              } else {
+                                (Four_Create_Site, Some(new Exception("The database is configured correctly but no " +
+                                  "sites have been defined yet.")))
+                              }
+                            }
+                            case Failure(x) => (Three_Install_Schemas,Some(x))
+                          }
+                        }
+                      }
+                      case None => (One_Specify_Databases, Some(context.config.reportError("db."+site,
+                        "No configuration found for this database")))
+                    }
+                  }
+                }
+                catch { case x : Throwable => (Two_Connect_Databases,Some(x)) }
+              }
+              // We just collected together a list of the results for each site. now let's find the earliest
+              // step amongst them.
+              site_results.foldLeft[(ConfigWizard.Step.Value,Option[Throwable])]((Six_Success,None)) {
+                case (step1:(Step.Kind, Option[Throwable]), step2:(Step.Kind, Option[Throwable])) =>
+                  if (step1._1 < step2._1) step1 else step2
+              }
+            }
+          }
+          case Failure(x)  => (One_Specify_Databases, Some(x))
+        }
+      }
+    } match {
+      case Success(x) => x
+      case Failure(x) => (One_Specify_Databases, Some(x))
+    }
+  }
+
+
+  // The configuration key that says where to get the database configuration data.
+  lazy val scrupal_database_config_file = "scrupal.database.config.file"
+
+  def getDbConfigFile(config: Configuration) : Option[File] = {
+    config.getString(scrupal_database_config_file) map { db_config_file_name: String =>
+      new File(db_config_file_name)
+    }
+  }
+
+  def getDbConfig(config: Configuration) : (Config,Option[File]) = {
+    getDbConfigFile(config) map { db_config_file: File =>
+      if (db_config_file.isFile) {
+        (ConfigFactory.parseFile(db_config_file),Some(db_config_file))
+      } else {
+        (ConfigFactory.empty(),None)
+      }
+    }
+  }.getOrElse((ConfigFactory.empty(),None))
+
+  private def setDbConfig(x : (Config, Option[File]), config: Map[String,Any]) : Configuration = {
+    import collection.JavaConversions._
+
+    val new_config : Config = ConfigFactory.parseMap(config)
+    val merged_config : Config  = new_config.withFallback(x._1)
+    val data: String = merged_config.root.render (ConfigRenderOptions.concise()) // whew!
+    val trimmed_data = data.substring(1, data.length-1)
+    x._2 map { file: File =>
+      val writer = new PrintWriter(file)
+      try  { writer.println(trimmed_data) } finally { writer.close }
+      Configuration(merged_config)
+    }
+  }.getOrElse(Configuration.empty)
+
+  private def doShortCutConfiguration(config: Configuration) = {
+    val default_db_conf = Map(
+      "db.shortcut.url" ->  "jdbc:h2:~/scrupal",
+      "db.shortcut.driver" -> "org.h2.Driver",
+      "db.shortcut.user" -> "",
+      "db.shortcut.pass" -> ""
+    )
+    val new_config = setDbConfig(getDbConfig(config), default_db_conf)
+    val default_config = new_config.getConfig("db.shortcut")
+    val sketch = Sketch(default_config.get)
+    sketch.withSession { implicit session: Session =>
+      val schema = new CoreSchema(sketch)
+      schema.create(session)
+      val site = EssentialSite('default, "Scrupal Default Site", 8000, "localhost", 8000, false, true)
+      schema.Sites.insert(site)
+      // TODO: Insert the first "Welcome To Scrupal" page entity.
+    }
+  }
+
+  /** Initial Configuration for Step 1
+    * This is empty so as to make the state machine go to step 1 which provides the JDBC configuration
+    * @return
+    */
+  private def doInitialConfiguration(config: Configuration) = {
+    val empty_conf = Map (
+      "db.default.url"    -> "jdbc:h2:mem:scrupal",
+      "db.default.driver" -> "org.h2.Driver",
+      "db.default.user"   -> "",
+      "db.default.pass"   -> ""
+    )
+    setDbConfig((ConfigFactory.empty(), getDbConfigFile(config)), empty_conf)
   }
 
   /** This Configuration action
@@ -188,59 +361,11 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
-  val db_config_file = new File("conf/databases.conf")
-
-  private def setDbConfig(config: Map[String,Any]) : Configuration = {
-    val existing_config : Config = if (db_config_file.isFile) {
-      ConfigFactory.parseFile(db_config_file)
-    } else {
-      ConfigFactory.empty()
-    }
-
-    import collection.JavaConversions._
-
-    val new_config : Config = ConfigFactory.parseMap(config)
-    val merged_config : Config  = new_config.withFallback(existing_config)
-    val data: String = merged_config.root.render (ConfigRenderOptions.concise()) // whew!
-    val trimmed_data = data.substring(1, data.length-1)
-    val writer = new PrintWriter(db_config_file.getCanonicalPath())
-    try  { writer.println(trimmed_data) } finally { writer.close }
-    Configuration(merged_config)
-  }
-
-  private def doShortCutConfiguration() = {
-    val default_db_conf = Map(
-      "db.default.url" ->  "jdbc:h2:~/scrupal",
-      "db.default.driver" -> "org.h2.Driver",
-      "db.default.user" -> "",
-      "db.default.pass" -> ""
-    )
-    val new_config = setDbConfig(default_db_conf)
-    val default_config = new_config.getConfig("db.default")
-    val sketch = Sketch(default_config.get)
-    sketch.withSession { implicit session: Session =>
-      val schema = new CoreSchema(sketch)
-      schema.create(session)
-      val site = EssentialSite('default, "Scrupal Default Site", 8000, "localhost", 8000, false, true)
-      schema.Sites.insert(site)
-      // TODO: Insert the first "Welcome To Scrupal" page entity.
-    }
-  }
-
-  /** Initial Configuration for Step 1
-    * This is empty so as to make the state machine go to step 1 which provides the JDBC configuration
-    * @return
+  /** Take Conifguration Action
+    * This is the POST method handler for the configuration wizard. It is invoked when the user provides some input
+    * to the configuration process. This is where the work gets done.
+    * @return An Action
     */
-  private def doInitialConfiguration() = {
-    val empty_conf = Map (
-      "db.default.url"    -> "jdbc:h2:mem:scrupal",
-      "db.default.driver" -> "org.h2.Driver",
-      "db.default.user"   -> "",
-      "db.default.pass"   -> ""
-    )
-    setDbConfig(empty_conf)
-  }
-
   def configAction() = Action { implicit request =>
     val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
     if (formData.contains("step"))
@@ -255,8 +380,8 @@ object ConfigWizard extends ScrupalController {
               val hows = formData.get("how").get
               if (hows.size==1) {
                 hows(0) match {
-                  case "shortcut" => doShortCutConfiguration()
-                  case "configure" => { doInitialConfiguration() }
+                  case "shortcut" => doShortCutConfiguration(context.config)
+                  case "configure" => doInitialConfiguration(context.config)
                 }
               }
             }

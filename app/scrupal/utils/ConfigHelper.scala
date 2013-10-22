@@ -57,12 +57,14 @@ class ConfigHelper(config : Configuration) {
         val keys: Set[String] = site_config.subKeys
         // Whatever keys are there they must all be strings so validate that (getString will throw if its not a string)
         // and make sure they didn't provide a key with an empty value, also
-        for ( key <- keys ) yield site_config.getString(key).getOrElse {
-          throw config.reportError("db." + site, "Missing value for '" + key + "'.")
-        }
+        for ( key <- keys ) yield if (site_config.getString(key).getOrElse {
+          throw new Exception("Configuration for '" + site + "' is missing a value for '" + key + "'.")
+        }.isEmpty) { throw new Exception("Configuration for '" + site + "' has an empty value for '" + key + "'.") }
         // The config needs to at least have a url key
         if (!keys.contains("url")) {
-          throw config.reportError("db." + site, "Configuration must specify a value for 'url' key, at least")
+          throw new Exception("Configuration for '" + site + "' must specify a value for 'url' key, at least.")
+        } else if (site_config.getString("url").get.equals("jdbc:h2:mem:")) {
+          throw new Exception("Configuration for '" + site + "' must not use a private memory-only database")
         }
         // Okay, looks good, return the site name
         site

@@ -294,7 +294,6 @@ class RealType (
   * @param id
   * @param description
   * @param mime
-  * @param minLen
   * @param maxLen
   */
 class BLOBType  (
@@ -302,10 +301,8 @@ class BLOBType  (
   description : String,
   moduleId: ModuleIdentifier,
   val mime : String,
-  val minLen : Int = 0,
   val maxLen : Long = Long.MaxValue
 ) extends Type(id, description, moduleId) {
-  assert(minLen >= 0)
   assert(maxLen >= 0)
   assert(mime.contains("/"))
 
@@ -341,9 +338,8 @@ class BLOBType  (
     "name" -> label,
     "plural" -> plural,
     "description" -> description,
-    "mine" -> mime,
-    "minLen" -> minLen,
-    "axnLen" -> maxLen
+    "mime" -> mime,
+    "maxLen" -> maxLen
   )
 }
 

@@ -42,9 +42,10 @@ class Feature(
 object Feature extends Registry[Feature] {
   override val registrantsName = "feature"
   override val registryName = "Features"
-  val NotAFeature : Feature = Feature('NotAFeature,"This is not a feature", false)
   def apply(name: Symbol, description: String, enabled: Boolean) = new Feature(name, description, enabled)
   implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
   implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled
+
+  object NotAFeature extends Feature('NotAFeature,"This is not a feature", false)
 }
 

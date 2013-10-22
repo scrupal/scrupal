@@ -20,9 +20,14 @@ package scrupal.controllers
 import org.specs2.mutable.Specification
 import play.api.mvc.RequestHeader
 import play.api.{Logger, Configuration}
-import scala.util.Success
 import scrupal.db.{CoreSchema,Sketch}
+import scala.slick.lifted.DDL
+import scala.slick.driver._
 import scala.slick.session.Session
+import scrupal.fakes.WithFakeScrupal
+import scala.slick.lifted.DDL
+import scrupal.api.{Instance, EssentialSite}
+import play.api.libs.json.Json
 
 /** This is the test suite for the Config.Step class
   *
@@ -41,74 +46,171 @@ class ConfigStepSpec extends Specification {
     def version: String = ???
   }
 
-  def simpleContext(config: Map[String,Object])(implicit request: RequestHeader ) : Context = Context(
-    config = Configuration.empty ++ play.api.Configuration.from( config )
-  )
+  def simpleContext(config: Map[String,Object]) : Context = Context(
+    config = Configuration.empty ++ Configuration.from( config ))(nullRequest)
 
-
-  "Config.Step" should {
-    "Identify Step 0 - empty config" in {
-      implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext(Map())
-      val step = ConfigWizard.Step(context)._1
-      step must beEqualTo(ConfigWizard.Step.Zero_Welcome)
+  "ConfigWizard.getDatabaseNames" should {
+    "Recognize Step 0 when there's no configuration" in new WithFakeScrupal {
+      val triple = ConfigWizard.getDatabaseNames(Configuration.from(Map()))
+      triple._1 must beEqualTo(ConfigWizard.Step.Zero_Welcome)
+      triple._2.isDefined must beTrue
+      triple._3.size must beEqualTo(0)
     }
 
-    "Identify Step 1 - wrong config" in {
-      implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext(
-        Map( "db" -> Map( "default" -> Map( "foo" -> "bar")))
+    "Recognize Step 0 on empty db config" in new WithFakeScrupal {
+      val config = Configuration.from(
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_conf.conf")
       )
-      val step = ConfigWizard.Step(context)._1
-      step must beEqualTo(ConfigWizard.Step.One_Specify_Databases)
+      val triple = ConfigWizard.getDatabaseNames(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.Zero_Welcome)
+      triple._2.isDefined must beTrue
+      triple._3.size must beEqualTo(0)
     }
-
-    "Identify Step 1 - bad config" in {
-      implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext(
-        Map( "db" -> Map( "default" -> Map( "url" -> "not-a-url")))
+    "Recognize Step 0 on default db config" in new WithFakeScrupal {
+      val config = Configuration.from(
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/default.conf")
       )
-      val step = ConfigWizard.Step(context)._1
-      step must beEqualTo(ConfigWizard.Step.One_Specify_Databases)
+      val triple = ConfigWizard.getDatabaseNames(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.Zero_Welcome)
+      triple._2.isDefined must beTrue
+      triple._3.size must beEqualTo(0)
     }
-
-    "Identify Step 2 - no such db" in {
-      implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext(
-        Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:not_an_existing_db;IFEXISTS=TRUE")))
+    "Recognize Step 1 on invalid db config" in new WithFakeScrupal {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/bad.conf")
       )
-      val step = ConfigWizard.Step(context)._1
-      step must beEqualTo(ConfigWizard.Step.Two_Connect_Databases)
+      val triple = ConfigWizard.getDatabaseNames(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.One_Specify_Databases)
+      triple._2.isDefined must beTrue
+      triple._3.size must beEqualTo(0)
     }
 
-    "Identify Step 3 - no schema" in {
-      implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext( Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:mem:empty_test"))
-      ) )
-
-      val step = ConfigWizard.Step(context)._1
-      step must beEqualTo(ConfigWizard.Step.Three_Install_Schemas) or beEqualTo(ConfigWizard.Step.Two_Connect_Databases)
-    }
-
-    "Identify Step 4 - missing site instances " in {
-      implicit val request : RequestHeader = nullRequest
-      implicit val context = simpleContext(
-        Map( "db" -> Map( "default" -> Map( "url" -> "jdbc:h2:mem:no_sites;DB_CLOSE_DELAY=2")))
+    "Recognize Step 1 on valid mem db config" in new WithFakeScrupal {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/valid_mem.conf")
       )
+      val triple = ConfigWizard.getDatabaseNames(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.One_Specify_Databases)
+      triple._2.isDefined must beTrue
+      triple._3.size must beEqualTo(0)
+    }
 
+    "Recognize Step 2 on valid db config" in new WithFakeScrupal {
+      val config = Configuration.from ( Map(
+        ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/valid.conf"
+        )
+      )
+      val triple = ConfigWizard.getDatabaseNames(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.Two_Connect_Databases)
+      triple._2.isDefined must beFalse
+      triple._3.size must beGreaterThan(0)
+    }
+  }
+
+  "ConfigWizard.checkSchema" should {
+    "Recognize Step 2 on non-existent db" in new WithFakeScrupal {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/no_exist.conf")
+      )
+      val triple = ConfigWizard.checkSchemas(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.Two_Connect_Databases)
+      ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("not found"); xcptn }}.isDefined) must beTrue
+      triple._3.size must beEqualTo(0)
+    }
+
+    "Recognize Step 3 on empty database" in new WithFakeScrupal {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
+      )
+      val triple = ConfigWizard.checkSchemas(config)
+      triple._1 must beEqualTo(ConfigWizard.Step.Three_Install_Schemas)
+      ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("empty"); xcptn }}.isDefined) must beTrue
+      triple._3.size must beEqualTo(0)
+    }
+
+    "Recognize Step 3 on schema missing tables" in {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
+      )
       // Get a DB Sketch with the same config values as specified above
-      val sketch = Sketch( context.config.getConfig("db.default").get )
+      val db_config = ConfigWizard.getDbConfig(config)._1
+      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+      sketch.withSession { implicit session: Session =>
+        val schema = new CoreSchema(sketch)
+        schema.createCoreTables
+        val triple = ConfigWizard.checkSchemas(config)
+        triple._1 must beEqualTo(ConfigWizard.Step.Three_Install_Schemas)
+        ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("validation"); xcptn }}.isDefined) must
+          beTrue
+        triple._3.size must beEqualTo(0)
+      }
+    }
+
+    "Recognize Step 4 on valid schema" in {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
+      )
+      // Get a DB Sketch with the same config values as specified above
+      val db_config = ConfigWizard.getDbConfig(config)._1
+      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
 
       // Install the Scrupal Schema
       sketch.withSession { implicit session: Session =>
         val schema = new CoreSchema(sketch)
         schema.create(session)
+        val triple = ConfigWizard.checkSchemas(config)
+        triple._1 must beEqualTo(ConfigWizard.Step.Four_Create_Site)
+        ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("no sites"); xcptn }}.isDefined) must
+          beTrue
+        triple._3.size must beEqualTo(1)
       }
-
-      // Now let's see if it validates that all the tables are there.
-      val step = ConfigWizard.Step(context)._1
-
-      step must beEqualTo(ConfigWizard.Step.Four_Create_Site)
     }
+
+    "Recognize Step 5 on valid site" in {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
+      )
+      // Get a DB Sketch with the same config values as specified above
+      val db_config = ConfigWizard.getDbConfig(config)._1
+      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+
+      // Install the Scrupal Schema
+      sketch.withSession { implicit session: Session =>
+        val schema = new CoreSchema(sketch)
+        schema.create(session)
+        schema.Sites.insert( EssentialSite('Test,"Testing",8080,"localhost",80,false,true))
+        val triple = ConfigWizard.checkSchemas(config)
+        triple._1 must beEqualTo(ConfigWizard.Step.Five_Create_Page)
+        ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("no entities"); xcptn }}.isDefined) must
+          beTrue
+        triple._3.size must beEqualTo(1)
+      }
+    }
+
+    "Recognize Step 5 on valid entity" in {
+      val config = Configuration.from (
+        Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
+      )
+      // Get a DB Sketch with the same config values as specified above
+      val db_config = ConfigWizard.getDbConfig(config)._1
+      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+
+      // Install the Scrupal Schema
+      sketch.withSession { implicit session: Session =>
+        val schema = new CoreSchema(sketch)
+        schema.create(session)
+        schema.Sites.insert( EssentialSite('Test,"Testing",8080,"localhost",80,false,true))
+        schema.Instances.insert( Instance('AnInstance, "Testing", 'Page, Json.obj(
+          "name" -> "TestInstance",
+          "description" -> "Testing",
+          "body" -> "# Heading\nThis is a test."
+        )))
+        val triple = ConfigWizard.checkSchemas(config)
+        triple._1 must beEqualTo(ConfigWizard.Step.Six_Success)
+        triple._2.isDefined must beFalse
+        triple._3.size must beEqualTo(1)
+      }
+    }
+
   }
 }

@@ -20,6 +20,7 @@ package scrupal.db
 import scala.slick.lifted.DDL
 import scala.slick.session.Session
 import scala.slick.jdbc.meta.MTable
+
 import scrupal.models.CoreModule
 import scrupal.api.{Entity, Type}
 
@@ -29,6 +30,9 @@ import scrupal.api.{Entity, Type}
 class CoreSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
   with ITEMSComponent with AAAComponent  with NotificationComponent
 {
+
+  // This is where the magic happens :)
+  import profile.simple._
 
   // Super class Schema requires us to provide the DDL from our tables
   override val ddl : DDL = {
@@ -52,6 +56,11 @@ class CoreSchema(sketch: Sketch)(implicit session: Session) extends Schema (sket
       yield tables.contains(tname)
     val num_in_meta_tables = meta_tables_scan_results.count { b: Boolean => b }
     num_in_meta_tables == tableNames.size
+  }
+
+  def createCoreTables(implicit session: Session) : Unit = {
+    val ddl: DDL = Instances.ddl ++ Types.ddl ++ Entities.ddl ++ Modules.ddl ++ Sites.ddl
+    ddl.create
   }
 
   override def create(implicit session: Session): Unit = {
