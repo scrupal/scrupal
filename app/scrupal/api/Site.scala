@@ -23,6 +23,7 @@ import play.api.{Logger, Configuration}
 import scala.util.{Failure, Success, Try}
 import scala.slick.session.Session
 import scrupal.db.{CoreSchema,Sketch}
+import scala.collection.mutable
 
 
 /** Information about one site that Scrupal is serving.
@@ -82,22 +83,27 @@ object Site extends Registry[Site]{
     */
   def load(config: Configuration) : Map[Short, Site] = {
     Try {
-      Map(
-        {
-          ConfigHelper(config).forEachDB {
-            case (site: String, dbConfig: Configuration) => {
-              val sketch = Sketch(dbConfig)
-              val url = dbConfig.getString("url").getOrElse("")
-              Logger.debug("Found valid DB Config with  URL '" + url + "' for site " + site + ": attempting load" )
-              implicit val session: Session = sketch.makeSession
-              val schema = new CoreSchema(sketch)
-              import schema._
-              val sites = Sites.findAll.toSeq
-              for (s: EssentialSite <- sites ) yield s.listenPort -> Site(s)
-              // FIXME: We need to handle sites configured for the same port here, only one should be allowed.
+      val result: mutable.Map[Short, Site] = mutable.Map()
+      ConfigHelper(config).forEachDB {
+        case (site: String, dbConfig: Configuration) => {
+          val sketch = Sketch(dbConfig)
+          sketch.withSession { implicit session: Session =>
+            val url = dbConfig.getString("url").getOrElse("")
+            Logger.debug("Found valid DB Config with  URL '" + url + "' for site " + site + ": attempting load" )
+            val schema = new CoreSchema(sketch)
+            schema.validate match {
+              case Success(true) =>
+                schema.Sites.findAll foreach { s: EssentialSite => result.put(s.listenPort, Site(s) ) }
+              case Success(false) =>
+                Logger.warn("Attempt to validate schema for '" + url + "' failed.")
+              case Failure(x) =>
+                Logger.warn("Attempt to validate schema for '" + url + "' failed.", x)
             }
-          }. flatMap { s: Seq[(Short,Site)] => for ( ps <- s ) yield ps._1 -> ps._2 }.toSeq
-        } : _* )
+            false
+          }
+        }
+      }
+      Map(result.toSeq:_*)
     } match {
       case Success(x) => x
       case Failure(e) => Logger.warn("Error while loading sites: ", e); Map[Short,Site]()

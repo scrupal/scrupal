@@ -99,8 +99,10 @@ object Global extends GlobalSettings
 
     // Set things from configuration
     val config = app.configuration
-    config.getBoolean("scrupal.developer.mode") map { value => CoreModule.DevMode.enabled(value) }
-    config.getBoolean("scrupal.developer.footer") map { value =>CoreModule.DebugFooter.enabled(value) }
+    // Features
+    config.getBoolean("scrupal.developer.mode") map   { value => CoreModule.DevMode.enabled(value) }
+    config.getBoolean("scrupal.developer.footer") map { value => CoreModule.DebugFooter.enabled(value) }
+    config.getBoolean("scrupal.config.wizard") map    { value => CoreModule.ConfigWizard.enabled(value) }
 
     // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
     // those is for a site configuration so we should be able to load the sites now.

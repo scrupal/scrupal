@@ -1,7 +1,13 @@
-@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
-    implicit context : scrupal.controllers.Context)
+@(dbs: scrupal.controllers.ConfigWizard.DatabasesForm,
+  step: scrupal.controllers.ConfigWizard.Step.Kind,
+  lastError: Option[Throwable])(
+  implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
+@import scrupal.views.Helpers._
+@import scrupal.views.html.helpers._
+@import helper._
 @import scrupal.controllers.routes.ConfigWizard
+
 @html.configPage("Database Configuration", step, lastError)  {
 <p>
 I'm going to help you select and configure your database now. Scrupal stores all its information in a database and
@@ -18,50 +24,25 @@ picking the right one for your needs is important. You may choose from among the
 </dl>
 <p>If you're not sure which database to select, choose H2. You can always change, without too much difficulty,
     later on.</p>
-<form class="form-horizontal" role="form" action="@ConfigWizard.configure" method="post">
-    <input type="hidden" name="step" value="@step">
 
-    <div class="form-group">
-        <label for="dbtype" class="col-lg-2 control-label">Type Of Databasee</label>
-        <div class="col-lg-2">
-            <select class="form-control" id="dbtype">
-                <option>H2</option>
-                <option>MySQL</option>
-                <option>Postgres</option>
-                <option>SQLite</option>
-            </select>
-        </div>
-    </div>
 
-    <div class="form-group">
-        <label for="host" class="col-lg-2 control-label">DB Host Name</label>
-        <div class="col-lg-6">
-            <input type="text" class="form-control" id="host" placeholder="Host your DB is on, or 'localhost'">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="port" class="col-lg-2 control-label">DB Port #</label>
-        <div class="col-lg-6">
-            <input type="text" class="form-control" id="port"
-            placeholder="Port number for DB,or leave blank for default">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="user" class="col-lg-2 control-label">DB User Name</label>
-        <div class="col-lg-6">
-            <input type="text" class="form-control" id="user" placeholder="User name to log into database with">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="pass" class="col-lg-2 control-label">Password</label>
-        <div class="col-lg-6">
-            <input type="text" class="form-control" id="pass" placeholder="Password for DB user">
-        </div>
-    </div>
-
+@hForm("Databases", ConfigWizard.configure) {
+<input type="hidden" name="step" value="@step">
+@repeat(dbs("dbs"), min = 1) { db =>
+    @inputText(db("name"), 'label -> "Database Name", 'lclass -> "2", 'class -> "col-lg-4",
+        'placeholder -> "Enter a name you want to use to refer to this database configuration.")
+    @select(dbs("kind"), options=List(
+        "H2"->"H2", "MySQL" -> "MySQL", "Postgres" -> "Postgres", "SQLite" -> "SQLite"),
+        'label -> "Database Type", 'lclass -> "2", 'class -> "col-lg-4")
+    @inputText(dbs("host"), 'label -> "Database Host", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
+        'placeholder -> "Domain name or IP address of the host your database is on, or 'localhost'.")
+    @inputNumber(dbs("port"), 1, 65535, 'label -> "Database Port", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
+        'placeholder -> "TCP Port number for database connections, or leave blank for default")
+    @inputText(dbs("user"), 'label -> "Database User", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
+        'placeholder -> "User name to log into database, or blank for none.")
+    @inputPassword(dbs("pass"), 'label -> "User's Password", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
+        'placeholder -> "Password for DB user, if a user was specified above.")
+}
     <button class="btn btn-default col-lg-2" name="how" value="configure" type="submit">Continue</button>
-</form>
+}
 }

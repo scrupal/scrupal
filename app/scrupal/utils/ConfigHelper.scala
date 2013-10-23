@@ -19,6 +19,7 @@ package scrupal.utils
 
 import play.api.{Logger, Configuration}
 import scala.util.Try
+import akka.actor.FSM.->
 
 /**
  * Provide some extentions to the Play Configuration class via the pimp-my-library pattern
@@ -51,37 +52,41 @@ class ConfigHelper(config : Configuration) {
     }
   }
 
-  def validateDBs : Try[Set[String]] = {
+  def validateDBs : Try[Map[String,Option[Configuration]]] = {
     Try {
-      forEachDB { (site: String, site_config: Configuration ) =>
-        val keys: Set[String] = site_config.subKeys
+      forEachDB { (db: String, db_config: Configuration ) =>
+        val keys: Set[String] = db_config.subKeys
         // Whatever keys are there they must all be strings so validate that (getString will throw if its not a string)
         // and make sure they didn't provide a key with an empty value, also
-        for ( key <- keys ) yield if (site_config.getString(key).getOrElse {
-          throw new Exception("Configuration for '" + site + "' is missing a value for '" + key + "'.")
-        }.isEmpty) { throw new Exception("Configuration for '" + site + "' has an empty value for '" + key + "'.") }
+        for ( key <- keys ) yield if (db_config.getString(key).getOrElse {
+          throw new Exception("Configuration for '" + db + "' is missing a value for '" + key + "'.")
+        }.isEmpty) { throw new Exception("Configuration for '" + db + "' has an empty value for '" + key + "'.") }
         // The config needs to at least have a url key
         if (!keys.contains("url")) {
-          throw new Exception("Configuration for '" + site + "' must specify a value for 'url' key, at least.")
-        } else if (site_config.getString("url").get.equals("jdbc:h2:mem:")) {
-          throw new Exception("Configuration for '" + site + "' must not use a private memory-only database")
+          throw new Exception("Configuration for '" + db + "' must specify a value for 'url' key, at least.")
+        } else if (db_config.getString("url").get.equals("jdbc:h2:mem:")) {
+          throw new Exception("Configuration for '" + db + "' must not use a private memory-only database")
         }
-        // Okay, looks good, return the site name
-        site
+        // Okay, looks good, include this in the results
+        true
       }
     }
   }
 
-  def forEachDB[FOO](f: (String, Configuration) => FOO ) : Set[FOO] = {
+  def forEachDB(f: (String, Configuration) => Boolean ) : Map[String,Option[Configuration]] = {
 
     // First, unpack the "db" configuration which is standardized by play
     val dbs_o: Option[Configuration] = config.getConfig("db")
     val dbs = dbs_o.getOrElse(Configuration.empty)
-    val site_names: Set[String] = dbs.subKeys
+    val db_names: Set[String] = dbs.subKeys
 
     // Now map the site names to the config objects and then convert with the caller's function
-    for ( site:String <- site_names )
-    yield (f(site, dbs.getConfig(site).getOrElse(Configuration.empty)))
+    { for ( db:String <- db_names )
+      yield {
+        val cfg = dbs.getConfig(db).getOrElse(Configuration.empty)
+        if (f(db, cfg)) (db,  dbs.getConfig(db)) else (db,  None)
+      }
+    }.toMap
   }
 }
 

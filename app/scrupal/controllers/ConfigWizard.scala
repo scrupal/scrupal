@@ -18,16 +18,18 @@
 package scrupal.controllers
 
 import java.io.{PrintWriter, File}
-import scala.util.{Success, Failure, Try}
+import scala.util.{Success, Failure}
 import scala.slick.session.Session
 
 import com.typesafe.config.{ConfigRenderOptions, Config, ConfigFactory}
 
 import play.api.mvc.{RequestHeader, Action}
-import play.api.{Configuration, Logger}
+import play.api.{Configuration}
+import play.api.data._
+import play.api.data.Forms._
 
-import scrupal.api.{EssentialSite,Site}
-import scrupal.db.{Sketch,CoreSchema}
+import scrupal.api.{EssentialSite}
+import scrupal.db.{Sketch,CoreSchema,SupportedDatabases}
 import scrupal.utils.ConfigHelper
 import scrupal.views.html
 
@@ -83,34 +85,37 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
+  type DBConfig = Map[String,Option[Configuration]]
+  val emptyDBConfig = Map.empty[String,Option[Configuration]]
+
   /** Get the names of the configured database, or error information
     * Reads the database.conf file and validates the configuration information contained therein. If it checks out,
     * returns the list of database names in the third part of the triple. Otherwise,
     * the first to parts of the triple provide the current state and error message to go with it.
     * @return A triple providing information for the next part of configuration
     */
-  def getDatabaseNames(config: Configuration) : (Step.Kind, Option[Throwable], Set[String]) = {
+  def getDatabaseNames(config: Configuration) : (Step.Kind, Option[Throwable], DBConfig) = {
     import Step._
     val cfg = Configuration(getDbConfig(config)._1)
     val db_cfg = cfg.getConfig("db")
     if (db_cfg.isEmpty)
-      (Zero_Welcome, Some(new Throwable("The database configuration is completely empty.")), Set.empty)
+      (Zero_Welcome, Some(new Throwable("The database configuration is completely empty.")), emptyDBConfig)
     else if (db_cfg.get.getConfig("default").isDefined)
-      (Zero_Welcome, Some(new Throwable("The initial, default database configuration was detected.")), Set.empty)
+      (Zero_Welcome, Some(new Throwable("The initial, default database configuration was detected.")), emptyDBConfig)
     else ConfigHelper(cfg).validateDBs match {
-      case Failure(x)  => (One_Specify_Databases, Some(x), Set.empty)
+      case Failure(x)  => (One_Specify_Databases, Some(x), emptyDBConfig)
       case Success(x)  => (Two_Connect_Databases, None, x)
     }
   }
 
-  def checkConnections(config: Configuration) : (Step.Kind, Option[Throwable], Set[String]) = {
+  def checkConnections(config: Configuration) : (Step.Kind, Option[Throwable], DBConfig) = {
     val (state, err, names) = getDatabaseNames(config)
     if (names.isEmpty)
       (state, err, names)
     else {
       try {
-        names.foreach { db_name: String =>
-          config.getConfig("db." + db_name) match {
+        names.foreach { case (db_name: String, config: Option[Configuration]) =>
+          config match {
             case Some(config) => {
               val sketch = Sketch(config)
               sketch.withSession { implicit  session: Session =>
@@ -121,73 +126,71 @@ object ConfigWizard extends ScrupalController {
           }
         }
       } catch {
-        case x: Throwable => (Step.Two_Connect_Databases, Some(x), Set.empty)
+        case x: Throwable => (Step.Two_Connect_Databases, Some(x), emptyDBConfig)
       }
       (Step.Three_Install_Schemas, None, names)
     }
   }
 
-  def checkSchemas(config: Configuration) : (Step.Kind, Option[Throwable], Set[String]) = {
-    val (state, err, names) = getDatabaseNames(config)
-    if (names.isEmpty)
-      (state, err, names)
+  def checkSchemas(fullConfig: Configuration) : (Step.Kind, Option[Throwable], DBConfig) = {
+    val (state, err, dbConfigs) = getDatabaseNames(fullConfig)
+    if (dbConfigs.isEmpty)
+      (state, err, dbConfigs)
     else {
       // Okay, we validated that we have a clean configuration. So, we can now look at each site and assess
       // if there are URL, connection or schema issues.
-      lazy val emptySet = Set.empty[String]
-      val db_results: Set[(Step.Value,Option[Throwable],Set[String])] = for ( db <- names ) yield {
+      val db_results = for ( (db:String, dbConfig: Option[Configuration]) <- dbConfigs ) yield {
         try
         {
-          val cfg = Configuration(getDbConfig(config)._1)
-          cfg.getConfig("db." + db) match {
+          dbConfig match {
             case Some(config) => {
               val sketch = Sketch(config)
               sketch.withSession { implicit  session: Session =>
                 val schema = new CoreSchema(sketch)
                 val metaTables = schema.getMetaTables
                 if (metaTables.isEmpty) {
-                  (Step.Three_Install_Schemas, Some(new Exception("Database is empty")), emptySet)
+                  (Step.Three_Install_Schemas, Some(new Exception("Database is empty")), emptyDBConfig)
                 } else {
                   schema.validate match {
                     case Success(false) =>
-                      (Step.Three_Install_Schemas, Some(new Exception("Schema validation failed.")), emptySet)
+                      (Step.Three_Install_Schemas, Some(new Exception("Schema validation failed.")), emptyDBConfig)
                     case Success(true) => {
                       // FIXME: These two queries use findAll which unloads the contents of the tables into
                       // memory. Why isn't there a COUNT(*) facility available??????
                       if ( schema.Sites.findAll.length > 0) {
                         if ( schema.Instances.findAll.length > 0) {
                           // Finally, at this point, we know everything is working.
-                          (Step.Six_Success, None, names)
+                          (Step.Six_Success, None, dbConfigs)
                         } else {
                           (Step.Five_Create_Page, Some(new Exception("You have a site defined but there are no " +
-                            "entities created yet so nothing will be served.")), names)
+                            "entities created yet so nothing will be served.")), dbConfigs)
                         }
                       } else {
                         (Step.Four_Create_Site, Some(new Exception("The database is configured correctly but no " +
-                          "sites have been defined yet.")), names)
+                          "sites have been defined yet.")), dbConfigs)
                       }
                     }
-                    case Failure(x) => (Step.Three_Install_Schemas,Some(x), emptySet)
+                    case Failure(x) => (Step.Three_Install_Schemas,Some(x), emptyDBConfig)
                   }
                 }
               }
             }
             case None => (Step.One_Specify_Databases,
-              Some(new Exception("No configuration found for database '" + db + "'.")), emptySet)
+              Some(new Exception("No configuration found for database '" + db + "'.")), emptyDBConfig)
           }
         }
-        catch { case x : Throwable => (Step.Two_Connect_Databases,Some(x), emptySet) }
+        catch { case x : Throwable => (Step.Two_Connect_Databases,Some(x), emptyDBConfig) }
       }
       // We just collected together a list of the results for each site. now let's find the earliest
       // step amongst them.
-      db_results.foldLeft[(Step.Value,Option[Throwable],Set[String])]((Step.Six_Success,None,emptySet)) {
+      db_results.foldLeft[(Step.Value,Option[Throwable],DBConfig)]((Step.Six_Success,None,emptyDBConfig)) {
         case (step1, step2) => if (step1._1 < step2._1) step1 else step2
       }
     }
   }
 
   /** Determine which step we are at based on the Context provided */
-  def computeState(implicit context: Context) : (Step.Kind,Option[Throwable],Set[String]) = {
+  def computeState(implicit context: Context) : (Step.Kind,Option[Throwable],DBConfig) = {
     checkSchemas(context.config)
   }
 
@@ -267,11 +270,11 @@ object ConfigWizard extends ScrupalController {
     * @return One of the Configuration Pages
     */
   def configure() = Action { implicit request : RequestHeader =>
-    val (step,error,dbs) : (Step.Kind,Option[Throwable],Set[String]) = computeState(context)
+    val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
     import ConfigWizard.Step._
     step match {
       case Zero_Welcome          => Ok(html.config.index(step,error))
-      case One_Specify_Databases => Ok(html.config.database(step,error))
+      case One_Specify_Databases => Ok(html.config.database(makeDatabasesForm(dbs), step, error))
       case Two_Connect_Databases => Ok(html.config.connect(step,error))
       case Three_Install_Schemas => Ok(html.config.schema(step,error))
       case Four_Create_Site      => Ok(html.config.site(step,error))
@@ -287,41 +290,125 @@ object ConfigWizard extends ScrupalController {
     * @return An Action
     */
   def configAction() = Action { implicit request =>
-    val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
-    if (formData.contains("step"))
-    {
-      val steps = formData.get("step").getOrElse(Seq())
-      if (steps.size==1) {
-        val step = Step.withName(steps(0))
-        import ConfigWizard.Step._
-        step match {
-          case Zero_Welcome          => {
-            if (formData.contains("how")) {
-              val hows = formData.get("how").get
-              if (hows.size==1) {
-                hows(0) match {
-                  case "shortcut" => doShortCutConfiguration(context.config)
-                  case "configure" => doInitialConfiguration(context.config)
-                }
-              }
+    // First, figure out where we are, step wise, by computing the state.
+    val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
+    import ConfigWizard.Step._
+    step match {
+      case Zero_Welcome          => {
+        val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
+        if (formData.contains("how")) {
+          val hows = formData.get("how").get
+          if ( hows.size == 1 ) {
+            hows(0) match {
+              case "shortcut" => doShortCutConfiguration(context.config)
+              case "configure" => doInitialConfiguration(context.config)
+              case _ => {}
             }
           }
-          case One_Specify_Databases =>
-          case Two_Connect_Databases =>
-          case Three_Install_Schemas =>
-          case Four_Create_Site      =>
-          case Five_Create_Page      =>
-          case Six_Success           =>
-          case _                     =>  // just in case
         }
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
+      }
+
+      // They are posting database configuration data.
+      case One_Specify_Databases => {
+        databasesForm.bindFromRequest.fold(
+          formWithErrors => { // binding failure, send bad request
+            BadRequest(html.config.database(formWithErrors, step, error))
+          },
+          dbData => { //binding success, build a new configuration file
+            Redirect(routes.ConfigWizard.configure)
+          }
+        )
+      }
+
+      // They are testing database configuration
+      case Two_Connect_Databases => {
+
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
+      }
+      case Three_Install_Schemas => {
+
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
+      }
+      case Four_Create_Site      => {
+
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
+      }
+      case Five_Create_Page      => {
+
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
+      }
+      case Six_Success           => {
+
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
+      }
+      case _                     =>  {
+        // No matter what, the next action is to go to the configure page and let it figure out the new state.
+        // This ensures that they get the config wizard page that matches their state AFTER the change made here
+        Redirect(routes.ConfigWizard.configure)
       }
     }
-    Redirect("/configure")
   }
 
   def reconfigure() = Action { implicit request =>
     doInitialConfiguration(context.config)
-    val (step,error,dbs) : (Step.Kind,Option[Throwable],Set[String]) = computeState(context)
+    val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
     Ok(html.config.index(step,error))
   }
+
+  /** The type of the form passed between here and the databases configuration page */
+  type DatabasesForm = Form[DatabasesInfo]
+
+  /** Utility to turn the database configuration data into the DatabasesForm object */
+  def makeDatabasesForm(cfgs: DBConfig) : DatabasesForm = {
+    val dbInfos : Seq[DatabaseInfo] = { for ( (db: String, config: Option[Configuration]) <- cfgs ) yield {
+      val cfg : Configuration = config.getOrElse(Configuration.empty)
+      DatabaseInfo(
+        db,
+        SupportedDatabases.withName(cfg.getString("kind").getOrElse("H2")),
+        cfg.getString("host").getOrElse(""),
+        cfg.getInt("port").getOrElse(80),
+        cfg.getString("user").getOrElse(""),
+        cfg.getString("pass").getOrElse("")
+      )
+    }}.toSeq
+    databasesForm.fill(DatabasesInfo(dbInfos))
+  }
+
+  /** Information for one database */
+  case class DatabaseInfo(name: String, kind: SupportedDatabases.Kind, host: String, port: Int, user: String,
+                          pass: String )
+
+  /** Information for all the databases */
+  case class DatabasesInfo(configs: Seq[DatabaseInfo])
+
+  import scrupal.utils.Enumerations.enum
+  /** The Play! Framework Form to perform the mapping to/from DatabasesInfo */
+  val databasesForm : DatabasesForm = Form[DatabasesInfo] (
+    mapping (
+      "dbs" -> seq (
+        mapping (
+          "name" -> nonEmptyText,
+          "kind" -> enum(SupportedDatabases),
+          "host" -> nonEmptyText,
+          "port" -> number(min=1, max=65535),
+          "user" -> text(minLength=0, maxLength=255),
+          "pass" -> text(minLength=0, maxLength=255)
+        )(DatabaseInfo.apply)(DatabaseInfo.unapply)
+      )
+    )(DatabasesInfo.apply)(DatabasesInfo.unapply)
+  )
+
 }

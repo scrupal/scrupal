@@ -157,6 +157,8 @@ object CoreModule extends Module (
     */
   object DevMode extends Feature('DeveloperMode, "Controls whether development mode facilities are enabled", false)
 
+  object ConfigWizard extends Feature('ConfigWizard, "Controls whether configuration by web request is allowed", false)
+
   override def features = Seq(
     DebugFooter, DevMode
   )
