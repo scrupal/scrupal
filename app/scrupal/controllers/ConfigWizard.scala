@@ -32,6 +32,7 @@ import scrupal.api.{EssentialSite}
 import scrupal.db.{Sketch,CoreSchema,SupportedDatabases}
 import scrupal.utils.ConfigHelper
 import scrupal.views.html
+import scrupal.models.CoreModule
 
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -270,17 +271,21 @@ object ConfigWizard extends ScrupalController {
     * @return One of the Configuration Pages
     */
   def configure() = Action { implicit request : RequestHeader =>
-    val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
-    import ConfigWizard.Step._
-    step match {
-      case Zero_Welcome          => Ok(html.config.index(step,error))
-      case One_Specify_Databases => Ok(html.config.database(makeDatabasesForm(dbs), step, error))
-      case Two_Connect_Databases => Ok(html.config.connect(step,error))
-      case Three_Install_Schemas => Ok(html.config.schema(step,error))
-      case Four_Create_Site      => Ok(html.config.site(step,error))
-      case Five_Create_Page      => Ok(html.config.page(step,error))
-      case Six_Success           => Ok(html.config.success(step,error))
-      case _                     => Ok(html.config.index(step,error)) // just in case
+    if (CoreModule.ConfigWizard.isEnabled) {
+      val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
+      import ConfigWizard.Step._
+      step match {
+        case Zero_Welcome          => Ok(html.config.index(step,error))
+        case One_Specify_Databases => Ok(html.config.database(makeDatabasesForm(dbs), step, error))
+        case Two_Connect_Databases => Ok(html.config.connect(step,error))
+        case Three_Install_Schemas => Ok(html.config.schema(step,error))
+        case Four_Create_Site      => Ok(html.config.site(step,error))
+        case Five_Create_Page      => Ok(html.config.page(step,error))
+        case Six_Success           => Ok(html.config.success(step,error))
+        case _                     => Ok(html.config.index(step,error)) // just in case
+      }
+    } else {
+      Redirect(routes.Home.index)
     }
   }
 
@@ -290,82 +295,90 @@ object ConfigWizard extends ScrupalController {
     * @return An Action
     */
   def configAction() = Action { implicit request =>
-    // First, figure out where we are, step wise, by computing the state.
-    val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
-    import ConfigWizard.Step._
-    step match {
-      case Zero_Welcome          => {
-        val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
-        if (formData.contains("how")) {
-          val hows = formData.get("how").get
-          if ( hows.size == 1 ) {
-            hows(0) match {
-              case "shortcut" => doShortCutConfiguration(context.config)
-              case "configure" => doInitialConfiguration(context.config)
-              case _ => {}
+    if (CoreModule.ConfigWizard.isEnabled) {
+      // First, figure out where we are, step wise, by computing the state.
+      val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
+      import ConfigWizard.Step._
+      step match {
+        case Zero_Welcome          => {
+          val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
+          if (formData.contains("how")) {
+            val hows = formData.get("how").get
+            if ( hows.size == 1 ) {
+              hows(0) match {
+                case "shortcut" => doShortCutConfiguration(context.config)
+                case "configure" => doInitialConfiguration(context.config)
+                case _ => {}
+              }
             }
           }
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
         }
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
-      }
 
-      // They are posting database configuration data.
-      case One_Specify_Databases => {
-        databasesForm.bindFromRequest.fold(
-          formWithErrors => { // binding failure, send bad request
-            BadRequest(html.config.database(formWithErrors, step, error))
-          },
-          dbData => { //binding success, build a new configuration file
-            Redirect(routes.ConfigWizard.configure)
-          }
-        )
-      }
+        // They are posting database configuration data.
+        case One_Specify_Databases => {
+          databasesForm.bindFromRequest.fold(
+            formWithErrors => { // binding failure, send bad request
+              BadRequest(html.config.database(formWithErrors, step, error))
+            },
+            dbData => { //binding success, build a new configuration file
+              Redirect(routes.ConfigWizard.configure)
+            }
+          )
+        }
 
-      // They are testing database configuration
-      case Two_Connect_Databases => {
+        // They are testing database configuration
+        case Two_Connect_Databases => {
 
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
-      }
-      case Three_Install_Schemas => {
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
+        }
+        case Three_Install_Schemas => {
 
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
-      }
-      case Four_Create_Site      => {
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
+        }
+        case Four_Create_Site      => {
 
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
-      }
-      case Five_Create_Page      => {
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
+        }
+        case Five_Create_Page      => {
 
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
-      }
-      case Six_Success           => {
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
+        }
+        case Six_Success           => {
 
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
+        }
+        case _                     =>  {
+          // No matter what, the next action is to go to the configure page and let it figure out the new state.
+          // This ensures that they get the config wizard page that matches their state AFTER the change made here
+          Redirect(routes.ConfigWizard.configure)
+        }
       }
-      case _                     =>  {
-        // No matter what, the next action is to go to the configure page and let it figure out the new state.
-        // This ensures that they get the config wizard page that matches their state AFTER the change made here
-        Redirect(routes.ConfigWizard.configure)
-      }
+    } else {
+      Redirect(routes.Home.index)
     }
   }
 
   def reconfigure() = Action { implicit request =>
-    doInitialConfiguration(context.config)
-    val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
-    Ok(html.config.index(step,error))
+    if (CoreModule.ConfigWizard.isEnabled) {
+      doInitialConfiguration(context.config)
+      val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
+      Ok(html.config.index(step,error))
+    } else {
+      Redirect(routes.Home.index)
+    }
   }
 
   /** The type of the form passed between here and the databases configuration page */
