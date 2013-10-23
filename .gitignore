@@ -9,6 +9,7 @@
 application.home_IS_UNDEFINED/
 bin
 bower_components
+conf/databases.conf
 conf/heroku.conf
 defunkt/
 diff.out

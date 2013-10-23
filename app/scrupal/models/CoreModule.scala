@@ -126,8 +126,6 @@ object CoreModule extends Module (
   )
 
   object PageBundle_t extends BundleType('PageBundle, "Information bundle for a page entity.", id, fields = HashMap (
-    'name -> Identifier_t,
-    'description -> Markdown_t,
     'body -> Markdown_t
   ))
 

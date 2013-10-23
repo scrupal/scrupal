@@ -1,0 +1,8 @@
+@(name: String, action: play.api.mvc.Call, args: (Symbol,String)* )(body: => Html)
+
+@import play.api.templates.PlayMagic.toHtmlArgs
+
+<form action="@action.url" class="form-inline" role="form" method="@action.method" accept-charset="UTF-8"
+  enctype="application/x-www-form-urlencoded" name="@name" @toHtmlArgs(args.toMap)>
+@body
+</form>

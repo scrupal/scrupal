@@ -23,16 +23,17 @@ import scala.slick.session.Session
 
 import com.typesafe.config.{ConfigRenderOptions, Config, ConfigFactory}
 
-import play.api.mvc.{RequestHeader, Action}
-import play.api.{Configuration}
+import play.api.mvc.{Request, AnyContent, RequestHeader, Action}
+import play.api.{Logger, Configuration}
 import play.api.data._
 import play.api.data.Forms._
 
-import scrupal.api.{EssentialSite}
-import scrupal.db.{Sketch,CoreSchema,SupportedDatabases}
+import scrupal.api.{Instance, EssentialSite}
+import scrupal.db.{Schema, Sketch, CoreSchema, SupportedDatabases}
 import scrupal.utils.ConfigHelper
 import scrupal.views.html
 import scrupal.models.CoreModule
+import play.api.libs.json.Json
 
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -190,6 +191,52 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
+  def createSchemas(fullConfig: Configuration) = {
+    val (state, err, dbConfigs) = getDatabaseNames(fullConfig)
+    require(state == Step.Three_Install_Schemas)
+    if (!dbConfigs.isEmpty) {
+      val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
+      try
+      {
+        dbConfig match {
+          case Some(config) => {
+            val sketch = Sketch(config)
+            sketch.withSession { implicit  session: Session =>
+              CoreModule.schemas(sketch).foreach { schema:Schema => schema.create }
+            }
+          }
+          case None => // Ignore
+        }
+      }
+      catch { case x : Throwable => /* Ignore */  }
+    }
+  }
+
+  def createSite(fullConfig: Configuration, siteData: SiteInfo) = {
+    val (state, err, dbConfigs) = checkSchemas(fullConfig)
+    require(state == Step.Four_Create_Site)
+    if (!dbConfigs.isEmpty) {
+      val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
+      try
+      {
+        dbConfig match {
+          case Some(config) => {
+            val sketch = Sketch(config)
+            sketch.withSession { implicit  session: Session =>
+              val schema = new CoreSchema(sketch)
+              schema.Sites.insert( EssentialSite(
+                Symbol(siteData.name), siteData.description, siteData.listenPort.toShort, "", 80, siteData.requiresHttps)
+              )
+            }
+          }
+          case None => // Ignore
+        }
+      }
+      catch { case x : Throwable => /* Ignore */  }
+    }
+  }
+
+
   /** Determine which step we are at based on the Context provided */
   def computeState(implicit context: Context) : (Step.Kind,Option[Throwable],DBConfig) = {
     checkSchemas(context.config)
@@ -214,22 +261,31 @@ object ConfigWizard extends ScrupalController {
     }
   }.getOrElse((ConfigFactory.empty(),None))
 
+  private def setDbConfig(x: (Config, Option[File]), new_config: Config) : Configuration = {
+    val result = {
+      val merged_config : Config  = new_config.withFallback(x._1)
+      val data: String = merged_config.root.render (ConfigRenderOptions.concise()) // whew!
+      val trimmed_data = data.substring(1, data.length-1)
+      x._2 map { file: File =>
+        val writer = new PrintWriter(file)
+        try  { writer.println(trimmed_data) } finally { writer.close }
+        Configuration(merged_config)
+      }
+    }.getOrElse(Configuration.empty)
+    Logger.debug("DB Config set to " + result)
+    result
+  }
+
   private def setDbConfig(x : (Config, Option[File]), config: Map[String,Any]) : Configuration = {
     import collection.JavaConversions._
-
     val new_config : Config = ConfigFactory.parseMap(config)
-    val merged_config : Config  = new_config.withFallback(x._1)
-    val data: String = merged_config.root.render (ConfigRenderOptions.concise()) // whew!
-    val trimmed_data = data.substring(1, data.length-1)
-    x._2 map { file: File =>
-      val writer = new PrintWriter(file)
-      try  { writer.println(trimmed_data) } finally { writer.close }
-      Configuration(merged_config)
-    }
-  }.getOrElse(Configuration.empty)
+    setDbConfig(x, new_config)
+  }
+
 
   private def doShortCutConfiguration(config: Configuration) = {
     val default_db_conf = Map(
+      "db.scrupal.kind" -> "H2",
       "db.scrupal.url" ->  "jdbc:h2:~/scrupal",
       "db.scrupal.driver" -> "org.h2.Driver",
       "db.scrupal.user" -> "",
@@ -241,8 +297,24 @@ object ConfigWizard extends ScrupalController {
     sketch.withSession { implicit session: Session =>
       val schema = new CoreSchema(sketch)
       schema.create(session)
-      val site = EssentialSite('default, "Scrupal Default Site", 8000, "localhost", 8000, false, true)
+      val site = EssentialSite('YourSite, "Auto-generated site created by Short-cut Configuration", 8000, "localhost",
+        8000, false, true)
       schema.Sites.insert(site)
+      val instance = Instance('YourPage, "Auto-generated page created by Short-cut Configuration", 'PageEntity,
+        Json.obj(
+          "body" ->
+            """# Welcome to Scrupal.
+              |This page was created for you because you chose the Short-cut configuration. Feel free to modify it at
+              |any time. If you need to learn more about Scrupal, please read the [Documentation](/doc) that comes
+              |with it. We hope you enjoy using Scrupal as much as we enjoyed developing it for you.
+              |+ [User Documentation](http:///doc)
+              |+ [Developer Documentation](http:///scaladoc)
+              |+ [API Documentation](http:///apidoc)
+              |+ [Scrupal Project](http://scrupal.org/)
+            """.stripMargin
+        )
+      )
+
       // TODO: Insert the first "Welcome To Scrupal" page entity.
     }
   }
@@ -253,6 +325,7 @@ object ConfigWizard extends ScrupalController {
     */
   private def doInitialConfiguration(config: Configuration) = {
     val initial_conf = Map (
+      "db.scrupal.kind"   -> "H2",
       "db.scrupal.url"    -> "jdbc:h2:~/scrupal",
       "db.scrupal.driver" -> "org.h2.Driver",
       "db.scrupal.user"   -> "",
@@ -279,13 +352,23 @@ object ConfigWizard extends ScrupalController {
         case One_Specify_Databases => Ok(html.config.database(makeDatabasesForm(dbs), step, error))
         case Two_Connect_Databases => Ok(html.config.connect(step,error))
         case Three_Install_Schemas => Ok(html.config.schema(step,error))
-        case Four_Create_Site      => Ok(html.config.site(step,error))
+        case Four_Create_Site      => Ok(html.config.site(makeSiteForm,step,error))
         case Five_Create_Page      => Ok(html.config.page(step,error))
         case Six_Success           => Ok(html.config.success(step,error))
         case _                     => Ok(html.config.index(step,error)) // just in case
       }
     } else {
       Redirect(routes.Home.index)
+    }
+  }
+
+  private def getFormAction(name:String)(f: (String) => Unit )(implicit request: Request[AnyContent] ) = {
+    val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
+    if (formData.contains(name)) {
+      val hows = formData.get(name).get
+      if ( hows.size == 1 ) {
+        f(hows(0))
+      }
     }
   }
 
@@ -301,16 +384,10 @@ object ConfigWizard extends ScrupalController {
       import ConfigWizard.Step._
       step match {
         case Zero_Welcome          => {
-          val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
-          if (formData.contains("how")) {
-            val hows = formData.get("how").get
-            if ( hows.size == 1 ) {
-              hows(0) match {
-                case "shortcut" => doShortCutConfiguration(context.config)
-                case "configure" => doInitialConfiguration(context.config)
-                case _ => {}
-              }
-            }
+          getFormAction("how") {
+            case "shortcut"  => doShortCutConfiguration( context.config )
+            case "configure" => doInitialConfiguration( context.config )
+            case _           => {}
           }
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
@@ -319,11 +396,15 @@ object ConfigWizard extends ScrupalController {
 
         // They are posting database configuration data.
         case One_Specify_Databases => {
-          databasesForm.bindFromRequest.fold(
+          databaseForm.bindFromRequest.fold(
             formWithErrors => { // binding failure, send bad request
               BadRequest(html.config.database(formWithErrors, step, error))
             },
             dbData => { //binding success, build a new configuration file
+              Logger.debug("DB Info Request: " + request.body.asFormUrlEncoded)
+              Logger.debug("Converted to DBDATA: " + dbData)
+              val dbConfig = makeConfiguration(dbData)
+              setDbConfig((ConfigFactory.empty(), getDbConfigFile(context.config)), dbConfig)
               Redirect(routes.ConfigWizard.configure)
             }
           )
@@ -331,18 +412,29 @@ object ConfigWizard extends ScrupalController {
 
         // They are testing database configuration
         case Two_Connect_Databases => {
-
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
           Redirect(routes.ConfigWizard.configure)
         }
         case Three_Install_Schemas => {
-
+          getFormAction("action") {
+            case "proceed" => {
+              createSchemas(context.config)
+            }
+            case _         => // Do nothing
+          }
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
           Redirect(routes.ConfigWizard.configure)
         }
         case Four_Create_Site      => {
+          siteForm.bindFromRequest.fold(
+            formWithErrors => { BadRequest(html.config.site(formWithErrors, step, error)) },
+            siteData => {
+              createSite(context.config, siteData)
+              Redirect(routes.ConfigWizard.configure)
+            }
+          )
 
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
@@ -382,46 +474,70 @@ object ConfigWizard extends ScrupalController {
   }
 
   /** The type of the form passed between here and the databases configuration page */
-  type DatabasesForm = Form[DatabasesInfo]
+  type DatabaseForm = Form[DatabaseInfo]
 
   /** Utility to turn the database configuration data into the DatabasesForm object */
-  def makeDatabasesForm(cfgs: DBConfig) : DatabasesForm = {
+  def makeDatabasesForm(cfgs: DBConfig) : DatabaseForm = {
     val dbInfos : Seq[DatabaseInfo] = { for ( (db: String, config: Option[Configuration]) <- cfgs ) yield {
       val cfg : Configuration = config.getOrElse(Configuration.empty)
       DatabaseInfo(
         db,
         SupportedDatabases.withName(cfg.getString("kind").getOrElse("H2")),
-        cfg.getString("host").getOrElse(""),
-        cfg.getInt("port").getOrElse(80),
+        cfg.getString("url").getOrElse(""),
         cfg.getString("user").getOrElse(""),
         cfg.getString("pass").getOrElse("")
       )
     }}.toSeq
-    databasesForm.fill(DatabasesInfo(dbInfos))
+    val dbInfo = if (dbInfos.isEmpty)
+      DatabaseInfo("scrupal", SupportedDatabases.H2, "jdbc:h2:~/scrupal", "", "")
+    else
+      dbInfos.head
+    databaseForm.fill(dbInfo)
+  }
+
+  def makeConfiguration(db: DatabaseInfo) : Config = {
+    import collection.JavaConversions._
+    val theMap = Map( {
+        val required = Seq(
+          "db." + db.name + ".kind" -> db.kind.toString,
+          "db." + db.name + ".driver" -> SupportedDatabases.defaultDriverFor(db.kind),
+          "db." + db.name + ".url" -> db.url
+        )
+        val opt1 = if (db.user.isEmpty) Seq.empty else Seq( "db." + db.name + ".user" -> db.user)
+        val opt2 = if (db.pass.isEmpty) Seq.empty else Seq( "db." + db.name + ".pass" -> db.pass)
+        required ++ opt1 ++ opt2
+      }:_*
+    )
+    Logger.debug("Constructed map from DatabaseInfos: " + theMap )
+    ConfigFactory.parseMap( theMap )
   }
 
   /** Information for one database */
-  case class DatabaseInfo(name: String, kind: SupportedDatabases.Kind, host: String, port: Int, user: String,
-                          pass: String )
-
-  /** Information for all the databases */
-  case class DatabasesInfo(configs: Seq[DatabaseInfo])
+  case class DatabaseInfo(name: String, kind: SupportedDatabases.Kind, url: String, user: String, pass: String )
 
   import scrupal.utils.Enumerations.enum
   /** The Play! Framework Form to perform the mapping to/from DatabasesInfo */
-  val databasesForm : DatabasesForm = Form[DatabasesInfo] (
+  val databaseForm : DatabaseForm = Form[DatabaseInfo] (
     mapping (
-      "dbs" -> seq (
-        mapping (
-          "name" -> nonEmptyText,
-          "kind" -> enum(SupportedDatabases),
-          "host" -> nonEmptyText,
-          "port" -> number(min=1, max=65535),
-          "user" -> text(minLength=0, maxLength=255),
-          "pass" -> text(minLength=0, maxLength=255)
-        )(DatabaseInfo.apply)(DatabaseInfo.unapply)
-      )
-    )(DatabasesInfo.apply)(DatabasesInfo.unapply)
+      "name" -> nonEmptyText,
+      "kind" -> enum(SupportedDatabases),
+      "url"  -> text,
+      "user" -> text(minLength=0, maxLength=255),
+      "pass" -> text(minLength=0, maxLength=255)
+    )(DatabaseInfo.apply)(DatabaseInfo.unapply)
   )
+
+  case class SiteInfo(name:String, description: String, listenPort:Int, requiresHttps: Boolean)
+
+  val siteForm = Form[SiteInfo] (
+    mapping (
+      "name" -> nonEmptyText,
+      "description" -> nonEmptyText,
+      "listenPort" -> number(max=65535, min=1),
+      "https" -> boolean
+    )(SiteInfo.apply)(SiteInfo.unapply)
+  )
+
+  def makeSiteForm = siteForm.fill(SiteInfo("","",8000,false))
 
 }

@@ -45,6 +45,7 @@ object SupportedDatabases extends Enumeration {
       case _ => Logger.warn("Unrecognized SupportedDatabase.Kind !"); "not.a.db.driver"
     }
   }
+
   def defaultDriverFor(kind: Option[Kind]) : String = {
     kind match {
       case Some(x) => defaultDriverFor(x)

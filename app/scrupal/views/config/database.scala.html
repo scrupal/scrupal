@@ -1,4 +1,4 @@
-@(dbs: scrupal.controllers.ConfigWizard.DatabasesForm,
+@(dbs: scrupal.controllers.ConfigWizard.DatabaseForm,
   step: scrupal.controllers.ConfigWizard.Step.Kind,
   lastError: Option[Throwable])(
   implicit context : scrupal.controllers.Context)
@@ -27,23 +27,18 @@ picking the right one for your needs is important. You may choose from among the
     later on.</p>
 
 
-@hForm("Databases", ConfigWizard.configure) {
-@* <input type="hidden" name="step" value="@step"> *@
-@repeat(dbs("dbs"), min = 1) { db =>
+@hForm("Databases", ConfigWizard.configAction) {
     @inputText(dbs("name"), '_label -> "Database Name",
         '_placeholder -> "Enter a name you want to use to refer to this database configuration.")
     @select(dbs("kind"), options=List(
         "H2"->"H2", "MySQL" -> "MySQL", "Postgres" -> "Postgres", "SQLite" -> "SQLite"),
         '_label -> "Database Type")
-    @inputText(dbs("host"), '_label -> "Database Host",
-        '_placeholder -> "Domain name or IP address of the host your database is on, or 'localhost'.")
-    @inputNumber(dbs("port"), 1, 65535, '_label -> "Database Port",
-        '_placeholder -> "TCP Port number for database connections, or leave blank for default")
+    @inputText(dbs("url"), '_label -> "Database JDBC URL",
+        '_placeholder -> "JDBC URL for the database")
     @inputText(dbs("user"), '_label -> "Database User",
         '_placeholder -> "User name to log into database, or blank for none.")
     @inputPassword(dbs("pass"), '_label -> "User's Password",
         '_placeholder -> "Password for DB user, if a user was specified above.")
-}
     <button class="btn btn-default col-lg-2" name="how" value="configure" type="submit">Continue</button>
 }
 }

@@ -1,9 +1,26 @@
-@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
+@(site: Form[scrupal.controllers.ConfigWizard.SiteInfo], step: scrupal.controllers.ConfigWizard.Step.Kind,
+    lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
     @import scrupal.views.html
-@import scrupal.controllers.routes.Home
-    @html.configPage("Welcome to Scrupal", step, lastError)  {
-<marked>
-# Define Your Site
-</marked>
+@import scrupal.views.html
+@import views.html.helper._
+@import scrupal.views.html.helpers._
+@import scrupal.controllers.routes.ConfigWizard
+
+    @implicitField = @{ FieldConstructor(hFormFieldConstructor.f) }
+@html.configPage("Define Your Site", step, lastError)  {
+<p>
+Congratulations, you're almost done. The database has been configured properly and we just need to put a couple
+things into it. I can help with that! Just fill in the information below and I'll create the first site for you.
+</p>
+@hForm("Site", ConfigWizard.configAction) {
+    @inputText(site("name"), '_label -> "Site Name",
+        '_placeholder -> "Enter a name you want to use to refer to this site configuration.")
+    @inputText(site("description"), '_label -> "Description",
+        '_placeholder -> "Enter a brief description for your site.")
+    @inputNumber(site("listenPort"), min=1, max=65535, '_label -> "Listen Port",
+        '_placeholder -> "Port Scrupal will listen on for incoming requests")
+    @checkbox(site("https"), '_label -> "Requires https?")
+    @actionButton(name="action", value="createSite", label="Create Site!")
+}
 }
