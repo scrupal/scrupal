@@ -1,9 +1,24 @@
-@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
-    implicit context : scrupal.controllers.Context)
+@(page: Form[scrupal.controllers.ConfigWizard.PageInfo], step: scrupal.controllers.ConfigWizard.Step.Kind,
+    lastError: Option[Throwable])(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.Home
-@html.configPage("Welcome to Scrupal", step, lastError)  {
-<marked>
-# Create Your First Page
-</marked>
+@import views.html.helper._
+@import scrupal.views.html.helpers._
+@import scrupal.controllers.routes.ConfigWizard
+
+@implicitField = @{ FieldConstructor(hFormFieldConstructor.f) }
+
+@html.configPage("Create A Page", step, lastError)  {
+<larger>
+<p>You're almost done! This is the last step. Just put some arbitrary information in the form below to create your
+first page. The "content" should be in markdown format.</p>
+</larger>
+@hForm("Site", ConfigWizard.configAction) {
+    @inputText(page("name"), '_label -> "Page Name",
+        '_placeholder -> "Enter a name you want to use to refer to this page.")
+    @inputText(page("description"), '_label -> "Description",
+        '_placeholder -> "Enter a brief description for your page.")
+    @textarea(page("body"), '_label -> "Page Content",
+        '_placeholder -> "The content to display when your page is requested.")
+    @actionButton(name="action", value="createPage", label="Create Page!")
+}
 }

@@ -7,7 +7,8 @@
 @import scrupal.views.html.helpers._
 @import scrupal.controllers.routes.ConfigWizard
 
-    @implicitField = @{ FieldConstructor(hFormFieldConstructor.f) }
+@implicitField = @{ FieldConstructor(hFormFieldConstructor.f) }
+
 @html.configPage("Define Your Site", step, lastError)  {
 <p>
 Congratulations, you're almost done. The database has been configured properly and we just need to put a couple

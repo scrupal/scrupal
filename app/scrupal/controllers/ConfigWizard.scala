@@ -28,12 +28,12 @@ import play.api.{Logger, Configuration}
 import play.api.data._
 import play.api.data.Forms._
 
-import scrupal.api.{Instance, EssentialSite}
+import scrupal.api.{Site, Instance, EssentialSite}
 import scrupal.db.{Schema, Sketch, CoreSchema, SupportedDatabases}
 import scrupal.utils.ConfigHelper
 import scrupal.views.html
 import scrupal.models.CoreModule
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -236,6 +236,34 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
+  def createPage(fullConfig: Configuration, pageInfo: PageInfo) = {
+    val (state, err, dbConfigs) = checkSchemas(fullConfig)
+    require(state == Step.Five_Create_Page)
+    if (!dbConfigs.isEmpty) {
+      val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
+      try
+      {
+        dbConfig match {
+          case Some(config) => {
+            val sketch = Sketch(config)
+            sketch.withSession { implicit  session: Session =>
+              val schema = new CoreSchema(sketch)
+              val inserted = schema.Instances.insert( Instance(Symbol(pageInfo.name), pageInfo.description,
+                'Page, Json.obj( "body" -> JsString(pageInfo.body) ) )
+              )
+              Global.DataYouShouldNotModify.sites = Map (
+                { for (site <- schema.Sites.findAll if site.enabled) yield  site.listenPort -> Site(site) }:_*
+              )
+              Logger.debug("Inserted instance with id=" + inserted)
+            }
+          }
+          case None => // Ignore
+        }
+      }
+      catch { case x : Throwable => Logger.debug("Attempting to insert instance: ", x)   }
+    }
+  }
+
 
   /** Determine which step we are at based on the Context provided */
   def computeState(implicit context: Context) : (Step.Kind,Option[Throwable],DBConfig) = {
@@ -353,7 +381,7 @@ object ConfigWizard extends ScrupalController {
         case Two_Connect_Databases => Ok(html.config.connect(step,error))
         case Three_Install_Schemas => Ok(html.config.schema(step,error))
         case Four_Create_Site      => Ok(html.config.site(makeSiteForm,step,error))
-        case Five_Create_Page      => Ok(html.config.page(step,error))
+        case Five_Create_Page      => Ok(html.config.page(makePageForm,step,error))
         case Six_Success           => Ok(html.config.success(step,error))
         case _                     => Ok(html.config.index(step,error)) // just in case
       }
@@ -435,12 +463,14 @@ object ConfigWizard extends ScrupalController {
               Redirect(routes.ConfigWizard.configure)
             }
           )
-
-          // No matter what, the next action is to go to the configure page and let it figure out the new state.
-          // This ensures that they get the config wizard page that matches their state AFTER the change made here
-          Redirect(routes.ConfigWizard.configure)
         }
         case Five_Create_Page      => {
+          pageForm.bindFromRequest.fold(
+            formWithErrors => { BadRequest(html.config.page(formWithErrors, step, error)) },
+            pageData => {
+              createPage(context.config, pageData)
+            }
+          )
 
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
@@ -450,7 +480,7 @@ object ConfigWizard extends ScrupalController {
 
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
-          Redirect(routes.ConfigWizard.configure)
+          Redirect(routes.Home.index)
         }
         case _                     =>  {
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
@@ -540,4 +570,14 @@ object ConfigWizard extends ScrupalController {
 
   def makeSiteForm = siteForm.fill(SiteInfo("","",8000,false))
 
+  case class PageInfo(name: String, description: String, body: String)
+  val pageForm = Form[PageInfo] (
+    mapping(
+      "name" -> nonEmptyText,
+      "description" -> nonEmptyText,
+      "body" -> nonEmptyText
+    )(PageInfo.apply)(PageInfo.unapply)
+  )
+
+  def makePageForm = pageForm.fill(PageInfo("","",""))
 }

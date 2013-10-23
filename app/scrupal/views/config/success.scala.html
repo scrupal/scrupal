@@ -1,12 +1,11 @@
 @(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.Home
-@html.configPage("Welcome to Scrupal", step, lastError)  {
-<marked>
-# Congratulations!
-Your site is now configured properly. If you wish to revisit the configuration steps,
-you can at any time by visiting the links in the list below.
-</marked>
+@html.configPage("Successful Configuration", step, lastError)  {
+<p>
+<strong>Congratulations!</strong>
+Your site is now configured properly. You can see the page your created
+<a href="/Page/">here</a>
+</p>
 }
 
