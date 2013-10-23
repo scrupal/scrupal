@@ -119,12 +119,12 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
 	 * @return path to the theme's .css file
 	 */
 	def theme(provider: String, name: String, min: Boolean = true) : Action[AnyContent] =  {
-    (Global.ScrupalIsConfigured || CoreModule.DevMode) match {
+    (Global.ScrupalIsConfigured && !CoreModule.DevMode) match {
       case true => {
         provider.toLowerCase() match {
           case "scrupal"    => {
             // TODO: Look it up in the database first and if that does not work forward on to static resolution
-            fallback(themes, minify(name,".css", min))
+            fallback(themes, minify(name,".css", true))
           }
           case "bootswatch" =>  Action { request:RequestHeader =>
             // TODO: Deal with "NotModified" better here?
@@ -133,10 +133,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
           case _ =>  fallback(stylesheets, "boostrap.min.css")
         }
       }
-      case false => Action { request: RequestHeader =>
-        // TODO: Deal with "NotModified" better here?
-        MovedPermanently("http://bootswatch.com/bower_components/bootstrap/dist/css/bootstrap.min.css")
-      }
+      case false => fallback(themes, "bootswatch/cyborg.min.css")
     }
   }
 

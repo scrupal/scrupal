@@ -32,8 +32,8 @@ case class Context(
   site : Option[Site] = None,
   modules: Seq[Module] = Seq(CoreModule),
   appName : String = "Scrupal",
-  themeName: String = "cyborg",
-  themeProvider: String = "bootswatch",
+  themeName: String = "amelia",
+  themeProvider: String = "scrupal",
   user: String = "nobody",
   instance: String = "instanceName",
   config: Configuration = current.configuration

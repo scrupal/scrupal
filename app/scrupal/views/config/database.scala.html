@@ -3,10 +3,11 @@
   lastError: Option[Throwable])(
   implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.views.Helpers._
+@import views.html.helper._
 @import scrupal.views.html.helpers._
-@import helper._
 @import scrupal.controllers.routes.ConfigWizard
+
+@implicitField = @{ FieldConstructor(hFormFieldConstructor.f) }
 
 @html.configPage("Database Configuration", step, lastError)  {
 <p>
@@ -27,21 +28,21 @@ picking the right one for your needs is important. You may choose from among the
 
 
 @hForm("Databases", ConfigWizard.configure) {
-<input type="hidden" name="step" value="@step">
+@* <input type="hidden" name="step" value="@step"> *@
 @repeat(dbs("dbs"), min = 1) { db =>
-    @inputText(db("name"), 'label -> "Database Name", 'lclass -> "2", 'class -> "col-lg-4",
-        'placeholder -> "Enter a name you want to use to refer to this database configuration.")
+    @inputText(dbs("name"), '_label -> "Database Name",
+        '_placeholder -> "Enter a name you want to use to refer to this database configuration.")
     @select(dbs("kind"), options=List(
         "H2"->"H2", "MySQL" -> "MySQL", "Postgres" -> "Postgres", "SQLite" -> "SQLite"),
-        'label -> "Database Type", 'lclass -> "2", 'class -> "col-lg-4")
-    @inputText(dbs("host"), 'label -> "Database Host", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
-        'placeholder -> "Domain name or IP address of the host your database is on, or 'localhost'.")
-    @inputNumber(dbs("port"), 1, 65535, 'label -> "Database Port", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
-        'placeholder -> "TCP Port number for database connections, or leave blank for default")
-    @inputText(dbs("user"), 'label -> "Database User", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
-        'placeholder -> "User name to log into database, or blank for none.")
-    @inputPassword(dbs("pass"), 'label -> "User's Password", 'lclass -> "col-lg-2", 'class -> "col-lg-6",
-        'placeholder -> "Password for DB user, if a user was specified above.")
+        '_label -> "Database Type")
+    @inputText(dbs("host"), '_label -> "Database Host",
+        '_placeholder -> "Domain name or IP address of the host your database is on, or 'localhost'.")
+    @inputNumber(dbs("port"), 1, 65535, '_label -> "Database Port",
+        '_placeholder -> "TCP Port number for database connections, or leave blank for default")
+    @inputText(dbs("user"), '_label -> "Database User",
+        '_placeholder -> "User name to log into database, or blank for none.")
+    @inputPassword(dbs("pass"), '_label -> "User's Password",
+        '_placeholder -> "Password for DB user, if a user was specified above.")
 }
     <button class="btn btn-default col-lg-2" name="how" value="configure" type="submit">Continue</button>
 }

@@ -1,0 +1,10 @@
+@(elements: views.html.helper.FieldElements)
+
+<div class="form-group @elements.args.get('_class) @if(elements.hasErrors) {error}" id="@elements.args.get('_id).getOrElse(elements.id + "_field")">
+  <label for="@elements.id" class="control-label col-lg-2">@elements.label(elements.lang)</label>
+  <div class="col-lg-10">
+    @elements.input
+    <small><span class="help-inline text-muted">@elements.infos(elements.lang).mkString(", ")</span></small>
+    <small><span class="help-block text-warning">@elements.errors(elements.lang).mkString(", ")</span></small>
+  </div>
+</div>
