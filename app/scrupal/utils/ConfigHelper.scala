@@ -19,7 +19,8 @@ package scrupal.utils
 
 import play.api.{Logger, Configuration}
 import scala.util.Try
-import akka.actor.FSM.->
+import java.io.{PrintWriter, File}
+import com.typesafe.config.{ConfigRenderOptions, ConfigFactory, Config}
 
 /**
  * Provide some extentions to the Play Configuration class via the pimp-my-library pattern
@@ -52,41 +53,94 @@ class ConfigHelper(config : Configuration) {
     }
   }
 
-  def validateDBs : Try[Map[String,Option[Configuration]]] = {
-    Try {
-      forEachDB { (db: String, db_config: Configuration ) =>
-        val keys: Set[String] = db_config.subKeys
-        // Whatever keys are there they must all be strings so validate that (getString will throw if its not a string)
-        // and make sure they didn't provide a key with an empty value, also
-        for ( key <- keys ) yield if (db_config.getString(key).getOrElse {
-          throw new Exception("Configuration for '" + db + "' is missing a value for '" + key + "'.")
-        }.isEmpty) { throw new Exception("Configuration for '" + db + "' has an empty value for '" + key + "'.") }
-        // The config needs to at least have a url key
-        if (!keys.contains("url")) {
-          throw new Exception("Configuration for '" + db + "' must specify a value for 'url' key, at least.")
-        } else if (db_config.getString("url").get.equals("jdbc:h2:mem:")) {
-          throw new Exception("Configuration for '" + db + "' must not use a private memory-only database")
-        }
-        // Okay, looks good, include this in the results
-        true
-      }
+  type DBConfig = Map[String,Option[Configuration]]
+  val emptyDBConfig = Map.empty[String,Option[Configuration]]
+
+  def forEachDB(f: (String, Configuration) => Boolean ) : DBConfig = {
+    val db_config = getDbConfig
+    val root_config = db_config.getConfig("db")
+    root_config map { rootConfig: Configuration => internalForEach(rootConfig)(f) }
+  }.getOrElse(emptyDBConfig)
+
+  private def internalForEach(rootConfig: Configuration)( f: (String, Configuration) => Boolean ) : DBConfig = {
+    for (dbName <- rootConfig.subKeys) yield {
+      val dbConf = rootConfig.getConfig(dbName)
+      val resolvedConf = dbConf.getOrElse(Configuration.empty)
+      if (f(dbName, resolvedConf)) (dbName,  dbConf) else (dbName,  None)
+    }
+  }.toMap
+
+  private def getDbConfigFile : Option[File] = {
+    config.getString(ConfigHelper.scrupal_database_config_file_key) map { db_config_file_name: String =>
+      new File(db_config_file_name)
     }
   }
 
-  def forEachDB(f: (String, Configuration) => Boolean ) : Map[String,Option[Configuration]] = {
-
-    // First, unpack the "db" configuration which is standardized by play
-    val dbs_o: Option[Configuration] = config.getConfig("db")
-    val dbs = dbs_o.getOrElse(Configuration.empty)
-    val db_names: Set[String] = dbs.subKeys
-
-    // Now map the site names to the config objects and then convert with the caller's function
-    { for ( db:String <- db_names )
-      yield {
-        val cfg = dbs.getConfig(db).getOrElse(Configuration.empty)
-        if (f(db, cfg)) (db,  dbs.getConfig(db)) else (db,  None)
+  def getDbConfig : Configuration = Configuration (
+    {
+      getDbConfigFile map { db_config_file: File =>
+        if (db_config_file.isFile) {
+          ConfigFactory.parseFile(db_config_file)
+        } else {
+          ConfigFactory.empty
+        }
       }
-    }.toMap
+    }.getOrElse(ConfigFactory.empty)
+  )
+
+  def setDbConfig(new_config: Configuration, writeTo: Option[File] = None) : Configuration = {
+    val result = {
+      val data: String = new_config.underlying.root.render (ConfigRenderOptions.concise()) // whew!
+      val trimmed_data = data.substring(1, data.length-1)
+      writeTo.orElse(getDbConfigFile) map { db_config_file : File =>
+        val writer = new PrintWriter(db_config_file)
+        try  { writer.println(trimmed_data) } finally { writer.close }
+        new_config
+      }
+    }.getOrElse(Configuration.empty)
+    Logger.debug("DB Config set to " + result)
+    result
+  }
+
+  def addDbConfig(db_config: Configuration) : Configuration = {
+    setDbConfig( getDbConfig ++ db_config )
+  }
+
+  def setDbConfig(new_config: Map[String,Any]) : Configuration = {
+    import collection.JavaConversions._
+    val cfg = Configuration(ConfigFactory.parseMap(new_config))
+    setDbConfig(cfg)
+  }
+
+  def validateDBConfiguration : Try[Map[String,Option[Configuration]]] = {
+    Try {
+      val cfg = getDbConfig
+      if (cfg.keys.size == 0)
+        throw new Exception("The database configuration is completely empty.")
+      val db_cfg = cfg.getConfig("db");
+      {
+        db_cfg map { the_config: Configuration =>
+          if (the_config.getConfig("default").isDefined)
+            throw new Throwable("The initial, default database configuration was detected.")
+          internalForEach(db_cfg.get) { (db: String, db_config: Configuration ) =>
+            val keys: Set[String] = db_config.subKeys
+            // Whatever keys are there they must all be strings so validate that (getString will throw if its not a string)
+            // and make sure they didn't provide a key with an empty value, also
+            for ( key <- keys ) yield if (db_config.getString(key).getOrElse {
+              throw new Exception("Configuration for '" + db + "' is missing a value for '" + key + "'.")
+            }.isEmpty) { throw new Exception("Configuration for '" + db + "' has an empty value for '" + key + "'.") }
+            // The config needs to at least have a url key
+            if (!keys.contains("url")) {
+              throw new Exception("Configuration for '" + db + "' must specify a value for 'url' key, at least.")
+            } else if (db_config.getString("url").get.equals("jdbc:h2:mem:")) {
+              throw new Exception("Configuration for '" + db + "' must not use a private memory-only database")
+            }
+            // Okay, looks good, include this in the results
+            true
+          }
+        }
+      }.getOrElse( { throw new Exception("The database configuration does not contain a top level 'db' key.")} )
+    }
   }
 }
 
@@ -94,4 +148,8 @@ object ConfigHelper
 {
   implicit def helpYoConfig(config: Configuration) = new ConfigHelper(config)
   def apply(config: Configuration) = helpYoConfig(config)
+
+  // The configuration key that says where to get the database configuration data.
+  val scrupal_database_config_file_key = "scrupal.database.config.file"
+
 }

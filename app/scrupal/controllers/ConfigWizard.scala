@@ -98,14 +98,14 @@ object ConfigWizard extends ScrupalController {
     */
   def getDatabaseNames(config: Configuration) : (Step.Kind, Option[Throwable], DBConfig) = {
     import Step._
-    val cfg = Configuration(getDbConfig(config)._1)
-    val db_cfg = cfg.getConfig("db")
-    if (db_cfg.isEmpty)
-      (Zero_Welcome, Some(new Throwable("The database configuration is completely empty.")), emptyDBConfig)
-    else if (db_cfg.get.getConfig("default").isDefined)
-      (Zero_Welcome, Some(new Throwable("The initial, default database configuration was detected.")), emptyDBConfig)
-    else ConfigHelper(cfg).validateDBs match {
-      case Failure(x)  => (One_Specify_Databases, Some(x), emptyDBConfig)
+    ConfigHelper(config).validateDBConfiguration match {
+      case Failure(x)  => {
+        x.getMessage match {
+          case s if s.contains("default") || s.contains("completely empty") || s.contains("not contain") =>
+            (Zero_Welcome, Some(x), emptyDBConfig)
+          case _ => (One_Specify_Databases, Some(x), emptyDBConfig)
+        }
+      }
       case Success(x)  => (Two_Connect_Databases, None, x)
     }
   }
