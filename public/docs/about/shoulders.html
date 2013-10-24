@@ -1,4 +1,21 @@
 
+<!--
+  ~ This file is part of Scrupal a Web Application Framework.
+  ~
+  ~ Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.
+  ~
+  ~ Scrupal is free software: you can redistribute it and/or modify it under the terms
+  ~ of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,
+  ~ or (at your option) any later version.
+  ~
+  ~ Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+  ~ details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:
+  ~ http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
+  -->
+
 <h2>Standing On The Shoulders Of Giants</h2>
 <p>Scrupal would not be possible without the free/libre/open source software community. Any recognition it
 achieves clearly needs to acknowledge the technologies upon which it is built, and the dedication and brilliance
@@ -46,18 +63,35 @@ http://www.oracle.com/technetwork/java/javase/documentation/index.html>
 <script type="text/ng-template" id="scala.html">
 <section id="scala">
 <h3>Scala Programming Language</h3>
+<marked>
 Almost all of Scrupal is written in Scala. The initial letters of Scrupal's name are attributed to Scala or at least
 it aims to have the same concern: scalability. We tip our hats to all those who have made Scala into such a beautiful
 language to work with. The Scala Programming Language requires the following copyright notices to be reproduced:
-
-<marked>
 ```
 Copyright (c) 2002-2013 EPFL
 Copyright (c) 2011-2013 Typesafe, Inc.
 
 All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+   disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided with the distribution.
+3. Neither the name of the EPFL nor the names of its contributors may be used to endorse or promote products derived
+   from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
-[License](http://www.scala-lang.org/license.html)
+[Scala License](http://www.scala-lang.org/license.html)
 </marked>
 
 </section>
@@ -65,12 +99,20 @@ All rights reserved.
 <script type="text/ng-template" id="play.html">
 <section id="play">
 <h3>Play! Framework</h3>
+<marked>
 The Play framework is at the heart of Scrupal. It provides the basic reactive, scalable, asynchronous, REST-friendly
 architecture that is at the crux of what Scrupal is. Play! made building Scrupal a breeze because so much of Scrupal
 was already built!  Play requires is Licensed under the Apache License, Version 2.0 under this copyright:
-<marked>
+This software is licensed under the Apache 2 license, quoted below.
 ```
 Copyright 2013 Typesafe (http://www.typesafe.com).
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with
+the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
 ```
 [Apache 2 License](http://www.apache.org/licenses/LICENSE-2.0.html)
 </marked>
@@ -83,7 +125,39 @@ Copyright 2013 Typesafe (http://www.typesafe.com).
 </script>
 
 <script type="text/ng-template" id="slick.html">
-<section id="slick">Slick
+<section id="slick">
+<h3>Slick</h3>
+<marked>
+The excellent Slick library for fully language-integrated relational programming via JDBC requires the following
+license notice to be reproduced
+```
+Copyright 2011-2012 Typesafe, Inc.
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+```
+</marked>
 </section>
 </script>
 
@@ -118,17 +192,70 @@ Copyright 2013 Typesafe (http://www.typesafe.com).
 </script>
 
 <script type="text/ng-template" id="pbkdf2.html">
-<section id="pbkdf2">PBKDF2
+<section id="pbkdf2">
+<h3>PBKDF2</h3>
+<marked>
+The PBKDF2 Scala library uses the following license:
+```
+Copyright 2013 Nicolas Rémond (@nremond)
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+```
+[Apache 2 License](http://www.apache.org/licenses/LICENSE-2.0.html)
+</marked>
 </section>
 </script>
 
 <script type="text/ng-template" id="bcrypt.html">
-<section id="bcrypt">BCrypt
+<section id="bcrypt">
+<h3>BCrypt</h3>
+<marked>
+The BCrypt library requires the following notice to be reproduced:
+```
+Copyright (c) 2002 Johnny Shelley All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that t\he
+following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided with the distribution.
+3. Neither the name of the author nor any contributors may be used to endorse or promote products derived from this
+   software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+</marked>
 </section>
 </script>
 
 <script type="text/ng-template" id="scrypt.html">
-<section id="scrypt">Scrypt
+<section id="scrypt">
+<h3>Scrypt</h3>
+<marked>
+The Scrypt library uses Attribution-NonCommercial-NoDerivs 3.0 United States (CC BY-NC-ND 3.0 US) and the copyright
+notice below is sufficient attribution.
+```
+Copyright (c) 2013 DCIT, a.s. http://www.dcit.cz / Karel Miko
+```
+[C BY-NC-ND 3.0 US](http://creativecommons.org/licenses/by-nc-nd/3.0/us/)
+</marked>
 </section>
 </script>
 
