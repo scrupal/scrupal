@@ -51,7 +51,7 @@ trait Component  {
 
     lazy val findAllQuery = for (e <- this) yield e
 
-    def findAll() : Seq[S] = findAllQuery.list()
+    def findAll : Seq[S] = findAllQuery.list()
   }
 
   trait SymbolicTable[S <: SymbolicIdentifiable] extends ScrupalTable[S] with AbstractStorage[Symbol,Symbol,S] {

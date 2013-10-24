@@ -43,7 +43,7 @@ GET            /assets/javascripts/jsroutes.js        scrupal.controllers.Home.j
 
 # Map static resources from the /assets folder to the /assets URL path
 GET            /assets/javascripts/*file              scrupal.controllers.Assets.js_s(file)
-#GET            /assets/javascripts-min/*file          scrupal.controllers.Assets.js_s(file, min=true)
+GET            /assets/javascripts-min/*file          scrupal.controllers.Assets.js_s_min(file)
 GET            /assets/stylesheets/*file              scrupal.controllers.Assets.css_s(file)
 #GET            /assets/stylesheets-min/*file          scrupal.controllers.Assets.css_s(file,min=true)
 GET            /assets/images/*file                   scrupal.controllers.Assets.img(file)

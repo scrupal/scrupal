@@ -93,7 +93,7 @@ object Site extends Registry[Site]{
             val schema = new CoreSchema(sketch)
             schema.validate match {
               case Success(true) =>
-                schema.Sites.findAll foreach { s: EssentialSite =>
+                for (s <- schema.Sites.findAll if s.enabled) {
                   Logger.debug("Loading site '" + s.id.name + "' for port " + s.listenPort)
                   result.put(s.listenPort, Site(s) )
                 }

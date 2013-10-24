@@ -188,9 +188,9 @@ object Global extends GlobalSettings
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 
-    Logger.trace("STARTUP CONFIGURATION VALUES")
+    Logger.debug("STARTUP CONFIGURATION VALUES")
     interestingConfig(newconf) foreach { case (key: String, value: ConfigValue) =>
-      Logger.trace ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
+      Logger.debug ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
     }
 
     newconf

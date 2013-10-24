@@ -40,6 +40,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
 
   val root = "/public"
   val javascripts = root + "/javascripts"
+  val javascripts_min = root + "/javascripts_min"
   val stylesheets = root + "/stylesheets"
   val images = root + "/images"
   val themes = root + "/themes"
@@ -80,7 +81,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     * @return The Content of the file as an Action
     */
   def js_s(file: String, min : Boolean = true) = fallback(javascripts, minify(file, ".js", min))
-
+  def js_s_min(file: String) = js_s(file, true)
 
   /** Get a Stylesheet from a Jar file
     * Uses WebJarAssets to locate and return the `file` from within a ClassLoaded Jar file.
