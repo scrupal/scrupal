@@ -85,15 +85,18 @@ object Site extends Registry[Site]{
     Try {
       val result: mutable.Map[Short, Site] = mutable.Map()
       ConfigHelper(config).forEachDB {
-        case (site: String, dbConfig: Configuration) => {
+        case (db: String, dbConfig: Configuration) => {
           val sketch = Sketch(dbConfig)
           sketch.withSession { implicit session: Session =>
             val url = dbConfig.getString("url").getOrElse("")
-            Logger.debug("Found valid DB Config with  URL '" + url + "' for site " + site + ": attempting load" )
+            Logger.debug("Found valid DB Config named '" + db + "' with  URL '" + url + "': attempting load." )
             val schema = new CoreSchema(sketch)
             schema.validate match {
               case Success(true) =>
-                schema.Sites.findAll foreach { s: EssentialSite => result.put(s.listenPort, Site(s) ) }
+                schema.Sites.findAll foreach { s: EssentialSite =>
+                  Logger.debug("Loading site '" + s.id.name + "' for port " + s.listenPort)
+                  result.put(s.listenPort, Site(s) )
+                }
               case Success(false) =>
                 Logger.warn("Attempt to validate schema for '" + url + "' failed.")
               case Failure(x) =>
