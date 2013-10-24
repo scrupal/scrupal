@@ -28,6 +28,7 @@ import scrupal.fakes.WithFakeScrupal
 import scala.slick.lifted.DDL
 import scrupal.api.{Instance, EssentialSite}
 import play.api.libs.json.Json
+import scrupal.utils.ConfigHelper
 
 /** This is the test suite for the Config.Step class
   *
@@ -133,8 +134,8 @@ class ConfigStepSpec extends Specification {
         Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
       )
       // Get a DB Sketch with the same config values as specified above
-      val db_config = ConfigWizard.getDbConfig(config)._1
-      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+      val db_config = ConfigHelper(config).getDbConfig
+      val sketch = Sketch( db_config.getConfig("db.empty_db").get )
       sketch.withSession { implicit session: Session =>
         val schema = new CoreSchema(sketch)
         schema.createCoreTables
@@ -151,8 +152,8 @@ class ConfigStepSpec extends Specification {
         Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
       )
       // Get a DB Sketch with the same config values as specified above
-      val db_config = ConfigWizard.getDbConfig(config)._1
-      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+      val db_config = ConfigHelper(config).getDbConfig
+      val sketch = Sketch( db_config.getConfig("db.empty_db").get )
 
       // Install the Scrupal Schema
       sketch.withSession { implicit session: Session =>
@@ -171,8 +172,8 @@ class ConfigStepSpec extends Specification {
         Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
       )
       // Get a DB Sketch with the same config values as specified above
-      val db_config = ConfigWizard.getDbConfig(config)._1
-      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+      val db_config = ConfigHelper(config).getDbConfig
+      val sketch = Sketch( db_config.getConfig("db.empty_db").get )
 
       // Install the Scrupal Schema
       sketch.withSession { implicit session: Session =>
@@ -192,8 +193,8 @@ class ConfigStepSpec extends Specification {
         Map(ConfigWizard.scrupal_database_config_file -> "test/resources/db/config/empty_db.conf")
       )
       // Get a DB Sketch with the same config values as specified above
-      val db_config = ConfigWizard.getDbConfig(config)._1
-      val sketch = Sketch( Configuration(db_config.getConfig("db.empty_db")) )
+      val db_config = ConfigHelper(config).getDbConfig
+      val sketch = Sketch( db_config.getConfig("db.empty_db").get )
 
       // Install the Scrupal Schema
       sketch.withSession { implicit session: Session =>

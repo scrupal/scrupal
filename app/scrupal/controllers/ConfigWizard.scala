@@ -87,7 +87,7 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
-  type DBConfig = Map[String,Option[Configuration]]
+  type DBConfig = ConfigHelper#DBConfig
   val emptyDBConfig = Map.empty[String,Option[Configuration]]
 
   /** Get the names of the configured database, or error information
@@ -264,7 +264,6 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
-
   /** Determine which step we are at based on the Context provided */
   def computeState(implicit context: Context) : (Step.Kind,Option[Throwable],DBConfig) = {
     checkSchemas(context.config)
@@ -272,44 +271,6 @@ object ConfigWizard extends ScrupalController {
 
   // The configuration key that says where to get the database configuration data.
   lazy val scrupal_database_config_file = "scrupal.database.config.file"
-
-  def getDbConfigFile(config: Configuration) : Option[File] = {
-    config.getString(scrupal_database_config_file) map { db_config_file_name: String =>
-      new File(db_config_file_name)
-    }
-  }
-
-  def getDbConfig(config: Configuration) : (Config,Option[File]) = {
-    getDbConfigFile(config) map { db_config_file: File =>
-      if (db_config_file.isFile) {
-        (ConfigFactory.parseFile(db_config_file),Some(db_config_file))
-      } else {
-        (ConfigFactory.empty(),None)
-      }
-    }
-  }.getOrElse((ConfigFactory.empty(),None))
-
-  private def setDbConfig(x: (Config, Option[File]), new_config: Config) : Configuration = {
-    val result = {
-      val merged_config : Config  = new_config.withFallback(x._1)
-      val data: String = merged_config.root.render (ConfigRenderOptions.concise()) // whew!
-      val trimmed_data = data.substring(1, data.length-1)
-      x._2 map { file: File =>
-        val writer = new PrintWriter(file)
-        try  { writer.println(trimmed_data) } finally { writer.close }
-        Configuration(merged_config)
-      }
-    }.getOrElse(Configuration.empty)
-    Logger.debug("DB Config set to " + result)
-    result
-  }
-
-  private def setDbConfig(x : (Config, Option[File]), config: Map[String,Any]) : Configuration = {
-    import collection.JavaConversions._
-    val new_config : Config = ConfigFactory.parseMap(config)
-    setDbConfig(x, new_config)
-  }
-
 
   private def doShortCutConfiguration(config: Configuration) = {
     val default_db_conf = Map(
@@ -319,7 +280,7 @@ object ConfigWizard extends ScrupalController {
       "db.scrupal.user" -> "",
       "db.scrupal.pass" -> ""
     )
-    val new_config = setDbConfig(getDbConfig(config), default_db_conf)
+    val new_config = ConfigHelper(config).setDbConfig(default_db_conf)
     val default_config = new_config.getConfig("db.scrupal")
     val sketch = Sketch(default_config.get)
     sketch.withSession { implicit session: Session =>
@@ -342,8 +303,6 @@ object ConfigWizard extends ScrupalController {
             """.stripMargin
         )
       )
-
-      // TODO: Insert the first "Welcome To Scrupal" page entity.
     }
   }
 
@@ -359,7 +318,7 @@ object ConfigWizard extends ScrupalController {
       "db.scrupal.user"   -> "",
       "db.scrupal.pass"   -> ""
     )
-    setDbConfig((ConfigFactory.empty(), getDbConfigFile(config)), initial_conf)
+   ConfigHelper(config).setDbConfig(initial_conf)
   }
 
   /** This Configuration action
@@ -432,7 +391,7 @@ object ConfigWizard extends ScrupalController {
               Logger.debug("DB Info Request: " + request.body.asFormUrlEncoded)
               Logger.debug("Converted to DBDATA: " + dbData)
               val dbConfig = makeConfiguration(dbData)
-              setDbConfig((ConfigFactory.empty(), getDbConfigFile(context.config)), dbConfig)
+              ConfigHelper(context.config).setDbConfig(Configuration(dbConfig))
               Redirect(routes.ConfigWizard.configure)
             }
           )
