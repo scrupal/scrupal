@@ -167,6 +167,57 @@ trait Component  {
   trait SymbolicEnablableThingTable[S <: SymbolicEnablableThing]
     extends SymbolicThingTable[S] with EnablableTable[S]
 
+  abstract class SymbolicNumericCorrelationTable[A <: SymbolicIdentifiable, B <: NumericIdentifiable] (
+    tableName: String, nameA: String, nameB: String, tableA: SymbolicTable[A], tableB: NumericTable[B]) extends
+    ScrupalTable[(Symbol, Identifier)](tableName) {
+    def a_id = column[Symbol](nm(nameA + "_id"))
+    def b_id = column[Identifier](nm(nameB + "_id"))
+    def a_fkey = foreignKey(fkn(nameA), a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def b_fkey = foreignKey(fkn(nameB), b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def a_b_uniqueness = index(idx(nameA + "_" + nameB), (a_id, b_id), unique= true)
+
+    lazy val findAsQuery = for {
+      bId <- Parameters[Identifier];
+      b <- this if b.b_id === bId;
+      a <- tableA if a.id === b.a_id
+    } yield a
+
+    lazy val findBsQuery = for {
+      aId <- Parameters[Symbol];
+      a <- this if a.a_id === aId;
+      b <- tableB if b.id === a.b_id
+    } yield b
+
+    def findAssociatedA(b: B) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
+    def findAssociatedB(a: A) : List[B] = { findBsQuery(a.id).list }
+    def * = a_id ~ b_id
+  }
+
+  abstract class SymbolicSymbolicCorrelationTable[A <: SymbolicIdentifiable, B <: SymbolicIdentifiable] (
+    tableName: String, nameA: String, nameB: String, tableA: SymbolicTable[A], tableB: SymbolicTable[B]) extends
+  ScrupalTable[(Symbol, Symbol)](tableName) {
+    def a_id = column[Symbol](nm(nameA + "_id"))
+    def b_id = column[Symbol](nm(nameB + "_id"))
+    def a_fkey = foreignKey(fkn(nameA), a_id, tableA)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def b_fkey = foreignKey(fkn(nameB), b_id, tableB)(_.id, onDelete = ForeignKeyAction.Cascade )
+    def a_b_uniqueness = index(idx(nameA + "_" + nameB), (a_id, b_id), unique= true)
+
+    lazy val findAsQuery = for {
+      bId <- Parameters[Symbol];
+      b <- this if b.b_id === bId;
+      a <- tableA if a.id === b.a_id
+    } yield a
+
+    lazy val findBsQuery = for {
+      aId <- Parameters[Symbol];
+      a <- this if a.a_id === aId;
+      b <- tableB if b.id === a.b_id
+    } yield b
+
+    def findAssociatedA(b: B) : List[A] = { findAsQuery(b.id).list }
+    def findAssociatedB(a: A) : List[B] = { findBsQuery(a.id).list }
+    def * = a_id ~ b_id
+  }
 
   /**
    * The base class of all correlation tables.
@@ -182,8 +233,8 @@ trait Component  {
     def a_b_uniqueness = index(idx(nameA + "_" + nameB), (a_id, b_id), unique= true)
     lazy val findBsQuery = for { aId <- Parameters[Long]; a <- this if a.a_id === aId; b <- tableB if b.id === a.b_id } yield b
     lazy val findAsQuery = for { bId <- Parameters[Long]; b <- this if b.b_id === bId; a <- tableA if a.id === b.a_id } yield a
-    def selectAssociatedA(b: B) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
-    def selectAssociatedB(a: A) : List[B] = { if (a.id.isDefined) findBsQuery(a.id.get).list else List() }
+    def findAssociatedA(b: B) : List[A] = { if (b.id.isDefined) findAsQuery(b.id.get).list else List() }
+    def findAssociatedB(a: A) : List[B] = { if (a.id.isDefined) findBsQuery(a.id.get).list else List() }
     def * = a_id ~ b_id
 
   };

@@ -57,7 +57,7 @@ object Global extends GlobalSettings
       * Note that the type is a HashMap[Short,Site] because we want to index it quickly by the port number we are
       * serving so as to avoid a scan of this data structure on every request.
       */
-    var sites : Map[Short,Site] = Map[Short,Site]()
+    var sites : Map[String,Site] = Map[String,Site]()
   }
 
   val Copyright = "2013 viritude llc"
@@ -106,11 +106,15 @@ object Global extends GlobalSettings
 
     // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
     // those is for a site configuration so we should be able to load the sites now.
-    reload(app)
+    reload(app.configuration)
   }
 
-  def reload(app: Application) {
-    DataYouShouldNotModify.sites = Site.load(app.configuration)
+  def reload(config: Configuration) = {
+    DataYouShouldNotModify.sites = Site.load(config)
+  }
+
+  def unload(config: Configuration) = {
+    DataYouShouldNotModify.sites = Site.unload(config)
   }
 
 	/**
@@ -188,9 +192,9 @@ object Global extends GlobalSettings
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 
-    Logger.debug("STARTUP CONFIGURATION VALUES")
+    Logger.trace("STARTUP CONFIGURATION VALUES")
     interestingConfig(newconf) foreach { case (key: String, value: ConfigValue) =>
-      Logger.debug ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
+      Logger.trace ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
     }
 
     newconf
@@ -222,7 +226,7 @@ object Global extends GlobalSettings
       Some(scrupal.controllers.ConfigWizard.configure())
     }
 	}
-  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|doc|scaladoc)".r
+  private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|reconfigure|doc|scaladoc)".r
 
   /**
 	 * Called when an exception occurred.

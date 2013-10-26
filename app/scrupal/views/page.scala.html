@@ -1,0 +1,15 @@
+@(title: String, description: String)(body: String)(implicit context : scrupal.controllers.Context)
+@import scrupal.views.html
+@html.angularPage(title) {
+}  {
+<div class="row span12">
+<div class="well">
+<marked>
+# @title
+@description
+
+@body
+</marked>
+</div>
+</div>
+}

@@ -22,6 +22,7 @@ import scrupal.api._
 import java.sql.Clob
 import play.api.libs.json.{Json, JsObject}
 import scrupal.utils.Version
+import views.html.helper.options
 
 /** I.T.E.M.S Component
   * We over used the term "Core" so this group of tables got a memorable acronym. This component defines the five
@@ -88,15 +89,25 @@ trait ITEMSComponent extends Component {
   }
 
   object Sites extends ScrupalTable[EssentialSite]("sites") with SymbolicEnablableThingTable[EssentialSite] {
-    def listenPort = column[Short](nm("listenPort"))
-    def listenPort_index = index(idx("listenPort"), listenPort, unique=true)
-    def urlDomain = column[String](nm("urlDomain"))
-    def urlPort = column[Short](nm("urlPort"))
-    def urlHttps = column[Boolean](nm("urlHttps"))
-    def * = id ~ description ~ listenPort ~ urlDomain ~ urlPort ~ urlHttps ~ enabled ~ modified.? ~ created.? <>
+    def host = column[String](nm("host"))
+    def host_index = index(idx("host"), host, unique=true)
+    def siteIndex = column[InstanceIdentifier](nm("siteIndex"), O.Nullable)
+    def siteIndex_fkey = foreignKey(fkn("siteIndex"), siteIndex, Instances)(_.id)
+    def requireHttps = column[Boolean](nm("requireHttps"))
+    def * = id ~ description ~ host ~ siteIndex.? ~ requireHttps ~ enabled ~ modified.? ~ created.? <>
       (EssentialSite.tupled, EssentialSite.unapply _)
 
+    def updateSiteIndex(siteId: Symbol, instanceId: InstanceIdentifier) = {
+      val q = for { s <- Sites if s.id === siteId } yield s.siteIndex
+      q.update(instanceId)
+    }
   }
 
-  def coreDDL : DDL = Instances.ddl ++ Types.ddl ++ Entities.ddl ++  Modules.ddl ++ Sites.ddl
+  object Sites_Modules extends SymbolicSymbolicCorrelationTable[EssentialSite,EssentialModule] (
+    "sites_modules", "site", "module", Sites, Modules ) {
+    def findModules(site: EssentialSite) = findAssociatedB(site)
+    def findSites(mod: EssentialModule) = findAssociatedA(mod)
+  }
+
+  def coreDDL : DDL = Instances.ddl ++ Types.ddl ++ Entities.ddl ++  Modules.ddl ++ Sites.ddl ++ Sites_Modules.ddl
 }

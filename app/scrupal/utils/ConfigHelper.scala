@@ -70,7 +70,7 @@ class ConfigHelper(config : Configuration) {
     }
   }.toMap
 
-  private def getDbConfigFile : Option[File] = {
+  def getDbConfigFile : Option[File] = {
     config.getString(ConfigHelper.scrupal_database_config_file_key) map { db_config_file_name: String =>
       new File(db_config_file_name)
     }

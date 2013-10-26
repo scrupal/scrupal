@@ -21,11 +21,8 @@ import org.specs2.mutable.Specification
 import play.api.mvc.RequestHeader
 import play.api.{Logger, Configuration}
 import scrupal.db.{CoreSchema,Sketch}
-import scala.slick.lifted.DDL
-import scala.slick.driver._
 import scala.slick.session.Session
 import scrupal.fakes.WithFakeScrupal
-import scala.slick.lifted.DDL
 import scrupal.api.{Instance, EssentialSite}
 import play.api.libs.json.Json
 import scrupal.utils.ConfigHelper
@@ -179,7 +176,7 @@ class ConfigStepSpec extends Specification {
       sketch.withSession { implicit session: Session =>
         val schema = new CoreSchema(sketch)
         schema.create(session)
-        schema.Sites.insert( EssentialSite('Test,"Testing",8080,"localhost",80,false,true))
+        schema.Sites.insert( EssentialSite('Test,"Testing","localhost",None,false,true))
         val triple = ConfigWizard.checkSchemas(config)
         triple._1 must beEqualTo(ConfigWizard.Step.Five_Create_Page)
         ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("no entities"); xcptn }}.isDefined) must
@@ -200,12 +197,12 @@ class ConfigStepSpec extends Specification {
       sketch.withSession { implicit session: Session =>
         val schema = new CoreSchema(sketch)
         schema.create(session)
-        schema.Sites.insert( EssentialSite('Test,"Testing",8080,"localhost",80,false,true))
-        schema.Instances.insert( Instance('AnInstance, "Testing", 'Page, Json.obj(
+        val id = schema.Instances.insert( Instance('AnInstance, "Testing", 'Page, Json.obj(
           "name" -> "TestInstance",
           "description" -> "Testing",
           "body" -> "# Heading\nThis is a test."
         )))
+        schema.Sites.insert( EssentialSite('Test,"Testing","localhost",Some(id), false,true))
         val triple = ConfigWizard.checkSchemas(config)
         triple._1 must beEqualTo(ConfigWizard.Step.Six_Success)
         triple._2.isDefined must beFalse

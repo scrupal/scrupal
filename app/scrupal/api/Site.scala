@@ -18,12 +18,13 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-import scrupal.utils.{ConfigHelper, Registry, Registrable}
+import scrupal.utils.{Jsonic, ConfigHelper, Registry, Registrable}
 import play.api.{Logger, Configuration}
 import scala.util.{Failure, Success, Try}
 import scala.slick.session.Session
 import scrupal.db.{CoreSchema,Sketch}
 import scala.collection.mutable
+import play.api.libs.json.{Reads, Json, JsObject}
 
 
 /** Information about one site that Scrupal is serving.
@@ -31,10 +32,9 @@ import scala.collection.mutable
   * scanning this table and collecting all the port numbers that are configured for active sites.
   * @param id The name of the `Thing`
   * @param description A brief description of the `Thing`
-  * @param listenPort The port number that Play! should listen on for this site
-  * @param urlDomain The domain name to use in generated urls
-  * @param urlPort The port number to use in generated urls
-  * @param urlHttps The HTTP method to use in generated urls (e.g. https or http)
+  * @param host The host (domain) name to match in the HTTP request
+  * @param siteIndex The identifier of the index (main page) for this site.
+  * @param requireHttps The HTTP method required for this site. When true, HTTP requests will be rejected
   * @param enabled Whether the site is enabled for serving or not
   * @param modified Modification time, optional
   * @param created Creation time, optional
@@ -42,29 +42,50 @@ import scala.collection.mutable
 case class EssentialSite(
   override val id: Symbol,
   override val description: String,
-  listenPort: Short,
-  urlDomain: String,
-  urlPort: Short,
-  urlHttps: Boolean = false,
+  host: String,
+  siteIndex: Option[InstanceIdentifier] = None,
+  requireHttps: Boolean = false,
   override val enabled: Boolean = false,
   override val modified: Option[DateTime] = None,
   override val created: Option[DateTime] = None
 ) extends SymbolicEnablableThing(id, description, enabled, modified, created)
 
 class Site (
-  id: Symbol,
-  description: String,
-  listenPort: Short,
-  urlDomain: String,
-  urlPort: Short,
-  urlHttps: Boolean = false,
-  enabled: Boolean = false,
-  modified: Option[DateTime] = None,
-  created: Option[DateTime] = None
-) extends EssentialSite(id, description, listenPort, urlDomain, urlPort, urlHttps, enabled,
-  modified, created) with Registrable {
-  def this(e: EssentialSite) = this(e.id, e.description, e.listenPort, e.urlDomain, e.urlPort, e.urlHttps, e.enabled, e.modified,
-    e.created)
+  override val id: Symbol,
+  override val description: String,
+  override val host: String,
+  override val siteIndex: Option[InstanceIdentifier] = None,
+  override val requireHttps: Boolean = false,
+  override val enabled: Boolean = false,
+  override val modified: Option[DateTime] = None,
+  override val created: Option[DateTime] = None,
+  val sketch: Option[Sketch] = None
+) extends EssentialSite(id, description, host, siteIndex, requireHttps, enabled,
+  modified, created) with Registrable with Jsonic {
+  def this(e: EssentialSite) =
+    this(e.id, e.description, e.host, e.siteIndex, e.requireHttps, e.enabled, e.modified, e.created, None)
+  def this(e: EssentialSite, sketch: Sketch) =
+    this(e.id, e.description, e.host, e.siteIndex, e.requireHttps, e.enabled, e.modified, e.created, Some(sketch))
+
+  def toJson : JsObject = {
+    Json.obj()
+  }
+
+  def fromJson(js: JsObject) = {
+
+  }
+
+  def withCoreSchema[TBD]( f: (CoreSchema) => TBD) : TBD = {
+    sketch map {
+      sk: Sketch => sk.withSession[TBD]  {
+        implicit session: Session => {
+          val schema = new CoreSchema(sk)
+          f(schema)
+        }
+      }
+    }
+  }.getOrElse { throw new Exception("Expected Site to have a Sketch") }
+
 }
 
 
@@ -74,6 +95,7 @@ object Site extends Registry[Site]{
   val registryName: String = "Sites"
 
   def apply(esite: EssentialSite) = new Site(esite)
+  def apply(esite: EssentialSite, sketch: Sketch) = new Site(esite, sketch)
 
   /** Load the Sites from configuration
     * Site loading is based on the Play Database configuration. There should be a one-to-one correspondence between a
@@ -81,9 +103,9 @@ object Site extends Registry[Site]{
     * same database information. We utilize this to open the database and load the site objects they contain
     * @param config The Scrupal Configuration to use to determine the initial loading
     */
-  def load(config: Configuration) : Map[Short, Site] = {
+  def load(config: Configuration) : Map[String, Site] = {
     Try {
-      val result: mutable.Map[Short, Site] = mutable.Map()
+      val result: mutable.Map[String, Site] = mutable.Map()
       ConfigHelper(config).forEachDB {
         case (db: String, dbConfig: Configuration) => {
           val sketch = Sketch(dbConfig)
@@ -93,9 +115,9 @@ object Site extends Registry[Site]{
             val schema = new CoreSchema(sketch)
             schema.validate match {
               case Success(true) =>
-                for (s <- schema.Sites.findAll if s.enabled) {
-                  Logger.debug("Loading site '" + s.id.name + "' for port " + s.listenPort)
-                  result.put(s.listenPort, Site(s) )
+                for (s <- schema.Sites.findAll) {
+                  Logger.debug("Loading site '" + s.id.name + "' for host " + s.host + ", " +"enabled: " + s.enabled)
+                  result.put(s.host, Site(s, sketch) )
                 }
               case Success(false) =>
                 Logger.warn("Attempt to validate schema for '" + url + "' failed.")
@@ -109,7 +131,14 @@ object Site extends Registry[Site]{
       Map(result.toSeq:_*)
     } match {
       case Success(x) => x
-      case Failure(e) => Logger.warn("Error while loading sites: ", e); Map[Short,Site]()
+      case Failure(e) => Logger.warn("Error while loading sites: ", e); Map[String,Site]()
     }
   }
+
+  def unload(config: Configuration) : Map[String,Site] = {
+    all foreach { s: Site => super.unRegister(s) }
+    Map[String,Site]()
+  }
+
+  // implicit lazy val siteWrites : Reads[Site]
 }

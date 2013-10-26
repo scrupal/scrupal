@@ -31,6 +31,7 @@ package object api {
   type ModuleIdentifier = Symbol
   type TypeIdentifier = Symbol
   type EntityIdentifier = Symbol
+  type SiteIdentifier = Symbol
   type FeatureIdentifier = Identifier
   type InstanceIdentifier = Identifier
 

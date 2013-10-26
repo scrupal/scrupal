@@ -17,16 +17,17 @@
 
 package scrupal.controllers
 
-import play.api.mvc.{Action, RequestHeader}
+import play.api.mvc.{Request, AnyContent, Action, RequestHeader}
 import play.api.{Mode, Play, Routes}
 import play.api.Play.current
 import scrupal.views.html
-import scrupal.api.{Module}
+import scrupal.api.{InstanceIdentifier, Instance, Site, Module}
 import org.joda.time.Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
 import java.io.File
-import scrupal.models.CoreModule
+import scrupal.db.CoreSchema
+import play.api.libs.json.JsString
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -35,17 +36,35 @@ import scrupal.models.CoreModule
 object Home extends ScrupalController {
 
   /** The home page */
-	def index = Action { implicit request =>
-  // If we are not yet configured (no sites to serve) then every request leads us to /config. Period :)
-    if (Global.ScrupalIsConfigured || CoreModule.DevMode ) {
-      // TODO: Get the home page url that is defined for the current site
-      NotImplemented("Site based main page")
-    }
-    else
-    {
-      TemporaryRedirect("/config") // Scrupal needs to be configured !
-    }
-	}
+	def index = Action {
+    implicit request: Request[AnyContent] =>{
+      context.site map {
+        site: Site => {
+          if (site.enabled) {
+            {
+              site.siteIndex map {
+                sid: InstanceIdentifier => {
+                  site.withCoreSchema { schema: CoreSchema =>
+                    schema.Instances.fetch(sid) map { instance: Instance =>
+                      require(instance.entityId == 'Page)
+                      val body = (instance.payload \ "body").asInstanceOf[JsString].value
+                      Ok(html.page(instance.name.name, instance.description)(body))
+                    }
+                  } getOrElse {
+                    notFound( "the page entity with index #" + sid, Seq(
+                      "you haven't completed initial configuration,",
+                      "you deleted your Site (" + site.id.name + ") index," )
+                    )
+                  }
+                }
+              }
+            } getOrElse { notFound("the index for site '" + site.id.name + "'") }
+          }
+          else { forbidden("browse site '" + site.id.name + "'", "it is disabled") }
+        }
+      }
+    } getOrElse { notFound("any sites to display at all!", Seq("your database configuration is incorrect,")) }
+  }
 
 
   /** The admin application */

@@ -141,7 +141,7 @@ object Sketch {
     */
   def apply(url: String, user: Option[String] = None, pass: Option[String] = None, schema: Option[String] = None,
     driver: Option[String] = None, properties: Option[Properties] = None) : Sketch = {
-    Logger.debug("Creating Sketch With: " + url )
+    Logger.trace("Creating Sketch With: " + url )
 
     val kind = SupportedDatabases.forJDBCUrl(url)
 

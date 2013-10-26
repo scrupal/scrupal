@@ -65,17 +65,15 @@ trait ContextProvider {
 
   implicit def context(implicit request: RequestHeader) : Context = {
     if (Global.ScrupalIsConfigured) {
-      val afterColon : Array[String] = request.host.split(":").tail
-      val port : Short = if (afterColon.length != 1) 80 else afterColon(0).toShort
-      val site : Option[Site] = Global.DataYouShouldNotModify.sites.get(port)
+      val parts : Array[String] = request.host.split(":")
+      // HTTP Requires the Host Header, but we guard anyway and assume "localhost" if its empty
+      val host: String = if (parts.length > 0) parts(0) else "localhost"
+      val site : Option[Site] = Global.DataYouShouldNotModify.sites.get(host)
       Context(
         site
       )
     }
-    else
-    {
-      Context()
-    }
+    else Context(None)
   }
 }
 

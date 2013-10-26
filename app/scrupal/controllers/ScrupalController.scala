@@ -53,6 +53,10 @@ trait ScrupalController extends Controller with ContextProvider {
      MovedPermanently(where)
   }
 
+  def forbidden(what: String, why: String)(implicit writable: Writeable[Html], request: RequestHeader): SimpleResult = {
+    Forbidden(html.errors.Forbidden(what, why))
+  }
+
   def spaces2underscores(what: String) = what.replaceAll(" ","_")
 
   def modules = Module.all

@@ -185,7 +185,23 @@ object Module extends Registry[Module] {
       }
     }
   }
+
+  private[scrupal] def installSchemas(sketch: Sketch) : Unit = {
+    // For each module ...
+    registrants foreach { case (name: ModuleIdentifier, mod: Module) =>
+      // In a database session ...
+      sketch.withSession { implicit session: Session =>
+        // For each schema ...
+        mod.schemas(sketch) foreach { schema: Schema =>
+          // Create the schema
+          schema.create
+        }
+      }
+    }
+  }
+
   implicit lazy val moduleWrites : Writes[Module] = new Writes[Module]  {
     def writes(m: Module): JsValue = m.toJson
   }
+
 }
