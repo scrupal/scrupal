@@ -4,6 +4,18 @@
 @import scrupal.controllers.ConfigWizard.Step
 @import scrupal.controllers.routes.ConfigWizard
 @html.angularPage(title) {
+<script type="text/ng-template" id="template/carousel/carousel.html">
+    <div ng-mouseenter="pause()" ng-mouseleave="play()" class="carousel">
+        <div>
+            <a ng-click="prev()" class="carousel-control left" ng-show="slides().length > 1"><i
+            class="icon-arrow-left icon-white"></i></a>
+            <a ng-click="next()" class="carousel-control right" ng-show="slides().length > 1"><i
+            class="icon-arrow-right icon-white"></i></a>
+        </div>
+        <hr/>
+        <div class="carousel-inner" ng-transclude></div>
+    </div>
+</script>
 } {
 <h2>@title</h2>
 <h3>Progress</h3>
@@ -31,70 +43,48 @@
 @body
 </large>
 </div>
-<carousel interval="5000">
-<slide active="@if(step == Step.Zero_Welcome){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote>
-    <p class="text-info">Necessity is the mother of taking chances.</p>
-    <sub><sup class="text-muted">Mark Twain</sup></sub>
-    </blockquote>
-    </div>
-</slide>
-<slide active="@if(step == Step.One_Specify_Databases){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote>
-    <p class="text-info">Web pages are designed for people. For the Semantic Web,
-        we need to look at existing databases.</p>
-    <sub><sup class="text-muted">Tim Berners-Lee</sup></sub>
-    </blockquote>
-    </div>
-</slide>
-<slide active="@if(step == Step.Two_Connect_Databases){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote>
-    <p class="text-info">A smile is the universal welcome. <i class="icon-smiley"></i></p>
-    <sub><sup class="text-muted">Max Eastman</sup></sub>
-    </blockquote>
-    </div>
-</slide>
-<slide active="@if(step == Step.Three_Install_Schemas){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote>
-    <p class="text-info">On a clear disk you can seek forever!</p>
-    <sub><sup class="text-muted">Anonymous</sup></sub>
-    </blockquote>
-    </div>
-</slide>
-<slide active="@if(step == Step.Four_Create_Site){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote>
-    <p class="text-info">People tend to think of the web as a way to get information or perhaps as a place to
-        carry out ecommerce. But really, the web is about accessing applications. Think of each website as an
-        application, and every single click, every single interaction with that site, is an opportunity to be on
-        the very latest version of that application.
-    </p>
-    <sub><sup class="text-muted">Marc Andreessen</sup></sub>
-    </blockquote>
-    </div>
-</slide>
-<slide active="@if(step == Step.Five_Create_Page){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote>
-    <p class="text-warning">Thank You For Choosing Me!</p>
-    <sub><sup class="text-muted">Scrupal Configuration Wizard</sup></sub>
-    </blockquote>
-    </div>
-</slide>
-<slide active="@if(step == Step.Six_Success){active}">
-    <div class="col-sm-6 pull-right">
-    <blockquote >
-    <p class="text-success">Strive not to be a success, but rather to be of value.</p>
-    <sub><sup class="text-muted">Albert Einstein</sup></sub>
-    </blockquote>
-    </div>
-</slide>
+<div ng-controller="QuoteCtrl as quoter">
+<carousel interval="quoter.interval">
+    <slide ng-repeat="quote in quoter.quotes" active="quote.active">
+        <div class="col-sm-6 pull-right">
+            <blockquote>
+                <p class="{{quote.clazz}}">{{quote.quote}}</p>
+                <sub><sup class="text-muted">{{quote.attribution}}</sup></sub>
+            </blockquote>
+        </div>
+    </slide>
 </carousel>
+</div>
 <hr/>
 <p><a href="@ConfigWizard.configure" title="Redetermine the configuration step you're on.">Try Again</a>&nbsp;
 <a href="@ConfigWizard.reconfigure" title="Force the configuration back to initial state. Careful!">Start Over</a></p>
+<script type="text/javascript">
+function QuoteCtrl() {
+this.interval = 5000;
+this.quotes = [
+  { active : "@if(step == Step.Zero_Welcome){active}", clazz : "text-primary",
+    quote : 'Necessity is the mother of taking chances.', attribution : 'Mark Twain' },
+  { active : '@if(step == Step.Two_Connect_Databases){active}', 'clazz' : 'text-warning',
+    quote : 'A smile is the universal welcome.', 'attribution' : 'Max Eastman' },
+  { active : '@if(step == Step.Three_Install_Schemas){active}', clazz : 'text-danger',
+    quote : 'On a clear disk you can seek forever.', attribution :'Anonymous ~ UNIX fortune program' },
+  { active : '@if(step == Step.Four_Create_Site){active}', clazz : 'text-primary',
+    quote : 'Sites need to be able to interact in one single, universal space.', attribution :'Tim Berners-Lee' },
+  { active : '@if(step == Step.Five_Create_Page){active}', clazz : 'text-info',
+    quote : 'Thank You For Choosing Me!', attribution :'Scrupal Configuration Wizard' },
+  { active : '@if(step == Step.Six_Success){active}', clazz : 'text-success',
+    quote : 'Strive not to be a success, but rather to be of value.', attribution :'Albert Einstein' },
+  { active : '', clazz : 'text-success', attribution : 'Jon Stewart',
+    quote : 'The Internet is just a world passing around notes in a classroom.' },
+  { active : '', clazz : 'text-success', attribution : 'Mitchell Kapor',
+    quote : 'Getting information off the Internet is like taking a drink from a fire hydrant.' },
+  { active : '', clazz : 'text-danger', attribution : 'Anonymous',
+    quote : "SELECT * FROM [People] WHERE [Clue] > 0"},
+  { action : '', clazz : 'text-success', attribution : 'Anonymous',
+    quote: '1f u c4n r34d th1s u r34lly n33d t0 g37 l41d.'},
+  { active : '', clazz : 'text-success', attribution : 'Steve Jobs',
+    quote : 'I am very excited about having the Internet in my den.' }
+];
+};
+</script>
 }
