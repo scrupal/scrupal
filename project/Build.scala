@@ -183,7 +183,6 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
       printClasspath <<= print_class_path
     ) ++  play.Project.playScalaSettings ++ Seq (
       // This bit of nonsense brought to you by https://github.com/playframework/playframework/issues/1813
-      // and its related friend at
       fork in (Test) := false
     )
 
