@@ -19,8 +19,8 @@ things into it. I can help with that! Just fill in the information below and I'l
         '_placeholder -> "Enter a name you want to use to refer to this site configuration.")
     @inputText(site("description"), '_label -> "Description",
         '_placeholder -> "Enter a brief description for your site.")
-    @inputNumber(site("listenPort"), min=1, max=65535, '_label -> "Listen Port",
-        '_placeholder -> "Port Scrupal will listen on for incoming requests")
+    @inputText(site("host"), '_label -> "Host To match",
+        '_placeholder -> "Host name to match in requests to Scrupal")
     @checkbox(site("https"), '_label -> "Requires https?")
     @actionButton(name="action", value="createSite", label="Create Site!")
 }
