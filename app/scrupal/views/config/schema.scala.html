@@ -4,13 +4,11 @@
 @import scrupal.views.html.helpers._
 @import scrupal.controllers.routes.ConfigWizard
 @html.configPage("Configure Scrupal Database", step, lastError)  {
-<large>
 <p>
 The database you have selected is not configured to work with Scrupal yet. To proceed, I will need your permission
 to install the database tables that Scrupal uses and populate them with the initial data. No data will be lost and it
 only takes a moment to do.
 </p>
-</large>
 @iForm(name="Choices", action = ConfigWizard.configAction) {
 @actionButton("action", "proceed", "Proceed")
 @actionButton("action", "cancel", "Cancel")

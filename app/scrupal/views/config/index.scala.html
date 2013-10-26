@@ -5,17 +5,15 @@
 @import scrupal.controllers.routes.ConfigWizard
 
 @html.configPage("Thank You For Choosing Me!", step, lastError)  {
-<large>
-<p>Hi!</p>
-<p>I'm the Scrupal Configuration Wizard. As you can see, I've recognized that this is your first configuration
+<p class="lead">Hi! I'm the Scrupal Configuration Wizard</p>
+<p>As you can see, I've recognized that this is your first configuration
 attempt, or at least you need to start from square one. Either way, relax, this is painless and you can't break
 anything ... cause I won't let you! :)</p>
 <p>
 To get Scrupal working (again?), it needs to use a database and that means you'll have to specify which one you want
 to use and where. If you'd rather I just do all this for you with a simple database I have built in, just use the
-**Take Short Cut** button below. Otherwise, press **Configure** to continue with the configuration.
+<em>Take Short Cut</em> button below. Otherwise, press <em>Configure</em>Configure to make your own choices.
 </p>
-</large>
 @iForm(name="Choices", action = ConfigWizard.configAction) {
 @actionButton("how", "configure", "Continue")
 @actionButton("how", "shortcut", "Take Short Cut")

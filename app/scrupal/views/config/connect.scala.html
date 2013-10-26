@@ -1,7 +1,6 @@
 @(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@import scrupal.controllers.routes.Home
 @html.configPage("Welcome to Scrupal", step, lastError)  {
 <marked>
 # Scrupal Database Connectivity

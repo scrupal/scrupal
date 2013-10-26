@@ -27,10 +27,74 @@
 </div>
 <hr/>
 <div class="well">
+<large>
 @body
+</large>
 </div>
+<carousel interval="5000">
+<slide active="@if(step == Step.Zero_Welcome){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote>
+    <p class="text-info">Necessity is the mother of taking chances.</p>
+    <sub><sup class="text-muted">Mark Twain</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+<slide active="@if(step == Step.One_Specify_Databases){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote>
+    <p class="text-info">Web pages are designed for people. For the Semantic Web,
+        we need to look at existing databases.</p>
+    <sub><sup class="text-muted">Tim Berners-Lee</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+<slide active="@if(step == Step.Two_Connect_Databases){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote>
+    <p class="text-info">A smile is the universal welcome. <i class="icon-smiley"></i></p>
+    <sub><sup class="text-muted">Max Eastman</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+<slide active="@if(step == Step.Three_Install_Schemas){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote>
+    <p class="text-info">On a clear disk you can seek forever!</p>
+    <sub><sup class="text-muted">Anonymous</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+<slide active="@if(step == Step.Four_Create_Site){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote>
+    <p class="text-info">People tend to think of the web as a way to get information or perhaps as a place to
+        carry out ecommerce. But really, the web is about accessing applications. Think of each website as an
+        application, and every single click, every single interaction with that site, is an opportunity to be on
+        the very latest version of that application.
+    </p>
+    <sub><sup class="text-muted">Marc Andreessen</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+<slide active="@if(step == Step.Five_Create_Page){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote>
+    <p class="text-warning">Thank You For Choosing Me!</p>
+    <sub><sup class="text-muted">Scrupal Configuration Wizard</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+<slide active="@if(step == Step.Six_Success){active}">
+    <div class="col-sm-6 pull-right">
+    <blockquote >
+    <p class="text-success">Strive not to be a success, but rather to be of value.</p>
+    <sub><sup class="text-muted">Albert Einstein</sup></sub>
+    </blockquote>
+    </div>
+</slide>
+</carousel>
 <hr/>
 <p><a href="@ConfigWizard.configure" title="Redetermine the configuration step you're on.">Try Again</a>&nbsp;
-    <a href="@ConfigWizard.reconfigure" title="Force the configuration back to initial state. Careful!">Start
-        Over</a></p>
+<a href="@ConfigWizard.reconfigure" title="Force the configuration back to initial state. Careful!">Start Over</a></p>
 }
