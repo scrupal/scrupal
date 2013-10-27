@@ -313,7 +313,7 @@ object ConfigWizard extends ScrupalController {
   private def doInitialConfiguration(config: Configuration) = Try[Boolean] {
     val default_db_conf = Map(
       "db.scrupal.kind" -> "H2",
-      "db.scrupal.url" ->  "jdbc:h2:~/scrupal_example",
+      "db.scrupal.url" ->  "",
       "db.scrupal.driver" -> "org.h2.Driver"
     )
     ConfigHelper(config).setDbConfig(default_db_conf)
