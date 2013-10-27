@@ -307,6 +307,7 @@ object ConfigWizard extends ScrupalController {
       val site = EssentialSite('YourSite, "Auto-generated site created by Short-cut Configuration", "localhost",
         Some(instance_id), requireHttps=false, enabled=true)
       schema.Sites.insert(site)
+      Global.reload( config )
     }
   }
 
@@ -317,6 +318,7 @@ object ConfigWizard extends ScrupalController {
       "db.scrupal.driver" -> "org.h2.Driver"
     )
     ConfigHelper(config).setDbConfig(default_db_conf)
+    Global.reload( config )
     true
   }
 
@@ -336,7 +338,7 @@ object ConfigWizard extends ScrupalController {
       step match {
         case Zero_Welcome          => Ok(html.config.index(step,error))
         case One_Specify_Databases => Ok(html.config.database(makeDatabasesForm(dbs), step, error))
-        case Two_Connect_Databases => Ok(html.config.connect(step,error))
+        case Two_Connect_Databases => Ok(html.config.connect(step,error,extractDatabaseUrl(dbs)))
         case Three_Install_Schemas => Ok(html.config.schema(step,error))
         case Four_Create_Site      => Ok(html.config.site(makeSiteForm,step,error))
         case Five_Create_Page      => Ok(html.config.page(makePageForm,step,error))
@@ -374,8 +376,8 @@ object ConfigWizard extends ScrupalController {
         case Zero_Welcome          => {
           getFormAction("how") {
             how: String => how match {
-              case "shortcut"  => doShortCutConfiguration( context.config ); Global.reload( context.config )
-              case "configure" => doInitialConfiguration( context.config ); Global.reload( context.config )
+              case "shortcut"  => doShortCutConfiguration( context.config )
+              case "configure" => doInitialConfiguration( context.config )
               case _  => {}
             }
             Redirect( routes.ConfigWizard.configure )
@@ -400,9 +402,15 @@ object ConfigWizard extends ScrupalController {
 
         // They are testing database configuration
         case Two_Connect_Databases => {
-          // No matter what, the next action is to go to the configure page and let it figure out the new state.
-          // This ensures that they get the config wizard page that matches their state AFTER the change made here
-          Redirect(routes.ConfigWizard.configure)
+          getFormAction("how") {
+            how: String => how match {
+              case "configure" => {
+                doInitialConfiguration( context.config )
+                Redirect(routes.ConfigWizard.configure)
+              }
+              case _ => Redirect(routes.ConfigWizard.configure)
+            }
+          }
         }
         case Three_Install_Schemas => {
           getFormAction("action") {
@@ -410,7 +418,7 @@ object ConfigWizard extends ScrupalController {
               createSchemas(context.config)
               Redirect(routes.ConfigWizard.configure)
             }
-            case _         => Redirect(routes.ConfigWizard.configure)
+            case _ => Redirect(routes.ConfigWizard.configure)
           }
         }
         case Four_Create_Site      => {
@@ -489,6 +497,15 @@ object ConfigWizard extends ScrupalController {
     else
       dbInfos.head
     databaseForm.fill(dbInfo)
+  }
+
+  def extractDatabaseUrl(cfgs: DBConfig) : String = {
+    if (!cfgs.isEmpty) {
+      cfgs.head._2 map { config: Configuration =>
+        config.getString("url").getOrElse("")
+      }
+    }.getOrElse("")
+    else "jdbc:h2:~/scrupal"
   }
 
   def makeConfiguration(db: DatabaseInfo) : Config = {

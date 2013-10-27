@@ -1,9 +1,23 @@
-@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable])(
+@(step: scrupal.controllers.ConfigWizard.Step.Kind, lastError: Option[Throwable], dbUrl: String)(
     implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
+@import scrupal.views.html.helpers._
+@import scrupal.controllers.ConfigWizard.Step
+@import scrupal.controllers.routes.ConfigWizard
+@require(step == Step.Two_Connect_Databases)
 @html.configPage("Welcome to Scrupal", step, lastError)  {
 <marked>
 # Scrupal Database Connectivity
-We are now going to test your configured database(s) for connectivity.
+Currently, Scrupal cannot properly connect to the database URL that you have specified:
+```
+@dbUrl
+```
+You will need to correct the error found above in order to proceed with the configuration. Use one of the buttons
+below to either reconfigure the database or try again.
 </marked>
+@iForm(name="Choices", action = ConfigWizard.configAction) {
+    @actionButton("how", "configure", "Reconfigure")
+    @actionButton("how", "proceed", "Try Connections Again")
+}
+
 }
