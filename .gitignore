@@ -3,6 +3,7 @@
 .history
 .idea/
 .idea*
+.*.swp
 .project
 .settings/
 .target/
