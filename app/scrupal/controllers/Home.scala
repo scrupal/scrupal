@@ -61,6 +61,7 @@ object Home extends ScrupalController {
   def instanceById(kind:String, id: Long) = UserAction {
     implicit context: AnyUserContext => {
       context.schema.Instances.fetch(id) map { instance: Instance =>
+        // FIXME: This has to learn how to render entities of any kind
         require(instance.entityId == 'Page)
         val body = (instance.payload \ "body").asInstanceOf[JsString].value
         Ok(html.page(instance.name.name, instance.description)(body))
@@ -74,6 +75,7 @@ object Home extends ScrupalController {
     implicit context: AnyUserContext => {
       context.schema.Instances.find(context.schema.Instances.ByName(Symbol(name))).headOption map {
         case (instance: Instance) => {
+          // FIXME: This has to learn how to render entities of any kind
           require(instance.entityId == 'Page)
           val body = (instance.payload \ "body").asInstanceOf[JsString].value
           Ok(html.page(instance.name.name, instance.description)(body))

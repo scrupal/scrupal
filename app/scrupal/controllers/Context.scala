@@ -74,7 +74,7 @@ class SiteContext[A](val site: Site, request: Request[A]) extends BasicContext[A
   */
 class UserContext[A](override val user: String, site: Site, request: Request[A])
     extends SiteContext[A](site, request) {
-  val principal : Principal = ??? // TODO: Finish UserContext implementation
+  val principal  = Nil // TODO: Finish UserContext implementation
 }
 
 /** Some utility applicators for constructing the various Contexts */

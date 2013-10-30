@@ -20,6 +20,8 @@
 
 # Home page for Scrupal which provides setup instructions, etc.
 GET            /                                      scrupal.controllers.Home.index
+GET            /entity/:kind/$id<[0-9]+>              scrupal.controllers.Home.instanceById(kind, id:Long)
+GET            /entity/:kind/$name<\D.*>               scrupal.controllers.Home.instanceByName(kind, name)
 
 # Configuration main page for first-time or any-time configuration wizard
 GET            /configure                             scrupal.controllers.ConfigWizard.configure
