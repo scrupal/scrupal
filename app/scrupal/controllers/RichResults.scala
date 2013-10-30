@@ -20,8 +20,6 @@ package scrupal.controllers
 import play.api.mvc.{SimpleResult, Results}
 import scrupal.views.html
 import play.api.libs.json.{Json, JsString}
-import play.api.http.Writeable
-import play.api.templates.Html
 
 /** A simple trait to provide some helper methods for Controllers.
   * These "Rich"Results transform the usual Results.XXX values into method calls that produce rich results based on

@@ -26,7 +26,7 @@ import scrupal.api.{Module, Type}
   */
 object API extends ScrupalController  with RichJsonResults {
 
-  def fetchAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    Ok(Json.arr("scrupal.org", "scrupal.com"))
       case "modules" =>  Ok(Json.toJson(moduleNames))
@@ -43,7 +43,7 @@ object API extends ScrupalController  with RichJsonResults {
     * @param id
     * @return
     */
-  def fetch(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "module" =>   {
@@ -63,7 +63,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def createAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def createAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Creation of " + kind))
       case "modules" =>  NotImplemented(JsString("Creation of " + kind))
@@ -74,7 +74,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def create(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
       case "modules" =>  NotImplemented(JsString("Creation of " + kind + " " + id))
@@ -86,7 +86,7 @@ object API extends ScrupalController  with RichJsonResults {
   }
 
 
-  def deleteAll(kind: String) = ContextualAction { implicit requiest =>
+  def deleteAll(kind: String) = UserAction { implicit requiest =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Deletion of all " + kind))
       case "modules" =>  NotImplemented(JsString("Deletion of all " + kind))
@@ -97,7 +97,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def delete(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def delete(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Deletion of " + kind + " " + id))
       case "modules" =>  NotImplemented(JsString("Deletion of " + kind + " " + id))
@@ -109,7 +109,7 @@ object API extends ScrupalController  with RichJsonResults {
   }
 
 
-  def updateAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def updateAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Update of " + kind ))
       case "modules" =>  NotImplemented(JsString("Update of " + kind ))
@@ -120,7 +120,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def update(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def update(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Update of " + kind + " " + id))
       case "modules" =>  NotImplemented(JsString("Update of " + kind + " " + id))
@@ -131,7 +131,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def summarizeAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def summarizeAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Info for " + kind ))
       case "modules" =>  NotImplemented(JsString("Info for " + kind ))
@@ -142,7 +142,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def summarize(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def summarize(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Info for " + id + " of kind " + kind))
       case "modules" =>  NotImplemented(JsString("Info for " + id + " of kind " + kind))
@@ -170,7 +170,7 @@ object API extends ScrupalController  with RichJsonResults {
     * but some help is needed for the fields that require entity help. The Entity method
     * `option(name:String, id: InstanceId)` will be called to fill in the blanks as needed by the request
    */
-  def optionsOfAll(kind : String) = ContextualAction { implicit context: AnyContext =>
+  def optionsOfAll(kind : String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Options of " + kind ))
       case "modules" =>  NotImplemented(JsString("Options of " + kind ))
@@ -181,7 +181,7 @@ object API extends ScrupalController  with RichJsonResults {
     }
   }
 
-  def optionsOf(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def optionsOf(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "sites" =>    NotImplemented(JsString("Options of " + kind + " for " + id))
       case "modules" =>  NotImplemented(JsString("Options of " + kind + " for " + id))
@@ -200,7 +200,7 @@ object API extends ScrupalController  with RichJsonResults {
     * @param what
     * @return
     */
-  def get(kind: String, id: String, what: String) = ContextualAction { implicit context: AnyContext =>
+  def get(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented(JsString("Getting " + what + " from " + kind + " " + id ))
   }
 
@@ -211,7 +211,7 @@ object API extends ScrupalController  with RichJsonResults {
     * @param what
     * @return
     */
-  def put(kind: String, id: String, what: String) = ContextualAction { implicit context: AnyContext =>
+  def put(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented(JsString("Putting " + what + " to " + kind + " " + id ))
   }
 

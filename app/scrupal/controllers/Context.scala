@@ -17,65 +17,85 @@
 
 package scrupal.controllers
 
+import scala.slick.session.Session
 import play.api.mvc._
 import scrupal.api.{Site, Module}
-import scrupal.models.CoreModule
 import play.api.Configuration
 import play.api.Play.current
 import scala.concurrent.Future
-import scrupal.db.Alert
-import scala.Some
+import scrupal.db.{Sketch, Principal, CoreSchema, Alert}
 import play.api.mvc.SimpleResult
 
-/** A generic Context trait that all the views and tests and other users of Context can utilize without having to deal
-  * with the type parameter needed by ConcreteContext.
-  * This is intended to be an augmentation of Request and in most cases the request body is not needed. When it is,
-  * they can always use ConcreteRequest[A] which derives from this trait.
+/** A generic Context trait with just enough defaulted information to render a BasicPage.
+  * This allows us, regardless of the error condition of a page, to render custom errors at least in some
+  * default way. Classes that mix in Context will override and extend what's available in their context.
   */
 trait Context extends RequestHeader {
-  def site : Option[Site]
-  def user : Option[String]
-  def appName : String
-  def modules: Seq[Module]
-  def themeName : String
-  def themeProvider : String
-  def config : Configuration
-
-  def alerts : Seq[Alert]
-
-  def suggestURL : String
+  val config : Configuration = current.configuration
+  val appName : String = "Scrupal"
+  val themeProvider : String = "scrupal"
+  val themeName : String = "amelia"
+  val user : String = "guest"
+  def alerts : Seq[Alert] = Seq()
+  def suggestURL : String = routes.Home.index.url
 }
 
-/**
- * A ConcreteContext with a type parameter for the content.
- * This is where the Context construction work gets done.
- */
-class ConcreteContext[A](val site : Option[Site] = None, request: Request[A]) extends WrappedRequest[A](request) with
-                                                                                      Context
-{
-  val user: Option[String] = None
-  val appName : String = site.map( s => s.id.name ).getOrElse( "Scrupal")
-  val modules: Seq[Module] = site.map( s => s.modules ).getOrElse(Seq(CoreModule))
-  val themeName: String = "amelia"
-  val themeProvider: String = "scrupal"
-  val instance: String = "instanceName"
-  val config: Configuration = current.configuration
+/** A Basic context which just mixes the Context trait with the WrappedRequest.
+  * This information is generally overridden by subclasses, but this is the minimum we need to render a page. Note that
+  * because this is a WrappedRequest[A], all the fields of Request are fields of this class too.
+  * @param request The request upon which the context is based
+  * @tparam A The type of content for the request
+  */
+class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) with Context
 
-  def alerts : Seq[Alert] = Seq()
+/** A Site context which pulls the information necessary to render something for a site.
+  * SiteContext is presumed to be created with a SiteAction from the ContextProvider which will only create on if the
+  * conditions are right, otherwise a BasicContext is created and an error returned.
+  * @param site The site that this request should be processed by
+  * @param request The request upon which the context is based
+  * @tparam A The type of content for the request
+  */
+class SiteContext[A](val site: Site, request: Request[A]) extends BasicContext[A](request) {
+  override val appName : String = site.id.name
+  override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
+  override val themeName: String = "cyborg" // FIXME: Should be default theme for site
+  val sketch : Sketch = site.sketch.getOrElse { throw new IllegalStateException("Site must have valid Sketch")}
+  val dbSession : Session = sketch.makeSession
+  val schema : CoreSchema = new CoreSchema(sketch)(dbSession)
+  val modules: Seq[Module] = site.modules
+}
 
-  def suggestURL : String = {
-    import routes.{Home => rHome}
-    import routes.{APIDoc => rAPIDoc}
-    import routes.{ConfigWizard => rConfig}
-    request.path match {
-      case s if s.startsWith("/api") => rAPIDoc.introduction().url
-      case s if s.startsWith("/doc") => rAPIDoc.introduction().url
-      case s if s.startsWith("/config") => rConfig.configure().url
-      case s if s.startsWith("/asset") => rHome.docPage("assets").url
-      case s if s.startsWith("/scaladoc") => rHome.scalaDoc("/").url
-      case _ => rHome.index().url
-    }
+/** A User context which extends SiteContext by adding specific user information.
+  * Details TBD.
+  * @param user The user that initiated the request.
+  * @param site The site that this request should be processed by
+  * @param request The request upon which the context is based
+  * @tparam A The type of content for the request
+  */
+class UserContext[A](override val user: String, site: Site, request: Request[A])
+    extends SiteContext[A](site, request) {
+  val principal : Principal = ??? // TODO: Finish UserContext implementation
+}
+
+/** Some utility applicators for constructing the various Contexts */
+object Context {
+  def apply[A](request: Request[A]) = new BasicContext[A](request)
+  def apply[A](site: Site, request: Request[A]) = new SiteContext(site, request)
+  def apply[A](user: String, site: Site, request: Request[A]) = new UserContext[A](user, site, request)
+
+  /** This one is degenerate, mostly for testing */
+  def apply[A]() = new AnyRef with Context {
+    def headers: play.api.mvc.Headers = new Headers { val data = Seq() }
+    def id: Long = 0
+    def method: String = "GET"
+    def path: String = "/"
+    def queryString: Map[String,Seq[String]] = Map()
+    def remoteAddress: String = ""
+    def tags: Map[String,String] = Map()
+    def uri: String = "/"
+    def version: String = "1.1"
   }
+
 }
 
 
@@ -88,10 +108,20 @@ class ConcreteContext[A](val site : Option[Site] = None, request: Request[A]) ex
   */
 trait ContextProvider extends RichResults {
 
-  object ContextualAction extends ActionBuilder[ConcreteContext] {
-    def invokeBlock[A](request: Request[A], block: ConcreteContext[A] => Future[SimpleResult]):
-    Future[SimpleResult]
-    = {
+  type BasicActionBlock[A] = (BasicContext[A]) => Future[SimpleResult]
+
+  class BasicAction extends ActionBuilder[BasicContext] {
+    def invokeBlock[A](request: Request[A], block: BasicActionBlock[A] ) : Future[SimpleResult] = {
+      block( new BasicContext[A](request) )
+    }
+  }
+  object BasicAction extends BasicAction
+  type AnyBasicContext = BasicContext[AnyContent]
+
+  type SiteActionBlock[A] = (SiteContext[A]) => Future[SimpleResult]
+
+  class SiteAction extends ActionBuilder[SiteContext] {
+    def invokeBlock[A](request: Request[A], block: SiteActionBlock[A]) : Future[SimpleResult] = {
       if (Global.ScrupalIsConfigured) {
         val parts : Array[String] = request.host.split(":")
         // HTTP Requires the Host Header, but we guard anyway and assume "localhost" if its empty
@@ -102,35 +132,52 @@ trait ContextProvider extends RichResults {
             if (site.enabled) {
               if (site.requireHttps) {
                 request.headers.get("X-Forwarded-Proto").collect {
-                  case "https" => block( new ConcreteContext(Some(site), request) )
+                  case "https" => block( Context(site, request) )
                   case _ => {
-                    implicit val ctxt = new ConcreteContext(None, request)
+                    implicit val ctxt = Context(request)
                     Future.successful(Forbidden("request to site '" + site.id.name + "'", "it requires https."))
                   }
                 } getOrElse {
-                  implicit val ctxt = new ConcreteContext(None, request)
+                  implicit val ctxt = Context(request)
                   Future.successful(Forbidden("request to site '" + site.id.name + "'", "it requires https."))
                 }
               } else {
-                block( new ConcreteContext(Some(site), request) )
+                block( new SiteContext(site, request) )
               }
             } else {
-              implicit val ctxt = new ConcreteContext(None, request)
+              implicit val ctxt = Context(request)
               Future.successful(Forbidden("browse site '" + site.id.name + "'", "it is disabled"))
             }
           }
         }  getOrElse {
-          implicit val ctxt = new ConcreteContext(None, request)
+          implicit val ctxt = Context(request)
           Future.successful(NotFound("content for site '" + host + "'"))
         }
       } else {
-        implicit val ctxt = new ConcreteContext(None, request)
+        implicit val ctxt = Context(request)
         Future.successful(Redirect(routes.ConfigWizard.configure))
       }
     }
   }
+  object SiteAction extends SiteAction
 
   /** A simple rename of the unwieldy ConcreteContext[AnyContent] that gets used frequently. */
-  type AnyContext = ConcreteContext[AnyContent]
+  type AnySiteContext = SiteContext[AnyContent]
+
+  type UserActionBlock[A] = (UserContext[A]) => Future[SimpleResult]
+
+  class UserAction extends ActionBuilder[UserContext] {
+    def invokeBlock[A](request: Request[A], block: UserActionBlock[A]) : Future[SimpleResult] = {
+      SiteAction.invokeBlock(request, {
+        context: SiteContext[A] => {
+          val user = "guest" // FIXME: Need to look up the actual user
+          block( Context(user, context.site, request))
+        }
+      })
+    }
+  }
+  object UserAction extends UserAction
+
+  type AnyUserContext = UserContext[AnyContent]
 }
 

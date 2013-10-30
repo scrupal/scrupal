@@ -36,62 +36,62 @@ import play.api.libs.json.JsString
 object Home extends ScrupalController {
 
   /** The home page */
-	def index = ContextualAction {
-    implicit context: AnyContext =>  {
-      context.site map {
-        site: Site => {
-          site.siteIndex map {
-            sid: InstanceIdentifier => {
-              site.withCoreSchema { schema: CoreSchema =>
-                schema.Instances.fetch(sid) map { instance: Instance =>
-                  require(instance.entityId == 'Page)
-                  val body = (instance.payload \ "body").asInstanceOf[JsString].value
-                  Ok(html.page(instance.name.name, instance.description)(body))
-                }
-              } getOrElse {
-                NotFound( "the page entity with index #" + sid, Seq(
-                  "you haven't completed initial configuration,",
-                  "you deleted your Site (" + site.id.name + ") index," )
-                )
-              }
+	def index = UserAction {
+    implicit context: AnyUserContext => {
+        context.site.siteIndex map {
+          case (sid: InstanceIdentifier) => {
+            context.schema.Instances.fetch(sid) map { instance: Instance =>
+              require(instance.entityId == 'Page)
+              val body = (instance.payload \ "body").asInstanceOf[JsString].value
+              Ok(html.page(instance.name.name, instance.description)(body))
             }
+          } getOrElse {
+            NotFound( "the page entity with index #" + sid, Seq(
+              "you haven't completed initial configuration,",
+              "you deleted your Site (" + context.site.id.name + ") index," )
+            )
           }
-        } getOrElse {
-          NotFound("the index for site '" + site.id.name + "'")
         }
-      }
-    }.getOrElse {
-      NotFound("Any site with an index",
-        suggestions=Seq("make sure Scrupal has an enabled Site with a configured index p"))
-    }
-  }
-
-  /*
-  def instanceById(kind:String, id: Long) = Action {
-    implicit request: Request[AnyContent] => {
-      context.site map {
-        site : Site => {
-
-        }
+      } getOrElse {
+        NotFound("the index for site '" + context.site.id.name + "'")
       }
     }
 
+
+  def instanceById(kind:String, id: Long) = UserAction {
+    implicit context: AnyUserContext => {
+      context.schema.Instances.fetch(id) map { instance: Instance =>
+        require(instance.entityId == 'Page)
+        val body = (instance.payload \ "body").asInstanceOf[JsString].value
+        Ok(html.page(instance.name.name, instance.description)(body))
+      }
+    } getOrElse {
+      NotFound("the entity with id #" + id, Seq("you typed in the wrong id #?"))
+    }
   }
 
-  def instanceByName(kind: String, id:Long) = Action {
-
+  def instanceByName(kind: String, name:String) = UserAction {
+    implicit context: AnyUserContext => {
+      context.schema.Instances.find(context.schema.Instances.ByName(Symbol(name))).headOption map {
+        case (instance: Instance) => {
+          require(instance.entityId == 'Page)
+          val body = (instance.payload \ "body").asInstanceOf[JsString].value
+          Ok(html.page(instance.name.name, instance.description)(body))
+        }
+      }
+    } getOrElse {
+      NotFound("the entity instance with name '" + name + "'", Seq("you typed in the wrong id #?"))
+    }
   }
-
-    */
 
 
   /** The admin application */
-  def admin = ContextualAction { implicit context: AnyContext =>
+  def admin = UserAction { implicit context: AnyUserContext =>
     Ok(html.admin(Module.all))
   }
 
   /** The apidoc application */
-  def apidoc = ContextualAction { implicit context: AnyContext =>
+  def apidoc = UserAction { implicit context: AnyUserContext =>
     Ok(html.apidoc(Module.all))
   }
 
@@ -109,7 +109,7 @@ object Home extends ScrupalController {
     * @param path Relative path to the page requested
     * @return
     */
-  def docPage(path: String) = ContextualAction { implicit context: AnyContext =>
+  def docPage(path: String) = BasicAction { implicit context: AnyBasicContext =>
     val path_to_serve = gracefulIndex(path, "index.html")
     Assets.isValidDocAsset(path_to_serve) match {
       case true => Ok(html.docPage(path_to_serve))
@@ -126,7 +126,7 @@ object Home extends ScrupalController {
     * @param path Path to the requested documentation asset
     * @return The asset
     */
-  def scalaDoc(path: String) = ContextualAction { implicit context : AnyContext =>
+  def scalaDoc(path: String) = BasicAction { implicit context : AnyBasicContext =>
     def serveDocFile(rootPath: String, file: String) = {
       val fileToServe = new File(rootPath, file)
       if (fileToServe.exists) {
@@ -191,7 +191,7 @@ object Home extends ScrupalController {
     * settings, modules, etc. It can return content in either HTML or JSON format, depending on the request.
     * @return HTML or JSON showing a pile of information about this Scrupal instance
     */
-  def dump = ContextualAction { implicit context : AnyContext =>
+  def dump = BasicAction { implicit context : AnyBasicContext =>
 
     val elide = "^(akka|java|sun|user|awt|os|path|line).*".r
     Play.configuration.toString

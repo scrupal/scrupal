@@ -45,7 +45,7 @@ class ConfigStepSpec extends Specification {
     def body: AnyContent = AnyContentAsEmpty
   }
 
-  def simpleContext(conf: Map[String,Object]) : Context = new ConcreteContext(None, nullRequest) {
+  def simpleContext(conf: Map[String,Object]) : Context = new BasicContext(nullRequest) {
     override val config = Configuration.empty ++ Configuration.from( conf )
   }
 

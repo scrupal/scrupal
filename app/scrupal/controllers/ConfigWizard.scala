@@ -331,7 +331,7 @@ object ConfigWizard extends ScrupalController {
     * corresponds to the state of affairs of Scrupal's installation.
     * @return One of the Configuration Pages
     */
-  def configure() = ContextualAction { implicit context : AnyContext =>
+  def configure() = BasicAction { implicit context : AnyBasicContext =>
     if (CoreModule.ConfigWizard.isEnabled) {
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
       import ConfigWizard.Step._
@@ -367,7 +367,7 @@ object ConfigWizard extends ScrupalController {
     * to the configuration process. This is where the work gets done.
     * @return An Action
     */
-  def configAction() = ContextualAction { implicit context: AnyContext =>
+  def configAction() = BasicAction { implicit context: AnyBasicContext =>
     if (CoreModule.ConfigWizard.isEnabled) {
       // First, figure out where we are, step wise, by computing the state.
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
@@ -461,7 +461,7 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
-  def reconfigure() = ContextualAction { implicit context : AnyContext =>
+  def reconfigure() = BasicAction { implicit context : AnyBasicContext =>
     if (CoreModule.ConfigWizard.isEnabled) {
       val ctxt = context
       // Just wipe out the initial configuration to get to step 0

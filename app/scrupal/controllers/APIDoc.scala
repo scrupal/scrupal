@@ -29,11 +29,11 @@ import scrupal.api.{Module, Type}
 object APIDoc extends ScrupalController  {
 
   /** Provide an introduction to the API */
-  def introduction() = ContextualAction { implicit context: AnyContext =>
+  def introduction() = UserAction { implicit context: AnyUserContext =>
     Ok(html.api.introduction(modules, types))
   }
 
-  def fetchAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     val (singular, description, module) = kind.toLowerCase() match {
       case "sites" =>    ("Site", "A site that Scrupal is configured to serve", "Core")
       case "modules" =>  ("Module", "A Scrupal Plug-in that extends it's functionality", "Core")
@@ -46,7 +46,7 @@ object APIDoc extends ScrupalController  {
     Ok(html.api.fetchAll(singular, Pluralizer.pluralize(singular), description, module))
   }
 
-  def fetch(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     kind.toLowerCase() match {
       case "type" =>  Type(Symbol(id)) match {
         case t: Some[Type] => Ok(html.api.fetchType(t.get))
@@ -60,47 +60,47 @@ object APIDoc extends ScrupalController  {
     }
   }
 
-  def createAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def createAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Creation of " + kind)
   }
 
-  def create(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Creation of " + kind + " " + id)
   }
 
-  def deleteAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def deleteAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Deletion of all " + kind)
   }
 
-  def delete(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def delete(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Deletion of " + kind + " " + id)
   }
 
-  def updateAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def updateAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Update of " + kind )
   }
 
-  def update(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def update(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Update of " + kind + " " + id)
   }
 
-  def summarizeAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+  def summarizeAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Info for " + kind )
   }
 
-  def summarize(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def summarize(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Info for " + id + " of kind " + kind)
   }
 
-  def optionsOfAll(kind : String) = ContextualAction { implicit context: AnyContext =>
+  def optionsOfAll(kind : String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Options of " + kind )
   }
 
-  def optionsOf(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+  def optionsOf(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Options of " + kind + " for " + id)
   }
 
-  def doTo(kind: String, id: String, action: String) = ContextualAction { implicit context: AnyContext =>
+  def doTo(kind: String, id: String, action: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented("Doing " + action + "to " + id + " of kind " + kind)
   }
 }
