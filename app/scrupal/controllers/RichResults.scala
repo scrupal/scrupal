@@ -17,25 +17,43 @@
 
 package scrupal.controllers
 
-import play.api.mvc._
-import scrupal.api._
-import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
+import play.api.mvc.{SimpleResult, Results}
+import scrupal.views.html
+import play.api.libs.json.{Json, JsString}
+import play.api.http.Writeable
+import play.api.templates.Html
 
-/** One line sentence description here.
-  * Further description here.
+/** A simple trait to provide some helper methods for Controllers.
+  * These "Rich"Results transform the usual Results.XXX values into method calls that produce rich results based on
+  * view templates that provide helpful information back to the user.
   */
-trait ScrupalController extends Controller with ContextProvider {
+trait RichResults extends Results {
 
-  def spaces2underscores(what: String) = what.replaceAll(" ","_")
+  def NotImplemented(what: String)(implicit context: Context) : SimpleResult = {
+    NotImplemented(html.errors.NotImplemented(what))
+  }
 
-  def modules = Module.all
-  def moduleNames : Seq[String]  = Module.all map { module: Module => module.label }
-  def moduleTypeNames(mod:Module)  : Seq[String] = mod.types map { typ => typ.label }
+  def NotFound(what: String, causes: Seq[String] = Seq(), suggestions : Seq[String] = Seq())(
+    implicit context: Context) : SimpleResult = {
+    NotFound(html.errors.NotFound(what, causes, suggestions))
+  }
 
-  def types       : Seq[Type]    = Module.all flatMap { module => module.types }
-  def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
+  def Forbidden(what: String, why: String)(implicit context: Context) : SimpleResult = {
+    Forbidden(html.errors.Forbidden(what, why))
+  }
 
-  def dateStr(millis: Long) : String = new DateTime(millis).toString(ISODateTimeFormat.dateTime)
+}
 
+/** A simple trait to provide some helper methods for JSON based controllers.
+  * These "Rich"JsonResults provide ways to send error messages back to the caller in Json format.
+  */
+trait RichJsonResults extends RichResults {
+
+  def NotImplemented(what: JsString)(implicit context: Context) : SimpleResult = {
+    Results.NotImplemented(JsString("NotImplemented: " + what) )
+  }
+
+  def NotFound[A](what: JsString)(implicit context: Context) : SimpleResult = {
+    Results.NotFound(Json.obj( "error" -> "404: NOT_FOUND", "what" ->  what))
+  }
 }

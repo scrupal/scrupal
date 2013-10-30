@@ -22,6 +22,7 @@ import scrupal.utils.{Jsonic, ConfigHelper, Registry, Registrable}
 import play.api.{Logger, Configuration}
 import scala.util.{Failure, Success, Try}
 import scala.slick.session.Session
+import scrupal.models.CoreModule
 import scrupal.db.{CoreSchema,Sketch}
 import scala.collection.mutable
 import play.api.libs.json.{Reads, Json, JsObject}
@@ -74,6 +75,9 @@ class Site (
   def fromJson(js: JsObject) = {
 
   }
+
+  // TODO: Implement this with a DB query
+  lazy val modules : Seq[Module] = Seq(CoreModule)
 
   def withCoreSchema[TBD]( f: (CoreSchema) => TBD) : TBD = {
     sketch map {

@@ -6,12 +6,12 @@
 	<strong>@alert.get.iconHtml&nbsp;@alert.get.prefix</strong>&nbsp;@alert.get.message
 </div>
 }
-@if(context.request.flash.get("error").isDefined) {
-@context.request.flash.get("error").map { msg => <div class="alert alert-error">@Messages(msg)</div> }
+@if(context.flash.get("error").isDefined) {
+@context.flash.get("error").map { msg => <div class="alert alert-error">@Messages(msg)</div> }
 }
-@if(context.request.flash.get("warning").isDefined) {
-@context.request.flash.get("warning").map { msg => <div class="alert alert-warning">@Messages(msg)</div> }
+@if(context.flash.get("warning").isDefined) {
+@context.flash.get("warning").map { msg => <div class="alert alert-warning">@Messages(msg)</div> }
 }
-@if(context.request.flash.get("success").isDefined) {
-@context.request.flash.get("success").map { msg => <div class="alert alert-success">@Messages(msg)</div> }
+@if(context.flash.get("success").isDefined) {
+@context.flash.get("success").map { msg => <div class="alert alert-success">@Messages(msg)</div> }
 }

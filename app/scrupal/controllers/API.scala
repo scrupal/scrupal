@@ -17,24 +17,23 @@
 
 package scrupal.controllers
 
-import play.api.mvc.{RequestHeader, Action}
-import play.api.libs.json.{JsValue, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 import scrupal.api.{Module, Type}
 
 /** The Controller For The Scrupal JSON API
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and
   * read about the various APIs supported by their Scrupal Installation.
   */
-object API extends ScrupalController  {
+object API extends ScrupalController  with RichJsonResults {
 
-  def fetchAll(kind: String) = Action { implicit request =>
+  def fetchAll(kind: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
       case "sites" =>    Ok(Json.arr("scrupal.org", "scrupal.com"))
       case "modules" =>  Ok(Json.toJson(moduleNames))
       case "entities" => Ok(Json.arr("One", "Two"))
       case "types" =>    Ok(Json.toJson(typeNames))
       case "users" =>    Ok(Json.arr("One", "Two", "Three"))
-      case _ => {        notFound(JsString(kind))  }
+      case _ => {        NotFound(JsString(kind))  }
     }
   }
 
@@ -44,7 +43,7 @@ object API extends ScrupalController  {
     * @param id
     * @return
     */
-  def fetch(kind: String, id: String) = Action { implicit request =>
+  def fetch(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
       case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "module" =>   {
@@ -58,99 +57,99 @@ object API extends ScrupalController  {
       case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
       case "type" =>    Type(Symbol(id)) match {
         case Some(t:Type) => Ok(t.toJson)
-        case _ => notFound(JsString("type " + id))
+        case _ => NotFound(JsString("type " + id))
       }
-      case _ => {        notFound(JsString(kind + " " + id)) }
+      case _ => {        NotFound(JsString(kind + " " + id)) }
     }
   }
 
-  def createAll(kind: String) = Action { implicit request =>
+  def createAll(kind: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Creation of " + kind))
-      case "modules" =>  notImplemented(JsString("Creation of " + kind))
-      case "entities" => notImplemented(JsString("Creation of " + kind))
-      case "traits" =>   notImplemented(JsString("Creation of " + kind))
-      case "types" =>    notImplemented(JsString("Creation of " + kind))
-      case _ => {        notImplemented(JsString("Creation of " + kind))  }
+      case "sites" =>    NotImplemented(JsString("Creation of " + kind))
+      case "modules" =>  NotImplemented(JsString("Creation of " + kind))
+      case "entities" => NotImplemented(JsString("Creation of " + kind))
+      case "traits" =>   NotImplemented(JsString("Creation of " + kind))
+      case "types" =>    NotImplemented(JsString("Creation of " + kind))
+      case _ => {        NotImplemented(JsString("Creation of " + kind))  }
     }
   }
 
-  def create(kind: String, id: String) = Action { implicit request =>
+  def create(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Creation of " + kind + " " + id))
-      case "modules" =>  notImplemented(JsString("Creation of " + kind + " " + id))
-      case "entities" => notImplemented(JsString("Creation of " + kind + " " + id))
-      case "traits" =>   notImplemented(JsString("Creation of " + kind + " " + id))
-      case "types" =>    notImplemented(JsString("Creation of " + kind + " " + id))
-      case _ => {        notImplemented(JsString("Creation of " + kind + " " + id))  }
-    }
-  }
-
-
-  def deleteAll(kind: String) = Action { implicit requiest =>
-    kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Deletion of all " + kind))
-      case "modules" =>  notImplemented(JsString("Deletion of all " + kind))
-      case "entities" => notImplemented(JsString("Deletion of all " + kind))
-      case "traits" =>   notImplemented(JsString("Deletion of all " + kind))
-      case "types" =>    notImplemented(JsString("Deletion of all " + kind))
-      case _ => {        notImplemented(JsString("Deletion of all " + kind))  }
-    }
-  }
-
-  def delete(kind: String, id: String) = Action { implicit request =>
-    kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Deletion of " + kind + " " + id))
-      case "modules" =>  notImplemented(JsString("Deletion of " + kind + " " + id))
-      case "entities" => notImplemented(JsString("Deletion of " + kind + " " + id))
-      case "traits" =>   notImplemented(JsString("Deletion of " + kind + " " + id))
-      case "types" =>    notImplemented(JsString("Deletion of " + kind + " " + id))
-      case _ => {        notImplemented(JsString("Deletion of " + kind + " " + id))  }
+      case "sites" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
+      case "modules" =>  NotImplemented(JsString("Creation of " + kind + " " + id))
+      case "entities" => NotImplemented(JsString("Creation of " + kind + " " + id))
+      case "traits" =>   NotImplemented(JsString("Creation of " + kind + " " + id))
+      case "types" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
+      case _ => {        NotImplemented(JsString("Creation of " + kind + " " + id))  }
     }
   }
 
 
-  def updateAll(kind: String) = Action { implicit request =>
+  def deleteAll(kind: String) = ContextualAction { implicit requiest =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Update of " + kind ))
-      case "modules" =>  notImplemented(JsString("Update of " + kind ))
-      case "entities" => notImplemented(JsString("Update of " + kind ))
-      case "traits" =>   notImplemented(JsString("Update of " + kind ))
-      case "types" =>    notImplemented(JsString("Update of " + kind ))
-      case _ => {        notImplemented(JsString("Update of " + kind ))  }
+      case "sites" =>    NotImplemented(JsString("Deletion of all " + kind))
+      case "modules" =>  NotImplemented(JsString("Deletion of all " + kind))
+      case "entities" => NotImplemented(JsString("Deletion of all " + kind))
+      case "traits" =>   NotImplemented(JsString("Deletion of all " + kind))
+      case "types" =>    NotImplemented(JsString("Deletion of all " + kind))
+      case _ => {        NotImplemented(JsString("Deletion of all " + kind))  }
     }
   }
 
-  def update(kind: String, id: String) = Action { implicit request =>
+  def delete(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Update of " + kind + " " + id))
-      case "modules" =>  notImplemented(JsString("Update of " + kind + " " + id))
-      case "entities" => notImplemented(JsString("Update of " + kind + " " + id))
-      case "traits" =>   notImplemented(JsString("Update of " + kind + " " + id))
-      case "types" =>    notImplemented(JsString("Update of " + kind + " " + id))
-      case _ => {        notImplemented(JsString("Update of " + kind + " " + id))  }
+      case "sites" =>    NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "modules" =>  NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "entities" => NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "traits" =>   NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "types" =>    NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case _ => {        NotImplemented(JsString("Deletion of " + kind + " " + id))  }
     }
   }
 
-  def summarizeAll(kind: String) = Action { implicit request =>
+
+  def updateAll(kind: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Info for " + kind ))
-      case "modules" =>  notImplemented(JsString("Info for " + kind ))
-      case "entities" => notImplemented(JsString("Info for " + kind ))
-      case "traits" =>   notImplemented(JsString("Info for " + kind ))
-      case "types" =>    notImplemented(JsString("Info for " + kind ))
-      case _ => {        notImplemented(JsString("Info for " + kind ))  }
+      case "sites" =>    NotImplemented(JsString("Update of " + kind ))
+      case "modules" =>  NotImplemented(JsString("Update of " + kind ))
+      case "entities" => NotImplemented(JsString("Update of " + kind ))
+      case "traits" =>   NotImplemented(JsString("Update of " + kind ))
+      case "types" =>    NotImplemented(JsString("Update of " + kind ))
+      case _ => {        NotImplemented(JsString("Update of " + kind ))  }
     }
   }
 
-  def summarize(kind: String, id: String) = Action { implicit request =>
+  def update(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "modules" =>  notImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "entities" => notImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "traits" =>   notImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "types" =>    notImplemented(JsString("Info for " + id + " of kind " + kind))
-      case _ => {        notImplemented(JsString("Info for " + id + " of kind " + kind))  }
+      case "sites" =>    NotImplemented(JsString("Update of " + kind + " " + id))
+      case "modules" =>  NotImplemented(JsString("Update of " + kind + " " + id))
+      case "entities" => NotImplemented(JsString("Update of " + kind + " " + id))
+      case "traits" =>   NotImplemented(JsString("Update of " + kind + " " + id))
+      case "types" =>    NotImplemented(JsString("Update of " + kind + " " + id))
+      case _ => {        NotImplemented(JsString("Update of " + kind + " " + id))  }
+    }
+  }
+
+  def summarizeAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+    kind.toLowerCase() match {
+      case "sites" =>    NotImplemented(JsString("Info for " + kind ))
+      case "modules" =>  NotImplemented(JsString("Info for " + kind ))
+      case "entities" => NotImplemented(JsString("Info for " + kind ))
+      case "traits" =>   NotImplemented(JsString("Info for " + kind ))
+      case "types" =>    NotImplemented(JsString("Info for " + kind ))
+      case _ => {        NotImplemented(JsString("Info for " + kind ))  }
+    }
+  }
+
+  def summarize(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+    kind.toLowerCase() match {
+      case "sites" =>    NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "modules" =>  NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "entities" => NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "traits" =>   NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "types" =>    NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case _ => {        NotImplemented(JsString("Info for " + id + " of kind " + kind))  }
     }
   }
 
@@ -171,25 +170,25 @@ object API extends ScrupalController  {
     * but some help is needed for the fields that require entity help. The Entity method
     * `option(name:String, id: InstanceId)` will be called to fill in the blanks as needed by the request
    */
-  def optionsOfAll(kind : String) = Action { implicit request =>
+  def optionsOfAll(kind : String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Options of " + kind ))
-      case "modules" =>  notImplemented(JsString("Options of " + kind ))
-      case "entities" => notImplemented(JsString("Options of " + kind ))
-      case "traits" =>   notImplemented(JsString("Options of " + kind ))
-      case "types" =>    notImplemented(JsString("Options of " + kind ))
-      case _ => {        notImplemented(JsString("Options of " + kind ))  }
+      case "sites" =>    NotImplemented(JsString("Options of " + kind ))
+      case "modules" =>  NotImplemented(JsString("Options of " + kind ))
+      case "entities" => NotImplemented(JsString("Options of " + kind ))
+      case "traits" =>   NotImplemented(JsString("Options of " + kind ))
+      case "types" =>    NotImplemented(JsString("Options of " + kind ))
+      case _ => {        NotImplemented(JsString("Options of " + kind ))  }
     }
   }
 
-  def optionsOf(kind: String, id: String) = Action { implicit request =>
+  def optionsOf(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
-      case "sites" =>    notImplemented(JsString("Options of " + kind + " for " + id))
-      case "modules" =>  notImplemented(JsString("Options of " + kind + " for " + id))
-      case "entities" => notImplemented(JsString("Options of " + kind + " for " + id))
-      case "traits" =>   notImplemented(JsString("Options of " + kind + " for " + id))
-      case "types" =>    notImplemented(JsString("Options of " + kind + " for " + id))
-      case _ => {        notImplemented(JsString("Options of " + kind + " for " + id))  }
+      case "sites" =>    NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "modules" =>  NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "entities" => NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "traits" =>   NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "types" =>    NotImplemented(JsString("Options of " + kind + " for " + id))
+      case _ => {        NotImplemented(JsString("Options of " + kind + " for " + id))  }
     }
   }
 
@@ -201,8 +200,8 @@ object API extends ScrupalController  {
     * @param what
     * @return
     */
-  def get(kind: String, id: String, what: String) = Action { implicit request =>
-    notImplemented(JsString("Getting " + what + " from " + kind + " " + id ))
+  def get(kind: String, id: String, what: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented(JsString("Getting " + what + " from " + kind + " " + id ))
   }
 
   /** THe extension of updating an entity. You can put any of its fields or even other information including
@@ -212,8 +211,8 @@ object API extends ScrupalController  {
     * @param what
     * @return
     */
-  def put(kind: String, id: String, what: String) = Action { implicit request =>
-    notImplemented(JsString("Putting " + what + " to " + kind + " " + id ))
+  def put(kind: String, id: String, what: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented(JsString("Putting " + what + " to " + kind + " " + id ))
   }
 
 }

@@ -331,7 +331,7 @@ object ConfigWizard extends ScrupalController {
     * corresponds to the state of affairs of Scrupal's installation.
     * @return One of the Configuration Pages
     */
-  def configure() = Action { implicit request : RequestHeader =>
+  def configure() = ContextualAction { implicit context : AnyContext =>
     if (CoreModule.ConfigWizard.isEnabled) {
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
       import ConfigWizard.Step._
@@ -367,7 +367,7 @@ object ConfigWizard extends ScrupalController {
     * to the configuration process. This is where the work gets done.
     * @return An Action
     */
-  def configAction() = Action { implicit request =>
+  def configAction() = ContextualAction { implicit context: AnyContext =>
     if (CoreModule.ConfigWizard.isEnabled) {
       // First, figure out where we are, step wise, by computing the state.
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
@@ -391,7 +391,7 @@ object ConfigWizard extends ScrupalController {
               BadRequest(html.config.database(formWithErrors, step, error))
             },
             dbData => { //binding success, build a new configuration file
-              Logger.debug("DB Info Request: " + request.body.asFormUrlEncoded)
+              Logger.debug("DB Info Request: " + context.body.asFormUrlEncoded)
               Logger.debug("Converted to DBDATA: " + dbData)
               val dbConfig = makeConfiguration(dbData)
               ConfigHelper(context.config).setDbConfig(Configuration(dbConfig))
@@ -461,7 +461,7 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
-  def reconfigure() = Action { implicit request =>
+  def reconfigure() = ContextualAction { implicit context : AnyContext =>
     if (CoreModule.ConfigWizard.isEnabled) {
       val ctxt = context
       // Just wipe out the initial configuration to get to step 0

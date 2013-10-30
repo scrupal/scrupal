@@ -29,11 +29,11 @@ import scrupal.api.{Module, Type}
 object APIDoc extends ScrupalController  {
 
   /** Provide an introduction to the API */
-  def introduction() = Action { implicit request: RequestHeader =>
+  def introduction() = ContextualAction { implicit context: AnyContext =>
     Ok(html.api.introduction(modules, types))
   }
 
-  def fetchAll(kind: String) = Action { implicit request: RequestHeader =>
+  def fetchAll(kind: String) = ContextualAction { implicit context: AnyContext =>
     val (singular, description, module) = kind.toLowerCase() match {
       case "sites" =>    ("Site", "A site that Scrupal is configured to serve", "Core")
       case "modules" =>  ("Module", "A Scrupal Plug-in that extends it's functionality", "Core")
@@ -46,61 +46,61 @@ object APIDoc extends ScrupalController  {
     Ok(html.api.fetchAll(singular, Pluralizer.pluralize(singular), description, module))
   }
 
-  def fetch(kind: String, id: String) = Action { implicit request: RequestHeader =>
+  def fetch(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
     kind.toLowerCase() match {
       case "type" =>  Type(Symbol(id)) match {
         case t: Some[Type] => Ok(html.api.fetchType(t.get))
-        case _ => notFound("Type " + id, Seq("You mis-typed '" + id + "'?"))
+        case _ => NotFound("Type " + id, Seq("You mis-typed '" + id + "'?"))
       }
       case "module" => Module(Symbol(id)) match {
         case m: Some[Module] => Ok(html.api.fetchModule(m.get))
-        case _ => notFound("Module " + id)
+        case _ => NotFound("Module " + id, Seq("You mis-typed '" + id + "'?"))
       }
-      case _ =>   notImplemented("fetch of " + kind + " " + id )
+      case _ =>   NotImplemented("fetch of " + kind + " " + id )
     }
   }
 
-  def createAll(kind: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Creation of " + kind))
+  def createAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Creation of " + kind)
   }
 
-  def create(kind: String, id: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Creation of " + kind + " " + id))
+  def create(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Creation of " + kind + " " + id)
   }
 
-  def deleteAll(kind: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Deletion of all " + kind))
+  def deleteAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Deletion of all " + kind)
   }
 
-  def delete(kind: String, id: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Deletion of " + kind + " " + id))
+  def delete(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Deletion of " + kind + " " + id)
   }
 
-  def updateAll(kind: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Update of " + kind ))
+  def updateAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Update of " + kind )
   }
 
-  def update(kind: String, id: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Update of " + kind + " " + id))
+  def update(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Update of " + kind + " " + id)
   }
 
-  def summarizeAll(kind: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Info for " + kind ))
+  def summarizeAll(kind: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Info for " + kind )
   }
 
-  def summarize(kind: String, id: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Info for " + id + " of kind " + kind))
+  def summarize(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Info for " + id + " of kind " + kind)
   }
 
-  def optionsOfAll(kind : String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Options of " + kind ))
+  def optionsOfAll(kind : String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Options of " + kind )
   }
 
-  def optionsOf(kind: String, id: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Options of " + kind + " for " + id))
+  def optionsOf(kind: String, id: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Options of " + kind + " for " + id)
   }
 
-  def doTo(kind: String, id: String, action: String) = Action { implicit request: RequestHeader =>
-    notImplemented(JsString("Doing " + action + "to " + id + " of kind " + kind))
+  def doTo(kind: String, id: String, action: String) = ContextualAction { implicit context: AnyContext =>
+    NotImplemented("Doing " + action + "to " + id + " of kind " + kind)
   }
 }

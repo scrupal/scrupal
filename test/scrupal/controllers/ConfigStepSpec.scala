@@ -18,7 +18,7 @@
 package scrupal.controllers
 
 import org.specs2.mutable.Specification
-import play.api.mvc.RequestHeader
+import play.api.mvc.{AnyContentAsEmpty, Request, AnyContent, RequestHeader}
 import play.api.{Logger, Configuration}
 import scrupal.db.{CoreSchema,Sketch}
 import scala.slick.session.Session
@@ -32,7 +32,7 @@ import scrupal.utils.ConfigHelper
   */
 class ConfigStepSpec extends Specification {
 
-  val nullRequest =  new RequestHeader() {
+  val nullRequest =  new Request[AnyContent]() {
     def headers: play.api.mvc.Headers = ???
     def id: Long = ???
     def method: String = ???
@@ -42,10 +42,12 @@ class ConfigStepSpec extends Specification {
     def tags: Map[String,String] = ???
     def uri: String = ???
     def version: String = ???
+    def body: AnyContent = AnyContentAsEmpty
   }
 
-  def simpleContext(config: Map[String,Object]) : Context = Context(
-    config = Configuration.empty ++ Configuration.from( config ))(nullRequest)
+  def simpleContext(conf: Map[String,Object]) : Context = new ConcreteContext(None, nullRequest) {
+    override val config = Configuration.empty ++ Configuration.from( conf )
+  }
 
   "ConfigWizard.getDatabaseNames" should {
     "Recognize Step 0 when there's no configuration" in new WithFakeScrupal {
@@ -123,7 +125,7 @@ class ConfigStepSpec extends Specification {
       val triple = ConfigWizard.checkSchemas(config)
       triple._1 must beEqualTo(ConfigWizard.Step.Three_Install_Schemas)
       ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("empty"); xcptn }}.isDefined) must beTrue
-      triple._3.size must beEqualTo(0)
+      triple._3.size must beEqualTo(1)
     }
 
     "Recognize Step 3 on schema missing tables" in {
@@ -140,7 +142,7 @@ class ConfigStepSpec extends Specification {
         triple._1 must beEqualTo(ConfigWizard.Step.Three_Install_Schemas)
         ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("validation"); xcptn }}.isDefined) must
           beTrue
-        triple._3.size must beEqualTo(0)
+        triple._3.size must beEqualTo(1)
       }
     }
 
@@ -179,8 +181,8 @@ class ConfigStepSpec extends Specification {
         schema.Sites.insert( EssentialSite('Test,"Testing","localhost",None,false,true))
         val triple = ConfigWizard.checkSchemas(config)
         triple._1 must beEqualTo(ConfigWizard.Step.Five_Create_Page)
-        ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("no entities"); xcptn }}.isDefined) must
-          beTrue
+        ({triple._2 map { xcptn: Throwable => xcptn.getMessage must contain("no entity instances"); xcptn }}
+            .isDefined) must beTrue
         triple._3.size must beEqualTo(1)
       }
     }
