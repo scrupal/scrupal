@@ -130,7 +130,7 @@ trait ContextProvider extends RichResults {
     }
   }
 
-  /** A simple rename of the unwieldy ConcreteContext[AnyContent] that gets used frequently.
+  /** A simple rename of the unwieldy ConcreteContext[AnyContent] that gets used frequently. */
   type AnyContext = ConcreteContext[AnyContent]
 }
 
