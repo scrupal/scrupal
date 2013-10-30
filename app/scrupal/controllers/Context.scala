@@ -23,7 +23,7 @@ import scrupal.api.{Site, Module}
 import play.api.Configuration
 import play.api.Play.current
 import scala.concurrent.Future
-import scrupal.db.{Sketch, Principal, CoreSchema, Alert}
+import scrupal.db.{Sketch, CoreSchema, Alert}
 import play.api.mvc.SimpleResult
 
 /** A generic Context trait with just enough defaulted information to render a BasicPage.
@@ -55,14 +55,13 @@ class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) wi
   * @param request The request upon which the context is based
   * @tparam A The type of content for the request
   */
-class SiteContext[A](val site: Site, request: Request[A]) extends BasicContext[A](request) {
+class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[A]) extends BasicContext[A](request) {
   override val appName : String = site.id.name
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
-  val sketch : Sketch = site.sketch.getOrElse { throw new IllegalStateException("Site must have valid Sketch")}
-  val dbSession : Session = sketch.makeSession
-  val schema : CoreSchema = new CoreSchema(sketch)(dbSession)
   val modules: Seq[Module] = site.modules
+  val sketch : Sketch = schema.sketch
+  val dbSession : Session = schema.session
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -72,16 +71,17 @@ class SiteContext[A](val site: Site, request: Request[A]) extends BasicContext[A
   * @param request The request upon which the context is based
   * @tparam A The type of content for the request
   */
-class UserContext[A](override val user: String, site: Site, request: Request[A])
-    extends SiteContext[A](site, request) {
+class UserContext[A](override val user: String, schema: CoreSchema, site: Site, request: Request[A])
+    extends SiteContext[A](schema, site, request) {
   val principal  = Nil // TODO: Finish UserContext implementation
 }
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
   def apply[A](request: Request[A]) = new BasicContext[A](request)
-  def apply[A](site: Site, request: Request[A]) = new SiteContext(site, request)
-  def apply[A](user: String, site: Site, request: Request[A]) = new UserContext[A](user, site, request)
+  def apply[A](schema: CoreSchema, site: Site, request: Request[A]) = new SiteContext(schema, site, request)
+  def apply[A](user: String, schema: CoreSchema, site: Site, request: Request[A]) =
+    new UserContext[A](user, schema, site, request)
 
   /** This one is degenerate, mostly for testing */
   def apply[A]() = new AnyRef with Context {
@@ -132,7 +132,10 @@ trait ContextProvider extends RichResults {
             if (site.enabled) {
               if (site.requireHttps) {
                 request.headers.get("X-Forwarded-Proto").collect {
-                  case "https" => block( Context(site, request) )
+                  case "https" =>
+                    site.withCoreSchema { schema: CoreSchema =>
+                      block( Context(schema, site, request) )
+                    }
                   case _ => {
                     implicit val ctxt = Context(request)
                     Future.successful(Forbidden("request to site '" + site.id.name + "'", "it requires https."))
@@ -142,7 +145,9 @@ trait ContextProvider extends RichResults {
                   Future.successful(Forbidden("request to site '" + site.id.name + "'", "it requires https."))
                 }
               } else {
-                block( new SiteContext(site, request) )
+                site.withCoreSchema { schema: CoreSchema =>
+                  block( Context(schema, site, request) )
+                }
               }
             } else {
               implicit val ctxt = Context(request)
@@ -171,7 +176,7 @@ trait ContextProvider extends RichResults {
       SiteAction.invokeBlock(request, {
         context: SiteContext[A] => {
           val user = "guest" // FIXME: Need to look up the actual user
-          block( Context(user, context.site, request))
+          block( Context(user, context.schema, context.site, request))
         }
       })
     }
