@@ -49,7 +49,7 @@ object CoreFeatures {
     * Administrators may wish to selectively disable the One Page Applications.
     */
   object OnePageApplications extends Feature('OnePageApplications,
-    "A feature that supports AngularJS based one page applications")
+    "A feature that supports AngularJS based one page applications", false)
 
 
 }

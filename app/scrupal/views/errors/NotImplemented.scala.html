@@ -6,14 +6,14 @@
 @html.angularPage("Not Implemented: " + what) {
 } {
 <h3 class="text-error">Pardon Our Mess</h3>
-<p>We have been planning to implement **@what.name** (@what.description), but currently it is not simply because
+<p>We have been planning to implement <b><em>@what.name</em></b> (@what.description), but currently it is not because
 @if(why.isDefined) {
   @{why.get}
 } else {
 we haven't gotten around to it yet!
 }
 If you really need this feature, please let us know by voting for it below.</p>
-<form action="@what.voteRoute" method="put" >
-  <button type="submit">Vote For @what.description</button>
+<form action="@what.voteRoute" method="put" > @** FIXME: HTML doesn't support PUT here! It sends as GET *@
+  <button type="submit">Vote For @what.name</button>
 </form>
 }
