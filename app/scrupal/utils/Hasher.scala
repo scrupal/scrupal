@@ -135,7 +135,7 @@ object PBKDF2Hasher extends Hasher {
   // Provide the name of this hasher
   override val id = 'PBKDF2
 
-  def defaultIterations = if ( Hash.fastMode ) 5000 else 25000
+  def defaultIterations = if ( Hash.fastMode ) 8000 else 25000
 
 
   override def hash(plainText: String, saltine: Option[String], complexity: Option[Long]) = {
@@ -158,7 +158,7 @@ object BCryptHasher extends Hasher {
   // Provide the name of this hasher
   override val id = 'BCrypt
 
-  def defaultRounds = if ( Hash.fastMode ) 1 else 10
+  def defaultRounds = if ( Hash.fastMode ) 4 else 10
 
   // Set up some parameterization of the bcrypt algorithm
   override def hash(plainText: String, saltine: Option[String], complexity: Option[Long]) = {
