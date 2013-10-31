@@ -20,6 +20,7 @@ package scrupal.controllers
 import play.api.mvc.{SimpleResult, Results}
 import scrupal.views.html
 import play.api.libs.json.{Json, JsString}
+import scrupal.api.Feature
 
 /** A simple trait to provide some helper methods for Controllers.
   * These "Rich"Results transform the usual Results.XXX values into method calls that produce rich results based on
@@ -27,8 +28,8 @@ import play.api.libs.json.{Json, JsString}
   */
 trait RichResults extends Results {
 
-  def NotImplemented(what: String)(implicit context: Context) : SimpleResult = {
-    NotImplemented(html.errors.NotImplemented(what))
+  def NotImplemented(what: Feature, why : Option[String] = None)(implicit context: Context) : SimpleResult = {
+    NotImplemented(html.errors.NotImplemented(what, why))
   }
 
   def NotFound(what: String, causes: Seq[String] = Seq(), suggestions : Seq[String] = Seq())(

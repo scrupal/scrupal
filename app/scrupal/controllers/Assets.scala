@@ -25,7 +25,7 @@ import play.api.Play.current
 import java.io.File
 import play.utils.UriEncoding
 import java.net.URL
-import scrupal.models.CoreModule
+import scrupal.models.CoreFeatures
 
 /**
  * Asset controller for core assets. This one gets used by the templates
@@ -120,7 +120,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
 	 * @return path to the theme's .css file
 	 */
 	def theme(provider: String, name: String, min: Boolean = true) : Action[AnyContent] =  {
-    (Global.ScrupalIsConfigured && !CoreModule.DevMode) match {
+    (Global.ScrupalIsConfigured && !CoreFeatures.DevMode) match {
       case true => {
         provider.toLowerCase() match {
           case "scrupal"    => {

@@ -17,23 +17,25 @@
 
 package scrupal.controllers
 
-import play.api.mvc._
 import scrupal.views.html
 import scrupal.utils.Pluralizer
-import play.api.libs.json.JsString
-import scrupal.api.{Module, Type}
+import scrupal.api.{WithFeature, Module, Type}
+import scrupal.models.CoreFeatures
 
 /** One line sentence description here.
   * Further description here.
   */
 object APIDoc extends ScrupalController  {
 
+  val apidocs = CoreFeatures.RESTAPIDocumentation
+
   /** Provide an introduction to the API */
-  def introduction() = UserAction { implicit context: AnyUserContext =>
-    Ok(html.api.introduction(modules, types))
+  def introduction() = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
+      Ok(html.api.introduction(modules, types))
+    }
   }
 
-  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>  WithFeature(apidocs) {
     val (singular, description, module) = kind.toLowerCase() match {
       case "sites" =>    ("Site", "A site that Scrupal is configured to serve", "Core")
       case "modules" =>  ("Module", "A Scrupal Plug-in that extends it's functionality", "Core")
@@ -44,9 +46,9 @@ object APIDoc extends ScrupalController  {
     }
 
     Ok(html.api.fetchAll(singular, Pluralizer.pluralize(singular), description, module))
-  }
+  }}
 
-  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     kind.toLowerCase() match {
       case "type" =>  Type(Symbol(id)) match {
         case t: Some[Type] => Ok(html.api.fetchType(t.get))
@@ -58,49 +60,49 @@ object APIDoc extends ScrupalController  {
       }
       case _ =>   NotImplemented("fetch of " + kind + " " + id )
     }
-  }
+  }}
 
-  def createAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def createAll(kind: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Creation of " + kind)
-  }
+  }}
 
-  def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Creation of " + kind + " " + id)
-  }
+  }}
 
-  def deleteAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def deleteAll(kind: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Deletion of all " + kind)
-  }
+  }}
 
-  def delete(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def delete(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Deletion of " + kind + " " + id)
-  }
+  }}
 
-  def updateAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def updateAll(kind: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Update of " + kind )
-  }
+  }}
 
-  def update(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def update(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Update of " + kind + " " + id)
-  }
+  }}
 
-  def summarizeAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def summarizeAll(kind: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Info for " + kind )
-  }
+  }}
 
-  def summarize(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def summarize(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Info for " + id + " of kind " + kind)
-  }
+  }}
 
-  def optionsOfAll(kind : String) = UserAction { implicit context: AnyUserContext =>
+  def optionsOfAll(kind : String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Options of " + kind )
-  }
+  }}
 
-  def optionsOf(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def optionsOf(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Options of " + kind + " for " + id)
-  }
+  }}
 
-  def doTo(kind: String, id: String, action: String) = UserAction { implicit context: AnyUserContext =>
+  def doTo(kind: String, id: String, action: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented("Doing " + action + "to " + id + " of kind " + kind)
-  }
+  }}
 }

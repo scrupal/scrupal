@@ -18,7 +18,8 @@
 package scrupal.controllers
 
 import play.api.libs.json.{JsString, Json}
-import scrupal.api.{Module, Type}
+import scrupal.api.{WithFeature, Module, Type}
+import scrupal.models.CoreFeatures
 
 /** The Controller For The Scrupal JSON API
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and
@@ -26,14 +27,18 @@ import scrupal.api.{Module, Type}
   */
 object API extends ScrupalController  with RichJsonResults {
 
+  val feature = CoreFeatures.RESTAPIAccess
+
   def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
-    kind.toLowerCase() match {
-      case "sites" =>    Ok(Json.arr("scrupal.org", "scrupal.com"))
-      case "modules" =>  Ok(Json.toJson(moduleNames))
-      case "entities" => Ok(Json.arr("One", "Two"))
-      case "types" =>    Ok(Json.toJson(typeNames))
-      case "users" =>    Ok(Json.arr("One", "Two", "Three"))
-      case _ => {        NotFound(JsString(kind))  }
+    WithFeature(feature) {
+      kind.toLowerCase() match {
+        case "sites" =>    Ok(Json.arr("scrupal.org", "scrupal.com"))
+        case "modules" =>  Ok(Json.toJson(moduleNames))
+        case "entities" => Ok(Json.arr("One", "Two"))
+        case "types" =>    Ok(Json.toJson(typeNames))
+        case "users" =>    Ok(Json.arr("One", "Two", "Three"))
+        case _ => {        NotFound(JsString(kind))  }
+      }
     }
   }
 
@@ -44,56 +49,63 @@ object API extends ScrupalController  with RichJsonResults {
     * @return
     */
   def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
-    kind.toLowerCase() match {
-      case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-      case "module" =>   {
-        Module(Symbol(id)) match {
-          case Some(m:Module) => Ok(m.toJson)
-          case _ => NotFound(Json.obj())
+    WithFeature(feature) {
+      kind.toLowerCase() match {
+        case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
+        case "module" =>   {
+          Module(Symbol(id)) match {
+            case Some(m:Module) => Ok(m.toJson)
+            case _ => NotFound(Json.obj())
+          }
         }
+        case "entity" => Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
+        case "bundle" => Ok(Json.obj( "name" -> id))
+        case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
+        case "type" =>    Type(Symbol(id)) match {
+          case Some(t:Type) => Ok(t.toJson)
+          case _ => NotFound(JsString("type " + id))
+        }
+        case _ => {        NotFound(JsString(kind + " " + id)) }
       }
-      case "entity" => Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-      case "bundle" => Ok(Json.obj( "name" -> id))
-      case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-      case "type" =>    Type(Symbol(id)) match {
-        case Some(t:Type) => Ok(t.toJson)
-        case _ => NotFound(JsString("type " + id))
-      }
-      case _ => {        NotFound(JsString(kind + " " + id)) }
     }
   }
 
   def createAll(kind: String) = UserAction { implicit context: AnyUserContext =>
-    kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Creation of " + kind))
-      case "modules" =>  NotImplemented(JsString("Creation of " + kind))
-      case "entities" => NotImplemented(JsString("Creation of " + kind))
-      case "traits" =>   NotImplemented(JsString("Creation of " + kind))
-      case "types" =>    NotImplemented(JsString("Creation of " + kind))
-      case _ => {        NotImplemented(JsString("Creation of " + kind))  }
+    WithFeature(feature) {
+      kind.toLowerCase() match {
+        case "sites" =>    NotImplemented(JsString("Creation of " + kind))
+        case "modules" =>  NotImplemented(JsString("Creation of " + kind))
+        case "entities" => NotImplemented(JsString("Creation of " + kind))
+        case "traits" =>   NotImplemented(JsString("Creation of " + kind))
+        case "types" =>    NotImplemented(JsString("Creation of " + kind))
+        case _ => {        NotImplemented(JsString("Creation of " + kind))  }
+      }
     }
   }
 
   def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
-    kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
-      case "modules" =>  NotImplemented(JsString("Creation of " + kind + " " + id))
-      case "entities" => NotImplemented(JsString("Creation of " + kind + " " + id))
-      case "traits" =>   NotImplemented(JsString("Creation of " + kind + " " + id))
-      case "types" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
-      case _ => {        NotImplemented(JsString("Creation of " + kind + " " + id))  }
+    WithFeature(feature) {
+      kind.toLowerCase() match {
+        case "sites" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "modules" =>  NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "entities" => NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "traits" =>   NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "types" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
+        case _ => {        NotImplemented(JsString("Creation of " + kind + " " + id))  }
+      }
     }
   }
 
-
   def deleteAll(kind: String) = UserAction { implicit requiest =>
-    kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Deletion of all " + kind))
-      case "modules" =>  NotImplemented(JsString("Deletion of all " + kind))
-      case "entities" => NotImplemented(JsString("Deletion of all " + kind))
-      case "traits" =>   NotImplemented(JsString("Deletion of all " + kind))
-      case "types" =>    NotImplemented(JsString("Deletion of all " + kind))
-      case _ => {        NotImplemented(JsString("Deletion of all " + kind))  }
+    WithFeature(feature) {
+      kind.toLowerCase() match {
+        case "sites" =>    NotImplemented(JsString("Deletion of all " + kind))
+        case "modules" =>  NotImplemented(JsString("Deletion of all " + kind))
+        case "entities" => NotImplemented(JsString("Deletion of all " + kind))
+        case "traits" =>   NotImplemented(JsString("Deletion of all " + kind))
+        case "types" =>    NotImplemented(JsString("Deletion of all " + kind))
+        case _ => {        NotImplemented(JsString("Deletion of all " + kind))  }
+      }
     }
   }
 
@@ -204,7 +216,7 @@ object API extends ScrupalController  with RichJsonResults {
     NotImplemented(JsString("Getting " + what + " from " + kind + " " + id ))
   }
 
-  /** THe extension of updating an entity. You can put any of its fields or even other information including
+  /** The extension of updating an entity. You can put any of its fields or even other information including
     * supporting complicated JSON based requests.
     * @param kind
     * @param id

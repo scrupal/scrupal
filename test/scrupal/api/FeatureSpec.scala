@@ -18,26 +18,40 @@
 package api
 
 import org.specs2.mutable.Specification
-import scrupal.api.Feature
+import scrupal.api.{WithFeature, Feature}
+import play.api.mvc.SimpleResult
+import play.api.mvc.Results._
+import play.mvc.{Http, Results}
+import play.api.http
+import scrupal.controllers.Context
+import scrupal.fakes.WithFakeScrupal
 
 /** Test cases for the scrupal.api.Feature class
   * Further description here.
   */
 class FeatureSpec extends Specification {
 
-  val on = Feature('TestFeatureOn, "Testing Feature: On", true)
-  val off = Feature('TestFeatureOff, "Testing Feature: Off", false)
+  val impl_on = Feature('ImplementedOn, "Testing Feature: Implemented/On", true, true)
+  val impl_off = Feature('ImplementedOff, "Testing Feature: Implemented/Off", true, false)
+  val unimpl_on = Feature('UnimplementedOn, "Testing Feature: Unimplemented/On", false, true)
+  val unimpl_off = Feature('UnimplementedOff, "Testing Feature: Unimplemented/Off", false, false)
 
   "Feature" should {
     "create with three arguments" in {
-      on.isEnabled must beTrue
+      val other = Feature('other, "Other", /*enabled=*/false)
+      other.isEnabled must beFalse
+      other.implemented must beTrue
+    }
+    "yield None for undefined Feature" in {
+      val maybe = Feature('DoesNotExist)
+      maybe.isDefined must beFalse
     }
     "access with one argument" in {
-      val truth = Feature('TestFeatureOn)
+      val truth = Feature('ImplementedOn)
       truth.isDefined must beTrue
       val t = truth.get
       t.isEnabled must beTrue
-      val truth2 = Feature('TestFeatureOff)
+      val truth2 = Feature('ImplementedOff)
       truth2.isDefined must beTrue
       val t2 = truth2.get
       t2.isEnabled must beFalse
@@ -50,15 +64,38 @@ class FeatureSpec extends Specification {
       f.isEnabled must beFalse
     }
     "convert to boolean implicitly" in {
-      Feature.featureToBool(on) must beTrue
-      off.isEnabled must beFalse
-      if (Feature('TestFeatureOn)) {
+      Feature.featureToBool(impl_on) must beTrue
+      impl_off.isEnabled must beFalse
+      if (Feature('ImplementedOn)) {
         success
       }
       else
       {
         failure
       }
+    }
+  }
+
+  "WithFeature" should {
+    "Pass through for implemented/enabled" in new WithFakeScrupal {
+      implicit val context = Context()
+      val result: SimpleResult = WithFeature(impl_on) { Ok("foo") }
+      result.header.status must equalTo(http.Status.OK)
+    }
+    "Generate Redirect for implemented/disabled" in new WithFakeScrupal {
+      implicit val context = Context()
+      val result: SimpleResult = WithFeature(impl_off) { Ok("foo") }
+      result.header.status must equalTo(http.Status.SEE_OTHER)
+    }
+    "Generate NotImplemented for unimplemented/enabled" in new WithFakeScrupal {
+      implicit val context = Context()
+      val result: SimpleResult = WithFeature(unimpl_on) { Ok("foo") }
+      result.header.status must equalTo(http.Status.NOT_IMPLEMENTED)
+    }
+    "Generate NotImplemented for unimplemented/disabled" in new WithFakeScrupal {
+      implicit val context = Context()
+      val result: SimpleResult = WithFeature(unimpl_off) { Ok("foo") }
+      result.header.status must equalTo(http.Status.NOT_IMPLEMENTED)
     }
   }
 }

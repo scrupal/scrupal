@@ -1,10 +1,19 @@
-@(what: String)(implicit context : scrupal.controllers.Context)
+@(what: scrupal.api.Feature, why: Option[String])(implicit context : scrupal.controllers.Context)
 
 @import scrupal.views.html
-@import scrupal.controllers.routes
 
-@html.markedPage("Not Implemented: " + what) {
-### Pardon Our Mess!
-We are planning to implement **@what** but we haven't gotten around to it yet. If you really need this feature,
-please let us know by visiting here: [Vote For @what](@routes.API.put("feature",what,"vote"))
+
+@html.angularPage("Not Implemented: " + what) {
+} {
+<h3 class="text-error">Pardon Our Mess</h3>
+<p>We have been planning to implement **@what.name** (@what.description), but currently it is not simply because
+@if(why.isDefined) {
+  @{why.get}
+} else {
+we haven't gotten around to it yet!
+}
+If you really need this feature, please let us know by voting for it below.</p>
+<form action="@what.voteRoute" method="put" >
+  <button type="submit">Vote For @what.description</button>
+</form>
 }

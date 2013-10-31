@@ -17,7 +17,10 @@
 
 package scrupal.api
 
+import play.api.mvc.{SimpleResult, Results}
 import scrupal.utils.{Registry, Registrable}
+import scrupal.views.html
+import scrupal.controllers.{Context, routes}
 
 /** A Feature of a Module.
   * Features are things that can be enabled or disabled that affect how a Module does its work. Scrupal handles the
@@ -29,12 +32,24 @@ import scrupal.utils.{Registry, Registrable}
 class Feature(
   override val id: Symbol,
   val description: String,
+  val implemented: Boolean = true,
   private var enabled: Boolean = true
 ) extends Registrable  {
   def enable() = enabled = true
   def disable() = enabled = false
   def enabled(how: Boolean): Unit = enabled = how
   def isEnabled = enabled
+
+  def name = id.name
+
+  def voteRoute : String = {
+    import scrupal.controllers.routes.API
+    API.put("feature", id.name, "vote").url
+  }
+
+  def redirect = Results.Redirect(routes.Home.index)
+  def notImplemented(why: Option[String] = None)(implicit context: Context) =
+    Results.NotImplemented(html.errors.NotImplemented(this, why))
 
   // Register ourself with the Feature Registry
   Feature.register(this)
@@ -46,10 +61,27 @@ object Feature extends Registry[Feature] {
   override val registrantsName = "feature"
   override val registryName = "Features"
   def enabled(name: Symbol) : Boolean = super.apply(name).getOrElse(NotAFeature).isEnabled
-  def apply(name: Symbol, description: String, enabled: Boolean) = new Feature(name, description, enabled)
+
+  def apply(name: Symbol, description: String, enabled: Boolean) =
+    new Feature(name, description, true, enabled)
+
+  def apply(name: Symbol, description: String, implemented: Boolean, enabled: Boolean) =
+      new Feature(name, description, implemented, enabled)
+
   implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
   implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled
 
   object NotAFeature extends Feature('NotAFeature,"This is not a feature", false)
 }
 
+object WithFeature {
+  def apply(feature: Feature)(block: => SimpleResult )(implicit context: Context) : SimpleResult = {
+    if (feature.implemented) {
+      if (feature.isEnabled) {
+        block
+      }
+      else feature.redirect
+    }
+    else feature.notImplemented()
+  }
+}

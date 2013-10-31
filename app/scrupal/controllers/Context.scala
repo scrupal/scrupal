@@ -84,7 +84,7 @@ object Context {
     new UserContext[A](user, schema, site, request)
 
   /** This one is degenerate, mostly for testing */
-  def apply[A]() = new AnyRef with Context {
+  def apply() = new AnyRef with Context {
     def headers: play.api.mvc.Headers = new Headers { val data = Seq() }
     def id: Long = 0
     def method: String = "GET"

@@ -21,7 +21,7 @@ import play.api._
 import play.api.Mode
 import java.io.File
 import play.api.mvc._
-import scrupal.models.CoreModule
+import scrupal.models.{CoreFeatures, CoreModule}
 import scrupal.api._
 import scrupal.api.Module
 import scrupal.api.Site
@@ -100,9 +100,9 @@ object Global extends GlobalSettings
     // Set things from configuration
     val config = app.configuration
     // Features
-    config.getBoolean("scrupal.developer.mode") map   { value => CoreModule.DevMode.enabled(value) }
-    config.getBoolean("scrupal.developer.footer") map { value => CoreModule.DebugFooter.enabled(value) }
-    config.getBoolean("scrupal.config.wizard") map    { value => CoreModule.ConfigWizard.enabled(value) }
+    config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enabled(value) }
+    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enabled(value) }
+    config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enabled(value) }
 
     // Theoretically, at this point, Play! has already initialized and validated the db.*.url settings. Each one of
     // those is for a site configuration so we should be able to load the sites now.

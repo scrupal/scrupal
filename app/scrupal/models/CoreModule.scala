@@ -36,6 +36,7 @@ import scrupal.api._
 import scrupal.utils.Version
 import scrupal.db.{SupportedDatabases,Sketch,Schema,CoreSchema}
 import play.libs.F
+import scrupal.models.CoreFeatures._
 
 
 /** Scrupal's Core Module.
@@ -144,21 +145,9 @@ object CoreModule extends Module (
     */
   override def settings = Configuration.empty
 
-  object DebugFooter extends Feature('DebugFooter, "Show tables of debug information at bottom of each page.", false)
-
-  /** Developer Mode Controls Some Aspects of Scrupal Functionality
-    * The administrator of the site(s) might be a developer building a new module or extending Scrupal itself. For
-    * such users, the developer mode can be set to relax some of Scrupal's security restrictions. Most notably when
-    * DevMode is false and the site is not configured, every URL will take you to the configuration wizard. This may
-    * not be convenient for developers, but saves a lot of confusion for end users as the site directs them towards
-    * what they need to know next. :)
-    */
-  object DevMode extends Feature('DeveloperMode, "Controls whether development mode facilities are enabled", false)
-
-  object ConfigWizard extends Feature('ConfigWizard, "Controls whether configuration by web request is allowed", false)
 
   override def features = Seq(
-    DebugFooter, DevMode
+    DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
   )
 
   override def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( new CoreSchema(sketch) )

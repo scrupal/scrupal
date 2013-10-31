@@ -40,6 +40,7 @@ import scrupal.api.Instance
 import play.api.libs.json.JsString
 import scala.Some
 import scala.util.Success
+import scrupal.models.CoreFeatures
 
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -49,6 +50,8 @@ import scala.util.Success
   * Further description here.
   */
 object ConfigWizard extends ScrupalController {
+
+  val cw = CoreFeatures.ConfigWizard
 
   type SiteMap = Map[Symbol,String]
 
@@ -331,8 +334,7 @@ object ConfigWizard extends ScrupalController {
     * corresponds to the state of affairs of Scrupal's installation.
     * @return One of the Configuration Pages
     */
-  def configure() = BasicAction { implicit context : AnyBasicContext =>
-    if (CoreModule.ConfigWizard.isEnabled) {
+  def configure() = BasicAction { implicit context : AnyBasicContext => WithFeature(cw) {
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
       import ConfigWizard.Step._
       step match {
@@ -345,12 +347,11 @@ object ConfigWizard extends ScrupalController {
         case Six_Success           => Global.reload(context.config); Ok(html.config.success(step,error))
         case _                     => Ok(html.config.index(step,error)) // just in case
       }
-    } else {
-      Redirect(routes.Home.index)
     }
   }
 
-  private def getFormAction(name:String)(f: (String) => Result )(implicit request: Request[AnyContent] ) : Result = {
+  private def getFormAction(name:String)(f: (String) => SimpleResult )(implicit request: Request[AnyContent] ) :
+  SimpleResult = {
     val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
     if (formData.contains(name)) {
       val hows = formData.get(name).get
@@ -367,8 +368,7 @@ object ConfigWizard extends ScrupalController {
     * to the configuration process. This is where the work gets done.
     * @return An Action
     */
-  def configAction() = BasicAction { implicit context: AnyBasicContext =>
-    if (CoreModule.ConfigWizard.isEnabled) {
+  def configAction() = BasicAction { implicit context: AnyBasicContext => WithFeature(cw) {
       // First, figure out where we are, step wise, by computing the state.
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
       import ConfigWizard.Step._
@@ -456,13 +456,10 @@ object ConfigWizard extends ScrupalController {
           Redirect(routes.ConfigWizard.configure)
         }
       }
-    } else {
-      Redirect(routes.Home.index)
     }
   }
 
-  def reconfigure() = BasicAction { implicit context : AnyBasicContext =>
-    if (CoreModule.ConfigWizard.isEnabled) {
+  def reconfigure() = BasicAction { implicit context : AnyBasicContext => WithFeature(cw) {
       val ctxt = context
       // Just wipe out the initial configuration to get to step 0
       ConfigHelper(ctxt.config).getDbConfigFile map { file: File =>
@@ -472,8 +469,6 @@ object ConfigWizard extends ScrupalController {
       }
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(ctxt)
       Ok(html.config.index(step,error))
-    } else {
-      Redirect(routes.Home.index)
     }
   }
 

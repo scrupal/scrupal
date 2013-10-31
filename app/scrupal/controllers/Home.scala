@@ -17,17 +17,17 @@
 
 package scrupal.controllers
 
-import play.api.mvc.{Request, AnyContent, Action, RequestHeader}
+import play.api.mvc.Action
 import play.api.{Mode, Play, Routes}
 import play.api.Play.current
 import scrupal.views.html
-import scrupal.api.{InstanceIdentifier, Instance, Site, Module}
+import scrupal.api.{WithFeature, InstanceIdentifier, Instance, Module}
 import org.joda.time.Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
 import java.io.File
-import scrupal.db.CoreSchema
 import play.api.libs.json.JsString
+import scrupal.models.{CoreFeatures, CoreModule}
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -38,25 +38,33 @@ object Home extends ScrupalController {
   /** The home page */
 	def index = UserAction {
     implicit context: AnyUserContext => {
-        context.site.siteIndex map {
-          case (sid: InstanceIdentifier) => {
-            context.schema.Instances.fetch(sid) map { instance: Instance =>
-              require(instance.entityId == 'Page)
-              val body = (instance.payload \ "body").asInstanceOf[JsString].value
-              Ok(html.page(instance.name.name, instance.description)(body))
-            }
-          } getOrElse {
-            NotFound( "the page entity with index #" + sid, Seq(
-              "you haven't completed initial configuration,",
-              "you deleted your Site (" + context.site.id.name + ") index," )
-            )
+      context.site.siteIndex map {
+        case (sid: InstanceIdentifier) => {
+          context.schema.Instances.fetch(sid) map { instance: Instance =>
+            require(instance.entityId == 'Page)
+            val body = (instance.payload \ "body").asInstanceOf[JsString].value
+            Ok(html.page(instance.name.name, instance.description)(body))
           }
+        } getOrElse {
+          NotFound( "the page entity with index #" + sid, Seq(
+            "you haven't completed initial configuration,",
+            "you deleted your Site (" + context.site.id.name + ") index," )
+          )
         }
-      } getOrElse {
-        NotFound("the index for site '" + context.site.id.name + "'")
+      }
+    } getOrElse {
+      NotFound("the index for site '" + context.site.id.name + "'", Seq())
+    }
+  }
+
+  def onePageApp(name: String) = UserAction {
+    implicit context: AnyUserContext => {
+      WithFeature(CoreFeatures.OnePageApplications) {
+        // Not implemented
+        NotImplemented("OnePageApplications")
       }
     }
-
+  }
 
   def instanceById(kind:String, id: Long) = UserAction {
     implicit context: AnyUserContext => {
