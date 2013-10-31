@@ -31,10 +31,10 @@ import scrupal.fakes.WithFakeScrupal
   */
 class FeatureSpec extends Specification {
 
-  val impl_on = Feature('ImplementedOn, "Testing Feature: Implemented/On", true, true)
-  val impl_off = Feature('ImplementedOff, "Testing Feature: Implemented/Off", true, false)
-  val unimpl_on = Feature('UnimplementedOn, "Testing Feature: Unimplemented/On", false, true)
-  val unimpl_off = Feature('UnimplementedOff, "Testing Feature: Unimplemented/Off", false, false)
+  val impl_on = Feature(true, 'ImplementedOn, "Testing Feature: Implemented/On", true)
+  val impl_off = Feature(true, 'ImplementedOff, "Testing Feature: Implemented/Off", false)
+  val unimpl_on = Feature(false, 'UnimplementedOn, "Testing Feature: Unimplemented/On", true)
+  val unimpl_off = Feature(false, 'UnimplementedOff, "Testing Feature: Unimplemented/Off", false)
 
   "Feature" should {
     "create with three arguments" in {

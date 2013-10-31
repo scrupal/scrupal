@@ -65,7 +65,7 @@ object Feature extends Registry[Feature] {
   def apply(name: Symbol, description: String, enabled: Boolean) =
     new Feature(name, description, true, enabled)
 
-  def apply(name: Symbol, description: String, implemented: Boolean, enabled: Boolean) =
+  def apply(implemented: Boolean, name: Symbol, description: String, enabled: Boolean) =
       new Feature(name, description, implemented, enabled)
 
   implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
