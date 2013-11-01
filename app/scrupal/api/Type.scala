@@ -119,7 +119,7 @@ abstract class Type (
   /** The plural of the name of the type.
     * The name given to the type should be the singular form (Color not Colors) but things associated with this type
     * may wish to use the plural form. To ensure that everyone uses the same rules for pluralization,
-    * we use our utility [[scrupal.util.Pluralizer]] to make it consistent. This is lazy constructed so there's no
+    * we use our utility [[scrupal.utils.Pluralizer]] to make it consistent. This is lazy constructed so there's no
     * cost for it unless it gets used.
     */
   lazy val plural = Pluralizer.pluralize(label)

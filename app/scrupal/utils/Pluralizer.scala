@@ -24,7 +24,7 @@ import java.util.regex.{Matcher, Pattern}
   * it is always nice to have the correct plural form of nouns be used. This class attempts to get pretty good
   * coverage for the english language based on a variety of pluralization rules.
   * Inspired by: [[https://github.com/atteo/evo-inflector/blob/master/src/main/java/org/atteo/evo/inflector/TwoFormInflector.java]]
-  * Rules from: [[]]http://www.barstow.edu/lrc/tutorserv/handouts/015%20Irregular%20Plural%20Nouns.pdf]]
+  * Rules from: [[http://www.barstow.edu/lrc/tutorserv/handouts/015%20Irregular%20Plural%20Nouns.pd]]
   * Oxford Rules: [[http://oxforddictionaries.com/words/plurals-of-nouns]]
   */
 abstract class Pluralizer

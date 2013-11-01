@@ -54,7 +54,7 @@ case class EssentialModule(
   * @param description A brief description of the module (purpose
   * @param version The version of this module. Whenever a module is changed and released publicly,
   *                it must have a new Version. How the Version numbers change depends on the kind of change that was
-  *                made. See the [[scala.api.Version]] class for details on how this should be utilized.
+  *                made. See the [[scrupal.utils.Version]] class for details on how this should be utilized.
   * @param obsoletes The version of this module that this version of it obsoletes. A module is not expected to
   *                  maintain backwards compatibility for all previous versions. Instead,
   *                  it must maintain backwards compatibility with some previous set of released versions. The
