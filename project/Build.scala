@@ -18,6 +18,9 @@
 import sbt._
 import sbt.Keys._
 
+import com.typesafe.sbt.SbtAtmos.atmosSettings
+
+
 /**
  * Settings for building Scrupal. These are common settings for each sub-project.
  * Only put things in here that must be identical for each sub-project. Otherwise,
@@ -90,13 +93,13 @@ trait Resolvers
 {
   // val scrupal_org_releases    = "Scrupal.org Releases" at "http://scrupal.github.org/mvn/releases"
   val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
-  val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
+  //val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
 //val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases"
 //val scala_lang              = "Scala Language" at "http://mvnrepository.com/artifact/org.scala-lang/"
 //val sbt_plugin_releases     = Resolver.url("SBT Plugin Releases",url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 //val geolocation             = "geolocation repository" at "http://blabluble.github.com/modules/releases/"
 
-  val all_resolvers           = Seq ( typesafe_releases, google_sedis  )
+  val all_resolvers           = Seq ( google_sedis  )
 }
 
 trait Dependencies
@@ -130,6 +133,10 @@ trait Dependencies
   // Test Libraries
   val specs2                  = "org.specs2"          %% "specs2"                 % "2.1.1"       % "test"
 
+  // Typsafe Console Aspects
+  val trace_play              = "com.typesafe.atmos"  % "trace-play-2.2.0"        % "1.3.0"
+  val trace_akka              = "com.typesafe.atmos"  % "trace-akka-2.2.1_2.10"   % "1.3.1"
+
 
 //val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.9"
 //val icu4j                   = "com.ibm.icu"          % "icu4j"                  % "51.1"
@@ -160,12 +167,13 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
   lazy val scrupal = play.Project(
     appName,
     path = file("."),
-    settings = buildSettings ++ Seq (
+    settings = play.Project.playScalaSettings ++ atmosSettings ++ buildSettings ++ Seq (
+      fork in (Test) := false,
       //requireJs += "scrupal.js",
       //requireJsShim += "scrupal.js",
-      resolvers := all_resolvers,
+      resolvers ++= all_resolvers,
       // playAssetsDirectories <+= baseDirectory / "foo",
-      libraryDependencies := Seq (
+      libraryDependencies ++= Seq (
         play.Keys.jdbc,
         play.Keys.cache,
         play.Keys.filters,
@@ -176,16 +184,13 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
         mailer_plugin,
         slick,
         h2,
+        trace_play, trace_akka,
         pbkdf2, bcrypt, scrypt,
         webjars_play, requirejs, requirejs_domready,  angularjs, angular_ui, angular_ui_bootstrap,
         angular_ui_router, marked, fontawesome
       ),
       printClasspath <<= print_class_path
-    ) ++  play.Project.playScalaSettings ++ Seq (
-      // This bit of nonsense brought to you by https://github.com/playframework/playframework/issues/1813
-      fork in (Test) := false
     )
-
     //    angularAssets map { f : File => playAssetsDirectories <+= f }
     //    ++
   )
