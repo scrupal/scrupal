@@ -15,6 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
+import org.apache.ivy.util.Checks
 import sbt._
 import sbt.Keys._
 
@@ -57,6 +58,7 @@ object BuildSettings
       "-encoding", "utf8",
       "-Ywarn-adapted-args"
     ),
+    closureCompilerOptions ++= Seq("ecmascript5", "checkControlStructures", "checkTypes", "checkSymbols"),
     scalaVersion    := "2.10.2",
     shellPrompt     := ShellPrompt.buildShellPrompt,
     version         := buildVersion
