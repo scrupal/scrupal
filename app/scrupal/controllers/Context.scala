@@ -36,6 +36,7 @@ trait Context extends RequestHeader {
   val themeProvider : String = "scrupal"
   val themeName : String = "amelia"
   val user : String = "guest"
+  val description : String = ""
   def alerts : Seq[Alert] = Seq()
   def suggestURL : String = routes.Home.index.url
 }
@@ -57,6 +58,7 @@ class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) wi
   */
 class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[A]) extends BasicContext[A](request) {
   override val appName : String = site.id.name
+  override val description : String = site.description
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
   val modules: Seq[Module] = site.modules
