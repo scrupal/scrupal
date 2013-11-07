@@ -88,6 +88,7 @@ object Global extends GlobalSettings
     require(Type.registryName == "Types")
     require(Module.registryName == "Modules")
     require(Site.registryName == "Sites")
+    require(Entity.registryName == "Entities")
 
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require(CoreModule.id == 'Core)

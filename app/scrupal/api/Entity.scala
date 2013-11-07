@@ -21,7 +21,7 @@ import scala.collection.immutable.HashMap
 import play.api.libs.json._
 import play.api.libs.json.JsObject
 import play.api.http.Status
-import scrupal.utils.Registrable
+import scrupal.utils.{Jsonic, Registry, Registrable}
 import scrupal.controllers.ScrupalController
 import play.api.mvc.Action
 
@@ -45,7 +45,7 @@ abstract class Entity(
   override val id: Symbol,
   override val description: String,
   override val instanceTypeId: TypeIdentifier
-) extends EssentialEntity(id, description, instanceTypeId) with ScrupalController with Registrable {
+) extends EssentialEntity(id, description, instanceTypeId) with ScrupalController with Registrable with Jsonic {
 
   /** Obtain the type of this Entity's Instance bundle. */
   def instanceType : Type = Type(instanceTypeId).getOrElse(Type.NotAType)
@@ -53,7 +53,10 @@ abstract class Entity(
   /** Entity Instances must be defined as a Bundle. Enforce that here */
   require(instanceType.kind == 'Bundle)
 
-  // val actions: HashMap[Symbol, Action] = HashMap()
+  /** The set of additional operations that can be invoked for this Entity in addition to the standard fetch,
+    * create, update, relete,
+    */
+  val operations: HashMap[Symbol, Operation] = HashMap()
 
   /** Fetch a single instance of this entity kind
     * Presumably this entity is stored somewhere and this method retrieve it, puts the data into a JsObject and
@@ -108,7 +111,17 @@ abstract class Entity(
     * @return
     */
   def put(id: String, what: String, data: JsObject) : StatusResult[JsObject] = ???
+
+  def fromJson(js: play.api.libs.json.JsObject): Unit = ???
+  def toJson: play.api.libs.json.JsObject = ???
+
+  Entity.register(this)
 }
 
+object Entity extends Registry[Entity] {
+  val registrantsName: String = "entity"
+  val registryName: String = "Entities"
+
+}
 
 

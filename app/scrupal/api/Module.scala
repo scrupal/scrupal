@@ -183,6 +183,9 @@ object Module extends Registry[Module] {
         // Touch the feature by asking for it's id's length. This just makes sure it gets instantiated & registered
         require(feature.id.name.length > 0)
       }
+      mod.entities foreach { case entity : Entity =>
+        require(entity.id.name.length > 0)
+      }
     }
   }
 

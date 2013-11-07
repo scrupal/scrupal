@@ -1,0 +1,19 @@
+@(site: scrupal.api.Site)(implicit context : scrupal.controllers.Context)
+@import scrupal.views.html
+@import play.api.libs.json.Json
+@html.markedPage("Fetch Site " + site.label) {
+# Site @site.label
+@site.description
+
+# Synopsis
+- *URI*: ```GET http:///api/site/@site.label```
+
+# Operation
+This API call returns information about the site named `@site.label` . The JSON object
+returned from this call contains the necessary information about this site.
+
+# Result
+```
+@Json.prettyPrint(site.toJson)
+```
+}

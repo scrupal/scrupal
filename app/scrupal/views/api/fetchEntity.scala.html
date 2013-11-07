@@ -1,0 +1,19 @@
+@(ent: scrupal.api.Entity)(implicit context : scrupal.controllers.Context)
+@import scrupal.views.html
+@import play.api.libs.json.Json
+@html.markedPage("Fetch Entity " + ent.label) {
+# Entity @ent.label
+@ent.description
+
+# Synopsis
+- *URI*: ```GET http:///api/entity/@ent.label```
+
+# Operation
+This API call returns information about the entity named `@ent.label` . The JSON object
+returned from this call contains the necessary information about this entity.
+
+# Result
+```
+@** @Json.prettyPrint(ent.toJson) *@
+```
+}

@@ -20,10 +20,8 @@ package scrupal.api
 import scala.util.matching.Regex
 import scala.collection.immutable.HashMap
 import play.api.libs.json._
-import play.api.data.validation.ValidationError
 import java.net.{URI, URISyntaxException}
 import scrupal.utils._
-import scala.collection.mutable
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsString
@@ -31,6 +29,7 @@ import scala.Some
 import play.api.data.validation.ValidationError
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
+import play.api.libs.json
 
 
 /** A trait to define the validate method for objects that can validate a JsValue */
@@ -499,21 +498,18 @@ class MapType  (
 }
 
 /** A group of named and typed fields that are related in some way.
-  * An entity type defines the structure of the fundamental unit of storage in Scrupal: An entity.  EntityTypes
-  * are analogous to table definitions in relational databases, but with one important difference. An EntityType can
-  * define itself recursively. That is, one of the fields of an Entity can be of Entity Type. In this way it is
-  * possible to assemble entities from a large collection of smaller entity concepts (traits if you will).
-  * Like relational tables, entity types define the names and types of a group of fields (columns) that are in some
-  * way related. For example, a street name, city name, country and postal code are fields of an address trait
-  * because they are related by the common purpose of specifying a location.
+  * An bundle type defines the structure of the fundamental unit of storage in Scrupal: An instance.  BundleTypes
+  * are analogous to table definitions in relational databases, but with one important difference. An BundleType can
+  * define itself recursively. That is, one of the fields of an Bundle can be another Bundle Type. Cycles in the
+  * definitions of BundleTypes are not permitted. In this way it is possible to assemble entities from a large
+  * collection of smaller bundle concepts (traits if you will). Like relational tables, bundle types define the names
+  * and types of a group of fields (columns) that are in some way related. For example, a street name, city name,
+  * country and postal code are fields of an address bundle because they are related by the common purpose of
+  * specifying a location.
   *
-  * Note that EntityTypes, along with ListType, SetType and MapType make the type system fully composable. You
+  * Note that BundleTypes, along with ListType, SetType and MapType make the type system fully composable. You
   * can create an arbitrarily complex data structure (not that we recommend that you do so).
   *
-  * EntityTypes also have actions associated with them. Actions can
-  * - transform the fields of the Trait into arbitrary JSON (map)
-  * - access the fields of the Trait to reduce its content (reduce)
-  * - mutate the fields of the Trait to produce a new instance of the Trait (mutate)
   * @param id The name of the trait
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type

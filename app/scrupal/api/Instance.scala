@@ -19,6 +19,7 @@ package scrupal.api
 
 import org.joda.time.DateTime
 import play.api.libs.json.JsObject
+import scrupal.utils.Jsonic
 
 /** The basic unit of storage and operation in Scrupal
   * Further description here.
@@ -31,6 +32,10 @@ case class Instance(
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
   override val id : Option[Identifier] = None
-) extends NumericThing(name, description, modified, created, id) {
+) extends NumericThing(name, description, modified, created, id) with Jsonic {
+
+  def fromJson(js: play.api.libs.json.JsObject): Unit = ???
+  def toJson: play.api.libs.json.JsObject = ???
+
 }
 
