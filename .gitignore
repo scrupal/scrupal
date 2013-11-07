@@ -20,5 +20,7 @@ logs
 out/
 project/project
 project/target
+public/javascripts
+public/stylesheets
 target
 tmp
