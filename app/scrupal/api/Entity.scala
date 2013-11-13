@@ -56,7 +56,7 @@ abstract class Entity(
   /** The set of additional operations that can be invoked for this Entity in addition to the standard fetch,
     * create, update, relete,
     */
-  val operations: HashMap[Symbol, Operation] = HashMap()
+  val methods: HashMap[Symbol, Method] = HashMap()
 
   /** Fetch a single instance of this entity kind
     * Presumably this entity is stored somewhere and this method retrieve it, puts the data into a JsObject and
