@@ -58,7 +58,7 @@ object BuildSettings
       "-encoding", "utf8",
       "-Ywarn-adapted-args"
     ),
-    closureCompilerOptions ++= Seq("ecmascript5", "checkControlStructures", "checkTypes", "checkSymbols"),
+    //closureCompilerOptions ++= Seq("ecmascript5", "checkControlStructures", "checkTypes", "checkSymbols"),
     scalaVersion    := "2.10.2",
     shellPrompt     := ShellPrompt.buildShellPrompt,
     version         := buildVersion
@@ -108,7 +108,7 @@ trait Dependencies
 {
   // Databass, Caches, Data Storage stuff
   val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
-  val slick                   = "com.typesafe.slick"  %% "slick"                  % "1.0.1"
+  val slick                   = "com.typesafe.slick"  %% "slick"                  % "2.0.0-M3"
   val h2                      = "com.h2database"      % "h2"                      % "1.3.173"
   val postgresql              = "postgresql"          % "postgresql"              % "9.1-901.jdbc4"
 
