@@ -1,28 +1,20 @@
-# scrupal
+# Scrupal
 
-Welcome to  Scrupal, an open source platform for building interesting community based web applications. The original
-idea for this software was to do what [Drupal](https://drupal.org) did a decade ago: create a platform on
-which web sites could be constructed without doing much or even any coding. However, its goals have far exceeded its
-humble origins. Scrupal now differs from Drupal in the following ways:
-* Scrupal is a technology refresh: Scala, Play, Akka, MongoDB, Angular.js, bootstrap, REST api, asynchronous, etc.
-* Scrupal has scruples - it is built on a set of principles honed from 35 years of software development experience
-* Scrupal is social - built for the most demanding social networking applications
-* Scrupal is mobile - responsive design to support any mobile platform
-* The only thing Scrupal and Drupal share is the desire to simplify web application construction.
+Welcome to  Scrupal, an open source platform for building scalable, comprehensive, reactive, uniform, production
+applications. The original idea for Scrupal was to do what [Drupal](https://drupal.org) did a decade ago: create a
+platform on which web applications could be constructed without doing much or even any coding. However, Scrupal and
+Drupal have nothing in common except the goal of providing the foundation for the next generation of web applications.
+What do we mean by the next generation of web application? Scrupal's acronym spells out it's goals in providing a
+modern web application framework:
+* **S*calable - Scrupal uses Scala, Play and Akka as the basis of a scalable framework that runs anywhere.
+* **C**omprehensive - Scrupal is opinionated as it integrates the best modern web technologies and will continue to utilize the best as new technologies develop.
+* **R**eactive - Scrupal supports the [Reactive Manifesto](http://www.reactivemanifesto.org/) by focusing on events, scale, resiliency, and responsiveness.
+* **U**uniform - Scrupal's uniform design at the right level of abstraction make large scale applications understandable without sacrificing customization or extensibility.
+* **P**roductive - Scrupal aims to be a highly productive tool for developers, users and operators of web systems because it applies [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) throughout.
+* **A**application - Scrupal is application-oriented-software. It is not suited for systems programming but very adept at enterprise, mobile, and large scale applications.
+* **L**aminate - Scrupal is a laminate that hides the complexities of integrating a suite of other technologies: Scala, Play, Akka, Specs2, Slick, Redis, SQL, AngularJS, Grunt, Karma, Bootstrap, HTML5, REST, etc.
 
-There are many more ways to explore Scrupal, each with their own documentation page. You can find out more at these
-locations:
-* [Audience](docs/audience.md) - Who should use Scrupal and why
-* [Getting Started](docs/getting_started.md) - How to get up and running with Scrupal quickly.
-* [Features](docs/features.md) - A description of Scrupal's more interesting features
-* [Scruples](docs/scruples.md) - The scruples we use on this software project
-* [Technology](docs/technology.md) - A look at the technology Scrupal is based on .. and why.
-* [Tutorials](docs/tutorials.md) - Step-by-step walkthroughs (using Scrupal of course!) to show you how to do a
-variety of interesting things with Scrupal
-* [License](LICENSE) - Our GPL v3 open source license
-
-Finally, just in case there was any doubt, Scrupal is not about screwing your pals. It's name was derived by
-combining `Scala` with `Drupal` with the obvious pun on scruple.
-
+Scrupal has scruples. It is built on a set of principles honed from decades of software development experience. For
+more details, please read [the documentation](http://scrupal.org/docs)/.
 - - -
-<sub><sup>&copy; Copyright 2013, viritude llc. All Rights Reserved.</sup></sub>
+<sub><sup>&copy; Copyright 2013, scrupal.org. All Rights Reserved.</sup></sub>
