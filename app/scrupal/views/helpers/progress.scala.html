@@ -1,0 +1,8 @@
+@(where: Int, max: Int, kind: String, caption: String)
+
+<div class="progress span10">
+  <div class="progress-bar progress-bar-success progress-striped active" role="progressbar"
+       aria-valuenow="@where" aria-valuemin="0" aria-valuemax="@max">
+    <span class="sr-only">@caption</span>
+  </div>
+</div>

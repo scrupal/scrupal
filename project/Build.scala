@@ -59,7 +59,7 @@ object BuildSettings
       "-Ywarn-adapted-args"
     ),
     //closureCompilerOptions ++= Seq("ecmascript5", "checkControlStructures", "checkTypes", "checkSymbols"),
-    scalaVersion    := "2.10.2",
+    scalaVersion    := "2.10.3",
     shellPrompt     := ShellPrompt.buildShellPrompt,
     version         := buildVersion
   )
@@ -95,7 +95,7 @@ trait Resolvers
 {
   // val scrupal_org_releases    = "Scrupal.org Releases" at "http://scrupal.github.org/mvn/releases"
   val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
-  //val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
+  val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
 //val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases"
 //val scala_lang              = "Scala Language" at "http://mvnrepository.com/artifact/org.scala-lang/"
 //val sbt_plugin_releases     = Resolver.url("SBT Plugin Releases",url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
@@ -111,6 +111,7 @@ trait Dependencies
   val slick                   = "com.typesafe.slick"  %% "slick"                  % "1.0.1"
   val h2                      = "com.h2database"      % "h2"                      % "1.3.173"
   val postgresql              = "postgresql"          % "postgresql"              % "9.1-901.jdbc4"
+  val mongo                   = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.10.2"
 
   // WebJars based UI components
   val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.2.0"
@@ -186,6 +187,7 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
         mailer_plugin,
         slick,
         h2,
+        mongo,
         trace_play, trace_akka,
         pbkdf2, bcrypt, scrypt,
         webjars_play, requirejs, requirejs_domready,  angularjs, angular_ui, angular_ui_bootstrap,

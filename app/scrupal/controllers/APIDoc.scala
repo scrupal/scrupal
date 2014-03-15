@@ -39,10 +39,11 @@ object APIDoc extends ScrupalController  {
 
   def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>  WithFeature(apidocs) {
     val (singular, description, module) = kind.toLowerCase() match {
-      case "sites" =>    ("Site", "A site that Scrupal is configured to serve", "Core")
-      case "modules" =>  ("Module", "A Scrupal Plug-in that extends it's functionality", "Core")
-      case "entities" => ("Entity", "The kinds of entities that Scrupal is configured to serve", "Core")
-      case "types" =>    ("Type", "The data types that Scrupal is configured to serve", "Core" )
+      case "sites" =>    ("site", "A site that Scrupal is configured to serve", "Core")
+      case "modules" =>  ("module", "A Scrupal Plug-in that extends it's functionality", "Core")
+      case "entities" => ("entity", "The kinds of entities that Scrupal is configured to serve", "Core")
+      case "types" =>    ("type", "The data types that Scrupal is configured to serve", "Core" )
+      case "instances" => ("instance", "The entity instances Scrupl is configured to serve", "Core")
       case _ =>          (kind, "No further description available.", "Unknown")
     }
 

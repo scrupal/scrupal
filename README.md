@@ -1,3 +1,5 @@
+[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupalhttps://waffle.io/scrupal/scrupal)
+
 # Scrupal
 
 Welcome to  Scrupal, an open source platform for building the next generation of web applications. The original

@@ -20,9 +20,7 @@
 <h2>@title</h2>
 <h3>Progress</h3>
 <div class="row-fluid">
-    <div class="span4">
-        <progress percent="@Step.progress(step)" class="progress-warning progress-striped active"></progress>
-    </div>
+    @html.helpers.progress(Step.stepNumber(step), Step.numberOfSteps, "warning", "Step"+Step.stepNumber(step)+" of "+Step.numberOfSteps+".")
     <div class="span8">
         <small class="text-muted">Step @Step.stepNumber(step) of @Step.numberOfSteps.
             <i class="icon-forward"></i> @Step.currentState(step)

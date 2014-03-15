@@ -20,14 +20,14 @@ object CoreFeatures {
     * not be convenient for developers, but saves a lot of confusion for end users as the site directs them towards
     * what they need to know next. :)
     */
-  object DevMode extends Feature('DeveloperMode, "Controls whether development mode facilities are enabled", false)
+  object DevMode extends Feature('DeveloperMode, "Controls whether development mode facilities are enabled", true)
 
   /** Controls accessibility of the ConfigWizard
     * The ConfigWizard makes first time configuration easier but should not be enabled for production systems.
     * Disabling means web visitors will simply be redirected to the index if they attempt to use the configuration
     * urls.
     */
-  object ConfigWizard extends Feature('ConfigWizard, "Controls whether configuration by web request is allowed", false)
+  object ConfigWizard extends Feature('ConfigWizard, "Controls whether configuration by web request is allowed", true)
 
   /** Controls access to the REST API
     * Administrators may wish to turn off REST API access temporarily to ensure all clients are unable to transact

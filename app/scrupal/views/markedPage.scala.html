@@ -1,8 +1,7 @@
 @(title: String)(content: Html)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
-@html.angularPage(title) {
-}  {
-<marked>
+@html.plainPage(title) {
+<div class="marked">
 @content
-</marked>
+</div>
 }
