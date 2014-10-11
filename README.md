@@ -19,12 +19,12 @@ foundation of the next generation of web applications with the following goals:
 
 - **P**roductive - Scrupal aims to be a highly productive tool for developers, users and operators of web systems because it applies [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) throughout.
 
-- **A**pplication - Scrupal is application-oriented-software. It is not suited for systems programming but very adept at enterprise, mobile, and large scale applications.
+- **A**pplication - Scrupal is application-oriented-software. It is not suited for systems programming but very adept at enterprise, mobile, and large scale web applications.
 
-- **L**amina - Scrupal is a lamina that hides the complexities of integrating a suite of other technologies: Scala, Play, Akka, Specs2, Slick, Redis, SQL, AngularJS, Grunt, Karma, Bootstrap, HTML5, REST, etc.
+- **L**ayer - Scrupal is a software layer that hides the complexities of integrating a suite of other technologies: Scala, Play, Akka, Specs2, ReactiveMongo, Mongo, Redis, AngularJS, Grunt, Karma, Bootstrap, HTML5, REST, etc.
 
-Scrupal has scruples. It is built on a set of principles honed from decades of software development experience. For
-more details, please read [the documentation](http://scrupal.org/docs).
+Scrupal has scruples. It is built on a set of principles honed from decades of software development experience. 
+For more details, please read [the documentation](http://scrupal.org/docs).
 
 - - -
 <sub><sup>&copy; Copyright 2013, scrupal.org. All Rights Reserved.</sup></sub>
