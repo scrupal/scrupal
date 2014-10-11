@@ -19,8 +19,6 @@ package scrupal.controllers
 
 import java.io.File
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Try,Failure,Success}
 
@@ -32,8 +30,6 @@ import play.api.data._
 import play.api.data.Forms._
 import play.api.libs.json.Json
 import play.api.libs.json.JsString
-
-import reactivemongo.api.MongoConnection
 
 import scrupal.api._
 import scrupal.db.{Schema, DBContext, CoreSchema}
@@ -246,7 +242,7 @@ object ConfigWizard extends ScrupalController {
           val inserted = schema.instances.insert( instance )
           val site = schema.sites.fetchAllSync.head
           schema.sites.update(Json.obj("id" -> JsString(site.id.name)), Json.obj("index" -> instance.id), upsert=true)
-          Logger.debug("Inserted instance with id=" + inserted)
+          log.debug("Inserted instance with id=" + inserted)
           true
         }
         case None => throw new Exception("Cannot create page, database configuration is invalid.")
@@ -273,7 +269,7 @@ object ConfigWizard extends ScrupalController {
     schema.validate match {
       case Success(true) => // nothing to do
       case Success(false) => Module.installSchemas(context)
-      case Failure(x) => Logger.error("Failed to validate schema because: ", x); throw x
+      case Failure(x) => log.error("Failed to validate schema because: ", x); throw x
     }
 
     val instance = Instance('YourPage, 'YourPage, "Auto-generated page created by Short-cut Configuration", 'Page,
@@ -376,8 +372,8 @@ object ConfigWizard extends ScrupalController {
               BadRequest(html.config.database(formWithErrors, step, error))
             },
             dbData => { //binding success, build a new configuration file
-              Logger.debug("DB Info Request: " + context.body.asFormUrlEncoded)
-              Logger.debug("Converted to DBDATA: " + dbData)
+              log.debug("DB Info Request: " + context.body.asFormUrlEncoded)
+              log.debug("Converted to DBDATA: " + dbData)
               val dbConfig = makeConfiguration(dbData)
               ConfigHelper(context.config).setDbConfig(Configuration(dbConfig))
               Redirect(routes.ConfigWizard.configure)
@@ -491,19 +487,19 @@ object ConfigWizard extends ScrupalController {
     import collection.JavaConversions._
     val theMap = Map( {
         val required = Seq(
-          "db." + db.name + ".url" -> db.url
+          "db." + db.name + ".uri" -> db.uri
         )
         val opt1 = if (db.user.isEmpty) Seq.empty else Seq( "db." + db.name + ".user" -> db.user)
         val opt2 = if (db.pass.isEmpty) Seq.empty else Seq( "db." + db.name + ".pass" -> db.pass)
         required ++ opt1 ++ opt2
       }:_*
     )
-    Logger.debug("Constructed map from DatabaseInfos: " + theMap )
+    log.debug("Constructed map from DatabaseInfos: " + theMap )
     ConfigFactory.parseMap( theMap )
   }
 
   /** Information for one database */
-  case class DatabaseInfo(name: String, url: String, user: String, pass: String )
+  case class DatabaseInfo(name: String, uri: String, user: String, pass: String )
 
   /** The Play! Framework Form to perform the mapping to/from DatabasesInfo */
   val databaseForm : DatabaseForm = Form[DatabaseInfo] (

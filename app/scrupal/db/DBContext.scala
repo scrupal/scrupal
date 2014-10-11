@@ -97,7 +97,7 @@ object DBContext extends Registry[DBContext] {
     val config = helper.getDbConfig
     config.getConfig("db.scrupal") match {
       case Some(cfg) => fromSpecificConfig('scrupal, cfg)
-      case None => throw new Exception("Missing 'db.scrupal' key in database configuration")
+      case None => fromURI('scrupal, "mongodb://localhost/scrupal")
     }
   }
 
