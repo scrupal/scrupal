@@ -17,51 +17,28 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
-
-abstract class StorableThing (
-  override val id: Option[Identifier] = None
-) extends NumericIdentifiable with Equals
+trait StorableThing extends Storable with Equals {
+  def canEqual(other: Any) : Boolean = other.isInstanceOf[StorableThing]
+}
 
 /** A Storable with a name and description
   *
-  * @param name The name of the thing
-  * @param description A brief description of the thing
-  * @param id The unique identifier
   */
-abstract class NamedDescribedThing (
-  override val name : Symbol,
-  override val description : String,
-  override val id : Option[Identifier] = None
-) extends StorableThing(id) with NumericNameable with NumericDescribable
+trait NamedDescribedThing extends StorableThing with Nameable with Describable
 
 /** A Storable that just has an id and a timestamp
   *
-  * @param created The time of creation
-  * @param id The unique identifier
   */
-abstract class CreatableThing (
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends StorableThing(id) with NumericCreatable
+trait CreatableThing extends StorableThing with Creatable
 
-abstract class ModifiableThing (
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends CreatableThing(created, id) with NumericModifiable
+trait ModifiableThing extends CreatableThing with Modifiable
 
 /** The most basic thing Scrupal can represent: Identifiable, Creatable, and Nameable.
   * Notably, these are immutable things because we don't keep track of a modification time stamp. The only storage
   * operations permitted are create, read and delete (CRD, not CRUD).
   *
-  * @param name The name of the `BasicThing`
   */
-abstract class ImmutableThing (
-  override val name: Symbol,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends CreatableThing(created, id) with NumericNameable {
+trait ImmutableThing extends CreatableThing  with Nameable {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[ImmutableThing]
   override def equals(other: Any) : Boolean = {
     other match {
@@ -69,7 +46,7 @@ abstract class ImmutableThing (
         that.canEqual(this) &&
           ( this.isIdentified == that.isIdentified) &&
           ( this.isNamed == that.isNamed) &&
-          ( ! this.isIdentified || this.id.get.equals(that.id.get)) &&
+          ( ! this.isIdentified || this.id.equals(that.id)) &&
           this.created.equals(that.created) &&
           ( ! this.isNamed || this.name.equals(that.name))
         )
@@ -79,25 +56,13 @@ abstract class ImmutableThing (
   }
 }
 
-abstract class MutableThing (
-  override val name: Symbol,
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends ModifiableThing(modified, created, id) with NumericNameable
+trait MutableThing extends ModifiableThing with Nameable
 
 /** An `ImmutableThing` with a description.
   * Just adds a short textual description of the thing.
   *
-  * @param name The name of the immutable thing
-  * @param description A brief description of the immutable thing
   */
-abstract class DescribableImmutableThing (
-  override val name: Symbol,
-  override val description: String,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends ImmutableThing(name, created, id) with NumericDescribable
+trait DescribableImmutableThing extends ImmutableThing with Describable
 {
   override def canEqual(other: Any) : Boolean = other.isInstanceOf[DescribableImmutableThing]
   override def equals(other: Any) : Boolean = {
@@ -116,20 +81,12 @@ abstract class DescribableImmutableThing (
 /** The Basic `Thing` that we can model with Scrupal
   * Generally the things that are interesting are identifiable, creatable, modifiable,
   * named and described. These traits hold for most of the `Thing`s that Scrupal will manipulate.
-  * @param name The name of the `Thing`
-  * @param description A brief description of the `Thing`
   */
-abstract class NumericThing (
-  override val name: Symbol,
-  override val description: String,
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-)  extends MutableThing(name, modified, created, id) with NumericDescribable {
-  override def canEqual(other: Any) : Boolean = other.isInstanceOf[NumericThing]
+trait Thing extends MutableThing with Describable {
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[Thing]
   override def equals(other: Any) : Boolean = {
     other match {
-      case that: NumericThing => { (this eq that) || (
+      case that: Thing => { (this eq that) || (
         that.canEqual(this) && super.equals(that) &&
           ( this.isModified == that.isModified) &&
           ( ! this.isModified || this.modified.get.equals(that.modified.get))
@@ -140,18 +97,11 @@ abstract class NumericThing (
   }
 }
 
-abstract class NumericEnablableThing (
-  override val name: Symbol,
-  override val description: String,
-  val enabled : Boolean = false,
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends NumericThing(name, description, modified, created, id)  with NumericEnablable {
-  override def canEqual(other: Any) : Boolean = other.isInstanceOf[NumericEnablableThing]
+trait EnablableThing extends Thing with Enablable {
+  override def canEqual(other: Any) : Boolean = other.isInstanceOf[EnablableThing]
   override def equals(other: Any) : Boolean = {
     other match {
-      case that: NumericEnablableThing => { (this eq that) || (
+      case that: EnablableThing => { (this eq that) || (
         that.canEqual(this) && super.equals(that) &&
           ( this.enabled == that.enabled)
         )
@@ -161,40 +111,3 @@ abstract class NumericEnablableThing (
   }
 }
 
-abstract class SymbolicThing (
-  override val id: Symbol,
-  override val description: String,
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None
-) extends Equals with Describable with Modifiable with Creatable
-          with SymbolicIdentifiable {
-  override def canEqual(other: Any) : Boolean = other.isInstanceOf[SymbolicThing]
-  override def equals(other: Any) : Boolean = {
-    other match {
-      case that: SymbolicThing => { (this eq that) || (
-        that.canEqual(this) && super.equals(that))
-      }
-      case _ => false
-    }
-  }
-}
-
-abstract class SymbolicEnablableThing (
-  override val id: Symbol,
-  override val description: String,
-  val enabled : Boolean = false,
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None
-) extends SymbolicThing(id, description, modified, created) with Enablable {
-  override def canEqual(other: Any) : Boolean = other.isInstanceOf[SymbolicEnablableThing]
-  override def equals(other: Any) : Boolean = {
-    other match {
-      case that: SymbolicEnablableThing => { (this eq that) || (
-        that.canEqual(this) && super.equals(that) &&
-          ( this.enabled == that.enabled)
-        )
-      }
-      case _ => false
-    }
-  }
-}

@@ -1,7 +1,7 @@
 /**********************************************************************************************************************
  * This file is part of Scrupal a Web Application Framework.                                                          *
  *                                                                                                                    *
- * Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.                                            *
+ * Copyright (c) 2014, Reid Spencer and viritude llc. All Rights Reserved.                                            *
  *                                                                                                                    *
  * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
  * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
@@ -17,39 +17,30 @@
 
 package scrupal.db
 
-import play.api.Logger
+import play.api.libs.json.{JsString, Json}
+import reactivemongo.bson.BSONObjectID
+import reactivemongo.core.commands.LastError
+import reactivemongo.extensions.json.dao.JsonDao
+import scrupal.api.Storable
 
-object SupportedDatabases extends Enumeration {
-  type Kind = Value
-  val H2 = Value
-  val MySQL = Value
-  val SQLite = Value
-  val Postgres = Value
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  def forJDBCUrl(url: String) : Option[Kind] = {
-    url match {
-      case s if s.startsWith("jdbc:h2") => Some(H2)
-      case s if s.startsWith("jdbc:mysql") => Some(MySQL)
-      case s if s.startsWith("jdbc:sqllite:") => Some(SQLite)
-      case s if s.startsWith("jdbc:postgresql:") => Some(Postgres)
-      case _ => None
-    }
-  }
+trait DataAccessObject[T <: Storable] extends JsonDao[T, BSONObjectID] {
 
-  def defaultDriverFor(kind: Kind) : String = {
-    kind match {
-      case H2 =>  "org.h2.Driver"
-      case MySQL => "com.mysql.jdbc.Driver"
-      case SQLite =>  "org.sqlite.JDBC"
-      case Postgres => "org.postgresql.Driver"
-      case _ => Logger.warn("Unrecognized SupportedDatabase.Kind !"); "not.a.db.driver"
-    }
-  }
+  def fetch(name: Symbol) : Future[Option[T]] = findOne(Json.obj("name" -> JsString(name.name)))
+  def fetchSync(name: Symbol) : Option[T] = Await.result(fetch(name), Duration.Inf)
 
-  def defaultDriverFor(kind: Option[Kind]) : String = {
-    kind match {
-      case Some(x) => defaultDriverFor(x)
-      case None => "org.h2.Driver" // Just because that's the default one Play uses
-    }
-  }
+  def fetchAll : Future[List[T]] = { super.findAll(Json.obj()) }
+  def fetchAllSync : List[T] = { Await.result(fetchAll, Duration.Inf) }
+
+  def count : Future[Int] = { count(Json.obj()) }
+  def countSync : Int = { Await.result(count, Duration.Inf) }
+
+  def insertSync(model: T) : LastError = { Await.result(super.insert(model), Duration.Inf) }
+
+  def upsert(model: T) : Future[LastError] = { super.save(model) }
+  def upsertSync(model: T) : LastError = { Await.result(upsert(model), Duration.Inf) }
+
 }

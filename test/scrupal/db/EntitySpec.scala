@@ -18,18 +18,24 @@
 package scrupal.db
 
 import org.specs2.mutable.Specification
-import scala.slick.lifted.DDL
+import play.api.libs.json.Json
+import reactivemongo.api.{DB, DefaultDB}
+import reactivemongo.bson.BSONObjectID
+import reactivemongo.extensions.json.dao.JsonDao
 import scrupal.api._
-import scala.slick.lifted
 import scrupal.fakes.{WithFakeScrupal}
 import org.joda.time.DateTime
-import scala.slick.session.Session
 
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Test that our basic abstractions for accessing the database hold water.
  */
 case class SomeValue(x: Short, y: Short)
+
+object SomeValue {
+  implicit val SomeValue_Format = Json.format[SomeValue]
+}
 
 case class TestEntity(
   override val name: Symbol,
@@ -37,30 +43,29 @@ case class TestEntity(
   testVal : SomeValue,
   override val modified : Option[DateTime] = None,
   override val created : Option[DateTime] = None,
-  override val id : Option[Identifier] = None
-) extends NumericThing(name, description, modified, created, id) {
+  override val id : Identifier
+) extends Thing {
 }
 
-trait TestComponent extends Component {
-  import sketch.profile.simple._
+object TestEntity {
+  implicit val TestEntity_Format = Json.format[TestEntity]
+}
 
-  implicit val someValueMapper = lifted.MappedTypeMapper.base[SomeValue,Int](
-    { v => v.x << 16 + v.y }, { i => SomeValue((i >> 16).toShort, (i & 0x0FFFF).toShort) } )
+class TestSchema(dbc: DBContext) extends Schema(dbc) {
+  case class TestEntityDao(db: DB) extends JsonDao[TestEntity,BSONObjectID](db,"test_entities") with DataAccessObject[TestEntity]
 
-  object TestEntities extends ScrupalTable[TestEntity]("test_entities") with NumericThingTable[TestEntity] {
-    def testVal = column[SomeValue]("test_val")
-    def * = name ~ description ~ testVal ~modified.? ~ created.? ~ id.? <> (TestEntity.tupled, TestEntity.unapply _)
+  val test_entities = dbc.withDatabase { db => new TestEntityDao(db) }
+
+  def daos : Seq[JsonDao[_,BSONObjectID] with DataAccessObject[_]] = {
+    Seq( test_entities )
   }
-}
 
-class TestSchema(sketch: Sketch)(implicit session: Session) extends Schema(sketch) with TestComponent {
-  val ddl : DDL = TestEntities.ddl
-  val tableNames = List(TestEntities.tableName)
+  def validateDao(dao: JsonDao[_,BSONObjectID] with DataAccessObject[_]) : Boolean = true
 }
 
 class EntitySpec extends Specification
 {
-	val te =  TestEntity('Test, "This is a test", SomeValue(1,2))
+	val te =  TestEntity('Test, "This is a test", SomeValue(1,2), None, None, 'Test)
 
 	"Entity" should {
 		"fail to compare against a non-entity" in {
@@ -69,21 +74,20 @@ class EntitySpec extends Specification
 			te.equals(te) must beTrue
 		}
     "save, load and delete from DB" in new WithFakeScrupal {
-      withDBSession { implicit session : Session =>
-        val ts = new TestSchema(sketch)
-        ts.create
-        import ts._
-        val te2 = TestEntities.upsert(te)
-        val te3 = TestEntities.fetch(te2)
+      withDBContext { implicit context : DBContext =>
+        val ts = new TestSchema(context)
+        ts.create(context)
+        val te2 = ts.test_entities.upsertSync(te)
+        val te3 = ts.test_entities.fetchSync(te.id)
         te3.isDefined must beTrue
         val te4 = te3.get
-        te4.id.get must beEqualTo(te2)
+        te4.id must beEqualTo(te.id)
         te4.testVal.equals(te4.testVal) must beTrue
         val te5 = TestEntity('Test, "This is a test", SomeValue(2,3), None, None, te4.id)
-        TestEntities.update(te5)
+        ts.test_entities.upsert(te5)
         te4.testVal.equals(te5.testVal) must beFalse
         te5.id must beEqualTo(te4.id)
-        TestEntities.delete(te5) must beTrue
+        // FIXME: ts.test_entities.delete(te5) must beTrue
       }
     }
   }

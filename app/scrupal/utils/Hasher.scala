@@ -145,8 +145,8 @@ object PBKDF2Hasher extends Hasher {
     val baseTime : Long = 1356998400000L // January 1, 2013 00:00:00
     val iterations = complexity.getOrElse(timeBasedComplexity(baseIterations, baseTime))
     val salt = saltine.getOrElse( Hash.salt )
-    val encrypted = PBKDF2(plainText, salt, iterations.toInt, keyLengthInBytes)
-    HashingResult(id, encrypted, salt, iterations)
+    val encrypted = PBKDF2(plainText.getBytes, salt.getBytes, iterations.toInt, keyLengthInBytes)
+    HashingResult(id, new String(encrypted), salt, iterations)
   }
 }
 

@@ -17,18 +17,20 @@
 
 package scrupal.fakes
 
-import scala.slick.session.{Session}
-
 import play.api.test._
 import play.api.mvc.Handler
 
 import org.specs2.execute.{Result, AsResult}
 
-import scrupal.db.{CoreSchema,Sketch}
+import scrupal.db.{CoreSchema,DBContext}
 
 
 trait Specs2ExampleGenerator {
   def apply[T : AsResult](f: => T): Result
+}
+
+object WithFakeScrupal {
+  implicit val dbContext = DBContext.fromURI('test, "mongodb://localhost:27017/test")
 }
 
 /**
@@ -37,30 +39,25 @@ trait Specs2ExampleGenerator {
  */
 abstract class WithFakeScrupal(
   path: java.io.File = new java.io.File("."),
-  classloader: ClassLoader = classOf[FakeApplication].getClassLoader,
+  classLoader: ClassLoader = classOf[FakeApplication].getClassLoader,
   additionalPlugins: Seq[String] = Nil,
   withoutPlugins: Seq[String] = Nil,
   additionalConfiguration: Map[String, _ <: Any] = Map.empty,
   withGlobal: Option[play.api.GlobalSettings] = None,
   withRoutes: PartialFunction[(String, String), Handler] = PartialFunction.empty
-) extends WithApplication(new FakeApplication(path, classloader, additionalPlugins, withoutPlugins,
+) extends WithApplication(new FakeApplication(path, classLoader, additionalPlugins, withoutPlugins,
   additionalConfiguration, withGlobal, withRoutes)) {
 
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
-  lazy val sketch: Sketch = Sketch("jdbc:h2:mem:test")
-
-  def withDBSession[T : AsResult]( f: Session => T) : T = {
-    implicit val session : Session = sketch.database.createSession()
-    try { f(session)  } finally { if (session != null) session.close() }
+  def withCoreSchema[T : AsResult]( f: CoreSchema => T ) : T = {
+    implicit val schema : CoreSchema = new CoreSchema(WithFakeScrupal.dbContext)
+    schema.create(WithFakeScrupal.dbContext)
+    f(schema)
   }
 
-  def withCoreSchema[T : AsResult]( f: CoreSchema => T ) : T = {
-    withDBSession { implicit session : Session =>
-      implicit val schema : CoreSchema = new CoreSchema(sketch)(session)
-      schema.create(session)
-      f(schema)
-    }
+  def withDBContext[T: AsResult]( f: DBContext => T) : T = {
+    f(WithFakeScrupal.dbContext)
   }
 }

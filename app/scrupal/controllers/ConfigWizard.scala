@@ -17,9 +17,12 @@
 
 package scrupal.controllers
 
-import java.io.{File}
-import scala.util.{Try}
-import scala.slick.session.Session
+import java.io.File
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Try,Failure,Success}
 
 import com.typesafe.config.{Config, ConfigFactory}
 
@@ -27,19 +30,17 @@ import play.api.mvc._
 import play.api.{Logger, Configuration}
 import play.api.data._
 import play.api.data.Forms._
+import play.api.libs.json.Json
+import play.api.libs.json.JsString
+
+import reactivemongo.api.MongoConnection
 
 import scrupal.api._
-import scrupal.db.{Schema, Sketch, CoreSchema, SupportedDatabases}
+import scrupal.db.{Schema, DBContext, CoreSchema}
 import scrupal.utils.ConfigHelper
 import scrupal.views.html
 import scrupal.models.CoreModule
-import play.api.libs.json.{Json}
-import scrupal.api.EssentialSite
-import scala.util.Failure
 import scrupal.api.Instance
-import play.api.libs.json.JsString
-import scala.Some
-import scala.util.Success
 import scrupal.models.CoreFeatures
 
 
@@ -109,6 +110,7 @@ object ConfigWizard extends ScrupalController {
     import Step._
     ConfigHelper(config).validateDBConfiguration match {
       case Failure(x)  => {
+        log.debug("Configuration failed DB validation: ", x)
         x.getMessage match {
           case s if s.contains("default") || s.contains("completely empty") || s.contains("not contain") =>
             (Zero_Welcome, Some(x), emptyDBConfig)
@@ -127,9 +129,9 @@ object ConfigWizard extends ScrupalController {
       try {
         names.foreach { case (db_name: String, config: Option[Configuration]) =>
           config match {
-            case Some(config) => {
-              val sketch = Sketch(config)
-              sketch.withSession { implicit  session: Session =>
+            case Some(cfg) => {
+              val context = DBContext.fromSpecificConfig(Symbol(db_name), cfg)
+              context.withDatabase { implicit db =>
                 true // result of the foreach
               }
             }
@@ -155,35 +157,28 @@ object ConfigWizard extends ScrupalController {
         {
           dbConfig match {
             case Some(config) => {
-              val sketch = Sketch(config)
-              sketch.withSession { implicit  session: Session =>
-                val schema = new CoreSchema(sketch)
-                val metaTables = schema.getMetaTables
-                if (metaTables.isEmpty) {
-                  (Step.Three_Install_Schemas, Some(new Exception("Database is empty")), dbConfigs)
-                } else {
-                  schema.validate match {
-                    case Success(false) =>
-                      (Step.Three_Install_Schemas, Some(new Exception("Schema validation failed.")), dbConfigs)
-                    case Success(true) => {
-                      // FIXME: These two queries use findAll which unloads the contents of the tables into
-                      // memory. Why isn't there a COUNT(*) facility available??????
-                      if ( schema.Sites.findAll.length > 0) {
-                        if ( schema.Instances.findAll.length > 0) {
-                          // Finally, at this point, we know everything is working.
-                          (Step.Six_Success, None, dbConfigs)
-                        } else {
-                          (Step.Five_Create_Page, Some(new Exception("You have a site defined but there are no " +
-                            "entity instances created yet so nothing will be served.")), dbConfigs)
-                        }
-                      } else {
-                        (Step.Four_Create_Site, Some(new Exception("The database is configured correctly but no " +
-                          "sites have been defined yet.")), dbConfigs)
-                      }
+              val context = DBContext.fromSpecificConfig(Symbol(db), config)
+              val schema = new CoreSchema(context)
+              schema.validate match {
+                case Success(false) =>
+                  (Step.Three_Install_Schemas, Some(new Exception("Schema validation failed.")), dbConfigs)
+                case Success(true) => {
+                  val numSites = schema.sites.countSync
+                  if (numSites > 0) {
+                    val numInstances = schema.instances.countSync
+                    if ( numInstances > 0) {
+                      // Finally, at this point, we know everything is working.
+                      (Step.Six_Success, None, dbConfigs)
+                    } else {
+                      (Step.Five_Create_Page, Some(new Exception("You have a site defined but there are no " +
+                        "entity instances created yet so nothing will be served.")), dbConfigs)
                     }
-                    case Failure(x) => (Step.Three_Install_Schemas,Some(x), dbConfigs)
+                  } else {
+                    (Step.Four_Create_Site, Some(new Exception("The database is configured correctly but no " +
+                      "sites have been defined yet.")), dbConfigs)
                   }
                 }
+                case Failure(x) => (Step.Three_Install_Schemas,Some(x), dbConfigs)
               }
             }
             case None => (Step.One_Specify_Databases,
@@ -203,15 +198,14 @@ object ConfigWizard extends ScrupalController {
   def createSchemas(fullConfig: Configuration) : Try[Boolean] = Try[Boolean] {
     val (state, err, dbConfigs) = checkSchemas(fullConfig)
     require(state == Step.Three_Install_Schemas)
-    if (!dbConfigs.isEmpty) {
+    if (dbConfigs.nonEmpty) {
       val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
       dbConfig match {
         case Some(config) => {
-          val sketch = Sketch(config)
-          sketch.withSession { implicit  session: Session =>
-            CoreModule.schemas(sketch).foreach { schema:Schema => schema.create }
-            true
-          }
+          implicit val context = DBContext.fromSpecificConfig(Symbol(db), config)
+          // FIXME: Process the results of Schema.create
+          CoreModule.schemas(context).foreach { schema:Schema => schema.create }
+          true
         }
         case None => throw new Exception("Cannot create schemas, Database configuration is invalid.")
       }
@@ -221,22 +215,21 @@ object ConfigWizard extends ScrupalController {
   def createSite(fullConfig: Configuration, siteData: SiteInfo) = Try[Boolean] {
     val (state, err, dbConfigs) = checkSchemas(fullConfig)
     require(state == Step.Four_Create_Site)
-    if (!dbConfigs.isEmpty) {
+    if (dbConfigs.nonEmpty) {
       val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
       dbConfig match {
         case Some(config) => {
-          val sketch = Sketch(config)
-          sketch.withSession { implicit  session: Session =>
-            val schema = new CoreSchema(sketch)
-            schema.Sites.insert( EssentialSite(
-              Symbol(siteData.name), siteData.description, siteData.host, None, siteData.requiresHttps, enabled=true)
-            )
-            true
-          }
+          val context = DBContext.fromSpecificConfig(Symbol(db), config)
+          val schema = new CoreSchema(context)
+          val sd = SiteData(Symbol(siteData.name), Symbol(siteData.name), siteData.description, siteData.host, None, siteData.requiresHttps, true, None, None)
+          schema.sites.insert( sd )
+          true
         }
         case None => throw new Exception("Cannot create site, database configuration is invalid.")
       }
-    } else throw new Exception("Cannot create site, database configuration is empty.")
+    } else {
+      throw new Exception("Cannot create site, database configuration is empty.")
+    }
   }
 
   def createPage(fullConfig: Configuration, pageInfo: PageInfo) = Try {
@@ -246,17 +239,15 @@ object ConfigWizard extends ScrupalController {
       val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
       dbConfig match {
         case Some(config) => {
-          val sketch = Sketch(config)
-          sketch.withSession { implicit  session: Session =>
-            val schema = new CoreSchema(sketch)
-            val inserted = schema.Instances.insert( Instance(Symbol(pageInfo.name), pageInfo.description,
-              'Page, Json.obj( "body" -> JsString(pageInfo.body) ) )
-            )
-            val site = schema.Sites.findAll.head
-            schema.Sites.updateSiteIndex(site.id, inserted)
-            Logger.debug("Inserted instance with id=" + inserted)
-            true
-          }
+          val context = DBContext.fromSpecificConfig(Symbol(db), config)
+          val schema = new CoreSchema(context)
+          val id = Symbol(pageInfo.name)
+          val instance = Instance(id, id, pageInfo.description, 'Page, Json.obj( "body" -> JsString(pageInfo.body) ) )
+          val inserted = schema.instances.insert( instance )
+          val site = schema.sites.fetchAllSync.head
+          schema.sites.update(Json.obj("id" -> JsString(site.id.name)), Json.obj("index" -> instance.id), upsert=true)
+          Logger.debug("Inserted instance with id=" + inserted)
+          true
         }
         case None => throw new Exception("Cannot create page, database configuration is invalid.")
       }
@@ -273,45 +264,40 @@ object ConfigWizard extends ScrupalController {
 
   private def doShortCutConfiguration(config: Configuration) = {
     val default_db_conf = Map(
-      "db.scrupal.kind" -> "H2",
-      "db.scrupal.url" ->  ("jdbc:h2:~/scrupal_shortcut_" + System.currentTimeMillis()),
-      "db.scrupal.driver" -> "org.h2.Driver"
+      "db.scrupal.url" ->  ("mongodb://localhost:27017/~/scrupal_shortcut_" + System.currentTimeMillis())
     )
 
     val new_config = ConfigHelper(config).setDbConfig(default_db_conf)
-    val default_config = new_config.getConfig("db.scrupal")
-    val sketch = Sketch(default_config.get)
-    sketch.withSession { implicit session: Session =>
-      val schema = new CoreSchema(sketch)
-      schema.validate match {
-        case Success(true) =>  // nothing to do
-        case Success(false) => Module.installSchemas(sketch)
-        case Failure(x) => Logger.error("Failed to validate schema because: ", x); throw x
-      }
-
-      val instance = Instance('YourPage, "Auto-generated page created by Short-cut Configuration", 'Page,
-        Json.obj(
-          "body" ->
-            """# Welcome to Scrupal.
-              |This page was created for you because you chose the Short-cut configuration. Feel free to modify it at
-              |any time. If you need to learn more about Scrupal, please read the [Documentation](/doc) that comes
-              |with it. We hope you enjoy using Scrupal as much as we enjoyed developing it for you.
-              |
-              |+ [User Documentation](/doc)
-              |+ [Developer Documentation](/scaladoc)
-              |+ [API Documentation](/apidoc)
-              |+ [Scrupal Project](http://scrupal.org/)
-              |+ [Scrupal On GitHub](https://github.com/scrupal/scrupal)
-              |
-            """.stripMargin
-        )
-      )
-      val instance_id = schema.Instances.insert(instance)
-      val site = EssentialSite('YourSite, "Auto-generated site created by Short-cut Configuration", "localhost",
-        Some(instance_id), requireHttps=false, enabled=true)
-      schema.Sites.insert(site)
-      Global.reload( config )
+    val context = DBContext.fromConfiguration()
+    val schema = new CoreSchema(context)
+    schema.validate match {
+      case Success(true) => // nothing to do
+      case Success(false) => Module.installSchemas(context)
+      case Failure(x) => Logger.error("Failed to validate schema because: ", x); throw x
     }
+
+    val instance = Instance('YourPage, 'YourPage, "Auto-generated page created by Short-cut Configuration", 'Page,
+      Json.obj(
+        "body" ->
+          """# Welcome to Scrupal.
+            |This page was created for you because you chose the Short-cut configuration. Feel free to modify it at
+            |any time. If you need to learn more about Scrupal, please read the [Documentation](/doc) that comes
+            |with it. We hope you enjoy using Scrupal as much as we enjoyed developing it for you.
+            |
+            |+ [User Documentation](/doc)
+            |+ [Developer Documentation](/scaladoc)
+            |+ [API Documentation](/apidoc)
+            |+ [Scrupal Project](http://scrupal.org/)
+            |+ [Scrupal On GitHub](https://github.com/scrupal/scrupal)
+            |
+          """.stripMargin
+      )
+    )
+    val instance_id = schema.instances.insert(instance)
+    val site = SiteData( Symbol("YourSite"), Symbol("YourSite"), "Auto-generated site created by Short-cut Configuration",
+                     "localhost", Some(instance.id), false, true, None, None)
+    schema.sites.insert(site)
+    Global.reload( config )
   }
 
   private def doInitialConfiguration(config: Configuration) = Try[Boolean] {
@@ -350,8 +336,7 @@ object ConfigWizard extends ScrupalController {
     }
   }
 
-  private def getFormAction(name:String)(f: (String) => SimpleResult )(implicit request: Request[AnyContent] ) :
-  SimpleResult = {
+  private def getFormAction(name:String)(f: (String) => Result )(implicit request: Request[AnyContent] ) : Result = {
     val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
     if (formData.contains(name)) {
       val hows = formData.get(name).get
@@ -481,14 +466,13 @@ object ConfigWizard extends ScrupalController {
       val cfg : Configuration = config.getOrElse(Configuration.empty)
       DatabaseInfo(
         db,
-        SupportedDatabases.withName(cfg.getString("kind").getOrElse("H2")),
         cfg.getString("url").getOrElse(""),
         cfg.getString("user").getOrElse(""),
         cfg.getString("pass").getOrElse("")
       )
     }}.toSeq
     val dbInfo = if (dbInfos.isEmpty)
-      DatabaseInfo("scrupal", SupportedDatabases.H2, "jdbc:h2:~/scrupal", "", "")
+      DatabaseInfo("scrupal", "mongodb://localhost:27017", "", "")
     else
       dbInfos.head
     databaseForm.fill(dbInfo)
@@ -507,8 +491,6 @@ object ConfigWizard extends ScrupalController {
     import collection.JavaConversions._
     val theMap = Map( {
         val required = Seq(
-          "db." + db.name + ".kind" -> db.kind.toString,
-          "db." + db.name + ".driver" -> SupportedDatabases.defaultDriverFor(db.kind),
           "db." + db.name + ".url" -> db.url
         )
         val opt1 = if (db.user.isEmpty) Seq.empty else Seq( "db." + db.name + ".user" -> db.user)
@@ -521,14 +503,12 @@ object ConfigWizard extends ScrupalController {
   }
 
   /** Information for one database */
-  case class DatabaseInfo(name: String, kind: SupportedDatabases.Kind, url: String, user: String, pass: String )
+  case class DatabaseInfo(name: String, url: String, user: String, pass: String )
 
-  import scrupal.utils.Enumerations.enum
   /** The Play! Framework Form to perform the mapping to/from DatabasesInfo */
   val databaseForm : DatabaseForm = Form[DatabaseInfo] (
     mapping (
       "name" -> nonEmptyText,
-      "kind" -> enum(SupportedDatabases),
       "url"  -> text,
       "user" -> text(minLength=0, maxLength=255),
       "pass" -> text(minLength=0, maxLength=255)

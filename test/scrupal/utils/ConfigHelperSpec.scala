@@ -109,11 +109,6 @@ class ConfigHelperSpec extends Specification {
       val result = helper.validateDBConfiguration
       result must beAFailedTry
     }
-    "Return Failure(x) for valid_mem configuration" in {
-      val helper = ConfigHelper(makeTestConfig("valid_mem.conf"))
-      val result = helper.validateDBConfiguration
-      result must beAFailedTry
-    }
 
     "Return Success(x) for valid configuration" in {
       val helper = ConfigHelper(makeTestConfig("valid.conf"))

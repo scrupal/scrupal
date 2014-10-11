@@ -18,7 +18,8 @@
 package scrupal.models
 
 import java.net.{URISyntaxException, URI}
-import java.sql.{SQLException, DriverManager}
+
+import reactivemongo.api.DefaultDB
 
 import scala.collection.immutable.HashMap
 
@@ -27,15 +28,11 @@ import play.api.libs.json._
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsString
 
-import org.joda.time.DateTime
-
-import scala.slick.session.Session
 
 import Patterns._
 import scrupal.api._
 import scrupal.utils.Version
-import scrupal.db.{SupportedDatabases,Sketch,Schema,CoreSchema}
-import play.libs.F
+import scrupal.db.{DBContext, Schema, CoreSchema}
 import scrupal.models.CoreFeatures._
 
 
@@ -44,13 +41,14 @@ import scrupal.models.CoreFeatures._
   * its functionality. The Core module defines the simple, trait, bundle and entity types
  * Further description here.
  */
-object CoreModule extends Module (
+object CoreModule extends Module(
   'Core,
   "Scrupal's Core module for core, essential functionality.",
   Version(0,1,0),
   Version(0,0,0),
-  true
+  enabled = true
 ) {
+
   /** The Scrupal Type for the identifier of things */
   object Identifier_t extends StringType('Identifier, "Scrupal Identifier", id, anchored(Identifier), 64)
 
@@ -65,7 +63,7 @@ object CoreModule extends Module (
   object TcpPort_t extends RangeType('TcpPort, "A type for TCP port numbers", 'Core, 1, 65535)
 
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-  object URI_t extends Type('URI, "Uniform Resource Identifier", id) {
+  object URI_t extends SimpleType ('URI, "Uniform Resource Identifier", id) {
     override def validate(value: JsValue) : JsResult[Boolean]= {
       value match {
         case v: JsString => {
@@ -76,32 +74,6 @@ object CoreModule extends Module (
       }
     }
     override def kind = 'URI
-  }
-
-  /** What constitutes a valid JDBC URL for Scrupal.
-    * Note that we validate this empirically by asking JDBC's DriverManager for the corresponding driver. This means
-    * that the validity of JDBC URL types is context sensitive, depending on which drivers are accessible from the
-    * classpath.
-    */
-  object JDBC_URL_t extends Type('JDBC_URL, "Java Database Connection URL", id) {
-    override def validate(value: JsValue) : JsResult[Boolean]= {
-      value match {
-        case v: JsString => {
-          try {
-            // NOTE: We do not want to do the following here. This is a syntactical check, not a connection check
-            // database.createSession().close()
-            val supported = SupportedDatabases.forJDBCUrl(v.value)
-            if (supported.isEmpty)
-              JsError("URL not valid for Scrupal")
-            else
-              JsSuccess(supported.isDefined)
-          }
-          catch { case xcptn: Throwable => JsError(xcptn.getMessage) }
-        }
-        case x => JsError("Expecting to validate a URI against a string, not " + x.getClass().getSimpleName())
-      }
-    }
-    override def kind = 'JDBC_URL
   }
 
   /** The Scrupal Type for IP version 4 addresses */
@@ -132,11 +104,15 @@ object CoreModule extends Module (
 
   /** The core types that Scrupal provides to all modules */
   override def types = Seq[Type](
-    Identifier_t, Description_t, Markdown_t, DomainName_t, TcpPort_t, URI_t, JDBC_URL_t, IPv4Address_t, EmailAddress_t,
+    Identifier_t, Description_t, Markdown_t, DomainName_t, TcpPort_t, URI_t, IPv4Address_t, EmailAddress_t,
     LegalName_t, SiteInfo_t, PageBundle_t
   )
 
-  object PageEntity extends Entity('Page, "An entity for simple HTML5 pages.", PageBundle_t.id)
+  val PageEntity = Entity(
+    'Page,
+    "An entity for simple HTML5 pages.",
+    PageBundle_t.id
+  )
 
   override def entities = Seq[Entity](
     PageEntity
@@ -150,7 +126,7 @@ object CoreModule extends Module (
     DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
   )
 
-  override def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( new CoreSchema(sketch) )
+  override def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( new CoreSchema(dbc) )
 
  // val schema = new CoreSchema
 }

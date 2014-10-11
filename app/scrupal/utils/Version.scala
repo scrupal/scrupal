@@ -17,6 +17,8 @@
 
 package scrupal.utils
 
+import play.api.libs.json.Json
+
 /** Version numbering for Scrupal Modules.
   * Versions are ordered by major and minor number; update is not factored into the ordering as it is intended to be
   * used only for those changes that do not add features but just fix bugs. Consequently if major and minor version
@@ -75,4 +77,8 @@ case class Version(major : Int, minor : Int, update: Int) extends Ordered[Versio
 
   /** Generate the typical dot notation for versions */
   override def toString = major + "." + minor + "." + update
+}
+
+object Version {
+  implicit val Version_format = Json.format[Version]
 }

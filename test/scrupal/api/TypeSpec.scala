@@ -27,10 +27,10 @@ import scrupal.utils.Version
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {
 
-  object TestModule extends Module('TestModule, "Test Module", Version(0,1,0), Version(0,0,0) )
+  object TestModule extends Module('TestModule, "Test Module", Version(0,1,0), Version(0,0,0), true )
 
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-  object MiddlePeriod extends Type('MiddlePeriod, "A type for validating URI strings.", TestModule.id) {
+  object MiddlePeriod extends SimpleType('MiddlePeriod, "A type for validating URI strings.", TestModule.id) {
     override def validate(value: JsValue) : JsResult[Boolean]= {
       value match {
         case v: JsString => {

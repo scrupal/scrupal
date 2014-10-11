@@ -26,7 +26,7 @@ import play.api.Logger
  */
 trait Registrable {
   val id: Symbol
-  lazy val label = id.name
+  def label = id.name
 }
 
 /**

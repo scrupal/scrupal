@@ -17,14 +17,12 @@
 
 package scrupal.controllers
 
-import scala.slick.session.Session
 import play.api.mvc._
 import scrupal.api.{Site, Module}
 import play.api.Configuration
 import play.api.Play.current
 import scala.concurrent.Future
-import scrupal.db.{Sketch, CoreSchema, Alert}
-import play.api.mvc.SimpleResult
+import scrupal.db.{DBContext, CoreSchema, Alert}
 
 /** A generic Context trait with just enough defaulted information to render a BasicPage.
   * This allows us, regardless of the error condition of a page, to render custom errors at least in some
@@ -47,7 +45,9 @@ trait Context extends RequestHeader {
   * @param request The request upon which the context is based
   * @tparam A The type of content for the request
   */
-class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) with Context
+class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) with Context {
+  override def secure : Boolean = false
+}
 
 /** A Site context which pulls the information necessary to render something for a site.
   * SiteContext is presumed to be created with a SiteAction from the ContextProvider which will only create on if the
@@ -57,13 +57,12 @@ class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) wi
   * @tparam A The type of content for the request
   */
 class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[A]) extends BasicContext[A](request) {
-  override val appName : String = site.id.name
-  override val description : String = site.description
+  override val appName : String = site.data.id.name
+  override val description : String = site.data.description
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
   val modules: Seq[Module] = site.modules
-  val sketch : Sketch = schema.sketch
-  val dbSession : Session = schema.session
+  val dbContext : DBContext = site.dbContext
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -96,6 +95,7 @@ object Context {
     def tags: Map[String,String] = Map()
     def uri: String = "/"
     def version: String = "1.1"
+    override def secure: Boolean = false
   }
 
 }
@@ -110,20 +110,20 @@ object Context {
   */
 trait ContextProvider extends RichResults {
 
-  type BasicActionBlock[A] = (BasicContext[A]) => Future[SimpleResult]
+  type BasicActionBlock[A] = (BasicContext[A]) => Future[Result]
 
   class BasicAction extends ActionBuilder[BasicContext] {
-    def invokeBlock[A](request: Request[A], block: BasicActionBlock[A] ) : Future[SimpleResult] = {
+    def invokeBlock[A](request: Request[A], block: BasicActionBlock[A] ) : Future[Result] = {
       block( new BasicContext[A](request) )
     }
   }
   object BasicAction extends BasicAction
   type AnyBasicContext = BasicContext[AnyContent]
 
-  type SiteActionBlock[A] = (SiteContext[A]) => Future[SimpleResult]
+  type SiteActionBlock[A] = (SiteContext[A]) => Future[Result]
 
   class SiteAction extends ActionBuilder[SiteContext] {
-    def invokeBlock[A](request: Request[A], block: SiteActionBlock[A]) : Future[SimpleResult] = {
+    def invokeBlock[A](request: Request[A], block: SiteActionBlock[A]) : Future[Result] = {
       if (Global.ScrupalIsConfigured) {
         val parts : Array[String] = request.host.split(":")
         // HTTP Requires the Host Header, but we guard anyway and assume "localhost" if its empty
@@ -131,8 +131,8 @@ trait ContextProvider extends RichResults {
         // Look up the Site by host requested in the request and deal with what we find
         {
           Global.DataYouShouldNotModify.sites.get(host) map { site: Site =>
-            if (site.enabled) {
-              if (site.requireHttps) {
+            if (site.data.enabled) {
+              if (site.data.requireHttps) {
                 request.headers.get("X-Forwarded-Proto").collect {
                   case "https" =>
                     site.withCoreSchema { schema: CoreSchema =>
@@ -140,11 +140,11 @@ trait ContextProvider extends RichResults {
                     }
                   case _ => {
                     implicit val ctxt = Context(request)
-                    Future.successful(Forbidden("request to site '" + site.id.name + "'", "it requires https."))
+                    Future.successful(Forbidden("request to site '" + site.data.id.name + "'", "it requires https."))
                   }
                 } getOrElse {
                   implicit val ctxt = Context(request)
-                  Future.successful(Forbidden("request to site '" + site.id.name + "'", "it requires https."))
+                  Future.successful(Forbidden("request to site '" + site.data.id.name + "'", "it requires https."))
                 }
               } else {
                 site.withCoreSchema { schema: CoreSchema =>
@@ -153,7 +153,7 @@ trait ContextProvider extends RichResults {
               }
             } else {
               implicit val ctxt = Context(request)
-              Future.successful(Forbidden("browse site '" + site.id.name + "'", "it is disabled"))
+              Future.successful(Forbidden("browse site '" + site.data.id.name + "'", "it is disabled"))
             }
           }
         }  getOrElse {
@@ -171,10 +171,10 @@ trait ContextProvider extends RichResults {
   /** A simple rename of the unwieldy ConcreteContext[AnyContent] that gets used frequently. */
   type AnySiteContext = SiteContext[AnyContent]
 
-  type UserActionBlock[A] = (UserContext[A]) => Future[SimpleResult]
+  type UserActionBlock[A] = (UserContext[A]) => Future[Result]
 
   class UserAction extends ActionBuilder[UserContext] {
-    def invokeBlock[A](request: Request[A], block: UserActionBlock[A]) : Future[SimpleResult] = {
+    def invokeBlock[A](request: Request[A], block: UserActionBlock[A]) : Future[Result] = {
       SiteAction.invokeBlock(request, {
         context: SiteContext[A] => {
           val user = "guest" // FIXME: Need to look up the actual user
@@ -187,4 +187,3 @@ trait ContextProvider extends RichResults {
 
   type AnyUserContext = UserContext[AnyContent]
 }
-

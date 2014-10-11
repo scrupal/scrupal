@@ -26,7 +26,7 @@ import com.typesafe.config.{ConfigRenderOptions, ConfigFactory, Config}
  * Provide some extentions to the Play Configuration class via the pimp-my-library pattern
  * Further description here.
  */
-class ConfigHelper(config : Configuration) {
+class ConfigHelper(config : Configuration) extends ScrupalComponent {
 
   import ClassHelpers._
 
@@ -106,9 +106,10 @@ class ConfigHelper(config : Configuration) {
     setDbConfig( getDbConfig ++ db_config )
   }
 
-  def setDbConfig(new_config: Map[String,Any]) : Configuration = {
+  def setDbConfig(new_config: Map[String,AnyRef]) : Configuration = {
     import collection.JavaConversions._
-    val cfg = Configuration(ConfigFactory.parseMap(new_config))
+    val j_config : java.util.Map[String,AnyRef] = mapAsJavaMap(new_config)
+    val cfg = Configuration(ConfigFactory.parseMap(j_config))
     setDbConfig(cfg)
   }
 
@@ -129,11 +130,11 @@ class ConfigHelper(config : Configuration) {
             for ( key <- keys ) yield if (db_config.getString(key).getOrElse {
               throw new Exception("Configuration for '" + db + "' is missing a value for '" + key + "'.")
             }.isEmpty) { throw new Exception("Configuration for '" + db + "' has an empty value for '" + key + "'.") }
-            // The config needs to at least have a url key
-            if (!keys.contains("url")) {
-              throw new Exception("Configuration for '" + db + "' must specify a value for 'url' key, at least.")
-            } else if (db_config.getString("url").get.equals("jdbc:h2:mem:")) {
-              throw new Exception("Configuration for '" + db + "' must not use a private memory-only database")
+            // The config needs to at least have a uri key
+            if (!keys.contains("uri")) {
+              throw new Exception("Configuration for '" + db + "' must specify a value for 'uri' key, at least.")
+            } else if (!db_config.getString("uri").get.startsWith("mongodb://")) {
+              throw new Exception("Configuration for '" + db + "' must have a mongodb URI")
             }
             // Okay, looks good, include this in the results
             true

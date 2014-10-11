@@ -18,6 +18,7 @@
 package scrupal.db
 
 import org.specs2.mutable.Specification
+import play.api.Logger
 
 import play.api.libs.json.Json
 import scrupal.fakes.{WithFakeScrupal}
@@ -36,12 +37,13 @@ class CoreSpec extends Specification {
   "Module Type, Entity and Instance " should {
     "support CRUD" in new WithFakeScrupal {
       withCoreSchema( { schema : CoreSchema =>
-        import schema._
-        val m_id = Modules.insert ( EssentialModule('foo, "Foo Man Chew", Version(0,1,0), Version(0,0,0), true) )
-        m_id must beEqualTo('foo)
-        println("Module ID=" + m_id)
+        val m_id = schema.modules.insertSync( Module('foo, "Foo Man Chew", Version(0,1,0), Version(0,0,0), true) )
+        m_id.ok must beTrue
+        Logger.info("Module ID=" + m_id)
+        val thai = new StringType('Thai, "Thai Foon", 'foo, ".*".r )
+        val buns = new BundleType('Buns, "Buns Aye", 'foo, HashMap('tie -> Type('Thai).get))
 
-        val ty_id = Types.insert(new StringType('Thai, "Thai Foon", m_id, ".*".r ))
+/*        val ty_id = schema.ypes.insert()
         val ty = Types.fetch(ty_id)
         val ty2 = ty.get
         ty2.id must beEqualTo('Thai)
@@ -53,12 +55,17 @@ class CoreSpec extends Specification {
         val bun2 = bun.get
         bun2.id must beEqualTo('Buns)
         bun_id must beEqualTo(bun2.id)
+*/
 
-        val e_id = Entities.insert( new Entity('Plun, "Plunderous Thundering Fun", 'Buns ) {})
+        val e_id = schema.entities.insertSync( new Entity('Plun, "Plunderous Thundering Fun", 'Buns ) )
+        e_id.ok must beTrue
         val clob : JsObject = Json.obj("type" -> "Thai" )
-        val instance = Instances.insert(Instance('Inst, "Instigating Instance", 'Plun, clob))
-        val i2 = Instances.fetch(instance).get
-        instance must beEqualTo(i2.id.get)
+        val instance = schema.instances.insertSync(Instance('Inst, 'Inst, "Instigating Instance", 'Plun, clob))
+        instance.ok must beTrue
+        val oi2 = schema.instances.fetchSync('Inst)
+        oi2.isDefined must beTrue
+        val i2 = oi2.get
+        i2.id must beEqualTo('Inst)
         i2.name must beEqualTo('Inst)
         i2.entityId must beEqualTo('Plun)
 

@@ -17,27 +17,29 @@
 
 package scrupal.controllers
 
-import play.api.mvc.{SimpleResult, Results}
-import scrupal.views.html
+import play.api.mvc.{Result, Results}
 import play.api.libs.json.{Json, JsString}
+
+import scrupal.utils.ScrupalComponent
+import scrupal.views.html
 import scrupal.api.Feature
 
 /** A simple trait to provide some helper methods for Controllers.
   * These "Rich"Results transform the usual Results.XXX values into method calls that produce rich results based on
   * view templates that provide helpful information back to the user.
   */
-trait RichResults extends Results {
+trait RichResults extends Results with ScrupalComponent {
 
-  def NotImplemented(what: Feature, why : Option[String] = None)(implicit context: Context) : SimpleResult = {
+  def NotImplemented(what: Feature, why : Option[String] = None)(implicit context: Context) : Result = {
     NotImplemented(html.errors.NotImplemented(what, why))
   }
 
   def NotFound(what: String, causes: Seq[String] = Seq(), suggestions : Seq[String] = Seq())(
-    implicit context: Context) : SimpleResult = {
+    implicit context: Context) :Result = {
     NotFound(html.errors.NotFound(what, causes, suggestions))
   }
 
-  def Forbidden(what: String, why: String)(implicit context: Context) : SimpleResult = {
+  def Forbidden(what: String, why: String)(implicit context: Context) : Result = {
     Forbidden(html.errors.Forbidden(what, why))
   }
 
@@ -48,11 +50,11 @@ trait RichResults extends Results {
   */
 trait RichJsonResults extends RichResults {
 
-  def NotImplemented(what: JsString)(implicit context: Context) : SimpleResult = {
+  def NotImplemented(what: JsString)(implicit context: Context) : Result = {
     Results.NotImplemented(JsString("NotImplemented: " + what) )
   }
 
-  def NotFound[A](what: JsString)(implicit context: Context) : SimpleResult = {
+  def NotFound[A](what: JsString)(implicit context: Context) : Result = {
     Results.NotFound(Json.obj( "error" -> "404: NOT_FOUND", "what" ->  what))
   }
 }

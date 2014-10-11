@@ -17,10 +17,14 @@
 
 package scrupal.api
 
-import play.api.mvc.{SimpleResult, Results}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import play.api.mvc.{Result, Results}
 import scrupal.utils.{Registry, Registrable}
 import scrupal.views.html
 import scrupal.controllers.{Context, routes}
+
 
 /** A Feature of a Module.
   * Features are things that can be enabled or disabled that affect how a Module does its work. Scrupal handles the
@@ -75,13 +79,31 @@ object Feature extends Registry[Feature] {
 }
 
 object WithFeature {
-  def apply(feature: Feature)(block: => SimpleResult )(implicit context: Context) : SimpleResult = {
+  def apply(feature: Feature)(block: => Result )(implicit context: Context) : Result = {
     if (feature.implemented) {
       if (feature.isEnabled) {
         block
       }
-      else feature.redirect
+      else
+        feature.redirect
     }
     else feature.notImplemented()
+  }
+}
+
+object AsyncWithFeature {
+  def apply(feature: Feature)(block: => Future[Result] )(implicit context: Context) : Future[Result] = {
+    if (feature.implemented) {
+      if (feature.isEnabled) {
+        block
+      }
+      else
+        Future { feature.redirect }
+    }
+    else {
+      Future {
+        feature.notImplemented()
+      }
+    }
   }
 }

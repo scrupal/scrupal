@@ -1,7 +1,7 @@
 /**********************************************************************************************************************
  * This file is part of Scrupal a Web Application Framework.                                                          *
  *                                                                                                                    *
- * Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.                                            *
+ * Copyright (c) 2014, Reid Spencer and viritude llc. All Rights Reserved.                                            *
  *                                                                                                                    *
  * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
  * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
@@ -17,34 +17,27 @@
 
 package scrupal.db
 
-import scala.slick.lifted.MappedTypeMapper
-import scala.util.matching.Regex
 import org.joda.time.DateTime
-import java.sql.{ Timestamp}
-import org.joda.time.DateTimeZone._
-import play.api.libs.json.{Json, JsObject}
-
+import scrupal.api.{Storable, Creatable, Identifier}
+import scrupal.utils.Hash
 
 /**
- * This object just collects together a variety of Slick TypeMappers that are used to convert between database
- * types and Scala types. All TypeMappers should be delcared implicit lazy vals so they only get instantiated
- * when they are used. To use them just "import CommonTypeMappers._"
+ * Information about a Principal, the essential identify of a user of the system. Authentication of Principals requires
+ * either one or more authentication factors. The first factor (something the Principal knows) is embodied in this object
+ * via the password, hasher algorithm, salt and complexity fields. Subsequent authentication factors are dealt with in
+ * separate objects. Each Principal is associated with an email address and a unique identifier (long number).
+ * @param email The principal's Email address
+ * @param password The Principal's hashed password
+ * @param hasher The Hasher algorithm used
+ * @param salt The salt used in generation of the principal's hashed password
+ * @param complexity The complexity factor for the Hasher algorithm
  */
-object CommonTypeMappers {
-
-  implicit lazy val regexMapper = MappedTypeMapper.base[Regex, String] (
-    { r => r.pattern.pattern() },
-    { s => new Regex(s) }
-  )
-
-  implicit lazy val dateTimeMapper = MappedTypeMapper.base[DateTime,Timestamp](
-  { d => new Timestamp( d getMillis ) },
-  { t => new DateTime (t getTime, UTC)  }
-  )
-
-  implicit lazy val symbolMapper = MappedTypeMapper.base[Symbol,String] (
-    { s => s.name},
-    { s => Symbol(s) }
-  )
-
-}
+case class Principal(
+  email: String,
+  password: String,
+  hasher: String,
+  salt: String = Hash.salt,
+  complexity: Long = 0,
+  override val created: Option[DateTime] = None,
+  override val id: Identifier
+) extends Storable with Creatable

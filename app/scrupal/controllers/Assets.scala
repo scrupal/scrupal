@@ -19,7 +19,6 @@ package scrupal.controllers
 
 import play.api.mvc._
 import controllers.WebJarAssets
-import java.lang.IllegalArgumentException
 import play.api.{Mode, Play}
 import play.api.Play.current
 import java.io.File
@@ -73,6 +72,8 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     * @return
     */
   def js(file: String, min : Boolean = true) = resolve(javascripts, minify(file, ".js", min))
+
+  def requirejs() = resolve(javascripts, minify("require.js", ".js", true))
 
   /** Get a Javascript from public/javascripts (static or compiled)
     * Just uses the Play AssetBuilder to extract the javascript file.

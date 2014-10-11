@@ -54,15 +54,6 @@ class TypesSpec extends Specification {
     }
   }
 
-  "JDBC_URL_t" should {
-    "accept jdbc:h2:mem:test_url" in {
-      JDBC_URL_t.validate(JsString("jdbc:h2:mem:test_url")).asOpt.isDefined must beTrue
-    }
-    "reject http://user:pw@scrupal.org/path?q=where#extra" in {
-      JDBC_URL_t.validate(JsString("http://user:pw@scrupal.org/path?q=where#extra")).asOpt.isDefined must beFalse
-    }
-  }
-
   "IPv4Address_t" should {
     "accept 1.2.3.4" in {
       IPv4Address_t.validate(JsString("1.2.3.4")).asOpt.isDefined must beTrue

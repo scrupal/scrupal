@@ -27,6 +27,3 @@ case class Profile(
   principal : Long
 ) extends Creatable {
 }
-
-trait ProfileComponent extends Component {
-}

@@ -17,6 +17,8 @@
 
 package scrupal
 
+import play.api.libs.json._
+
 /** The Module API to Scrupal.
   * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
   * is simply the "Core" module, this API provides essential everything needed to write Scrupal itself and any extension
@@ -27,12 +29,44 @@ package scrupal
   */
 package object api {
 
-  type Identifier = Long
-  type ModuleIdentifier = Symbol
-  type TypeIdentifier = Symbol
-  type EntityIdentifier = Symbol
-  type SiteIdentifier = Symbol
-  type FeatureIdentifier = Identifier
-  type InstanceIdentifier = Identifier
+  type Identifier = Symbol
+
+  implicit val Symbol_Format : Format[Symbol] = {
+    new Format[Symbol] {
+      def reads(json: JsValue) : JsResult[Symbol] = { JsSuccess(Symbol(json.asInstanceOf[JsString].value)) }
+      def writes(s: Symbol) : JsValue = JsString(s.name)
+    }
+  }
+
+  // implicit val Identifier_Format : Format[Identifier] = Symbol_Format
+
+  implicit val OptionSymbol_Format : Format[Option[Symbol]] = {
+    new Format[Option[Symbol]] {
+      def reads(json: JsValue) : JsResult[Option[Symbol]] = {
+        val defined = JsPath \ "defined"
+        defined.read[Boolean].reads(json).asOpt match {
+          case Some(b) =>
+            if (b) {
+              val value = JsPath \ "value"
+              value.read[String].reads(json).asOpt match {
+                case Some(str) => JsSuccess(Some(Symbol(str)))
+                case None => JsError(value,"Field not found")
+              }
+            } else {
+              JsSuccess(None)
+            }
+          case None => JsError(defined, "Field not found")
+        }
+      }
+      def writes(os: Option[Symbol]) : JsValue = {
+        JsObject(
+          Seq(
+            "defined" -> JsBoolean(os.isDefined),
+            "value" -> JsString(os.getOrElse('null).name)
+          )
+        )
+      }
+    }
+  }
 
 }

@@ -21,8 +21,9 @@ import scrupal.views.html
 import scrupal.utils.Pluralizer
 import scrupal.api._
 import scrupal.models.CoreFeatures
-import scala.Some
-import play.api.libs.json.JsString
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /** One line sentence description here.
   * Further description here.
@@ -32,55 +33,68 @@ object APIDoc extends ScrupalController  {
   val apidocs = CoreFeatures.RESTAPIDocumentation
 
   /** Provide an introduction to the API */
-  def introduction() = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
+  def introduction() = UserAction { implicit context: AnyUserContext =>
+    WithFeature(apidocs) {
       Ok(html.api.introduction(modules, types))
     }
   }
 
-  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>  WithFeature(apidocs) {
-    val (singular, description, module) = kind.toLowerCase() match {
-      case "sites" =>    ("site", "A site that Scrupal is configured to serve", "Core")
-      case "modules" =>  ("module", "A Scrupal Plug-in that extends it's functionality", "Core")
-      case "entities" => ("entity", "The kinds of entities that Scrupal is configured to serve", "Core")
-      case "types" =>    ("type", "The data types that Scrupal is configured to serve", "Core" )
-      case "instances" => ("instance", "The entity instances Scrupl is configured to serve", "Core")
-      case _ =>          (kind, "No further description available.", "Unknown")
+  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+    WithFeature(apidocs) {
+      val (singular, description, module) = kind.toLowerCase() match {
+        case "sites" =>    ("site", "A site that Scrupal is configured to serve", "Core")
+        case "modules" =>  ("module", "A Scrupal Plug-in that extends it's functionality", "Core")
+        case "entities" => ("entity", "The kinds of entities that Scrupal is configured to serve", "Core")
+        case "types" =>    ("type", "The data types that Scrupal is configured to serve", "Core" )
+        case "instances" => ("instance", "The entity instances Scrupl is configured to serve", "Core")
+        case _ =>          (kind, "No further description available.", "Unknown")
+      }
+
+      Ok(html.api.fetchAll(singular, Pluralizer.pluralize(singular), description, module))
     }
+  }
 
-    Ok(html.api.fetchAll(singular, Pluralizer.pluralize(singular), description, module))
-  }}
-
-  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
-    kind.toLowerCase match {
-      case "type" =>  Type(Symbol(id)) match {
-        case t: Some[Type] => Ok(html.api.fetchType(t.get))
-        case _ => NotFound("Type " + id, Seq("You mis-typed '" + id + "'?"))
-      }
-      case "module" => Module(Symbol(id)) match {
-        case m: Some[Module] => Ok(html.api.fetchModule(m.get))
-        case _ => NotFound("Module " + id, Seq("You mis-typed '" + id + "'?"))
-      }
-      case "site" => Site(Symbol(id)) match {
-        case s: Some[Site] => Ok(html.api.fetchSite(s.get))
-        case _ => NotFound("Site " + id, Seq("You mis-typed '" + id + "'?"))
-      }
-      case "entity" => Entity(Symbol(id)) match {
-        case e: Some[Entity] => Ok(html.api.fetchEntity(e.get))
-        case _ => NotFound("Entity " + id, Seq())
-      }
-      case _ => Entity(Symbol(kind)) match {
-        case e: Some[Entity] => {
-          val lid = id.toLong
-          context.schema.Instances.fetch(lid) map { instance: Instance =>
-            Ok(html.api.fetchInstance(lid, instance))
+  def fetch(kind: String, id: String) = UserAction.async { implicit context: AnyUserContext =>
+    AsyncWithFeature(apidocs) {
+      kind.toLowerCase match {
+        case "type" =>  Future {
+          Type(Symbol(id)) match {
+            case t: Some[Type] => Ok(html.api.fetchType(t.get))
+            case _ => NotFound("Type " + id, Seq("You mis-typed '" + id + "'?"))
           }
-        } getOrElse {
-          NotFound( "the " + kind + " " + id, Seq("the " + kind + " has not been created yet?"))
         }
-        case _ => NotFound("fetch of " + kind + " " + id, Seq("You mis-typed '" + kind + "'?") )
+        case "module" => Future {
+          Module(Symbol(id)) match {
+            case m: Some[Module] => Ok(html.api.fetchModule(m.get))
+            case _ => NotFound("Module " + id, Seq("You mis-typed '" + id + "'?"))
+          }
+        }
+        case "site" => Future {
+          Site(Symbol(id)) match {
+            case s: Some[Site] => Ok(html.api.fetchSite(s.get))
+            case _ => NotFound("Site " + id, Seq("You mis-typed '" + id + "'?"))
+          }
+        }
+        case "entity" => Future {
+          Entity(Symbol(id)) match {
+            case e: Some[Entity] => Ok(html.api.fetchEntity(e.get))
+            case _ => NotFound("Entity " + id, Seq())
+          }
+        }
+        case _ => Entity(Symbol(kind)) match {
+          case e: Some[Entity] => {
+            context.schema.instances.fetch(Symbol(id)) map { os: Option[Instance]=>
+              os match {
+                case Some(instance) => Ok(html.api.fetchInstance(Symbol(id), instance))
+                case None => NotFound("the " + kind + " " + id, Seq("the " + kind + " was not found"))
+              }
+            }
+          }
+          case _ => Future { NotFound("fetch of " + kind + " " + id, Seq("You mis-typed '" + kind + "'?") ) }
+        }
       }
     }
-  }}
+  }
 
   def createAll(kind: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented(apidocs, Some("Creation of " + kind + " not finished."))

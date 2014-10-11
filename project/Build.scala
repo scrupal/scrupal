@@ -15,11 +15,9 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-import org.apache.ivy.util.Checks
+import play.PlayScala
 import sbt._
 import sbt.Keys._
-
-import com.typesafe.sbt.SbtAtmos.atmosSettings
 
 
 /**
@@ -35,7 +33,7 @@ object BuildSettings
   val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
   val buildVersion = conf.getString("app.version")
 
-  val buildSettings = Seq (
+  val buildSettings : Seq[Def.Setting[_]] = Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     javacOptions ++= Seq(
       "-encoding", "utf8",
@@ -59,7 +57,7 @@ object BuildSettings
       "-Ywarn-adapted-args"
     ),
     //closureCompilerOptions ++= Seq("ecmascript5", "checkControlStructures", "checkTypes", "checkSymbols"),
-    scalaVersion    := "2.10.3",
+    scalaVersion    := "2.11.2",
     shellPrompt     := ShellPrompt.buildShellPrompt,
     version         := buildVersion
   )
@@ -91,30 +89,36 @@ object ShellPrompt
 }
 
 
-trait Resolvers
+trait Dependencies
 {
   // val scrupal_org_releases    = "Scrupal.org Releases" at "http://scrupal.github.org/mvn/releases"
-  val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
+  val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk/"
   val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
-//val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases"
+  val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases/"
+  val sonatype_snapshots      = "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+
 //val scala_lang              = "Scala Language" at "http://mvnrepository.com/artifact/org.scala-lang/"
 //val sbt_plugin_releases     = Resolver.url("SBT Plugin Releases",url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 //val geolocation             = "geolocation repository" at "http://blabluble.github.com/modules/releases/"
 
-  val all_resolvers           = Seq ( google_sedis  )
-}
+  val all_resolvers : Seq[MavenRepository] = Seq ( typesafe_releases, sonatype_releases, sonatype_snapshots, google_sedis  )
 
-trait Dependencies
-{
   // Databass, Caches, Data Storage stuff
   val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
-  val slick                   = "com.typesafe.slick"  %% "slick"                  % "1.0.1"
-  val h2                      = "com.h2database"      % "h2"                      % "1.3.173"
-  val postgresql              = "postgresql"          % "postgresql"              % "9.1-901.jdbc4"
-  val mongo                   = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.10.2"
+  val slick                   = "com.typesafe.slick"  %% "slick"                  % "2.1.0"
+  val reactivemongo            ="org.reactivemongo"   %% "reactivemongo"          % "0.10.5.0.akka23"
+  val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.10.5.0.akka23"
+  val reactivemongo_ext       = "org.reactivemongo"   %% "reactivemongo-extensions-json"  % "0.10.5.akka23-SNAPSHOT"
+  val play_jdbc               = "com.typesafe.play"   %% "play-jdbc"              % "2.3.4"
+  val play_cache              = "com.typesafe.play"   %% "play-cache"             % "2.3.4"
+  val play_filters            = "com.typesafe.play"   %% "filters-helpers"        % "2.3.4"
+  val play_test               = "com.typesafe.play"   %% "play-test"              % "2.3.4"
+  val play_docs               = "com.typesafe.play"   %% "play-docs"              % "2.3.4"
+  val play_ws                 = "com.typesafe.play"   %% "play-ws"                % "2.3.4"
+
 
   // WebJars based UI components
-  val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.2.0"
+  val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.3.0"
   val requirejs               = "org.webjars"         % "requirejs"               % "2.1.8"
   val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1"
   // val bootstrap               = "org.webjars"         % "bootstrap"               % "3.0.0"
@@ -126,28 +130,34 @@ trait Dependencies
   val fontawesome             = "org.webjars"         % "font-awesome"            % "3.2.1"
 
   // Hashing Algorithms
-  val pbkdf2                  = "io.github.nremond"   %% "pbkdf2-scala"           % "0.2"
+  val pbkdf2                  = "io.github.nremond"   %% "pbkdf2-scala"           % "0.4"
   val bcrypt                  = "org.mindrot"         % "jbcrypt"                 % "0.3m"
   val scrypt                  = "com.lambdaworks"     % "scrypt"                  % "1.4.0"
 
   // Miscellaneous
-  val mailer_plugin           = "com.typesafe"        %% "play-plugins-mailer"    % "2.2.0"
+  val mailer_plugin = "com.typesafe.play.plugins"      %% "play-plugins-mailer"    % "2.3.0"
 
   // Test Libraries
   val specs2                  = "org.specs2"          %% "specs2"                 % "2.1.1"       % "test"
 
-  // Typsafe Console Aspects
-  val trace_play              = "com.typesafe.atmos"  % "trace-play-2.2.0"        % "1.3.0"
-  val trace_akka              = "com.typesafe.atmos"  % "trace-akka-2.2.1_2.10"   % "1.3.1"
 
-
-//val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.9"
 //val icu4j                   = "com.ibm.icu"          % "icu4j"                  % "51.1"
 //val geolocation             =  "com.edulify"        %% "geolocation"            % "1.1.0"
 
+  val all_dependencies : Seq[ModuleID] = Seq(
+    play_cache, play_filters, play_test, play_docs, play_ws,
+    mailer_plugin,
+    play2_reactivemongo, reactivemongo_ext,
+    pbkdf2, bcrypt, scrypt,
+    webjars_play,
+    requirejs, requirejs_domready,  angularjs, angular_ui, angular_ui_bootstrap, angular_ui_router,
+    marked, fontawesome
+
+  )
+
 }
 
-object ScrupalBuild extends Build  with Resolvers with Dependencies {
+object ScrupalBuild extends Build with Dependencies {
 
   import BuildSettings._
 
@@ -167,34 +177,19 @@ object ScrupalBuild extends Build  with Resolvers with Dependencies {
     out
   }
 
-  lazy val scrupal = play.Project(
-    appName,
-    path = file("."),
-    settings = play.Project.playScalaSettings ++ atmosSettings ++ buildSettings ++ Seq (
+
+  lazy val scrupal = Project(appName, file("."))
+    .enablePlugins(PlayScala)
+    .settings(buildSettings ++
+    Seq(
       fork in (Test) := false,
       //requireJs += "scrupal.js",
       //requireJsShim += "scrupal.js",
       resolvers ++= all_resolvers,
       // playAssetsDirectories <+= baseDirectory / "foo",
-      libraryDependencies ++= Seq (
-        play.Keys.jdbc,
-        play.Keys.cache,
-        play.Keys.filters,
-        play.Keys.component("play-test"),
-        play.Keys.component("play-docs"),
-        specs2,
-        play_plugins_redis,
-        mailer_plugin,
-        slick,
-        h2,
-        mongo,
-        trace_play, trace_akka,
-        pbkdf2, bcrypt, scrypt,
-        webjars_play, requirejs, requirejs_domready,  angularjs, angular_ui, angular_ui_bootstrap,
-        angular_ui_router, marked, fontawesome
-      ),
+      libraryDependencies ++= all_dependencies,
       printClasspath <<= print_class_path
-    )
+    ):_*
     //    angularAssets map { f : File => playAssetsDirectories <+= f }
     //    ++
   )

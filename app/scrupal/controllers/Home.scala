@@ -20,14 +20,18 @@ package scrupal.controllers
 import play.api.mvc.Action
 import play.api.{Mode, Play, Routes}
 import play.api.Play.current
+import reactivemongo.bson.BSONObjectID
 import scrupal.views.html
-import scrupal.api.{WithFeature, InstanceIdentifier, Instance, Module}
+import scrupal.api.{WithFeature, Identifier, Instance, Module}
 import org.joda.time.Duration
 import com.typesafe.config.ConfigValue
 import scala.collection.immutable.TreeMap
 import java.io.File
 import play.api.libs.json.JsString
 import scrupal.models.{CoreFeatures, CoreModule}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
  * A controller to provide the Introduction To Scrupal content
@@ -36,24 +40,24 @@ import scrupal.models.{CoreFeatures, CoreModule}
 object Home extends ScrupalController {
 
   /** The home page */
-	def index = UserAction {
-    implicit context: AnyUserContext => {
-      context.site.siteIndex map {
-        case (sid: InstanceIdentifier) => {
-          context.schema.Instances.fetch(sid) map { instance: Instance =>
-            require(instance.entityId == 'Page)
-            val body = (instance.payload \ "body").asInstanceOf[JsString].value
-            Ok(html.page(instance.name.name, instance.description)(body))
+	def index = UserAction.async { implicit context: AnyUserContext => {
+      context.site.data.siteIndex map { sid: Identifier =>
+        context.schema.instances.fetch(sid) map { optional_instance: Option[Instance] =>
+          optional_instance match {
+            case Some(instance: Instance) =>
+              require(instance.entityId == 'Page)
+              val body = (instance.payload \ "body").asInstanceOf[JsString].value
+              Ok(html.page(instance.name.name, instance.description)(body))
+            case None =>
+              NotFound("the page entity with index #" + sid, Seq(
+                "you haven't completed initial configuration,",
+                "you deleted your Site (" + context.site.id.name + ") index,")
+              )
           }
-        } getOrElse {
-          NotFound( "the page entity with index #" + sid, Seq(
-            "you haven't completed initial configuration,",
-            "you deleted your Site (" + context.site.id.name + ") index," )
-          )
         }
       }
-    } getOrElse {
-      NotFound("the index for site '" + context.site.id.name + "'", Seq())
+    }.getOrElse {
+      Future { NotFound("the site's page index", Seq("there is a misconfiguration")) }
     }
   }
 
@@ -66,31 +70,36 @@ object Home extends ScrupalController {
     }
   }
 
-  def instanceById(kind:String, id: Long) = UserAction {
+  def instanceById(kind:String, id: String) = UserAction.async {
     implicit context: AnyUserContext => {
-      context.schema.Instances.fetch(id) map { instance: Instance =>
-        // FIXME: This has to learn how to render entities of any kind
-        require(instance.entityId == 'Page)
-        val body = (instance.payload \ "body").asInstanceOf[JsString].value
-        Ok(html.page(instance.name.name, instance.description)(body))
+      context.schema.instances.findById(BSONObjectID(id)) map { optional_instance: Option[Instance] =>
+        optional_instance match {
+          case Some(instance:Instance) =>
+            // FIXME: This has to learn how to render entities of any kind
+            require(instance.entityId == 'Page)
+            val body = (instance.payload \ "body").asInstanceOf[JsString].value
+            Ok(html.page(instance.name.name, instance.description)(body))
+          case _ =>
+            NotFound("the entity with id #" + id, Seq("you typed in the wrong id #?"))
+        }
       }
-    } getOrElse {
-      NotFound("the entity with id #" + id, Seq("you typed in the wrong id #?"))
     }
   }
 
-  def instanceByName(kind: String, name:String) = UserAction {
+  def instanceByName(kind: String, name:String) = UserAction.async {
     implicit context: AnyUserContext => {
-      context.schema.Instances.find(context.schema.Instances.ByName(Symbol(name))).headOption map {
-        case (instance: Instance) => {
-          // FIXME: This has to learn how to render entities of any kind
-          require(instance.entityId == 'Page)
-          val body = (instance.payload \ "body").asInstanceOf[JsString].value
-          Ok(html.page(instance.name.name, instance.description)(body))
+      context.schema.instances.fetch(Symbol(name)).map { optional_instance =>
+        optional_instance match {
+          case Some(instance: Instance) =>
+            // FIXME: This has to learn how to render entities of any kind
+            require(instance.entityId == 'Page)
+            val body = (instance.payload \ "body").asInstanceOf[JsString].value
+            Ok(html.page(instance.name.name, instance.description)(body))
+          case _ =>
+            NotFound("the entity instance with name '" + name + "'", Seq("you typed in the wrong id #?"))
+
         }
       }
-    } getOrElse {
-      NotFound("the entity instance with name '" + name + "'", Seq("you typed in the wrong id #?"))
     }
   }
 

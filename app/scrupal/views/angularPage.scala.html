@@ -1,10 +1,7 @@
-@(title: String, module: String = "scrupal")(initScript: Html)(content: Html)(implicit context : scrupal.controllers
-.Context)
-
+@(title: String, module: String = "scrupal")(initScript: play.twirl.api.Html)(content: Html)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
 @import scrupal.controllers.routes.Assets
-
-@defining[Html]( initScript += Html("<style type=\"text/css\">[ng\\:cloak], [ng-cloak], [data-ng-cloak], " +
+@defining[Html](Html(initScript.body + "<style type=\"text/css\">[ng\\:cloak], [ng-cloak], [data-ng-cloak], " +
     "[x-ng-cloak], .ng-cloak, .x-ng-cloak { display: none !important;}</style>")) { init: Html =>
 @html.basicPage(title) @{init}  {
 <body ng-cloak>

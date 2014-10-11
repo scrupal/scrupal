@@ -3,7 +3,7 @@
 @import play.api.libs.json.Json
 @html.markedPage("Fetch Site " + site.label) {
 # Site @site.label
-@site.description
+@site.data.description
 
 # Synopsis
 - *URI*: ```GET http:///api/site/@site.label```
@@ -14,6 +14,6 @@ returned from this call contains the necessary information about this site.
 
 # Result
 ```
-@Json.prettyPrint(site.toJson)
+@Json.prettyPrint(site.data.toJson)
 ```
 }

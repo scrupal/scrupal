@@ -17,33 +17,18 @@
 
 package scrupal.api
 
+import reactivemongo.api.DefaultDB
+
 import scala.collection.immutable.HashMap
 
 import play.api.{Configuration, Logger}
 import play.api.libs.json._
 
 import com.typesafe.config.ConfigRenderOptions
-import scala.slick.session.Session
 
 import scrupal.utils.{Version, Jsonic, Registry, Registrable}
-import scrupal.db.{Schema,Sketch}
+import scrupal.db.{DBContext, Schema}
 
-/** The essential, storable, information in a Module */
-case class EssentialModule(
-  override val id: ModuleIdentifier,
-  override val description: String,
-  version: Version,
-  obsoletes: Version,
-  enabled: Boolean
-  /* owner: String,
-  contact_name: String,
-  contact_url: String,
-  contact_email: String,
-  created: DateTime */
-) extends SymbolicDescribable with Registrable
-{
-
-}
 
 /** A modular plugin to Scrupal to extend its functionality.
   * A module is an object that provides information (data) and functionality (behavior) to Scrupal so that Scrupal can
@@ -64,13 +49,13 @@ case class EssentialModule(
   *                  incompatible with `version` (although, depending on the feature in question, some compatibility
   *                  may remain).
   */
-class Module(
-  id: ModuleIdentifier,
+case class Module(
+  id : Identifier,
   description: String,
   version: Version,
   obsoletes: Version,
-  enabled : Boolean = false
-) extends EssentialModule(id, description, version, obsoletes, enabled)  with Jsonic {
+  enabled: Boolean
+) extends Storable with Describable with Enablable with Registrable with Jsonic {
 
   /** A mapping of the Module's dependencies.
     * The dependencies map provides the version for each named module this module depends on. The default value lists
@@ -78,7 +63,7 @@ class Module(
     * modules should always depend on the latest version of Scrupal available at the time of their writing to ensure
     * the longest future lifespan before they become obsoleted.
     */
-  def dependencies : Map[ModuleIdentifier,Version] = HashMap('Core -> Version(0,1,0))
+  def dependencies : Map[Identifier,Version] = HashMap('Core -> Version(0,1,0))
 
   /** The set of data types this module defines.
     * There should be no duplicate types as there is overhead in managing them. Always prefer to depend on the module
@@ -117,9 +102,9 @@ class Module(
     * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
     * schemas.
     */
-  def schemas(sketch: Sketch)(implicit session: Session) : Seq[Schema] = Seq( )
+  def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( )
 
-  val moreDetailsURL = "http://modules.scrupal.org/doc/" + label
+  def moreDetailsURL = "http://modules.scrupal.org/doc/" + label
 
   /** Register this module with the registry of modules */
   Module.register(this)
@@ -138,7 +123,7 @@ class Module(
   }
 
   override def toJson : JsObject = {
-    val d  = Json.toJson( dependencies map { case (n:ModuleIdentifier, v:Version) => (n.name, v.toString)} )
+    val d  = Json.toJson( dependencies map { case (n:Identifier, v:Version) => (n.name, v.toString)} )
     val t = Json.toJson( types map { typ: Type => typ.label } )
     val e = Json.toJson  (handlers map { hdlr: HandlerFor[Event] => hdlr.category  + ":" + hdlr.label } )
     val s =  settings.underlying.root.render(ConfigRenderOptions.concise())
@@ -167,17 +152,20 @@ class Module(
   */
 object Module extends Registry[Module] {
 
+  implicit val Module_Format = Json.format[Module]
+
   override val registryName = "Modules"
   override val registrantsName = "module"
 
   private[scrupal] def processModules() : Unit = {
     // For each module ...
-    registrants foreach { case (name: ModuleIdentifier, mod: Module) =>
+    registrants foreach { case (name: Identifier, mod: Module) =>
 
       // For each type in the module ...
       mod.types foreach { case typ: Type =>
         // Touch the type by asking for it's id's length. This just makes sure it gets instantiated and thus registered
-        require(typ.id.name.length > 0)
+        val symbol: Symbol = typ.id
+        require(symbol.name.length > 0)
       }
       mod.features foreach { case feature: Feature =>
         // Touch the feature by asking for it's id's length. This just makes sure it gets instantiated & registered
@@ -189,22 +177,22 @@ object Module extends Registry[Module] {
     }
   }
 
-  private[scrupal] def installSchemas(sketch: Sketch) : Unit = {
+  private[scrupal] def installSchemas(implicit context: DBContext) : Unit = {
     // For each module ...
-    registrants foreach { case (name: ModuleIdentifier, mod: Module) =>
+    registrants foreach { case (name: Identifier, mod: Module) =>
       // In a database session ...
-      sketch.withSession { implicit session: Session =>
+      context.withDatabase { implicit db =>
         // For each schema ...
-        mod.schemas(sketch) foreach { schema: Schema =>
+        mod.schemas.foreach { schema: Schema =>
           // Create the schema
-          schema.create
+          schema.validate
         }
       }
     }
   }
 
-  implicit lazy val moduleWrites : Writes[Module] = new Writes[Module]  {
+/*  implicit lazy val moduleWrites : Writes[Module] = new Writes[Module]  {
     def writes(m: Module): JsValue = m.toJson
-  }
+  } */
 
 }

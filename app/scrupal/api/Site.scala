@@ -17,15 +17,22 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
-import scrupal.utils.{Jsonic, ConfigHelper, Registry, Registrable}
-import play.api.{Logger, Configuration}
-import scala.util.{Failure, Success, Try}
-import scala.slick.session.Session
-import scrupal.models.CoreModule
-import scrupal.db.{CoreSchema,Sketch}
 import scala.collection.mutable
-import play.api.libs.json.{Reads, Json, JsObject}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success, Try}
+
+import play.api.{Logger, Configuration}
+import play.api.libs.json.{Json, JsObject}
+
+import org.joda.time.DateTime
+
+import reactivemongo.api.DefaultDB
+
+import scrupal.utils.{Jsonic, Registry, Registrable}
+import scrupal.models.CoreModule
+import scrupal.db.{CoreSchema,DBContext}
 
 
 /** Information about one site that Scrupal is serving.
@@ -40,65 +47,54 @@ import play.api.libs.json.{Reads, Json, JsObject}
   * @param modified Modification time, optional
   * @param created Creation time, optional
   */
-case class EssentialSite(
+
+case class SiteData (
   override val id: Symbol,
-  override val description: String,
+  override val name: Identifier,
+  description: String,
   host: String,
-  siteIndex: Option[InstanceIdentifier] = None,
+  siteIndex: Option[Identifier] = None,
   requireHttps: Boolean = false,
-  override val enabled: Boolean = false,
+  enabled: Boolean = false,
   override val modified: Option[DateTime] = None,
   override val created: Option[DateTime] = None
-) extends SymbolicEnablableThing(id, description, enabled, modified, created)
-
-class Site (
-  override val id: Symbol,
-  override val description: String,
-  override val host: String,
-  override val siteIndex: Option[InstanceIdentifier] = None,
-  override val requireHttps: Boolean = false,
-  override val enabled: Boolean = false,
-  override val modified: Option[DateTime] = None,
-  override val created: Option[DateTime] = None,
-  val sketch: Option[Sketch] = None
-) extends EssentialSite(id, description, host, siteIndex, requireHttps, enabled,
-  modified, created) with Registrable with Jsonic {
-  def this(e: EssentialSite) =
-    this(e.id, e.description, e.host, e.siteIndex, e.requireHttps, e.enabled, e.modified, e.created, None)
-  def this(e: EssentialSite, sketch: Sketch) =
-    this(e.id, e.description, e.host, e.siteIndex, e.requireHttps, e.enabled, e.modified, e.created, Some(sketch))
+) extends EnablableThing with Jsonic {
 
   def toJson : JsObject = {
-    Json.obj()
+    SiteData.Format.writes(this).asInstanceOf[JsObject]
   }
 
   def fromJson(js: JsObject) = {
-
+    SiteData.Format.reads(js)
   }
+
+}
+
+object SiteData {
+  implicit val Format = Json.format[SiteData]
+
+}
+
+class Site(val data: SiteData, implicit val dbContext: DBContext) extends Registrable {
+
+  val id = data.id
 
   // TODO: Implement this with a DB query
   lazy val modules : Seq[Module] = Seq(CoreModule)
 
   def withCoreSchema[TBD]( f: (CoreSchema) => TBD) : TBD = {
-    sketch map {
-      sk: Sketch => sk.withSession[TBD]  {
-        implicit session: Session => {
-          val schema = new CoreSchema(sk)
-          f(schema)
-        }
-      }
-    }
-  }.getOrElse { throw new Exception("Expected Site to have a Sketch") }
+    val schema = new CoreSchema(dbContext)
+    f(schema)
+  }
+
 }
 
+object Site extends Registry[Site] {
 
-object Site extends Registry[Site]{
+  def apply(data: SiteData, dbc: DBContext) = new Site(data, dbc)
 
   val registrantsName: String = "site"
   val registryName: String = "Sites"
-
-  def apply(esite: EssentialSite) = new Site(esite)
-  def apply(esite: EssentialSite, sketch: Sketch) = new Site(esite, sketch)
 
   /** Load the Sites from configuration
     * Site loading is based on the Play Database configuration. There should be a one-to-one correspondence between a
@@ -109,26 +105,21 @@ object Site extends Registry[Site]{
   def load(config: Configuration) : Map[String, Site] = {
     Try {
       val result: mutable.Map[String, Site] = mutable.Map()
-      ConfigHelper(config).forEachDB {
-        case (db: String, dbConfig: Configuration) => {
-          val sketch = Sketch(dbConfig)
-          sketch.withSession { implicit session: Session =>
-            val url = dbConfig.getString("url").getOrElse("")
-            Logger.debug("Found valid DB Config named '" + db + "' with  URL '" + url + "': attempting load." )
-            val schema = new CoreSchema(sketch)
-            schema.validate match {
-              case Success(true) =>
-                for (s <- schema.Sites.findAll) {
-                  Logger.debug("Loading site '" + s.id.name + "' for host " + s.host + ", " +"enabled: " + s.enabled)
-                  result.put(s.host, Site(s, sketch) )
-                }
-              case Success(false) =>
-                Logger.warn("Attempt to validate schema for '" + url + "' failed.")
-              case Failure(x) =>
-                Logger.warn("Attempt to validate schema for '" + url + "' failed.", x)
+      val context = DBContext.fromConfiguration()
+      val schema = new CoreSchema(context)
+      context.withDatabase { db =>
+        schema.validate match {
+          case Success(true) =>
+            val sites = Await.result(schema.sites.fetchAll, 5.seconds)
+            for (s <- sites) {
+              Logger.debug("Loading site '" + s.id.name + "' for host " + s.host + ", " +"enabled: " + s.enabled)
+              result.put(s.host, Site(s, context))
             }
-            false
-          }
+          case Success(false) =>
+            Logger.warn("Attempt to validate schema for '" + db.name + "' failed.")
+          case Failure(x) =>
+            Logger.warn("Attempt to validate schema for '" + db.name + "' failed.", x)
+
         }
       }
       Map(result.toSeq:_*)

@@ -16,10 +16,15 @@
  **********************************************************************************************************************/
 package scrupal.db
 
+import java.util.concurrent.TimeUnit
+
 import org.specs2.mutable.Specification
 import scrupal.utils.Icons
-import org.joda.time.{Duration, DateTime}
+import org.joda.time.DateTime
 import scrupal.fakes.{WithFakeScrupal}
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * One line sentence description here.
@@ -32,7 +37,7 @@ class AlertSpec extends Specification
 	  val t :DateTime =  DateTime.now().plusDays(1)
 
 		"construct with one argument and give sane results" in {
-			val alert =  new Alert( 'Alert, "Alert", "<span>Note Message</span>" )
+			val alert =  new Alert( 'Alert, "Alert", "<span>Note Message</span>", AlertKind.Note )
 			alert.message.toString must beEqualTo("<span>Note Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Note)
 			alert.iconKind must beEqualTo(Icons.info)
@@ -48,7 +53,7 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Danger!")
 		}
 		"construct with three arguments and give sane results" in {
-			val alert = Alert('Alert, "Alert", "<span>Warning Message</span>", AlertKind.Warning,
+			val alert = Alert('Alert, 'Alert, "Alert", "<span>Warning Message</span>", AlertKind.Warning,
         AlertKind.toIcon(AlertKind.Warning), AlertKind.toPrefix(AlertKind.Warning),
         AlertKind.toCss(AlertKind.Warning), t )
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
@@ -59,7 +64,7 @@ class AlertSpec extends Specification
 			alert.expires must beEqualTo( t)
 		}
 		"construct with four arguments and give sane results" in {
-			val alert = Alert('Alert, "Alert", "<span>Caution Message</span>", AlertKind.Caution,
+			val alert = Alert('Alert, 'Alert, "Alert", "<span>Caution Message</span>", AlertKind.Caution,
         Icons.align_center, "Alignment!", "", new DateTime(0))
 			alert.message.toString must beEqualTo("<span>Caution Message</span>")
 			alert.alertKind must beEqualTo(AlertKind.Caution)
@@ -68,21 +73,19 @@ class AlertSpec extends Specification
 			alert.prefix must beEqualTo("Alignment!")
 		}
 		"produce correct icon html" in {
-			val alert = new Alert('A, "A", "<span>Html Message</span>")
+			val alert = new Alert('A, "A", "<span>Html Message</span>", AlertKind.Note)
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
     "save to and fetch from the DB" in  new WithFakeScrupal {
       withCoreSchema { schema: CoreSchema =>
         import schema._
-        val a1 = Alerts.insert(new Alert('foo, "Alert", "Message" ))
-        a1 must beGreaterThan(0L)
-        val a2 = Alerts.fetch(a1).get
+        val a1 = new Alert('foo, "Alert", "Message", AlertKind.Warning )
+        val fa1 = alerts.insert(a1)
+        Await.result(fa1,Duration(1,TimeUnit.SECONDS)).ok must beTrue
+        val a2 = Await.result(alerts.fetch('foo),Duration(1,TimeUnit.SECONDS)).get
         val saved_time = a2.expires
-        a2.id.isDefined must beTrue
-        a1 must beEqualTo(a2.id.get)
-        Alerts.renew(a1, Duration.standardMinutes(30))(session)
-        val a3 = Alerts.fetch(a1).get
-        a3.expires.isAfter(saved_time.plusMinutes(29))  must beTrue
+        a2.id must beEqualTo('foo)
+        a1.id must beEqualTo('foo)
       }
     }
 	}

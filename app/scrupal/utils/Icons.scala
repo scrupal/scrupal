@@ -17,7 +17,8 @@
 
 package scrupal.utils
 
-import play.api.templates.Html
+import play.api.libs.json._
+import play.twirl.api.Html
 
 /**
  * Enumeration of icons available in Scrupal.
@@ -82,17 +83,8 @@ object Icons extends Enumeration
 
   def html(kind: Icons) : Html = Html("<i class=\"" + name(kind) + "\"></i>")
 
-  /*
-  implicit val iconsReader : Reads[Icons] = new Reads[Icons] {
-    def reads(jsValue: JsValue) : json.JsResult[Icons] = {
-      (jsValue \ "alert_kind").validate[String].map { s => Icons.withName(s) }
-    }
+  implicit object AlertKind_Format extends Format[Icons.Value] {
+    def reads(json: JsValue) : JsResult[Icons.Value] = { JsSuccess(Icons.Value(json.asInstanceOf[JsString].value)) }
+    def writes(a: Icons.Value) : JsValue = JsString(a.toString)
   }
-
-  implicit val iconsWriter : Writes[Icons] = new Writes[Icons] {
-    def writes(alert: Icons) : JsValue = JsString(alert.toString)
-  }
-
-  implicit val consFormatter : Format[Icons] = Format(iconsReader, iconsWriter)
-  */
 }

@@ -25,11 +25,9 @@ import scrupal.utils._
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsString
-import scala.Some
 import play.api.data.validation.ValidationError
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
-import play.api.libs.json
 
 
 /** A trait to define the validate method for objects that can validate a JsValue */
@@ -84,30 +82,20 @@ trait ObjectValidator {
   }
 }
 
-case class EssentialType (
-  override val id : TypeIdentifier,
-  override val description: String,
-  moduleId: ModuleIdentifier
-) extends SymbolicDescribable with Registrable
-
 /** A generic Type used as a placeholder for subclasses that compose types.
   * Note that the name of the Type is a Symbol. Symbols are interned so there is only ever one copy of the name of
   * the type. This is important because type linkage is done by indirectly referencing the name, not the actual type
   * object and name reference equality is the same as type equality.  Scrupal also interns the Type objects that
   * modules provide so they can be looked up by name quickly. This allows inter-module integration without sharing
   * code and provides rapid determination of type equality.
-  * @param id
-  * @param description
-  * @param moduleId
   */
-abstract class Type (
-  id : TypeIdentifier,
-  description: String,
-  moduleId: ModuleIdentifier
-) extends EssentialType(id, description, moduleId) with ValueValidator  with Jsonic {
+abstract class Type extends Describable with Registrable with ValueValidator  with Jsonic {
+  val moduleId: Identifier
   require(!label.isEmpty)
   require(!description.isEmpty)
   require(!moduleId.name.isEmpty)
+
+  def collectionName = "types"
 
   /** By default the validate method returns an error
     * @param value The JSON value to be validated
@@ -124,7 +112,7 @@ abstract class Type (
   lazy val plural = Pluralizer.pluralize(label)
 
   /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
-  def kind :Symbol = Symbol(super.getClass.getSimpleName.replace("$",""))
+  def kind : Symbol = Symbol(super.getClass.getSimpleName.replace("$","_"))
 
   override def toJson : JsObject = ???
   override def fromJson( js: JsObject ) = ???
@@ -134,6 +122,8 @@ abstract class Type (
 
 }
 
+case class SimpleType(override val id: Identifier, description: String, moduleId: Identifier) extends Type
+
 /** The type for indirectly referencing another value of a specific type.
   * By default, all nested types are stored in JSON by value. In this way, complex data structures can be created and
   * validated by composing the various subclasses of Type --- with one exception, this `ReferenceType` class. This
@@ -142,12 +132,12 @@ abstract class Type (
   * @param description A description of the reference type
   * @param typ The type of the value to which the this object refers
   */
-class ReferenceType (
-  id : TypeIdentifier,
+case class ReferenceType (
+  override val id : Identifier,
   description: String,
-  moduleId: ModuleIdentifier,
-  val typ : Type
-) extends Type(id, description, moduleId) {
+  moduleId: Identifier,
+  typ : Type
+) extends Type {
   override def validate(value : JsValue) = {
     value match {
       case v : JsObject => {
@@ -182,13 +172,13 @@ class ReferenceType (
   * @param regex The regular expression that specifies legal values for the string type
   * @param maxLen The maximum length of this string type
   */
-class StringType (
-  id : TypeIdentifier,
+case class StringType (
+  override val id : Identifier,
   description : String,
-  moduleId: ModuleIdentifier,
-  val regex : Regex,
-  val maxLen : Int = Int.MaxValue
-) extends Type(id, description, moduleId) {
+  moduleId: Identifier,
+  regex : Regex,
+  maxLen : Int = Int.MaxValue
+) extends Type {
   require(maxLen >= 0)
 
   override def validate(value : JsValue) = {
@@ -220,13 +210,13 @@ class StringType (
   * @param min
   * @param max
   */
-class RangeType (
-  id : TypeIdentifier,
+case class RangeType (
+  override val id : Identifier,
   description : String,
-  moduleId: ModuleIdentifier,
-  val min : Long = Int.MinValue,
-  val max : Long = Int.MaxValue
-) extends Type(id, description, moduleId) {
+  moduleId: Identifier,
+  min : Long = Int.MinValue,
+  max : Long = Int.MaxValue
+) extends Type {
 
   override def validate(value : JsValue) = {
     value match {
@@ -257,13 +247,13 @@ class RangeType (
   * @param min
   * @param max
   */
-class RealType (
-  id : TypeIdentifier,
+case class RealType (
+  override val id : Identifier,
   description : String,
-  moduleId: ModuleIdentifier,
-  val min : Double = Double.MinValue,
-  val max : Double = Double.MaxValue
-) extends Type(id, description, moduleId) {
+  moduleId: Identifier,
+  min : Double = Double.MinValue,
+  max : Double = Double.MaxValue
+) extends Type {
 
   override def validate(value : JsValue) = {
     value match {
@@ -295,13 +285,13 @@ class RealType (
   * @param mime
   * @param maxLen
   */
-class BLOBType  (
-  id : TypeIdentifier,
+case class BLOBType  (
+  override val id : Identifier,
   description : String,
-  moduleId: ModuleIdentifier,
-  val mime : String,
-  val maxLen : Long = Long.MaxValue
-) extends Type(id, description, moduleId) {
+  moduleId: Identifier,
+  mime : String,
+  maxLen : Long = Long.MaxValue
+) extends Type {
   assert(maxLen >= 0)
   assert(mime.contains("/"))
 
@@ -345,12 +335,12 @@ class BLOBType  (
 /** An Enum type allows a selection of one enumerator from a list of enumerators.
   * Each enumerator is assigned an integer value.
   */
-class EnumType  (
-  id : TypeIdentifier,
+case class EnumType  (
+  override val id : Identifier,
   description : String,
-  moduleId: ModuleIdentifier,
-  val enumerators : HashMap[Symbol, Int]
-) extends Type(id, description, moduleId) {
+  moduleId: Identifier,
+  enumerators : HashMap[Symbol, Int]
+) extends Type {
   require(!enumerators.isEmpty)
 
   override def validate(value : JsValue) = {
@@ -379,17 +369,10 @@ class EnumType  (
 }
 
 /** Abstract base class of Types that refer to another Type that is the element type of the compound type
-  *
-  * @param id
-  * @param description
-  * @param elemType
   */
-abstract class CompoundType (
-  id : TypeIdentifier,
-  description : String,
-  moduleId: ModuleIdentifier,
-  val elemType : Type
-) extends Type(id, description, moduleId)
+trait CompoundType extends Type {
+  def elemType: Type
+}
 
 /** A List type allows a non-exclusive list of elements of other types to be constructed
   *
@@ -397,12 +380,12 @@ abstract class CompoundType (
   * @param description
   * @param elemType
   */
-class ListType  (
-  override val id : TypeIdentifier,
-  override val description : String,
-  override val moduleId: ModuleIdentifier,
-  override val elemType : Type
-) extends CompoundType( id, description, moduleId, elemType ) with ArrayValidator {
+case class ListType  (
+  override val id : Identifier,
+  description : String,
+  moduleId: Identifier,
+  elemType : Type
+) extends CompoundType with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -429,12 +412,12 @@ class ListType  (
   * @param description
   * @param elemType
   */
-class SetType  (
-  override val id : TypeIdentifier,
-  override val description : String,
-  override val moduleId: ModuleIdentifier,
-  override val elemType : Type
-) extends CompoundType( id, description, moduleId, elemType) with ArrayValidator {
+case class SetType  (
+  override val id : Identifier,
+  description : String,
+  moduleId: Identifier,
+  elemType : Type
+) extends CompoundType  with ArrayValidator {
 
   override def validate(value : JsValue) = {
     value match {
@@ -466,12 +449,12 @@ class SetType  (
   * @param description
   * @param elemType
   */
-class MapType  (
-  override val id : TypeIdentifier,
-  override val description : String,
-  override val moduleId: ModuleIdentifier,
-  override val elemType : Type
-) extends CompoundType( id, description, moduleId, elemType) {
+case class MapType  (
+  override val id : Identifier,
+  description : String,
+  moduleId: Identifier,
+  elemType : Type
+) extends CompoundType {
 
   override def validate(value : JsValue) = {
     value match {
@@ -514,12 +497,12 @@ class MapType  (
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type
   */
-class BundleType (
-  override val id : TypeIdentifier,
-  override val description : String,
-  override val moduleId: ModuleIdentifier,
+case class BundleType (
+  override val id : Identifier,
+  description : String,
+  moduleId: Identifier,
   fields : HashMap[Symbol, Type]
-) extends Type( id, description, moduleId) with ObjectValidator {
+) extends Type with ObjectValidator {
   require(!fields.isEmpty)
 
   override def validate(value: JsValue) : JsResult[Boolean] = {
@@ -568,8 +551,12 @@ object Type extends Registry[Type] {
   def isKindOf(name: Symbol, kind: Symbol) : Boolean = registrants.getOrElse(name,NotAType).kind == kind
 
   lazy val CoreModuleId : Symbol = 'Core
-  lazy val NotAType = new Type('NotAType, "Not A Type", CoreModuleId) { override val kind = 'Cruel }
-
+  lazy val NotAType = new Type {
+    override val id = 'NotAType
+    override val kind = 'Cruel
+    val description = "Not A Type"
+    val moduleId = CoreModuleId
+  }
   lazy val EmptyBundle = new BundleType('EmptyBundle, "An Empty Bundle Type", CoreModuleId, HashMap())
 
   /** Retrieve the module in which a Type was defined
@@ -577,9 +564,9 @@ object Type extends Registry[Type] {
     * @param id The Symbol for the type to look up
     * @return Some[Module] if the ```id``` was found, None otherwise
     */
-  def moduleOf(id: TypeIdentifier) : Option[Module] = {
+  def moduleOf(id: Identifier) : Option[Module] = {
     registrants.get(id) match {
-      case Some(ty) => Module(ty.moduleId)
+      case Some(ty:Type) => Module(ty.moduleId)
       case _ => None
     }
   }

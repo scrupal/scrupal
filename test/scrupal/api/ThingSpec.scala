@@ -28,14 +28,14 @@ class ThingSpec extends Specification {
   case class TestCreatable(
     override val id: Symbol = Symbol(""),
     override val created: Option[DateTime] = None
-  ) extends SymbolicCreatable {
+  ) extends Creatable with Storable {
     def blah : Int = 3
   }
 
   case class Identified[FOO](it: FOO,
-    override val id: Option[Long],
+    override val id: Symbol,
     override val created: Option[DateTime] = Some(DateTime.now())
-  ) extends NumericCreatable {
+  ) extends Creatable with Storable {
     def apply() : FOO = it
   }
 
@@ -43,7 +43,7 @@ class ThingSpec extends Specification {
     "report existence with both id and timestamp" in {
       val t = TestCreatable()
       t.exists must beFalse
-      val o = new Identified(TestCreatable(),Some(1))
+      val o = new Identified(TestCreatable(),'id)
       o.exists must beTrue
       o().blah must beEqualTo(3)
     }
@@ -73,15 +73,16 @@ class ThingSpec extends Specification {
     }
   }
 
-  case class TestNumericThing(
+  case class TestThing(
+    override val id: Symbol,
     override val name: Symbol,
     override val description: String
-  ) extends NumericThing(name, description) {
+  ) extends Thing {
   }
 
   "Thing" should {
     "instantiate with simple arguments" in {
-      val t = TestNumericThing('test, "Testing")
+      val t = TestThing('test, 'test, "Testing")
       t.isNamed && t.isDescribed must beTrue
     }
   }

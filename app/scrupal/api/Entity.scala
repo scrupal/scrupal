@@ -25,13 +25,6 @@ import scrupal.utils.{Jsonic, Registry, Registrable}
 import scrupal.controllers.ScrupalController
 import play.api.mvc.Action
 
-
-case class EssentialEntity(
-  id: Symbol,
-  val description: String,
-  val instanceTypeId: TypeIdentifier
-) extends SymbolicDescribable
-
 case class StatusResult[TYPE](result: JsResult[TYPE], status: Int = Status.OK)
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal
@@ -41,13 +34,13 @@ case class StatusResult[TYPE](result: JsResult[TYPE], status: Int = Status.OK)
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   * There, a
   */
-abstract class Entity(
-  override val id: Symbol,
-  override val description: String,
-  override val instanceTypeId: TypeIdentifier
-) extends EssentialEntity(id, description, instanceTypeId) with ScrupalController with Registrable with Jsonic {
+case class Entity(
+  id : Identifier,
+  description: String,
+  instanceTypeId: Identifier
+) extends Storable with Describable with ScrupalController with Registrable with Jsonic {
 
-  /** Obtain the type of this Entity's Instance bundle. */
+/** Obtain the type of this Entity's Instance bundle. */
   def instanceType : Type = Type(instanceTypeId).getOrElse(Type.NotAType)
 
   /** Entity Instances must be defined as a Bundle. Enforce that here */
@@ -122,6 +115,7 @@ object Entity extends Registry[Entity] {
   val registrantsName: String = "entity"
   val registryName: String = "Entities"
 
+  implicit val Entity_Format = Json.format[Entity]
 }
 
 

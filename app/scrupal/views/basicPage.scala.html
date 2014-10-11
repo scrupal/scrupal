@@ -1,5 +1,4 @@
 @(title: String)(headSuffix: Html)(body: Html)(implicit context : scrupal.controllers.Context)
-@import scrupal.controllers.routes.Assets
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="@context.description">
-    <link rel="shortcut icon" type="image/x-icon" href="@Assets.favicon()">
-    <link rel="stylesheet" href="@Assets.theme(context.themeProvider,context.themeName)" media="screen">
-    <link rel="stylesheet" href="@Assets.css( "font-awesome" )" media="screen">
-    <link rel="stylesheet" href="@Assets.css_s( "scrupal" )" media="screen">
+    <link rel="shortcut icon" type="image/x-icon" href="@scrupal.controllers.routes.Assets.favicon()">
+    <link rel="stylesheet" href="@scrupal.controllers.routes.Assets.theme(context.themeProvider,context.themeName)" media="screen">
+    <link rel="stylesheet" href="@scrupal.controllers.routes.Assets.css( "font-awesome" )" media="screen">
+    <link rel="stylesheet" href="@scrupal.controllers.routes.Assets.css_s( "scrupal" )" media="screen">
     @headSuffix
 </head>
 @body

@@ -60,7 +60,7 @@ object Global extends GlobalSettings
     var sites : Map[String,Site] = Map[String,Site]()
   }
 
-  val Copyright = "2013 viritude llc"
+  val Copyright = "2013, 2014 viritude llc"
 
 
   /** Simple utility to determine if we are considered configured or not.

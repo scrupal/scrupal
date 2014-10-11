@@ -1,7 +1,7 @@
 /**********************************************************************************************************************
  * This file is part of Scrupal a Web Application Framework.                                                          *
  *                                                                                                                    *
- * Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.                                            *
+ * Copyright (c) 2014, Reid Spencer and viritude llc. All Rights Reserved.                                            *
  *                                                                                                                    *
  * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
  * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
@@ -17,30 +17,13 @@
 
 package scrupal.db
 
-import org.specs2.mutable.Specification
-import scrupal.fakes.WithFakeScrupal
+import reactivemongo.api.FailoverStrategy
 
-/** One line sentence description here.
-  * Further description here.
-  */
-class CoreSchemaSpec extends Specification {
+import scala.concurrent.duration._
 
-  "CoreSchema" should {
-    "Accumulate table names correctly" in new WithFakeScrupal {
-      withCoreSchema { schema =>
-        schema.collectionNames.contains("instances") must beTrue
-        schema.collectionNames.contains("entities") must beTrue
-        schema.collectionNames.contains("modules") must beTrue
-        schema.collectionNames.contains("sites") must beTrue
-        schema.collectionNames.contains("alerts") must beTrue
-      }
-    }
+/**
+ * Created by reidspencer on 10/8/14.
+ */
+object ScrupalFailoverStrategy extends FailoverStrategy(initialDelay=1.seconds, retries=3, delayFactor = { i => Math.log10(i) } ) {
 
-    "Generate DDL SQL For Each Core Table" in new WithFakeScrupal {
-      withCoreSchema { implicit schema =>
-        // TODO: Finish implementing
-        success
-      }
-    }
-  }
 }

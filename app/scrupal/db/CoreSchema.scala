@@ -17,64 +17,72 @@
 
 package scrupal.db
 
-import scala.slick.lifted.DDL
-import scala.slick.session.Session
-import scala.slick.jdbc.meta.MTable
-
+import reactivemongo.api.DB
+import reactivemongo.bson.BSONObjectID
+import reactivemongo.core.commands.{LastError}
+import reactivemongo.extensions.json.dao.JsonDao
 import scrupal.models.CoreModule
-import scrupal.api.{Entity, Type}
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import scrupal.api._
+
 
 /**
  * The basic schema for Scrupal. This is composed by merging together the various Components.
  */
-class CoreSchema(sketch: Sketch)(implicit session: Session) extends Schema (sketch)
-  with ITEMSComponent with AAAComponent  with NotificationComponent
-{
+class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
-  // This is where the magic happens :)
-  import profile.simple._
+  case class ModuleDao(db: DB) extends JsonDao[Module,BSONObjectID](db,"modules") with DataAccessObject[Module]
+  case class SiteDao(db: DB) extends JsonDao[SiteData,BSONObjectID](db,"sites") with DataAccessObject[SiteData]
+  case class EntityDao(db: DB) extends JsonDao[Entity,BSONObjectID](db,"entities") with DataAccessObject[Entity]
+  case class InstanceDao(db: DB) extends JsonDao[Instance,BSONObjectID](db,"instances") with DataAccessObject[Instance]
+  // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
+  // case class TokenDao(db: DB) extends JsonDao[String,BSONObjectID](db,"tokens") with DataAccessObject[String]
+  case class AlertDao(db: DB) extends JsonDao[Alert,BSONObjectID](db,"alerts") with DataAccessObject[Alert]
 
-  // Super class Schema requires us to provide the DDL from our tables
-  override val ddl : DDL = {
-    coreDDL ++ aaaDDL ++ notificationDDL
+  val modules = dbc.withDatabase { db => new ModuleDao(db) }
+  val sites = dbc.withDatabase { db => new SiteDao(db) }
+  val entities = dbc.withDatabase { db => new EntityDao(db) }
+  val instances = dbc.withDatabase { db => new InstanceDao(db) }
+  // val aliases = dbc.withDatabase { db => new AliasDao(db) }
+  // val tokens = dbc.withDatabase { db => new TokenDao(db) }
+  val alerts = dbc.withDatabase { db => new AlertDao(db) }
+
+
+  def daos : Seq[JsonDao[_,BSONObjectID] with DataAccessObject[_]] = {
+    Seq( modules, sites, entities, instances, /* aliases, tokens, */ alerts )
   }
 
-  // Tables In This Schema
-  val CoreTables = List(Types, Modules, Sites, Entities, Instances)
-  val UserTables = List(Principals, Handles, Tokens )
-  val NotificationTables = List( Alerts )
-
-  val tableNames : Seq[String] =
-    (for (t <- CoreTables) yield t.tableName) :::
-    (for (t <- UserTables) yield t.tableName ) :::
-    (for (t <- NotificationTables) yield t.tableName)
-
-  override def validateTables( tables: Map[String,MTable] )(implicit session: Session) : Boolean = {
-    // Simply validating that each of the table names we expect exists is sufficient for now
-    val meta_tables_scan_results =
-      for (tname: String <- tableNames )
-      yield tables.contains(tname)
-    val num_in_meta_tables = meta_tables_scan_results.count { b: Boolean => b }
-    num_in_meta_tables == tableNames.size
+  def validateDao(dao: JsonDao[_,BSONObjectID] with DataAccessObject[_]) : Boolean = {
+    dao.collection.name match {
+      case "modules" => true
+      case "sites" => true
+      case "entities" => true
+      case "instances" => true
+      case "principals" => true
+      case "aliases" => true
+      case "tokens" => true
+      case "alerts" => true
+      case _ => false
+    }
   }
 
-  def createCoreTables(implicit session: Session) : Unit = {
-    val ddl: DDL = Instances.ddl ++ Types.ddl ++ Entities.ddl ++ Modules.ddl ++ Sites.ddl
-    ddl.create
-  }
-
-  override def create(implicit session: Session): Unit = {
+  override def create(implicit context: DBContext): Future[Seq[LastError]] = {
     // First, call our super class to install our schema
-    super.create
+    val futures = super.create
 
     // First, install the CoreModule itself
-    Modules.insert(CoreModule)
+    val f1 = modules.insert(CoreModule)
 
     // Now, install all the CoreModule's types and entities
-    CoreModule.types foreach { ty : Type => Types.insert( ty ) }
-    CoreModule.entities foreach { en : Entity => Entities.insert( en ) }
+    // val f2 = for (ty <- CoreModule.types) yield { types.insert( ty ) }
+    val f3 = for (en <- CoreModule.entities) yield { entities.insert( en ) }
 
-    // That's it!
+    val combined = Future sequence (Seq(f1)  ++ f3)
+
+    for (f <- futures; c <- combined) yield { f ++ c }
   }
 
 }

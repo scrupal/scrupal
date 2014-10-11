@@ -32,12 +32,14 @@ object API extends ScrupalController  with RichJsonResults {
   def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" =>    Ok(Json.arr("scrupal.org", "scrupal.com"))
-        case "modules" =>  Ok(Json.toJson(moduleNames))
+        case "sites" => Ok(Json.arr("scrupal.org", "scrupal.com"))
+        case "modules" => Ok(Json.toJson(moduleNames))
         case "entities" => Ok(Json.arr("One", "Two"))
-        case "types" =>    Ok(Json.toJson(typeNames))
-        case "users" =>    Ok(Json.arr("One", "Two", "Three"))
-        case _ => {        NotFound(JsString(kind))  }
+        case "types" => Ok(Json.toJson(typeNames))
+        case "users" => Ok(Json.arr("One", "Two", "Three"))
+        case _ => {
+          NotFound(JsString(kind))
+        }
       }
     }
   }
@@ -51,21 +53,23 @@ object API extends ScrupalController  with RichJsonResults {
   def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "site" =>    Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-        case "module" =>   {
+        case "site" => Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
+        case "module" => {
           Module(Symbol(id)) match {
-            case Some(m:Module) => Ok(m.toJson)
+            case Some(m: Module) => Ok(m.toJson)
             case _ => NotFound(Json.obj())
           }
         }
-        case "entity" => Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-        case "bundle" => Ok(Json.obj( "name" -> id))
-        case "trait" =>   Ok(Json.obj( "name" -> id, "description" -> JsString("Description of " + id )))
-        case "type" =>    Type(Symbol(id)) match {
-          case Some(t:Type) => Ok(t.toJson)
+        case "entity" => Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
+        case "bundle" => Ok(Json.obj("name" -> id))
+        case "trait" => Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
+        case "type" => Type(Symbol(id)) match {
+          case Some(t: Type) => Ok(t.toJson)
           case _ => NotFound(JsString("type " + id))
         }
-        case _ => {        NotFound(JsString(kind + " " + id)) }
+        case _ => {
+          NotFound(JsString(kind + " " + id))
+        }
       }
     }
   }
@@ -73,12 +77,12 @@ object API extends ScrupalController  with RichJsonResults {
   def createAll(kind: String) = UserAction { implicit context: AnyUserContext =>
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" =>    NotImplemented(JsString("Creation of " + kind))
-        case "modules" =>  NotImplemented(JsString("Creation of " + kind))
+        case "sites" => NotImplemented(JsString("Creation of " + kind))
+        case "modules" => NotImplemented(JsString("Creation of " + kind))
         case "entities" => NotImplemented(JsString("Creation of " + kind))
-        case "traits" =>   NotImplemented(JsString("Creation of " + kind))
-        case "types" =>    NotImplemented(JsString("Creation of " + kind))
-        case _ => {        NotImplemented(JsString("Creation of " + kind))  }
+        case "traits" => NotImplemented(JsString("Creation of " + kind))
+        case "types" => NotImplemented(JsString("Creation of " + kind))
+        case _ => NotImplemented(JsString("Creation of " + kind))
       }
     }
   }
@@ -86,12 +90,14 @@ object API extends ScrupalController  with RichJsonResults {
   def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "modules" =>  NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "sites" => NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "modules" => NotImplemented(JsString("Creation of " + kind + " " + id))
         case "entities" => NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "traits" =>   NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "types" =>    NotImplemented(JsString("Creation of " + kind + " " + id))
-        case _ => {        NotImplemented(JsString("Creation of " + kind + " " + id))  }
+        case "traits" => NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "types" => NotImplemented(JsString("Creation of " + kind + " " + id))
+        case _ => {
+          NotImplemented(JsString("Creation of " + kind + " " + id))
+        }
       }
     }
   }
@@ -99,12 +105,14 @@ object API extends ScrupalController  with RichJsonResults {
   def deleteAll(kind: String) = UserAction { implicit requiest =>
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" =>    NotImplemented(JsString("Deletion of all " + kind))
-        case "modules" =>  NotImplemented(JsString("Deletion of all " + kind))
+        case "sites" => NotImplemented(JsString("Deletion of all " + kind))
+        case "modules" => NotImplemented(JsString("Deletion of all " + kind))
         case "entities" => NotImplemented(JsString("Deletion of all " + kind))
-        case "traits" =>   NotImplemented(JsString("Deletion of all " + kind))
-        case "types" =>    NotImplemented(JsString("Deletion of all " + kind))
-        case _ => {        NotImplemented(JsString("Deletion of all " + kind))  }
+        case "traits" => NotImplemented(JsString("Deletion of all " + kind))
+        case "types" => NotImplemented(JsString("Deletion of all " + kind))
+        case _ => {
+          NotImplemented(JsString("Deletion of all " + kind))
+        }
       }
     }
   }

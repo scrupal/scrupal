@@ -1,7 +1,7 @@
 /**********************************************************************************************************************
  * This file is part of Scrupal a Web Application Framework.                                                          *
  *                                                                                                                    *
- * Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.                                            *
+ * Copyright (c) 2014, Reid Spencer and viritude llc. All Rights Reserved.                                            *
  *                                                                                                                    *
  * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
  * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
@@ -15,32 +15,25 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.db
+package scrupal
 
-import org.specs2.mutable.Specification
-import scrupal.fakes.WithFakeScrupal
+import play.api.libs.json._
+import reactivemongo.bson.BSONObjectID
 
-/** One line sentence description here.
-  * Further description here.
-  */
-class CoreSchemaSpec extends Specification {
+/**
+ * Created by reidspencer on 10/7/14.
+ */
+package object db {
 
-  "CoreSchema" should {
-    "Accumulate table names correctly" in new WithFakeScrupal {
-      withCoreSchema { schema =>
-        schema.collectionNames.contains("instances") must beTrue
-        schema.collectionNames.contains("entities") must beTrue
-        schema.collectionNames.contains("modules") must beTrue
-        schema.collectionNames.contains("sites") must beTrue
-        schema.collectionNames.contains("alerts") must beTrue
+  implicit val BSONObjectID_Formats = new Format[BSONObjectID] {
+    def reads(jsv: JsValue) : JsResult[BSONObjectID] = {
+      (JsPath \ "$oid").read[String].reads(jsv).asOpt match {
+        case Some(str) => JsSuccess(BSONObjectID(str))
+        case None => JsSuccess(BSONObjectID.generate)
       }
     }
-
-    "Generate DDL SQL For Each Core Table" in new WithFakeScrupal {
-      withCoreSchema { implicit schema =>
-        // TODO: Finish implementing
-        success
-      }
+    def writes(o : BSONObjectID) : JsValue = {
+      JsObject(Seq("$oid" -> JsString(o.stringify)))
     }
   }
 }

@@ -1,0 +1,2 @@
+#!/bin/sh
+play -jvm-debug 9998 -Dhttp.port=9090
