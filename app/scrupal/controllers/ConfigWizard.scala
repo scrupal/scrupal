@@ -260,7 +260,7 @@ object ConfigWizard extends ScrupalController {
 
   private def doShortCutConfiguration(config: Configuration) = {
     val default_db_conf = Map(
-      "db.scrupal.url" ->  ("mongodb://localhost:27017/~/scrupal_shortcut_" + System.currentTimeMillis())
+      "db.scrupal.uri" ->  ("mongodb://localhost:27017/scrupal_shortcut_" + System.currentTimeMillis())
     )
 
     val new_config = ConfigHelper(config).setDbConfig(default_db_conf)
@@ -298,9 +298,7 @@ object ConfigWizard extends ScrupalController {
 
   private def doInitialConfiguration(config: Configuration) = Try[Boolean] {
     val default_db_conf = Map(
-      "db.scrupal.kind" -> "H2",
-      "db.scrupal.url" ->  "",
-      "db.scrupal.driver" -> "org.h2.Driver"
+      "db.scrupal.uri" ->  ""
     )
     ConfigHelper(config).setDbConfig(default_db_conf)
     Global.reload( config )
@@ -462,7 +460,7 @@ object ConfigWizard extends ScrupalController {
       val cfg : Configuration = config.getOrElse(Configuration.empty)
       DatabaseInfo(
         db,
-        cfg.getString("url").getOrElse(""),
+        cfg.getString("uri").getOrElse(""),
         cfg.getString("user").getOrElse(""),
         cfg.getString("pass").getOrElse("")
       )
@@ -477,7 +475,7 @@ object ConfigWizard extends ScrupalController {
   def extractDatabaseUrl(cfgs: DBConfig) : String = {
     if (!cfgs.isEmpty) {
       cfgs.head._2 map { config: Configuration =>
-        config.getString("url").getOrElse("")
+        config.getString("uri").getOrElse("")
       }
     }.getOrElse("")
     else "jdbc:h2:~/scrupal"
@@ -505,7 +503,7 @@ object ConfigWizard extends ScrupalController {
   val databaseForm : DatabaseForm = Form[DatabaseInfo] (
     mapping (
       "name" -> nonEmptyText,
-      "url"  -> text,
+      "uri"  -> text,
       "user" -> text(minLength=0, maxLength=255),
       "pass" -> text(minLength=0, maxLength=255)
     )(DatabaseInfo.apply)(DatabaseInfo.unapply)

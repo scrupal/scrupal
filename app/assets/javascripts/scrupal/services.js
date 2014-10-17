@@ -15,14 +15,14 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /** Scrupal Services Definitions */
 
-define(['angular'], function(angular) {
+define(['angular'], function(ng) {
+    'use strict';
+
     // Demonstrate how to register services
     // In this case it is a simple value service.
-    var mod = angular.module('scrupal.services', [])
+    var mod = ng.module('scrupal.services', [])
 
     // Simple value service for the version of the Scrupal UI
     mod.value('version', '0.1');

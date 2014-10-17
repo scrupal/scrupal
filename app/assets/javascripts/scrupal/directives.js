@@ -15,32 +15,31 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Scrupal Directives */
 
-define(['angular', 'marked'], function(angular, marked) {
+define(['angular', 'marked'], function(ng, marked) {
+    'use strict';
 
     /** Create the sub-module of scrupal named directives. We define the scrupal directives here */
-    var mod = angular.module('scrupal.directives', [])
+    var mod = ng.module('scrupal.directives', [])
 
     /**
-     * Create a "marked" element that contains markdown content which is automatically converted, client side, into
+     * Create a 'marked' element that contains markdown content which is automatically converted, client side, into
      * HTML via the marked.js module.
      */
 
-    mod.directive('marked', function($compile) {
+    mod.directive('marked', function() {
         return {
             restrict: 'EAC',
             // priority: 99,
             link: function (scope, element, attrs) {
                 if (attrs.marked) {
                     scope.$watch(attrs.marked, function (newVal) {
-                        var html = newVal ? "<div class=\"marked\">" + marked(newVal) + "</div>" : '';
+                        var html = newVal ? '<div class=\'marked\'>' + marked(newVal) + '</div>' : '';
                         element.replaceWith(html);
                     });
                 } else {
-                    var html = "<div class=\"marked\">" + marked(element.text()) + "</div>";
+                    var html = '<div class=\'marked\'>' + marked(element.text()) + '</div>';
                     element.replaceWith(html);
                 }
             }

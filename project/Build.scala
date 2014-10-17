@@ -15,9 +15,59 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
+import play.Play.autoImport._
+import PlayKeys._
 import play.PlayScala
 import sbt._
 import sbt.Keys._
+
+// import com.typesafe.jse.sbt.JsEnginePlugin.JsEngineKeys
+// import com.typesafe.jshint.sbt.JSHintPlugin
+import com.typesafe.sbt.web.SbtWeb
+import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.web.Import.Assets
+import com.typesafe.sbt.web.Import.pipelineStages
+import com.typesafe.sbt.rjs.Import.rjs
+import com.typesafe.sbt.gzip.Import.gzip
+import com.typesafe.sbt.digest.Import.digest
+
+/**
+ * Capture basic information about the build.
+ */
+object BuildInfo {
+  val appName = "scrupal"
+
+  import com.typesafe.config._
+  val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
+  val buildVersion = conf.getString("app.version")
+}
+
+/**
+ * Augment the Play shell prompt with the Shell prompt which show the current project,
+ * git branch and build version
+ */
+object ShellPrompt
+{
+  object devnull extends ProcessLogger {
+    def info (s: => String) {}
+    def error (s: => String) { }
+    def buffer[T] (f: => T): T = f
+  }
+
+  val current = """\*\s+([^\s]+)""".r
+
+  def gitBranches = ("git branch --no-color" lines_! devnull mkString)
+
+  val buildShellPrompt = {
+    (state: State) => {
+      val currBranch = current findFirstMatchIn gitBranches map (_ group(1)) getOrElse "-"
+      val currProject = Project.extract (state).currentProject.id
+      "%s:%s:%s> ".format (currBranch, currProject, BuildInfo.buildVersion)
+    }
+  }
+}
+
+
 
 
 /**
@@ -25,14 +75,8 @@ import sbt.Keys._
  * Only put things in here that must be identical for each sub-project. Otherwise,
  * Specialize below in the definition of each Project object.
  */
-object BuildSettings
+trait BuildSettings
 {
-  val appName = "scrupal"
-
-  import com.typesafe.config._
-  val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
-  val buildVersion = conf.getString("app.version")
-
   val buildSettings : Seq[Def.Setting[_]] = Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     javacOptions ++= Seq(
@@ -59,35 +103,37 @@ object BuildSettings
     //closureCompilerOptions ++= Seq("ecmascript5", "checkControlStructures", "checkTypes", "checkSymbols"),
     scalaVersion    := "2.11.2",
     shellPrompt     := ShellPrompt.buildShellPrompt,
-    version         := buildVersion
+    version         := BuildInfo.buildVersion
   )
 }
 
-/**
- * Augment the Play shell prompt with the Shell prompt which show the current project,
- * git branch and build version
- */
-object ShellPrompt
-{
-  object devnull extends ProcessLogger {
-    def info (s: => String) {}
-    def error (s: => String) { }
-    def buffer[T] (f: => T): T = f
-  }
-
-  val current = """\*\s+([^\s]+)""".r
-
-  def gitBranches = ("git branch --no-color" lines_! devnull mkString)
-
-  val buildShellPrompt = {
-    (state: State) => {
-      val currBranch = current findFirstMatchIn gitBranches map (_ group(1)) getOrElse "-"
-      val currProject = Project.extract (state).currentProject.id
-      "%s:%s:%s> ".format (currBranch, currProject, BuildSettings.buildVersion)
-    }
-  }
+trait AssetsSettings {
+  val lessSettings : Seq[Def.Setting[_]] = Seq(
+    includeFilter in (Assets, LessKeys.less) := "*.less",
+    excludeFilter in (Assets, LessKeys.less) := "_*.less",
+    LessKeys.cleancss	in Assets := true, // Compress output using clean-css.
+    // LessKeys.cleancssOptions	in Assets := "", // Pass an option to clean css, using CLI arguments from https://github.com/GoalSmashers/clean-css .
+    LessKeys.color in Assets := true, // Whether LESS output should be colorised
+    LessKeys.compress in Assets := true,
+    // LessKeys.globalVariables	Variables that will be placed at the top of the less file.
+    LessKeys.ieCompat in Assets := true, // Do IE compatibility checks.
+    LessKeys.insecure in Assets := false, 	// Allow imports from insecure https hosts.
+    LessKeys.maxLineLen	in Assets := 1024, // Maximum line length.
+    // LessKeys.optimization	in Assets := // Set the parser's optimization level.
+    // relativeImports	Re-write import paths relative to the base less file. Default is true.
+    // relativeUrls	Re-write relative urls to the base less file.
+    // rootpath	Set rootpath for url rewriting in relative imports and urls.
+    // silent	Suppress output of error messages.
+    LessKeys.sourceMap in Assets := true, //	Outputs a v3 sourcemap.
+    LessKeys.sourceMapFileInline in Assets := false,  //	Whether the source map should be embedded in the output file
+    // sourceMapLessInline	Whether to embed the less code in the source map
+    // sourceMapRootpath	Adds this path onto the sourcemap filename and less file paths.
+    // strictImports	Whether imports should be strict.
+    // strictMath	Requires brackets. This option may default to true and be removed in future.
+    // strictUnits	Whether all unit should be strict, or if mixed units are allowed.
+    LessKeys.verbose in Assets := true // Be verbose.
+  )
 }
-
 
 trait Dependencies
 {
@@ -103,31 +149,36 @@ trait Dependencies
 
   val all_resolvers : Seq[MavenRepository] = Seq ( typesafe_releases, sonatype_releases, sonatype_snapshots, google_sedis  )
 
-  // Databass, Caches, Data Storage stuff
-  val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
-  val slick                   = "com.typesafe.slick"  %% "slick"                  % "2.1.0"
-  val reactivemongo            ="org.reactivemongo"   %% "reactivemongo"          % "0.10.5.0.akka23"
-  val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.10.5.0.akka23"
-  val reactivemongo_ext       = "org.reactivemongo"   %% "reactivemongo-extensions-json"  % "0.10.5.akka23-SNAPSHOT"
-  val play_jdbc               = "com.typesafe.play"   %% "play-jdbc"              % "2.3.4"
+  // Fundamentals
+  val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.3"
   val play_cache              = "com.typesafe.play"   %% "play-cache"             % "2.3.4"
   val play_filters            = "com.typesafe.play"   %% "filters-helpers"        % "2.3.4"
   val play_test               = "com.typesafe.play"   %% "play-test"              % "2.3.4"
   val play_docs               = "com.typesafe.play"   %% "play-docs"              % "2.3.4"
   val play_ws                 = "com.typesafe.play"   %% "play-ws"                % "2.3.4"
 
+  // Databass, Caches, Data Storage stuff
+  val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
+  val slick                   = "com.typesafe.slick"  %% "slick"                  % "2.1.0"
+  val reactivemongo            ="org.reactivemongo"   %% "reactivemongo"          % "0.10.5.0.akka23"
+  val play2_reactivemongo     = "org.reactivemongo"   %% "play2-reactivemongo"    % "0.10.5.0.akka23"
+  val reactivemongo_ext       = "org.reactivemongo"   %% "reactivemongo-extensions-json"  % "0.10.5.akka23-SNAPSHOT"
 
   // WebJars based UI components
   val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.3.0"
-  val requirejs               = "org.webjars"         % "requirejs"               % "2.1.8"
+  val requirejs               = "org.webjars"         % "requirejs"               % "2.1.14-3"
   val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1"
-  // val bootstrap               = "org.webjars"         % "bootstrap"               % "3.0.0"
-  val angularjs               = "org.webjars"         % "angularjs"               % "1.1.5-1"
-  val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-1"
-  val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.6.0-1"
-  val angular_ui_router       = "org.webjars"         % "angular-ui-router"       % "0.2.0"
-  val marked                  = "org.webjars"         % "marked"                  % "0.2.9"
-  val fontawesome             = "org.webjars"         % "font-awesome"            % "3.2.1"
+  val angularjs               = "org.webjars"         % "angularjs"               % "1.3.0"
+  val angular_drag_drop       = "org.webjars"         % "angular-dragdrop"        % "1.0.3"
+  val angular_multi_select    = "org.webjars"         % "angular-multi-select"    % "2.0.1"
+  val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-3"
+  val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.11.2"
+  val angular_ui_router       = "org.webjars"         % "angular-ui-router"       % "0.2.11-1"
+  val angular_ui_utils        = "org.webjars"         % "angular-ui-utils"        % "47ff7ef35c"
+  val angular_ui_calendar     = "org.webjars"         % "angular-ui-calendar"     % "0.9.0-beta.1"
+  val angualr_ckeditor        = "org.webjars"         % "angular-ckeditor"        % "0.2.0"
+  val marked                  = "org.webjars"         % "marked"                  % "0.3.2-1"
+  val fontawesome             = "org.webjars"         % "font-awesome"            % "4.2.0"
 
   // Hashing Algorithms
   val pbkdf2                  = "io.github.nremond"   %% "pbkdf2-scala"           % "0.4"
@@ -150,16 +201,15 @@ trait Dependencies
     play2_reactivemongo, reactivemongo_ext,
     pbkdf2, bcrypt, scrypt,
     webjars_play,
-    requirejs, requirejs_domready,  angularjs, angular_ui, angular_ui_bootstrap, angular_ui_router,
+    requirejs, requirejs_domready,
+    angularjs, angular_drag_drop, angular_multi_select,
+    angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar,
     marked, fontawesome
-
   )
 
 }
 
-object ScrupalBuild extends Build with Dependencies {
-
-  import BuildSettings._
+object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Dependencies {
 
   addCommandAlias("tq", "test-quick")
   addCommandAlias("tm", "test-only scrupal.models")
@@ -178,15 +228,18 @@ object ScrupalBuild extends Build with Dependencies {
   }
 
 
-  lazy val scrupal = Project(appName, file("."))
+  lazy val scrupal = Project(BuildInfo.appName, file("."))
     .enablePlugins(PlayScala)
-    .settings(buildSettings ++
-    Seq(
+    .enablePlugins(SbtWeb)
+    .enablePlugins()
+    .settings(buildSettings ++ Seq(
       fork in (Test) := false,
+      pipelineStages := Seq(rjs, digest, gzip),
+
       //requireJs += "scrupal.js",
       //requireJsShim += "scrupal.js",
-      resolvers ++= all_resolvers,
       // playAssetsDirectories <+= baseDirectory / "foo",
+      resolvers ++= all_resolvers,
       libraryDependencies ++= all_dependencies,
       printClasspath <<= print_class_path
     ):_*

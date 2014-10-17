@@ -15,15 +15,13 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Scrupal Controllers Definitions */
 
-define(['angular'], function(ng) {
+define(['angular', 'ng.route'], function(ng) {
+    'use strict';
 
-    var mod = ng.module('scrupal.controllers', []) // Note: ['ngRoute'] when Angular 1.2
+    var mod = ng.module('scrupal.controllers', ['ngRoute']);
 
-/*
     var simpleNavCtrl = function($scope, $route, $routeParams, $location) {
         $scope.navClass = function (page) {
             var currentRoute = $location.path().substring(1) || '/';
@@ -31,21 +29,20 @@ define(['angular'], function(ng) {
         };
         $scope.absUrl = $location.absUrl();
         $scope.url = $location.path()
-
     }
 
     var acquireUrl = function($location, $scope) {
-        var hash = $location.hash
-        var base = $location.path("").hash("")
-        var result = base + "/assets/docs/" + hash
-        $scope.newUrl = result
+        var hash = $location.hash;
+        var base = $location.path('').hash('');
+        var result = base + '/assets/docs/' + hash;
+        $scope.newUrl = result;
         return result
-    }
+    };
 
-    mod.controller("simpleNavCtrl", simpleNavCtrl)
+    mod.controller('simpleNavCtrl', simpleNavCtrl);
 
     mod.config( function ($routeProvider, $locationProvider) {
-        $routeProvider.when("/:path*", {
+        $routeProvider.when('/:path*', {
             templateUrl: acquireUrl,
             controller: simpleNavCtrl,
             controllerAs: 'simpleUrlNav'
@@ -56,6 +53,5 @@ define(['angular'], function(ng) {
 
         $locationProvider.html5Mode(true)
     })
-       */
     return mod
 });

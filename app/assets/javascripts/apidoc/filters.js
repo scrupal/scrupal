@@ -15,11 +15,10 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Filters */
 
 define(['angular'], function(angular) {
+    'use strict';
 
     angular.module('apidoc.filters', [])
         .filter('interpolate', ['version', function(version) {

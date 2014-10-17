@@ -1,0 +1,19 @@
+{
+    "curly": true,
+    "eqeqeq" : true,
+    "freeze": true,
+    "immed" : true,
+    "latedef" : true,
+    "newcap" : true,
+    "nonbsp" : true,
+    "nonew" : true,
+    "quotmark" : true,
+    "strict": false,
+    "undef": true,
+    "unused": true,
+    "asi": true,
+    "eqnull": true,
+    "jquery": true,
+    "browser": true,
+    "predef" : ["define", "require", "render", "alert"]
+}

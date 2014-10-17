@@ -24,7 +24,7 @@ define([
 ], function (ng) {
     'use strict';
 
-    var apidoc = angular.module('apidoc', [
+    var apidoc = ng.module('apidoc', [
         'apidoc.filters',
         'apidoc.services',
         'apidoc.directives',
@@ -34,35 +34,35 @@ define([
     apidoc.config(['$routeProvider', function($routeProvider) {
 
         $routeProvider
-            .when("/", {
-                templateUrl: "chunks/apidoc/intro.html",
-                controller: "Intro"
+            .when('/', {
+                templateUrl: 'chunks/apidoc/intro.html',
+                controller: 'Intro'
             })
-            .when("/:method", {
-                templateUrl: "chunks/apidoc/top.html",
-                controller: "Top"
+            .when('/:method', {
+                templateUrl: 'chunks/apidoc/top.html',
+                controller: 'Top'
             })
-            .when( "/:method/:kind", {
-                templateUrl: "chunks/apidoc/kind.html",
-                controller: "Kind"
+            .when( '/:method/:kind', {
+                templateUrl: 'chunks/apidoc/kind.html',
+                controller: 'Kind'
             })
             .when('/:method/:kind/', {
-                templateUrl: "chunks/apidoc/kind.html",
-                controller: "Kind"
+                templateUrl: 'chunks/apidoc/kind.html',
+                controller: 'Kind'
             })
             .when('/:method/:kind/:id', {
-                templateUrl: "chunks/apidoc/item.html",
-                controller: "Item"
+                templateUrl: 'chunks/apidoc/item.html',
+                controller: 'Item'
             })
             .when('/:method/:kind/:id/:trait', {
-                templateUrl: "chunks/apidoc/trait.html",
-                controller: "Trait"
+                templateUrl: 'chunks/apidoc/trait.html',
+                controller: 'Trait'
             })
             .otherwise({redirectTo: '/'})
     }])
 
     // Tell angular where to bootstrap this application
-    angular.bootstrap(document.body.querySelector('#apidoc'),['apidoc']);
+    ng.bootstrap(document.body.querySelector('#apidoc'),['apidoc']);
 
     return apidoc
 });

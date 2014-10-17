@@ -1,15 +1,19 @@
-@(title: String, module: String = "scrupal")(initScript: play.twirl.api.Html)(content: Html)(implicit context : scrupal.controllers.Context)
+@(title: String, module: String = "scrupal")(initScript: play.twirl.api.Html)(content: play.twirl.api.Html)(implicit context : scrupal.controllers.Context)
 @import scrupal.views.html
+@import play.twirl.api.Html
 @import scrupal.controllers.routes.Assets
 @defining[Html](Html(initScript.body)) { init: Html =>
 @html.basicPage(title) @{init}  {
-<body>
+<body ng-show="page_is_ready">
 <div id="@module" class="container">
 @content
 @html.debug()
 </div>
-<script>var scrupal_module_to_load="@module"</script>
-@helper.requireJs(core = Assets.requirejs().url, module = Assets.js_s("require-data-main").url)
+<script lang="javascript">
+  var scrupal_module_to_load="@module";
+  var page_is_ready=true;
+</script>
+<script data-main="@Assets.js_s("require-data-main.js")" type="text/javascript" src="@Assets.resolve("lib/requirejs/require.js")"></script>
 </body>
 }
 }

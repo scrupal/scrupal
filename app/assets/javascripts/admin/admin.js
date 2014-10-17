@@ -21,10 +21,10 @@ define([
     './directives.js',
     './filters.js',
     './services.js'
-], function (ng, uiRouter) {
+], function (ng) {
     'use strict';
 
-    var admin = angular.module('admin', [
+    var admin = ng.module('admin', [
         'admin.filters',
         'admin.services',
         'admin.directives',
@@ -34,33 +34,33 @@ define([
     admin.config(['$routeProvider', function($routeProvider) {
 
         $routeProvider
-            .when( "/Scrupal", {
-                templateUrl: "chunks/admin/scrupal.html",
-                controller: "Scrupal"
+            .when( '/Scrupal', {
+                templateUrl: 'chunks/admin/scrupal.html',
+                controller: 'Scrupal'
             })
             .when('/Sites', {
-                templateUrl: "chunks/admin/sites.html",
-                controller: "Sites"
+                templateUrl: 'chunks/admin/sites.html',
+                controller: 'Sites'
             })
             .when('/Modules', {
-                templateUrl: "chunks/admin/modules.html",
-                controller: "Modules"
+                templateUrl: 'chunks/admin/modules.html',
+                controller: 'Modules'
             })
             .when('/Modules/:modName', {
-                templateUrl: "chunks/admin/module.html",
-                controller: "Module"
+                templateUrl: 'chunks/admin/module.html',
+                controller: 'Module'
             })
             .when('/Entities', {
-                templateUrl: "chunks/admin/entities.html",
-                controller: "Entities"
+                templateUrl: 'chunks/admin/entities.html',
+                controller: 'Entities'
             })
             .when('/Traits', {
-                templateUrl: "chunks/admin/traits.html",
-                controller: "Traits"
+                templateUrl: 'chunks/admin/traits.html',
+                controller: 'Traits'
             })
             .when('/Types', {
-                templateUrl: "chunks/admin/types.html",
-                controller: "Types"
+                templateUrl: 'chunks/admin/types.html',
+                controller: 'Types'
             })
             .otherwise({redirectTo: '/Scrupal'})
     }])

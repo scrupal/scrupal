@@ -56,12 +56,16 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     */
   def resolve(path: String, file: String) : Action[AnyContent] = {
     try {
-      val expanded_file_path = super.locate(file)
-      super.at(expanded_file_path)
+      resolve(file)
     }
     catch {
       case x: IllegalArgumentException => fallback(path, file)
     }
+  }
+
+  def resolve(file:String) : Action[AnyContent] = {
+    val expanded_file_path = super.locate(file)
+    super.at(expanded_file_path)
   }
 
   def misc(file: String) = resolve(root, file)
@@ -71,17 +75,22 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     * @param file
     * @return
     */
-  def js(file: String, min : Boolean = true) = resolve(javascripts, minify(file, ".js", min))
+  def js(file: String, min : Boolean = true) = resolve("", minify(file, ".js", min))
 
   def requirejs() = resolve(javascripts, minify("require.js", ".js", true))
 
-  /** Get a Javascript from public/javascripts (static or compiled)
+  /** Get a Javascript from assets/javascripts (static or compiled)
     * Just uses the Play AssetBuilder to extract the javascript file.
     * @param file The name of the script with partial path after "javascripts" and no version or suffix.
     * @param min Whether or not to minify the resulting file name (always off for Dev mode)
     * @return The Content of the file as an Action
     */
-  def js_s(file: String, min : Boolean = true) = fallback(javascripts, minify(file, ".js", min))
+  def js_s(file: String, min : Boolean = true) = {
+    if (file.endsWith(".js"))
+      resolve(javascripts, minify(file, ".js", min))
+    else
+      fallback(javascripts,file)
+  }
   def js_s_min(file: String) = js_s(file, true)
 
   /** Get a Stylesheet from a Jar file
@@ -96,10 +105,9 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
   /** Get a Stylesheet from public/stylesheets (static or compiled)
     *
     * @param file The partial path with no suffix
-    * @param min Whether or not to minify the resulting file name (always off for Dev mode)
     * @return The Content of the file as an Action
     */
-  def css_s(file: String, min: Boolean = true) = fallback(stylesheets, minify(file, ".css", min))
+  def css_s(file: String) = fallback(stylesheets, minify(file, ".css", min=false))
 
   /** Get a PNG (Portable Network Graphic) file with extension .png from the static assets
     *
@@ -169,7 +177,7 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
    */
   def chunk(module: String, file: String) = fallback(chunks + "/" + module, file)
 
-  /** ui-bootstrap requires template files to satisfy some of its directives.
+  /** ng-ui-bootstrap requires template files to satisfy some of its directives.
     *
     * @param path Path to the template
     * @return

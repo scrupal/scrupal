@@ -20,9 +20,25 @@ package scrupal
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 
-/**
- * Created by reidspencer on 10/7/14.
- */
+/** Database Abstractions
+  * This library contains various abstractions and interfaces to the MongoDB replica sets that Scrupal uses. Scrupal
+  * uses three open source components to assist with this:
+  * - ReactiveMongo: A non-blocking asynchronous driver for MongoDB
+  * - Play2-ReactiveMongo: A Play2 extension to integrate ReactiveMongo with Play's JSON interface
+  * - reactivemongo-extensions-json: A set of DAO extensions for JSON
+  *
+  * When implementing the database interface, we want a tradeoff between flexibility and ease of use. We also want to
+  * be mindful of performance and security aspects of the database. Here are some principles learned from the Mongo DB
+  * Developer Days in DC 10/14/14:
+  * - Design documents around the natural entities the application uses. MongoDB is effective because related data is
+  *   grouped together in a document and fetched/read/transmitted together.
+  * - Optimize document content to minimize reads (i.e. read the 1 document not 100)
+  * - Optimize document content to prefer update over insert (update are done in place and much faster)
+  * - Don't leave security until deployment time. The schema may need to support it. Run dev in a secure mode.
+  * - Implement indexes judiciously. They improve read speeds and slow down write speeds.
+  * - The _id index (unique, immutable) can be any data, not just a BSONObjectID - use the natural unique primary key
+  * - Choose sharding keys exceptionally well as they will make scalability effective .. or not.
+  */
 package object db {
 
   implicit val BSONObjectID_Formats = new Format[BSONObjectID] {

@@ -15,13 +15,12 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Scrupal Filters */
 
-define(['angular'], function(angular) {
+define(['angular'], function(ng) {
+    'use strict';
 
-    var mod = angular.module('scrupal.filters', [])
+    var mod = ng.module('scrupal.filters', []);
 
     mod.filter('interpolate', ['version', function(version) {
         return function(text) {

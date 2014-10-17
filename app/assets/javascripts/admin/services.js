@@ -15,16 +15,14 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Services */
 
-define(['angular'], function(angular) {
+define(['angular'], function(ng) {
+    'use strict';
 
-
-// Demonstrate how to register services
-// In this case it is a simple value service.
-angular.module('admin.services', []).
-    value('version', '0.1');
+    // Demonstrate how to register services
+    // In this case it is a simple value service.
+    ng.module('admin.services', [])
+      .value('version', '0.1');
 
 })

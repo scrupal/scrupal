@@ -23,15 +23,17 @@ define([
 ], function (ng) {
   'use strict';
 
+  require(['nguibootstrap', 'ng.ui.bootstrap.tpls'])
+
   /**
    * Declare the scrupal module. This is fundamental to Scrupal applications and this module provides all the basic
    * elements and capabilities that any Scrupal application needs. What it doesn't do is provide any particular
    * application level constructs, just facilities applications can utilize.
    */
   var config = ng.module('config', [
-    'ui.bootstrap',
-    'ui.bootstrap.tpls'
-  ])
+    'nguibootstrap',
+    'ng.ui.bootstrap.tpls'
+  ]);
 
   return config
 });

@@ -17,7 +17,7 @@
 
 /**
  * Bootstrap angular onto the window.document node so we don't have to deal with asynchronous loading issues.
- * We avoid using ng-app="scrupal" so that angular doesn't attempt to process that directive before we've loaded
+ * We avoid using ng-app='scrupal' so that angular doesn't attempt to process that directive before we've loaded
  * our scrupal module. We utilize the domReady module to make sure that the DOM really is ready before we
  * instruct Angular to go bootstrap on it. This should give us a clean, reliable, flicker-free startup for
  * Scrupal pages.
@@ -25,9 +25,8 @@
 define(['require'], function (require) {
     'use strict';
 
-
     /** Ask RequireJS to ensure that domReady, AngularJS and scrupal itself are loaded before proceeding */
-    require(['webjars!domReady', 'angular', '/assets/javascripts/scrupal/scrupal.js'], function (domReady, ng, scrupal ) {
+    require(['domReady', 'angular', 'scrupal/scrupal'], function (domReady, ng ) {
         /** Invoke domReady as a wrapper around the Angular bootstrapping so we don't go off half-cocked */
         domReady(function() {
 
@@ -44,11 +43,11 @@ define(['require'], function (require) {
              * as the window variable `scrupal_module_to_load`. So, if we find that value, we load the corresponding
              * module and bootstrap it to the element with the same ID. Easy Peasy. :)
              */
-            if ("scrupal_module_to_load" in window) {
+            if ('scrupal_module_to_load' in window) {
                 var mod = window.scrupal_module_to_load
-                if (mod != "scrupal") {
-                    requirejs(["/assets/javascripts/" + mod + "/" + mod + ".js"], function(the_module) {
-                        var body_selector = "#" + mod
+                if (mod !== 'scrupal') {
+                    require(['/assets/javascripts/' + mod + '/' + mod + '.js'], function() {
+                        var body_selector = '#' + mod
                         ng.bootstrap( window.document.body.querySelector(body_selector), [mod])
                     })
                 }

@@ -17,13 +17,13 @@
 
 define([
     'angular',
-    './controllers.js',
-    './directives.js',
-    './filters.js',
-    './services.js',
-    'webjars!ui-bootstrap.js',
-    'webjars!ui-bootstrap-tpls.js'
-], function (ng, controllers, directives, filters, services) {
+    'scrupal/controllers',
+    'scrupal/directives',
+    'scrupal/filters',
+    'scrupal/services',
+    'ng.ui.bootstrap',
+    'ng.ui.bootstrap.tpls'],
+  function (ng) {
     'use strict';
 
     /**

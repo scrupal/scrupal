@@ -15,15 +15,14 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Directives */
 
-define(['angular'], function(angular) {
+define(['angular'], function(ng) {
+    'use strict';
 
-    angular.module('apidoc.directives', []).
-    directive('appVersion', ['version', function(version) {
-        return function(scope, elm, attrs) {
+    ng.module('apidoc.directives', [])
+      .directive('appVersion', ['version', function(version) {
+        return function(scope, elm) {
             elm.text(version);
         };
     }]);

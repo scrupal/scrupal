@@ -52,7 +52,7 @@ GET            /assets/stylesheets/*file              scrupal.controllers.Assets
 GET            /assets/images/*file                   scrupal.controllers.Assets.img(file)
 GET            /assets/themes/:provider/*file         scrupal.controllers.Assets.theme(provider, file)
 GET            /assets/doc/*file                      scrupal.controllers.Assets.doc(file)
-GET            /assets/*file                          scrupal.controllers.Assets.fallback(path="/public", file)
+GET            /webjars/*file                         scrupal.controllers.Assets.resolve(file)
 GET            /template/*file                        scrupal.controllers.Assets.template(file)
 
 # Scrupal UI Applications routing

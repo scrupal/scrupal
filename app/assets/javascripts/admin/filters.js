@@ -15,16 +15,15 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.
  */
 
-'use strict';
-
 /* Filters */
 
-define(['angular'], function(angular) {
+define(['ng'], function(ng) {
+    'use strict';
 
-    angular.module('admin.filters', [])
-        .filter('interpolate', ['version', function(version) {
-            return function(text) {
-                return String(text).replace(/\%VERSION\%/mg, version);
-            }
-        }]);
+    ng.module('admin.filters', [])
+      .filter('interpolate', ['version', function(version) {
+        return function(text) {
+            return String(text).replace(/\%VERSION\%/mg, version);
+        }
+    }]);
 });

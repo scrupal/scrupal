@@ -19,34 +19,58 @@
  * See [http://requirejs.org/docs/api.html#config] for details
  */
 require.config({
-    baseUrl : "/assets/javascripts",
+    baseUrl : '/assets/javascripts',
+
+    paths: {
+        'jquery'                : [ '/webjars/lib/jquery/jquery'],
+        'domReady'              : [ '/webjars/lib/requirejs-domready/domReady'],
+        'requirejs'             : [ '/webjars/lib/requirejs/require' ],
+        'marked'                : [ '/webjars/lib/marked/marked' ],
+        'angular'               : [ '/webjars/lib/angularjs/angular' ],
+        'ng.route'              : [ '/webjars/lib/angularjs/angular-route'],
+        'ng.ui'                 : [ '/webjars/lib/angular-ui/angular-ui'],
+        'ng.DragAndDrop'        : [ '/webjars/lib/angular-dragdrop/draganddrop' ],
+        'ng.MultiSelect'        : [ '/webjars/lib/angular-multi-select/angular-multi-select'],
+        'ng.ui.bootstrap'       : [ '/webjars/lib/angular-ui-bootstrap/ui-bootstrap'] ,
+        'ng.ui.bootstrap.tpls'  : [ '/webjars/lib/angular-ui-bootstrap/ui-bootstrap-tpls'] ,
+        'ng.ui.calendar'        : [ '/webjars/lib/angular-ui-calendar/calendar'],
+        'ng.ui.router'          : [ '/webjars/lib/angular-ui-router/angular-ui-router'],
+        'ng.ui.Utils'           : [ '/webjars/lib/angular-ui-utils/ui-utils'],
+        'jqueryUI'              : [ '/webjars/lib/jquery-ui/ui/jquery-ui'],
+        'scrupal'               : [ 'scrupal'],
+        'apidoc'                : [ 'apidoc' ],
+        'admin'                 : [ 'admin' ]
+    },
 
     /**
      * Shims are dependency settings for things that don't grok requirejs.
      */
     shim: {
-        'jquery'    : { exports: "$" },
-        'marked'    : { exports: "marked" },
+        'jquery'    : { exports: '$' },
+        'marked'    : { exports: 'marked' },
         'angular'   : { exports: 'angular' },
-        'jsrouts'   : { exports: "jsRoutes" },
-        'domReady'  : { exports: "domReady" }
+        // 'jsRoutes'  : { exports: 'jsRoutes' },
+        // 'domReady'  : { exports: 'domReady' }
     },
 
     /** This is the really important part. RequireJS reads this file first because it is the only javascript file
-     * referenced from the `<script> ` tag in plainPage.scala.html.html. Instead of risking script load ordering issues, we
-     * do not put the ng-app directive in the HTML file. Instead we tell requirJs that it depends on
+     * referenced from the `<script> ` tag in plainPage.scala.html. Instead of risking script load ordering issues, we
+     * do not put the ng-app directive in the HTML file. Instead we tell requireJs that it depends on
      * bootstrap-angular.js which it will load as part of processing this configuration. That javascript is what
      * bootstrap's AngularJS, not the ng-app directive.
      */
-    deps: ['./bootstrap-angular']
+    deps: ['/assets/javascripts/bootstrap-angular.js']
 });
 
 /** Create names for the various javascripts we use so we can depend on them more easily. */
-define("jsroutes",      ["/assets/javascripts/jsroutes.js"],function(jsRoutes) { return jsRoutes; });
-define("jquery",        ["webjars!jquery.js"],              function() { return $; });
-define("angular",       ["webjars!angular.js"],             function() { return angular; });
-define("angular-ui",    ["webjars!angular-ui.js"],          function(angularUI) { return angularUI; })
-define("ui-router",     ["webjars!angular-ui-router.js"],   function(uiRouter) { return uiRouter; })
-define("ui-bootstrap",  ["webjars!angular-ui-bootstrap.js"],function(uiBootstrap) { return uiBootstrap; })
-define("marked",        ["webjars!marked.js"],              function(marked) { return marked; });
-define("domReady"       ["webjars!domReady.js"],            function(domReady) { return domReady; });
+define('nguibootstrap', ['/webjars/lib/angular-ui-bootstrap/ui-bootstrap'], function(uiboot) { return uiboot; });
+
+/* define('jsroutes',      ['assets/javascripts/jsroutes.js'],function(jsRoutes) { return jsRoutes; });
+define('jquery',        ['webjars!jquery.js'],              function(jquery) { return jquery; });
+define('angular',       ['webjars!angular.js'],             function(angular) { return angular; });
+define('angular-ui',    ['webjars!angular-ui.js'],          function(angularUI) { return angularUI; });
+define('ui-router',     ['webjars!angular-ui-router.js'],   function(uiRouter) { return uiRouter; });
+define('ui-bootstrap',  ['webjars!angular-ui-bootstrap.js'],function(uiBootstrap) { return uiBootstrap; });
+define('marked',        ['webjars!marked.js'],              function(marked) { return marked; });
+define('domReady'       ['webjars!domReady.js'],            function(domReady) { return domReady; });
+   */
