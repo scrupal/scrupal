@@ -25,7 +25,7 @@ import scrupal.utils.Jsonic
   * Further description here.
   */
 case class Instance(
-  override val id : Identifier,
+  _id : Identifier,
   override val name: Symbol,
   override val description: String,
   entityId: Identifier,

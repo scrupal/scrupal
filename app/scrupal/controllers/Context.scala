@@ -57,7 +57,7 @@ class BasicContext[A](request: Request[A]) extends WrappedRequest[A](request) wi
   * @tparam A The type of content for the request
   */
 class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[A]) extends BasicContext[A](request) {
-  override val appName : String = site.data.id.name
+  override val appName : String = site.data._id.name
   override val description : String = site.data.description
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
@@ -140,11 +140,11 @@ trait ContextProvider extends RichResults {
                     }
                   case _ => {
                     implicit val ctxt = Context(request)
-                    Future.successful(Forbidden("request to site '" + site.data.id.name + "'", "it requires https."))
+                    Future.successful(Forbidden("request to site '" + site.data._id.name + "'", "it requires https."))
                   }
                 } getOrElse {
                   implicit val ctxt = Context(request)
-                  Future.successful(Forbidden("request to site '" + site.data.id.name + "'", "it requires https."))
+                  Future.successful(Forbidden("request to site '" + site.data._id.name + "'", "it requires https."))
                 }
               } else {
                 site.withCoreSchema { schema: CoreSchema =>
@@ -153,7 +153,7 @@ trait ContextProvider extends RichResults {
               }
             } else {
               implicit val ctxt = Context(request)
-              Future.successful(Forbidden("browse site '" + site.data.id.name + "'", "it is disabled"))
+              Future.successful(Forbidden("browse site '" + site.data._id.name + "'", "it is disabled"))
             }
           }
         }  getOrElse {

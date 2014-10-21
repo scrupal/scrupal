@@ -35,10 +35,11 @@ case class StatusResult[TYPE](result: JsResult[TYPE], status: Int = Status.OK)
   * There, a
   */
 case class Entity(
-  id : Identifier,
+  override val _id : Identifier,
   description: String,
   instanceTypeId: Identifier
-) extends Storable with Describable with ScrupalController with Registrable with Jsonic {
+) extends Storable[Identifier] with Describable with ScrupalController with Registrable with Jsonic {
+  val id : Identifier = _id
 
 /** Obtain the type of this Entity's Instance bundle. */
   def instanceType : Type = Type(instanceTypeId).getOrElse(Type.NotAType)

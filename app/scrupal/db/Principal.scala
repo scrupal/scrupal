@@ -33,11 +33,11 @@ import scrupal.utils.Hash
  * @param complexity The complexity factor for the Hasher algorithm
  */
 case class Principal(
+  _id: Identifier,
   email: String,
   password: String,
   hasher: String,
   salt: String = Hash.salt,
   complexity: Long = 0,
-  override val created: Option[DateTime] = None,
-  override val id: Identifier
-) extends Storable with Creatable
+  override val created: Option[DateTime] = None
+) extends Storable[Identifier] with Creatable

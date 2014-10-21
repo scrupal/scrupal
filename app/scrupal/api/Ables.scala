@@ -18,16 +18,13 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-import reactivemongo.bson.BSONObjectID
 
 /** How Scrupal things are identified.
   * Objects stored in This works for both memory and database objects. The
   * So, in case we ever have to change this, we're calling it an Identifier throughout the api
   */
-trait Storable {
-  def _id : Option[BSONObjectID] = None
-  def id : Symbol
-  def isIdentified : Boolean = _id.isDefined
+trait Storable[T] {
+  def _id : T
 }
 
 /** Something that can be created and keeps track of its modification time.
@@ -68,11 +65,11 @@ trait Enablable  {
   def enabled : Boolean
 }
 
-trait CreatableModifiableNameableDescribable
-  extends Storable
+trait CreatableModifiableNameableDescribable[T]
+  extends Storable[T]
           with Creatable
           with Modifiable
           with Nameable
           with Describable
 
-trait CreatableModifiableNameableDescribableEnablable extends CreatableModifiableNameableDescribable with Enablable
+trait CreatableModifiableNameableDescribableEnablable[T] extends CreatableModifiableNameableDescribable[T] with Enablable

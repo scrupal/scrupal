@@ -41,7 +41,7 @@ import scala.xml.{NodeSeq, Node, Elem}
  * @param expires The time at which the alert expires
  */
 case class Alert (
-  override val id : Identifier,
+  _id : Identifier,
   override val name : Symbol,
   override val description : String,
   message: String,

@@ -18,15 +18,14 @@
 package scrupal.db
 
 import reactivemongo.api.DB
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.core.commands.{LastError}
-import reactivemongo.extensions.json.dao.JsonDao
+import reactivemongo.core.commands.LastError
 import scrupal.models.CoreModule
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scrupal.api._
+import reactivemongo.extensions.json.dao.JsonDao
 
 
 /**
@@ -34,28 +33,28 @@ import scrupal.api._
  */
 class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
-  case class ModuleDao(db: DB) extends JsonDao[Module,BSONObjectID](db,"modules") with DataAccessObject[Module]
-  case class SiteDao(db: DB) extends JsonDao[SiteData,BSONObjectID](db,"sites") with DataAccessObject[SiteData]
-  case class EntityDao(db: DB) extends JsonDao[Entity,BSONObjectID](db,"entities") with DataAccessObject[Entity]
-  case class InstanceDao(db: DB) extends JsonDao[Instance,BSONObjectID](db,"instances") with DataAccessObject[Instance]
+  case class ModuleDao(db: DB) extends JsonDao[Module,Identifier](db, "modules") with DataAccessObject[Module,Identifier]
+  case class SiteDao(db: DB) extends JsonDao[SiteData,Identifier](db,"sites") with DataAccessObject[SiteData,Identifier]
+  case class EntityDao(db: DB) extends JsonDao[Entity,Identifier](db, "entities") with DataAccessObject[Entity,Identifier]
+  case class InstanceDao(db: DB) extends JsonDao[Instance,Identifier](db, "instances") with DataAccessObject[Instance,Identifier]
   // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
   // case class TokenDao(db: DB) extends JsonDao[String,BSONObjectID](db,"tokens") with DataAccessObject[String]
-  case class AlertDao(db: DB) extends JsonDao[Alert,BSONObjectID](db,"alerts") with DataAccessObject[Alert]
+  case class AlertDao(db: DB) extends JsonDao[Alert,Identifier](db, "alerts") with DataAccessObject[Alert,Identifier]
 
-  val modules = dbc.withDatabase { db => new ModuleDao(db) }
-  val sites = dbc.withDatabase { db => new SiteDao(db) }
-  val entities = dbc.withDatabase { db => new EntityDao(db) }
+  val modules : DataAccessObject[Module,Identifier] = dbc.withDatabase { db => new ModuleDao(db) }
+  val sites : DataAccessObject[SiteData,Identifier] = dbc.withDatabase { db => new SiteDao(db) }
+  val entities : DataAccessObject[Entity,Identifier] = dbc.withDatabase { db => new EntityDao(db) }
   val instances = dbc.withDatabase { db => new InstanceDao(db) }
   // val aliases = dbc.withDatabase { db => new AliasDao(db) }
   // val tokens = dbc.withDatabase { db => new TokenDao(db) }
   val alerts = dbc.withDatabase { db => new AlertDao(db) }
 
 
-  def daos : Seq[JsonDao[_,BSONObjectID] with DataAccessObject[_]] = {
+  def daos : Seq[DataAccessObject[_,_]] = {
     Seq( modules, sites, entities, instances, /* aliases, tokens, */ alerts )
   }
 
-  def validateDao(dao: JsonDao[_,BSONObjectID] with DataAccessObject[_]) : Boolean = {
+  def validateDao(dao: DataAccessObject[_,_]) : Boolean = {
     dao.collection.name match {
       case "modules" => true
       case "sites" => true

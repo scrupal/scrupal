@@ -29,20 +29,20 @@ define(['angular', 'marked'], function(ng, marked) {
      */
 
     mod.directive('marked', function() {
+        function link(scope, element, attrs) {
+            if (attrs.marked) {
+                scope.$watch(attrs.marked, function (newVal) {
+                    var html = newVal ? '<div class=\'marked\'>' + marked(newVal) + '</div>' : '';
+                    element.replaceWith(html);
+                });
+            } else {
+                var html = '<div class=\'marked\'>' + marked(element.text()) + '</div>';
+                element.replaceWith(html);
+            }
+        }
         return {
             restrict: 'EAC',
-            // priority: 99,
-            link: function (scope, element, attrs) {
-                if (attrs.marked) {
-                    scope.$watch(attrs.marked, function (newVal) {
-                        var html = newVal ? '<div class=\'marked\'>' + marked(newVal) + '</div>' : '';
-                        element.replaceWith(html);
-                    });
-                } else {
-                    var html = '<div class=\'marked\'>' + marked(element.text()) + '</div>';
-                    element.replaceWith(html);
-                }
-            }
+            link: link
         }
     });
 

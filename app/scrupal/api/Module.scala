@@ -35,7 +35,7 @@ import scrupal.db.{DBContext, Schema}
   * be extended to do things it was not originally invented to do. In fact, all functionality in Scrupal is implemented
   * in this way, even the core part of Scrupal. Only the meta-model to keep track of the information that modules
   * provide is fixed within Scrupal.
-  * @param id The name of the module
+  * @param _id The name of the module
   * @param description A brief description of the module (purpose
   * @param version The version of this module. Whenever a module is changed and released publicly,
   *                it must have a new Version. How the Version numbers change depends on the kind of change that was
@@ -50,12 +50,13 @@ import scrupal.db.{DBContext, Schema}
   *                  may remain).
   */
 case class Module(
-  id : Identifier,
+  _id : Identifier,
   description: String,
   version: Version,
   obsoletes: Version,
   enabled: Boolean
-) extends Storable with Describable with Enablable with Registrable with Jsonic {
+) extends Storable[Identifier] with Describable with Enablable with Registrable with Jsonic {
+  val id : Identifier = _id
 
   /** A mapping of the Module's dependencies.
     * The dependencies map provides the version for each named module this module depends on. The default value lists

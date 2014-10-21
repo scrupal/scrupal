@@ -17,7 +17,7 @@
 
 package scrupal.api
 
-trait StorableThing extends Storable with Equals {
+trait StorableThing extends Storable[Identifier] with Equals {
   def canEqual(other: Any) : Boolean = other.isInstanceOf[StorableThing]
 }
 
@@ -44,9 +44,8 @@ trait ImmutableThing extends CreatableThing  with Nameable {
     other match {
       case that: ImmutableThing => { (this eq that) || (
         that.canEqual(this) &&
-          ( this.isIdentified == that.isIdentified) &&
           ( this.isNamed == that.isNamed) &&
-          ( ! this.isIdentified || this.id.equals(that.id)) &&
+          ( this._id.equals(that._id)) &&
           this.created.equals(that.created) &&
           ( ! this.isNamed || this.name.equals(that.name))
         )

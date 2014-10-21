@@ -17,9 +17,7 @@
 
 package scrupal.db
 
-import reactivemongo.bson.BSONObjectID
 import reactivemongo.core.commands.{LastError, Count}
-import reactivemongo.extensions.json.dao.JsonDao
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -33,7 +31,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 abstract class Schema(val dbc: DBContext)
 {
 
-  def daos : Seq[JsonDao[_,BSONObjectID] with DataAccessObject[_]]
+  def daos : Seq[DataAccessObject[_,_]]
 
   def create(implicit context: DBContext) : Future[Seq[LastError]] = {
     val futures = for (dao <- daos) yield {
@@ -48,7 +46,7 @@ abstract class Schema(val dbc: DBContext)
   }
 
 
-  def validateDao(dao: JsonDao[_,BSONObjectID] with DataAccessObject[_]) : Boolean
+  def validateDao(dao: DataAccessObject[_,_]) : Boolean
 
   def collectionNames: Seq[String] = daos map { dao => dao.collection.name }
 

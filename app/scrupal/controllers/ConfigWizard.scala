@@ -241,7 +241,8 @@ object ConfigWizard extends ScrupalController {
           val instance = Instance(id, id, pageInfo.description, 'Page, Json.obj( "body" -> JsString(pageInfo.body) ) )
           val inserted = schema.instances.insert( instance )
           val site = schema.sites.fetchAllSync.head
-          schema.sites.update(Json.obj("id" -> JsString(site.id.name)), Json.obj("index" -> instance.id), upsert=true)
+          val update = Json.obj( "$set" -> Json.obj( "siteIndex" -> instance._id ))
+          schema.sites.update(Json.obj("id" -> JsString(site._id.name)), update, upsert=false)
           log.debug("Inserted instance with id=" + inserted)
           true
         }
@@ -291,7 +292,7 @@ object ConfigWizard extends ScrupalController {
     )
     val instance_id = schema.instances.insert(instance)
     val site = SiteData( Symbol("YourSite"), Symbol("YourSite"), "Auto-generated site created by Short-cut Configuration",
-                     "localhost", Some(instance.id), false, true, None, None)
+                     "localhost", Some(instance._id), false, true, None, None)
     schema.sites.insert(site)
     Global.reload( config )
   }

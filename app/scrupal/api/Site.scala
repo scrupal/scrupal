@@ -38,7 +38,7 @@ import scrupal.db.{CoreSchema,DBContext}
 /** Information about one site that Scrupal is serving.
   * Sites are associated with a port number that Play! is configured to listen on. We configure play's ports by
   * scanning this table and collecting all the port numbers that are configured for active sites.
-  * @param id The name of the `Thing`
+  * @param _id The name of the `Thing`
   * @param description A brief description of the `Thing`
   * @param host The host (domain) name to match in the HTTP request
   * @param siteIndex The identifier of the index (main page) for this site.
@@ -49,7 +49,7 @@ import scrupal.db.{CoreSchema,DBContext}
   */
 
 case class SiteData (
-  override val id: Symbol,
+  _id: Identifier,
   override val name: Identifier,
   description: String,
   host: String,
@@ -76,8 +76,7 @@ object SiteData {
 }
 
 class Site(val data: SiteData, implicit val dbContext: DBContext) extends Registrable {
-
-  val id = data.id
+  val id = data._id
 
   // TODO: Implement this with a DB query
   lazy val modules : Seq[Module] = Seq(CoreModule)
@@ -112,7 +111,7 @@ object Site extends Registry[Site] {
           case Success(true) =>
             val sites = Await.result(schema.sites.fetchAll, 5.seconds)
             for (s <- sites) {
-              Logger.debug("Loading site '" + s.id.name + "' for host " + s.host + ", " +"enabled: " + s.enabled)
+              Logger.debug("Loading site '" + s._id.name + "' for host " + s.host + ", " +"enabled: " + s.enabled)
               result.put(s.host, Site(s, context))
             }
           case Success(false) =>
@@ -133,6 +132,4 @@ object Site extends Registry[Site] {
     all foreach { s: Site => super.unRegister(s) }
     Map[String,Site]()
   }
-
-  // implicit lazy val siteWrites : Reads[Site]
 }

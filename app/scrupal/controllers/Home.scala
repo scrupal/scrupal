@@ -72,7 +72,7 @@ object Home extends ScrupalController {
 
   def instanceById(kind:String, id: String) = UserAction.async {
     implicit context: AnyUserContext => {
-      context.schema.instances.findById(BSONObjectID(id)) map { optional_instance: Option[Instance] =>
+      context.schema.instances.findById(Symbol(id)) map { optional_instance: Option[Instance] =>
         optional_instance match {
           case Some(instance:Instance) =>
             // FIXME: This has to learn how to render entities of any kind

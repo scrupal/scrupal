@@ -18,7 +18,6 @@
 package scrupal.db
 
 import play.api.libs.json.{JsString, Json}
-import reactivemongo.bson.BSONObjectID
 import reactivemongo.core.commands.LastError
 import reactivemongo.extensions.json.dao.JsonDao
 import scrupal.api.Storable
@@ -26,21 +25,22 @@ import scrupal.api.Storable
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import reactivemongo.api.DB
 
-trait DataAccessObject[T <: Storable] extends JsonDao[T, BSONObjectID] {
+trait DataAccessObject[MODEL <: Storable[ID],ID] extends JsonDao[MODEL, ID] {
 
-  def fetch(name: Symbol) : Future[Option[T]] = findOne(Json.obj("name" -> JsString(name.name)))
-  def fetchSync(name: Symbol) : Option[T] = Await.result(fetch(name), Duration.Inf)
+  def fetch(name: Symbol) : Future[Option[MODEL]] = findOne(Json.obj("name" -> JsString(name.name)))
+  def fetchSync(name: Symbol) : Option[MODEL] = Await.result(fetch(name), Duration.Inf)
 
-  def fetchAll : Future[List[T]] = { super.findAll(Json.obj()) }
-  def fetchAllSync : List[T] = { Await.result(fetchAll, Duration.Inf) }
+  def fetchAll : Future[List[MODEL]] = { super.findAll(Json.obj()) }
+  def fetchAllSync : List[MODEL] = { Await.result(fetchAll, Duration.Inf) }
 
   def count : Future[Int] = { count(Json.obj()) }
   def countSync : Int = { Await.result(count, Duration.Inf) }
 
-  def insertSync(model: T) : LastError = { Await.result(super.insert(model), Duration.Inf) }
+  def insertSync(model: MODEL) : LastError = { Await.result(super.insert(model), Duration.Inf) }
 
-  def upsert(model: T) : Future[LastError] = { super.save(model) }
-  def upsertSync(model: T) : LastError = { Await.result(upsert(model), Duration.Inf) }
+  def upsert(model: MODEL) : Future[LastError] = { super.save(model) }
+  def upsertSync(model: MODEL) : LastError = { Await.result(upsert(model), Duration.Inf) }
 
 }
