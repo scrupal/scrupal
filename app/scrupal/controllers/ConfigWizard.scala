@@ -242,7 +242,7 @@ object ConfigWizard extends ScrupalController {
           val inserted = schema.instances.insert( instance )
           val site = schema.sites.fetchAllSync.head
           val update = Json.obj( "$set" -> Json.obj( "siteIndex" -> instance._id ))
-          schema.sites.update(Json.obj("id" -> JsString(site._id.name)), update, upsert=false)
+          val update_result = schema.sites.update(Json.obj("_id" -> JsString(site._id.name)), update, upsert=false)
           log.debug("Inserted instance with id=" + inserted)
           true
         }
