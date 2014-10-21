@@ -24,11 +24,12 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api.{DefaultDB, MongoConnection, MongoDriver}
 import scrupal.utils.{ScrupalComponent, ConfigHelper, Registry, Registrable}
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.util.{Try, Failure, Success}
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Try, Failure, Success}
+import akka.actor.ActorSystem
+
 
 /** Database Context.
   * Provides the context for connecting to a Mongo Database Replica Set via the URL and credentials provided.
@@ -36,7 +37,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * The utility methods withContext, withConnection and withDatabase provide functional access to the
   * context, connection and database.
   */
-case class DBContext(id: Symbol, uri: String, user: Option[String] = None, pass: Option[String] = None) extends Registrable {
+case class DBContext(id: Symbol, uri: String, driver: MongoDriver,
+                     user: Option[String] = None, pass: Option[String] = None) extends Registrable with ScrupalComponent {
 
   val default_dbName = "scrupal"
 
@@ -45,7 +47,7 @@ case class DBContext(id: Symbol, uri: String, user: Option[String] = None, pass:
     case Failure(xcptn) => throw xcptn
   }
 
-  val connection = DBContext.driver.connection(parsedURI)
+  val connection = driver.connection(parsedURI)
 
   def withDatabase[T](f: (DefaultDB) => T) : T = {
     val name = parsedURI.db match {
@@ -83,14 +85,22 @@ case class DBContext(id: Symbol, uri: String, user: Option[String] = None, pass:
     }
   }
 
+  def close() = Try {
+    log.debug("Closing registered context:" + id.name + " with connection: " + connection)
+    connection.askClose()(3.seconds)
+  } match {
+    case Success(x) => log.debug("Closed DBContext '" + id.name + "' successfully.")
+    case Failure(x) => log.error("Failed to close DBContext '" + id.name + "': ", x)
+  }
+
 }
 
 object DBContext extends Registry[DBContext] with ScrupalComponent {
   val registrantsName: String = "dbContext"
   val registryName: String = "DatabaseContexts"
 
-  private var driver = MongoDriver()
-  private var connection: Option[MongoConnection] = None
+  private case class State(system: ActorSystem, driver: MongoDriver)
+  private var state: Option[State] = None
 
   def fromConfiguration() : DBContext = {
     val helper = new ConfigHelper(play.api.Play.application.configuration)
@@ -112,29 +122,59 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
     getRegistrant(id) match {
       case Some(dbc) => dbc
       case None =>
-        val result = new DBContext(id, uri)
-        register(result)
-        result
+        state match {
+          case Some(s) =>
+            val result = new DBContext(id, uri, s.driver)
+            register(result)
+            result
+          case None =>
+            toss("The mongoDB driver has not been initialized")
+        }
     }
   }
 
   def startup() : Unit = Try {
-    driver = MongoDriver()
+    state match {
+      case Some(s) => log.debug("The mongoDB driver is already initialized.")
+      case None =>
+        val system = ActorSystem("MongoDB")
+        val driver = MongoDriver(system)
+        state = Some(State(system, driver))
+    }
   } match {
     case Success(x) => log.debug("Successful mongoDB startup.")
     case Failure(x) => log.error("Failed to start up mongoDB", x)
   }
 
   def shutdown() : Unit = Try {
-    connection match {
-      case Some(conn) => log.debug("Closing mongoDB connections"); conn.close()
-      case None => log.debug("No mongoDB connections to close.")
+    for ((symbol, ctxt) <- registrants) {
+      ctxt.close()
     }
-    driver.close()
+    state match {
+      case Some(s) =>
+        s.driver.close()
+        val future = Future {
+          while (s.driver.connections.size > 0)
+            Thread.sleep(50)
+        }
+        Try { Await.result(future, 3.seconds) } match {
+          case Success(x) => log.debug("All mongoDB connections closed.")
+          case Failure(x) => log.debug("Failed to close all mongoDB connections, " + s.driver.connections.size + " remain: ", x)
+        }
+        for (connection <- s.driver.connections) {
+          log.debug("Connection remains open:" + connection)
+        }
+        s.system.shutdown()
+        Try { s.driver.system.awaitTermination(3.seconds) } match {
+          case Success(x) => log.debug("The mongoDB driver has been closed.")
+          case Failure(x) => log.debug("The mongoDB driver failed to close: ", x)
+        }
+      case None =>
+        log.debug("No MongoDB driver to shut down.")
+    }
   } match {
     case Success(x) => log.debug("Successful mongoDB shutdown.")
     case Failure(x) => log.error("Failed to shut down mongoDB", x)
   }
-
 }
 

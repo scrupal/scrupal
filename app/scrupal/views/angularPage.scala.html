@@ -4,7 +4,7 @@
 @import scrupal.controllers.routes.Assets
 @defining[Html](Html(initScript.body)) { init: Html =>
 @html.basicPage(title) @{init}  {
-<body ng-controller="pageIsReady" ng-show="page_is_ready">
+<body ng-controller="scrupal" ng-show="page_is_ready">
 <div id="@module" class="container">
 @content
 @html.debug()

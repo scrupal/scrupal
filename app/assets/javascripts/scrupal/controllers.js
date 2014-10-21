@@ -17,7 +17,7 @@
 
 /* Scrupal Controllers Definitions */
 
-define(['angular', 'ngRoute'], function(ng) {
+define(['angular', 'ngRoute', 'domReady'], function(ng, ngRoute, domReady) {
     'use strict';
 
     var mod = ng.module('scrupal.controllers', ['ngRoute']);
@@ -39,8 +39,8 @@ define(['angular', 'ngRoute'], function(ng) {
         return result
     };
 
-    mod.controller('pageIsReady', function($scope) {
-        $scope.page_is_ready = true
+    mod.controller('scrupal', function($scope) {
+        $scope.page_is_ready = domReady
     })
 
     mod.controller('simpleNavCtrl', simpleNavCtrl);

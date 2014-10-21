@@ -84,6 +84,9 @@ object Global extends GlobalSettings
 	}
 
   def oneTimeInitialization(app: Application) {
+    // Get the database started up
+    DBContext.startup()
+
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
     require(Type.registryName == "Types")
@@ -126,7 +129,6 @@ object Global extends GlobalSettings
 	 */
 	override def onStart(app: Application) {
 		DefaultGlobal.onStart(app)
-    DBContext.startup()
 	}
 
 	/**
