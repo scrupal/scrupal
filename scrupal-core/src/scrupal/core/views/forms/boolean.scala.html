@@ -1,0 +1,23 @@
+@**
+* Create the checkbox that corresponds to a boolean Input type
+*
+* Example:
+* {{{
+* @boolean(input = Input(...,Boolean_t,...))
+* }}}
+*
+* @param input the input that corresponds to the element that we are going to generate
+* @param wrapper The implicit input wrapper function
+*@
+@(inp: scrupal.core.api.Forms.Input)(implicit wrapper: scrupal.core.api.Forms.InputWrapper)
+@import scrupal.core.api.Forms._
+@import scrupal.core.views.html.forms._
+
+@thevalue = {
+  @inp.opts.getOrElse('value,"true")
+}
+
+@input_elem(inp) { i:Input =>
+  <input  @htmlAttrs(i) />
+}
+@** @toHtmlArgs(htmlArgs.filterKeys(_ != 'value)) *@

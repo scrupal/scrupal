@@ -8,12 +8,12 @@
     <logger name="controllers" level="DEBUG" />
     <logger name="scrupal" level="DEBUG"/>
     <logger name="org.apache" level="WARN" />
-    <logger name="reactivemongo" level="DEBUG" />
+    <logger name="reactivemongo" level="INFO" />
     <jmxConfigurator/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${logs_dir:-logs}/scrupal.log</file>
+        <file>${logs_dir:-logs}/j9Accelerators.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${logs_dir:-logs}/scrupal.%i.log.zip</fileNamePattern>
+            <fileNamePattern>${logs_dir:-logs}/j9Accelerators.%i.log.zip</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -21,14 +21,14 @@
             <maxFileSize>50MB</maxFileSize>
         </triggeringPolicy>
         <encoder>
-            <pattern>%d %-7relative %-5level [%thread:%logger{40}] - %msg%n%xException</pattern>
+            <pattern>%d %-7relative %-5level [%thread:%logger{30}] - %msg%n%xException</pattern>
             <immediateFlush>false</immediateFlush>
             <outputPatternAsHeader>true</outputPatternAsHeader>
         </encoder>
     </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%date %-5level %logger{40} - %message%n%xException{5}</pattern>
+            <pattern>%date %-5level %logger{30} - %message%n%xException{5}</pattern>
         </encoder>
     </appender>
     <root level="DEBUG">

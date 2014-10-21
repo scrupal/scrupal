@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="SBT: org.reactivemongo:reactivemongo-bson_2.11:0.11.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/local/org.reactivemongo/reactivemongo-bson_2.11/0.11.0-SNAPSHOT/jars/reactivemongo-bson_2.11.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.ivy2/local/org.reactivemongo/reactivemongo-bson_2.11/0.11.0-SNAPSHOT/docs/reactivemongo-bson_2.11-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/local/org.reactivemongo/reactivemongo-bson_2.11/0.11.0-SNAPSHOT/srcs/reactivemongo-bson_2.11-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

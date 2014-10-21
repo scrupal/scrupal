@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test Utils" type="Specs2RunConfiguration" factoryName="Specs2" singleton="false">
+    <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+    <extension name="scalaCoverage" />
+    <module name="scrupal-utils" />
+    <setting name="path" value="" />
+    <setting name="package" value="scrupal.utils" />
+    <setting name="vmparams" value="" />
+    <setting name="params" value="console color" />
+    <setting name="workingDirectory" value="file://$PROJECT_DIR$" />
+    <setting name="searchForTest" value="In single module" />
+    <setting name="testName" value="" />
+    <setting name="testKind" value="All in package" />
+    <setting name="showProgressMessages" value="true" />
+    <envs />
+    <RunnerSettings RunnerId="Run" />
+    <ConfigurationWrapper RunnerId="Run" />
+    <method />
+  </configuration>
+</component>

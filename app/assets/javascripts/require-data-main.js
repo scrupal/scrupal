@@ -50,8 +50,6 @@ require.config({
         'marked'    : { exports: 'marked' },
         'angular'   : { exports: 'angular' },
         'ngRoute'   : { exports: 'ngRoute' }
-        // 'jsRoutes'  : { exports: 'jsRoutes' },
-        // 'domReady'  : { exports: 'domReady' }
     },
 
     /** This is the really important part. RequireJS reads this file first because it is the only javascript file
@@ -62,16 +60,3 @@ require.config({
      */
     deps: ['/assets/javascripts/bootstrap-angular.js']
 });
-
-/** Create names for the various javascripts we use so we can depend on them more easily. */
-// define('angular',       ['/webjars/lib/angularjs/angular'], function(ng) { return ng; });
-// define('nguibootstrap', ['/webjars/lib/angular-ui-bootstrap/ui-bootstrap'], function(uiboot) { return uiboot; });
-
-/* define('jsroutes',      ['assets/javascripts/jsroutes.js'],function(jsRoutes) { return jsRoutes; });
-define('jquery',        ['webjars!jquery.js'],              function(jquery) { return jquery; });
-define('angular-ui',    ['webjars!angular-ui.js'],          function(angularUI) { return angularUI; });
-define('ui-router',     ['webjars!angular-ui-router.js'],   function(uiRouter) { return uiRouter; });
-define('ui-bootstrap',  ['webjars!angular-ui-bootstrap.js'],function(uiBootstrap) { return uiBootstrap; });
-define('marked',        ['webjars!marked.js'],              function(marked) { return marked; });
-define('domReady'       ['webjars!domReady.js'],            function(domReady) { return domReady; });
-   */

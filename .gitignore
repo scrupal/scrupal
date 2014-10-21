@@ -1,14 +1,11 @@
 .cache
 .classpath
 .history
-.idea/
-.idea*
 .*.swp
 .project
 .settings/
 .target/
 application.home_IS_UNDEFINED/
-bin
 bower_components
 conf/databases.conf
 conf/heroku.conf
@@ -24,3 +21,7 @@ public/javascripts
 public/stylesheets
 target
 tmp
+.idea/dictionaries
+.idea/workspace.xml
+.idea/tasks.xml
+.DS_Store

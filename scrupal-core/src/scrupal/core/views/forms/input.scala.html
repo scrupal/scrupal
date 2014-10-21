@@ -1,0 +1,31 @@
+@**
+* This is the fundamental InputGenerator (a (Input) => Html function). It looks at the kind of each Input's type and
+* generates the corresponding input element for that type using the input_elem helper (that applies the wrapper)
+*@
+@(item: scrupal.core.api.Forms.Input)(implicit wrapper: scrupal.core.api.Forms.InputWrapper)
+
+@import scrupal.core.views.html.forms._
+
+@item.typ.kind match {
+  case 'Boolean => {
+    @boolean(item)
+  }
+  case 'String => {
+  }
+  case 'Range => {
+  }
+  case 'Real => {
+  }
+  case 'Enum => {
+  }
+  case 'MultiEnum => {
+  }
+  case 'List => {
+  }
+  case 'Set => {
+  }
+  case 'Map => {
+  }
+  case 'Bundle => {
+  }
+}

@@ -1,0 +1,33 @@
+<configuration>
+    <logger name="akka" level="WARN" />
+    <logger name="play" level="WARN" />
+    <logger name="application" level="DEBUG" />
+    <logger name="scrupal" level="DEBUG" />
+    <logger name="reactivemongo" level="WARN"/>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logs_dir:-logs}/j9Accelerators.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${logs_dir:-logs}/j9Accelerators.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>50MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%d %-7relative %-5level [%thread:%logger{30}] - %msg%n%xException</pattern>
+            <immediateFlush>false</immediateFlush>
+            <outputPatternAsHeader>true</outputPatternAsHeader>
+        </encoder>
+    </appender>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date %-5level %logger{30} - %message%n%xException{5}</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

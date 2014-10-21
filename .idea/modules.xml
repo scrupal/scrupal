@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/scrupal-config/scrupal-config.iml" filepath="$PROJECT_DIR$/scrupal-config/scrupal-config.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-http.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-http.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-http-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-http-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-web.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-web-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-web-build.iml" />
+    </modules>
+  </component>
+</project>

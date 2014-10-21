@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaSbtSettings">
+    <option name="linkedExternalProjectsSettings">
+      <SbtProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="jdk" value="1.7.0_72" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/scrupal-config" />
+            <option value="$PROJECT_DIR$/scrupal-config/project" />
+            <option value="$PROJECT_DIR$/scrupal-core" />
+            <option value="$PROJECT_DIR$/scrupal-core/project" />
+            <option value="$PROJECT_DIR$/scrupal-db" />
+            <option value="$PROJECT_DIR$/scrupal-db/project" />
+            <option value="$PROJECT_DIR$/scrupal-http" />
+            <option value="$PROJECT_DIR$/scrupal-http/project" />
+            <option value="$PROJECT_DIR$/scrupal-utils" />
+            <option value="$PROJECT_DIR$/scrupal-utils/project" />
+          </set>
+        </option>
+        <option name="resolveClassifiers" value="true" />
+        <option name="resolveSbtClassifiers" value="true" />
+      </SbtProjectSettings>
+    </option>
+    <option name="sbtVersion" value="0.13.6" />
+  </component>
+</project>
