@@ -39,6 +39,10 @@ define(['angular', 'ngRoute'], function(ng) {
         return result
     };
 
+    mod.controller('pageIsReady', function($scope) {
+        $scope.page_is_ready = true
+    })
+
     mod.controller('simpleNavCtrl', simpleNavCtrl);
 
     mod.config( function ($routeProvider, $locationProvider) {

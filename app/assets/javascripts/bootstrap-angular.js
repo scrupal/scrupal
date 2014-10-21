@@ -44,7 +44,7 @@ define(['require'], function (require) {
              * module and bootstrap it to the element with the same ID. Easy Peasy. :)
              */
             if ('scrupal_module_to_load' in window) {
-                var mod = window.scrupal_module_to_load
+                var mod = window.scrupal_module_to_load;
                 if (mod !== 'scrupal') {
                     require(['/assets/javascripts/' + mod + '/' + mod + '.js'], function() {
                         var body_selector = '#' + mod
