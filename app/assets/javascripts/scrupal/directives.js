@@ -42,6 +42,7 @@ define(['angular', 'marked'], function(ng, marked) {
         }
         return {
             restrict: 'EAC',
+            replace: true,
             link: link
         }
     });

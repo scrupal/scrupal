@@ -460,14 +460,15 @@ object ConfigWizard extends ScrupalController {
     val dbInfos : Seq[DatabaseInfo] = { for ( (db: String, config: Option[Configuration]) <- cfgs ) yield {
       val cfg : Configuration = config.getOrElse(Configuration.empty)
       DatabaseInfo(
+        cfg.getString("host").getOrElse("localhost"),
+        cfg.getInt("port").getOrElse(27017),
         db,
-        cfg.getString("uri").getOrElse(""),
         cfg.getString("user").getOrElse(""),
         cfg.getString("pass").getOrElse("")
       )
     }}.toSeq
     val dbInfo = if (dbInfos.isEmpty)
-      DatabaseInfo("scrupal", "mongodb://localhost:27017", "", "")
+      DatabaseInfo("localhost", 27017, "scrupal", "", "")
     else
       dbInfos.head
     databaseForm.fill(dbInfo)
@@ -479,14 +480,16 @@ object ConfigWizard extends ScrupalController {
         config.getString("uri").getOrElse("")
       }
     }.getOrElse("")
-    else "jdbc:h2:~/scrupal"
+    else "mongodb:localhost:27017/scrupal"
   }
 
   def makeConfiguration(db: DatabaseInfo) : Config = {
     import collection.JavaConversions._
     val theMap = Map( {
         val required = Seq(
-          "db." + db.name + ".uri" -> db.uri
+          "db." + db.name + ".uri" -> db.uri,
+          "db." + db.name + ".host" -> db.host,
+          "db." + db.name + ".port" -> db.port.toString
         )
         val opt1 = if (db.user.isEmpty) Seq.empty else Seq( "db." + db.name + ".user" -> db.user)
         val opt2 = if (db.pass.isEmpty) Seq.empty else Seq( "db." + db.name + ".pass" -> db.pass)
@@ -498,13 +501,16 @@ object ConfigWizard extends ScrupalController {
   }
 
   /** Information for one database */
-  case class DatabaseInfo(name: String, uri: String, user: String, pass: String )
+  case class DatabaseInfo(host:String, port: Int, name: String, user: String, pass: String ) {
+    def uri = { "mongodb://" + host + ":" + port + "/" + name }
+  }
 
   /** The Play! Framework Form to perform the mapping to/from DatabasesInfo */
   val databaseForm : DatabaseForm = Form[DatabaseInfo] (
     mapping (
+      "host" -> nonEmptyText,
+      "port" -> number,
       "name" -> nonEmptyText,
-      "uri"  -> text,
       "user" -> text(minLength=0, maxLength=255),
       "pass" -> text(minLength=0, maxLength=255)
     )(DatabaseInfo.apply)(DatabaseInfo.unapply)

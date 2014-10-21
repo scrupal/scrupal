@@ -17,7 +17,7 @@
 
 /* Scrupal Controllers Definitions */
 
-define(['angular', 'ng.route'], function(ng) {
+define(['angular', 'ngRoute'], function(ng) {
     'use strict';
 
     var mod = ng.module('scrupal.controllers', ['ngRoute']);

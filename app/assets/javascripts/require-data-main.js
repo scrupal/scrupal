@@ -27,7 +27,7 @@ require.config({
         'requirejs'             : [ '/webjars/lib/requirejs/require' ],
         'marked'                : [ '/webjars/lib/marked/marked' ],
         'angular'               : [ '/webjars/lib/angularjs/angular' ],
-        'ng.route'              : [ '/webjars/lib/angularjs/angular-route'],
+        'ngRoute'               : [ '/webjars/lib/angularjs/angular-route'],
         'ng.ui'                 : [ '/webjars/lib/angular-ui/angular-ui'],
         'ng.DragAndDrop'        : [ '/webjars/lib/angular-dragdrop/draganddrop' ],
         'ng.MultiSelect'        : [ '/webjars/lib/angular-multi-select/angular-multi-select'],
@@ -49,6 +49,7 @@ require.config({
         'jquery'    : { exports: '$' },
         'marked'    : { exports: 'marked' },
         'angular'   : { exports: 'angular' },
+        'ngRoute'   : { exports: 'ngRoute' }
         // 'jsRoutes'  : { exports: 'jsRoutes' },
         // 'domReady'  : { exports: 'domReady' }
     },
@@ -63,11 +64,11 @@ require.config({
 });
 
 /** Create names for the various javascripts we use so we can depend on them more easily. */
-define('nguibootstrap', ['/webjars/lib/angular-ui-bootstrap/ui-bootstrap'], function(uiboot) { return uiboot; });
+// define('angular',       ['/webjars/lib/angularjs/angular'], function(ng) { return ng; });
+// define('nguibootstrap', ['/webjars/lib/angular-ui-bootstrap/ui-bootstrap'], function(uiboot) { return uiboot; });
 
 /* define('jsroutes',      ['assets/javascripts/jsroutes.js'],function(jsRoutes) { return jsRoutes; });
 define('jquery',        ['webjars!jquery.js'],              function(jquery) { return jquery; });
-define('angular',       ['webjars!angular.js'],             function(angular) { return angular; });
 define('angular-ui',    ['webjars!angular-ui.js'],          function(angularUI) { return angularUI; });
 define('ui-router',     ['webjars!angular-ui-router.js'],   function(uiRouter) { return uiRouter; });
 define('ui-bootstrap',  ['webjars!angular-ui-bootstrap.js'],function(uiBootstrap) { return uiBootstrap; });

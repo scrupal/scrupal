@@ -22,11 +22,11 @@ import play.api.Play.current
 
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api.{DefaultDB, MongoConnection, MongoDriver}
-import scrupal.utils.{ConfigHelper, Registry, Registrable}
+import scrupal.utils.{ScrupalComponent, ConfigHelper, Registry, Registrable}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Try, Failure, Success}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -85,11 +85,11 @@ case class DBContext(id: Symbol, uri: String, user: Option[String] = None, pass:
 
 }
 
-object DBContext extends Registry[DBContext] {
+object DBContext extends Registry[DBContext] with ScrupalComponent {
   val registrantsName: String = "dbContext"
   val registryName: String = "DatabaseContexts"
 
-  private val driver = MongoDriver()
+  private var driver = MongoDriver()
   private var connection: Option[MongoConnection] = None
 
   def fromConfiguration() : DBContext = {
@@ -116,6 +116,24 @@ object DBContext extends Registry[DBContext] {
         register(result)
         result
     }
+  }
+
+  def startup() : Unit = Try {
+    driver = MongoDriver()
+  } match {
+    case Success(x) => log.debug("Successful mongoDB startup.")
+    case Failure(x) => log.error("Failed to start up mongoDB", x)
+  }
+
+  def shutdown() : Unit = Try {
+    connection match {
+      case Some(conn) => log.debug("Closing mongoDB connections"); conn.close()
+      case None => log.debug("No mongoDB connections to close.")
+    }
+    driver.close()
+  } match {
+    case Success(x) => log.debug("Successful mongoDB shutdown.")
+    case Failure(x) => log.error("Failed to shut down mongoDB", x)
   }
 
 }

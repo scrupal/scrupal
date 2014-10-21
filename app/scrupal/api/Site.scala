@@ -111,7 +111,8 @@ object Site extends Registry[Site] {
           case Success(true) =>
             val sites = Await.result(schema.sites.fetchAll, 5.seconds)
             for (s <- sites) {
-              Logger.debug("Loading site '" + s._id.name + "' for host " + s.host + ", " +"enabled: " + s.enabled)
+              Logger.debug("Loading site '" + s._id.name + "' for host " + s.host + ", index=" + s.siteIndex
+                            + ", " +"enabled: " + s.enabled)
               result.put(s.host, Site(s, context))
             }
           case Success(false) =>

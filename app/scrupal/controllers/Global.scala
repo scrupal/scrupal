@@ -29,6 +29,7 @@ import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
 import scala.util.matching.Regex
 import scala.collection.immutable.TreeMap
+import scrupal.db.DBContext
 
 object Global extends GlobalSettings
 {
@@ -48,13 +49,13 @@ object Global extends GlobalSettings
     /** The Set of sites that we serve is loaded once from the database at startup. These change very infrequently and
       * are needed for request processing on every request in order to construct the Context for the request.
       * Consequently we do not want to put them in a Cache nor query them from teh DB. They just need to be here in
-      * memory available for use on each request. The sites reference is a val, nobody should ever change it,
-      * but the content of the MutableSet may change as sites are added/removed. Again,
-      * that's an administration operation that happens infrequently so we don't expect mutation churn on this data.
+      * memory available for use on each request. The sites reference is a var, nobody should ever change it, except
+      * when new sites are added to the database which is an administrative action tha toccurs infrequently so we don't
+      * expect mutation churn on this data.
       * Note: the objects themselves are not ever mutated. When we want to make a change,
-      * the new on is added and the old one is removed. So, our only vulnerability is a brief moment when the list
+      * the new one is added and the old one is removed. So, our only vulnerability is a brief moment when the list
       * contains a duplicate.
-      * Note that the type is a HashMap[Short,Site] because we want to index it quickly by the port number we are
+      * Note that the type is a Map[String,Site] because we want to index it quickly by the host name we are
       * serving so as to avoid a scan of this data structure on every request.
       */
     var sites : Map[String,Site] = Map[String,Site]()
@@ -125,6 +126,7 @@ object Global extends GlobalSettings
 	 */
 	override def onStart(app: Application) {
 		DefaultGlobal.onStart(app)
+    DBContext.startup()
 	}
 
 	/**
@@ -134,6 +136,7 @@ object Global extends GlobalSettings
 	 */
 	override def onStop(app: Application) {
 		DefaultGlobal.onStop(app)
+    DBContext.shutdown()
 	}
 
   /** The Scrupal default Configuration

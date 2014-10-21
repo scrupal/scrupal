@@ -11,26 +11,20 @@
 
 @html.configPage("Database Configuration", step, lastError)  {
 <p>
-I'm going to help you select and configure your database now. Scrupal stores all its information in a database and
-picking the right one for your needs is important. You may choose from among the following databases:
-</p>
-<dl class="dl-horizontal">
-    <dt>H2</dt><dd>Fast, lightweight, easy to use. A good choice if you're evaluating,
-    testing or extending Scrupal. It's what the developers use!</dd>
-    <dt>MySQL</dt><dd>A mature, competent, stable and scalable open source database owned by Oracle. A good choice if
-    you are looking to host your Scrupal somewhere as MySQL is quite ubiquitous.</dd>
-    <dt>Postgres</dt><dd>A highly scalable database with many features the others don't have. A good choice if you
-    need access to advanced database features.</dd>
-    <dt>SQLite</dt><dd>Another competent open source database. A good choice if you're already familiar with it.</dd>
-</dl>
-<p>If you're not sure which database to select, choose H2. You can always change, without too much difficulty,
-    later on.</p>
+I'm going to help you select and configure your database now. Scrupal stores all its information in a
+<a href="https://www.mongodb.org/">mongoDB</a> database and we need to specify enough information for Scrupal
+to find or create the database you want to use for Scrupal. If you don't have mongoDB installed, you can
+<a href="https://www.mongodb.org/downloads">download it from this link.</a>. In order to specify the database
+to use, you will need to provide the hostname the mongoDB server (daemon) is running on, the name of the database
+you wish to use, and the login credentials (optional).
+
 
 
 @hForm("Databases", ConfigWizard.configAction) {
+    @inputText(dbs("host"), '_label -> "Host Name", '_placeholder -> "Enter the host name where mongoDB is running.")
+    @inputText(dbs("port"), '_label -> "Port Number", '_placeholder -> "Enter the TCP port number mongoDB is listening on.")
     @inputText(dbs("name"), '_label -> "Database Name",
         '_placeholder -> "Enter a name you want to use to refer to this database configuration.")
-    @inputText(dbs("uri"), '_label -> "Mongo Database URI", '_placeholder -> "JDBC URL for the database")
     @inputText(dbs("user"), '_label -> "Database User",
         '_placeholder -> "User name to log into database, or blank for none.")
     @inputPassword(dbs("pass"), '_label -> "User's Password",
