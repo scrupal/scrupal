@@ -1,5 +1,7 @@
 package scrupal.fakes
 
+import java.net.URL
+
 import scrupal.core.api._
 import scrupal.utils.Version
 
@@ -13,7 +15,7 @@ abstract class AbstractFakeModule(
   isEnabled : Boolean =true
 )  extends Module(id, "Fake Module", version, obsoletes, isEnabled) {
 
-  override def moreDetailsURL: Unit = "No URL, Fake Module"
+  override def moreDetailsURL: URL = new URL("No URL, Fake Module")
   override def author: String = "No author, Fake Module"
   override def copyright: String = "No copyright, Fake Module"
   override def license: String = "No license, Fake Module"
@@ -35,4 +37,3 @@ case class FakeModule(
 ) extends AbstractFakeModule(id, version, obsoletes, isEnabled) {
 
 }
-

@@ -17,6 +17,8 @@
 
 package scrupal.core.api
 
+import java.net.URL
+
 import scrupal.core.{EmptyMutableConfiguration, MutableConfiguration}
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{Registrable, Registry, Version}
@@ -49,11 +51,11 @@ abstract class Module(
   val version: Version,
   val obsoletes: Version,
   var enabled: Boolean = true
-) extends Registrable[Module] with Describable with Enablable with Versionable {
+) extends Registrable[Module] with Describable with Enablable with Versionable with SelfValidator{
   def registry = Module
   def asT = this
 
-  def moreDetailsURL
+  def moreDetailsURL : URL
 
   def author : String
 
@@ -121,6 +123,25 @@ abstract class Module(
       required_version > this.obsoletes
     }
   }
+
+  override final def enable() = {
+    // TODO: Make sure an invalid module never gets enabled
+    enabled = true
+  }
+  /** Validate A Module's Content
+    *
+    * This provides a safety check against making declarative mistakes in the definition of a module. It makes a full
+    * pass through the entire stucture of the module and ensures that everything makes sense and the Module is ready
+    * to be used. Scrupal validates a module when it is first loaded and will disable it should validation fail.
+    * Whenever it is enabled, validation is re-run again.
+    * @return
+    */
+  private[scrupal] final def _validate : ValidationResult = {
+    // TODO: Write the module validator
+    None
+  }
+
+  def validate() : ValidationResult = _validate
 }
 
 /** Amalgamated information about all registered Modules

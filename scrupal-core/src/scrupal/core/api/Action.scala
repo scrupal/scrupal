@@ -36,7 +36,7 @@ trait Request[E] {
   * Results are generated from an action processing a request. They encapsulate a payload and a disposition. The
   * disposition provides a quick summary of the result while the payload provides access to the actual resulting
   * information.
-  * @tparam P
+  * @tparam P The type of the resulting payload
   */
 trait Result[P] {
   val disposition : Disposition

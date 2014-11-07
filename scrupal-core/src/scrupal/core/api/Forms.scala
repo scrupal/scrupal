@@ -16,7 +16,7 @@ object Forms {
   type FormOptions = Map[Symbol, String]
   val EmptyOptions = Map.empty[Symbol,String]
 
-  trait FormThing extends Storable[String] with Validator {
+  trait FormThing extends Storable[String] with BSONValidator {
     val default: BSONValue
   }
 
@@ -104,7 +104,7 @@ object Forms {
     def fill[T](t: T): Input = ???
   }
 
-  case class SubmitAction(_id: String, handler: Option[Handler]) extends Validator {
+  case class SubmitAction(_id: String, handler: Option[Handler]) extends BSONValidator {
     def apply(value: BSONValue): ValidationResult = None // TODO: Implement this
   }
 

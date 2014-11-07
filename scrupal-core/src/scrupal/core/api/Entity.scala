@@ -33,7 +33,7 @@ case class Entity (
   description: String,
   instanceType: BundleType,
   module: Module
-) extends StorableRegistrable[Entity] with Describable with Validator {
+) extends StorableRegistrable[Entity] with Describable with BSONValidator {
   def registry = Entity
   def asT = this
 

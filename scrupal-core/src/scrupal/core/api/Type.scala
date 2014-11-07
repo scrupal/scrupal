@@ -33,7 +33,7 @@ import scrupal.utils.{Registry, Pluralizer, Registrable}
   * Types are interned by the Registry[Type] utility. This means that types share a single global name space.
   * Modules must cooperate on defining types in such a way that their names do not conflict.
   */
-trait Type extends Registrable[Type] with Describable with Validator {
+trait Type extends Registrable[Type] with Describable with BSONValidator {
   val module: Identifier
   def registry = Type
 

@@ -17,6 +17,8 @@
 
 package scrupal.core
 
+import java.net.URL
+
 import reactivemongo.bson.{BSONString, BSONValue}
 import scrupal.db.{Schema,DBContext}
 import scrupal.core.api._
@@ -37,7 +39,7 @@ object CoreModule extends Module(
   enabled = true
 ) {
 
-  def moreDetailsURL = "http://modules.scrupal.org/doc/" + label
+  def moreDetailsURL = new URL("http://modules.scrupal.org/doc/" + label)
 
   def author : String = "Reid Spencer"
 

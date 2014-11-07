@@ -200,7 +200,7 @@ case class BLOBType  (
 
 }
 
-case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends Validator {
+case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator {
 
   def apply(value: BSONValue): ValidationResult = single(value) {
     case BSONInteger(x) if !enumerators.exists { y => y._2 == x} =>
@@ -266,7 +266,7 @@ case class ListType  (
   override def kind = 'List
   def apply(value: BSONValue) : ValidationResult = {
     value match {
-      case a: BSONArray => validate(a, elemType)
+      case a: BSONArray => validate(a.values, elemType)
       case x: BSONValue => wrongClass("BSONArray", x).map { s => Seq(s)}
     }
   }
@@ -288,7 +288,7 @@ case class SetType  (
   override def kind = 'Set
   def apply(value: BSONValue) : ValidationResult = {
     value match {
-      case a: BSONArray => validate(a, elemType) // FIXME: validate there are no duplicates
+      case a: BSONArray => validate(a.values, elemType) // FIXME: validate there are no duplicates
       case x: BSONValue => wrongClass("BSONArray", x).map { s => Seq(s)}
     }
   }
