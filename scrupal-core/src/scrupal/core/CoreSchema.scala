@@ -29,11 +29,11 @@ import scala.concurrent.Future
  */
 class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
-  val (features,sites,entities,instances,alerts) = dbc.withDatabase { db ⇒
+  val (features,sites,instances,alerts) = dbc.withDatabase { db ⇒
     (
       Feature.FeatureDao(db),
       Site.SiteDao(db),
-      Entity.EntityDao(db),
+      // Entity.EntityDao(db),
       Instance.InstanceDao(db),
       Alert.AlertDao(db)
     )
@@ -46,15 +46,13 @@ class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
 
   def daos : Seq[DataAccessObject[_,_]] = {
-    Seq( features, sites, entities, instances, /* aliases, tokens, */ alerts )
+    Seq( features, sites, instances, /* aliases, tokens, */ alerts )
   }
 
   def validateDao(dao: DataAccessObject[_,_]) : Boolean = {
     // FIXME: this needs to be written properly
     dao.collection.name match {
-      case "modules" => true
       case "sites" => true
-      case "entities" => true
       case "instances" => true
       case "principals" => true
       case "aliases" => true

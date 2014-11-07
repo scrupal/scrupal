@@ -19,25 +19,26 @@ package scrupal.core.api
 
 import org.specs2.mutable.Specification
 import scrupal.core.RangeType
+import scrupal.fakes.FakeModule
 import scrupal.utils.Version
 
 import scala.collection.immutable.HashMap
 
 /** Test specifications for the API Module class */
 class ModuleSpec extends Specification {
-  object Module1 extends Module('Module1, "Module1 Description", Version(1,0,0), Version(0,8,20)) {
+  object Module1 extends FakeModule('Module1, Version(1,0,0), Version(0,8,20)) {
     override val types = Seq(
       new RangeType('Foo, "Fooness", id, 0, 0)
     )
   }
 
-  object Module2 extends Module('Module2, "Module2 Description", Version(1,0,0), Version(0,9,1)) {
+  object Module2 extends FakeModule('Module2, Version(1,0,0), Version(0,9,1)) {
     override val dependencies = Map[Symbol,Version](
       'Module1 -> Version(0,8,21)
     )
   }
 
-  object Module3 extends Module('Module3, "Module3 Description", Version(1,0,0), Version(0,9,1)) {
+  object Module3 extends FakeModule('Module3, Version(1,0,0), Version(0,9,1)) {
     override val dependencies = HashMap[Symbol,Version](
       'Module1 -> Version(0,9,10)
     )

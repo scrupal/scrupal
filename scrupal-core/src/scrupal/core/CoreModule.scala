@@ -20,7 +20,7 @@ package scrupal.core
 import reactivemongo.bson.{BSONString, BSONValue}
 import scrupal.db.{Schema,DBContext}
 import scrupal.core.api._
-import scrupal.utils.{Configuration, Version}
+import scrupal.utils.Version
 
 import CoreFeatures._
 
@@ -34,16 +34,30 @@ object CoreModule extends Module(
   "Scrupal's Core module for core, essential functionality.",
   Version(0,1,0),
   Version(0,0,0),
-  MutableConfiguration(
+  enabled = true
+) {
+
+  def moreDetailsURL = "http://modules.scrupal.org/doc/" + label
+
+  def author : String = "Reid Spencer"
+
+  def copyright : String = "(C) 2014 Reactific Systems, Inc. All Rights Reserved"
+
+  def license : String = "GPLv3"
+
+  override def config =   MutableConfiguration(
     Map(
       "Notes" → Markdown_t
     ),
     Map[String,BSONValue](
       "Notes" → BSONString("No notes.")
     )
-  ),
-  enabled = true
-) {
+  )
+
+  override def features = Seq(
+    DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
+  )
+
 
   /** The core types that Scrupal provides to all modules */
   override def types = Seq[Type](
@@ -55,21 +69,15 @@ object CoreModule extends Module(
   val PageEntity = Entity(
     'Page,
     "An entity for simple HTML5 pages.",
-    PageBundle_t
+    PageBundle_t,
+    this
   )
 
   override def entities = Seq[Entity](
     PageEntity
   )
 
-  /** Settings for the core
-    */
-  override def settings = Configuration.empty
-
-
-  override def features = Seq(
-    DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
-  )
+  override def handlers = Seq()
 
   override def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( new CoreSchema(dbc) )
 }

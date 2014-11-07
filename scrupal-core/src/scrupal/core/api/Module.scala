@@ -19,7 +19,7 @@ package scrupal.core.api
 
 import scrupal.core.{EmptyMutableConfiguration, MutableConfiguration}
 import scrupal.db.{DBContext, Schema}
-import scrupal.utils.{Configuration, Registrable, Registry, Version}
+import scrupal.utils.{Registrable, Registry, Version}
 
 import scala.collection.immutable.HashMap
 
@@ -43,16 +43,30 @@ import scala.collection.immutable.HashMap
   *                  incompatible with `version` (although, depending on the feature in question, some compatibility
   *                  may remain).
   */
-case class Module(
-  id : Identifier,
-  description: String,
-  version: Version,
-  obsoletes: Version,
-  config: MutableConfiguration = EmptyMutableConfiguration,
+abstract class Module(
+  val id : Identifier,
+  val description: String,
+  val version: Version,
+  val obsoletes: Version,
   var enabled: Boolean = true
 ) extends Registrable[Module] with Describable with Enablable with Versionable {
   def registry = Module
   def asT = this
+
+  def moreDetailsURL
+
+  def author : String
+
+  def copyright : String
+
+  def license : String
+
+  /** The set of configuration settings for the Module grouped into named sections.
+    * We use the Play! Configuration class here. It is a Scala wrapper around the very lovely Typesafe Configuration
+    * library written in Java. We provide, elsewhere, our own way to fetch and restore these things from the database
+    * via Json serialization.
+    * Java*/
+  def config : MutableConfiguration = EmptyMutableConfiguration
 
   /** A mapping of the Module's dependencies.
     * The dependencies map provides the version for each named module this module depends on. The default value lists
@@ -62,38 +76,31 @@ case class Module(
     */
   def dependencies : Map[Identifier,Version] = HashMap('Core -> Version(0,1,0))
 
+  /** The set of Features that this Module provides.
+    * These features can be enabled and disabled through the admin interface and the module can provide its own
+    * functionality for when those events occur. See [[scrupal.core.api.Feature]]
+    */
+  def features : Seq[Feature]
+
   /** The set of data types this module defines.
     * There should be no duplicate types as there is overhead in managing them. Always prefer to depend on the module
     * that defines the type rather than respecify it here. This sequence includes all the Trait and Entity types that
     * the module defines.
     */
-  def types = Seq[Type]()
+  def types: Seq[Type]
 
   /** The entities that this module supports.
     * An entity combines together a BundleType for storage, a set of REST API handlers,
     * additional operations that can be requested, and
     */
-  def entities = Seq[Entity]()
+  def entities : Seq[Entity]
 
   /** The set of handlers for the events this module is interested in.
     * Interest is expressed by providing a handler for each event the module wishes to intercept. When the event occurs
     * the module's handler will be invoked. Multiple modules can register for interest in the same event but there is
     * no defined order in which the handlers are invoked.
     */
-  def handlers = Seq[HandlerFor[Event]]()
-
-  /** The set of configuration settings for the Module grouped into named sections.
-    * We use the Play! Configuration class here. It is a Scala wrapper around the very lovely Typesafe Configuration
-    * library written in Java. We provide, elsewhere, our own way to fetch and restore these things from the database
-    * via Json serialization.
-    * Java*/
-  def settings : Configuration = Configuration.empty
-
-  /** The set of Features that this Module provides.
-    * These features can be enabled and disabled through the admin interface and the module can provide its own
-    * functionality for when those events occur. See [[scrupal.core.api.Feature]]
-    */
-  def features : Seq[Feature] = Seq()
+  def handlers : Seq[HandlerFor[Event]]
 
   /** The set of Database Schemas that this Module defines.
     * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
@@ -101,7 +108,6 @@ case class Module(
     */
   def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( )
 
-  def moreDetailsURL = "http://modules.scrupal.org/doc/" + label
 
   /** Determine compatibility between `this` [[scrupal.core.api.Module]] and `that`.
     * This module is compatible with `that` if either `that` does not depend on `this` or the version `that` requires

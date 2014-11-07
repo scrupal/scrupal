@@ -20,10 +20,22 @@ package scrupal.core
 import org.specs2.mutable.Specification
 import reactivemongo.bson.BSONDocument
 import scrupal.core.api.{Entity, Instance, Module}
+import scrupal.fakes.FakeModule
 import scrupal.utils.Version
 
 /** Top Level Test Suite for Core */
 class CoreSpec extends Specification {
+
+
+  class TestModule extends FakeModule('foo) {
+    val thai = StringType('Thai, "Thai Foon", id, ".*".r)
+    val buns = BundleType('Buns, "Buns Aye", id, Map('tie -> thai))
+    val plun = Entity('Plun, "Plunderous Thundering Fun", buns, this)
+
+    override val types = Seq(thai, buns)
+
+    override val entities = Seq(plun)
+  }
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in {
@@ -31,12 +43,9 @@ class CoreSpec extends Specification {
         withCoreSchema { schema : CoreSchema =>
 
 
-          val foo = Module('foo, "Foo Man Chew", Version(0, 1, 0), Version(0, 0, 0))
-          foo.id must beEqualTo('foo)
-          log.info("Module ID=" + foo.id)
+          val foo = new TestModule
 
-          val thai = new StringType('Thai, "Thai Foon", foo.id, ".*".r)
-          val buns = new BundleType('Buns, "Buns Aye", foo.id, Map('tie -> thai))
+          foo.id must beEqualTo('foo)
 
           /*        val ty_id = schema.ypes.insert()
           val ty = Types.fetch(ty_id)
@@ -53,9 +62,7 @@ class CoreSpec extends Specification {
   */
           dbContext.get must beEqualTo(schema.dbc)
 
-          val e_id = schema.entities.insertSync(new Entity('Plun, "Plunderous Thundering Fun", buns))
-          e_id.ok must beTrue
-          val instance = Instance('Inst, "Instance", "Instigating Instance", 'Plun, BSONDocument())
+          val instance = Instance('Inst, "Instance", "Instigating Instance", foo.plun.id, BSONDocument())
           val wr = schema.instances.insertSync(instance)
           wr.hasErrors must beFalse
           val oi2 = schema.instances.fetchSync('Inst)

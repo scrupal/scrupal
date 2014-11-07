@@ -21,12 +21,13 @@ import org.specs2.mutable.Specification
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson._
 import scrupal.core._
+import scrupal.fakes.FakeModule
 import scrupal.utils.Version
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {
 
-  object TestModule extends Module('TestModule, "Test Module", Version(0,1,0), Version(0,0,0) )
+  object TestModule extends FakeModule('TestModule)
 
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
   object MiddlePeriod extends AnyType('MiddlePeriod, "A type for validating URI strings.", TestModule.id) {

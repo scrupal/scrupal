@@ -19,15 +19,28 @@ package scrupal.core.api
 import play.twirl.api.Html
 import reactivemongo.bson.BSONDocument
 
+/** Encapsulation Of An
+  *
+  * Requests are generated from a request receiver such as scrupal-http. They encapsulate an entity, an instance of
+  * that entity, and the invocation arguments. This request information is passed to an Action when it is invoked.
+  * @tparam E The type of entity to which the request is addressed.
+  */
 trait Request[E] {
   val entity: E
   val instance: Instance
   val args: Map[String,Any]
 }
 
+/** Encapsulation of an Action's Result
+  *
+  * Results are generated from an action processing a request. They encapsulate a payload and a disposition. The
+  * disposition provides a quick summary of the result while the payload provides access to the actual resulting
+  * information.
+  * @tparam P
+  */
 trait Result[P] {
-  val payload: P
   val disposition : Disposition
+  val payload: P
 }
 
 trait BSONResult extends Result[BSONDocument]

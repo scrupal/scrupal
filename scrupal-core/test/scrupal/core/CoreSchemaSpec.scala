@@ -31,7 +31,6 @@ class CoreSchemaSpec extends Specification {
           val names = schema.collectionNames
           names.contains("features") must beTrue
           names.contains("instances") must beTrue
-          names.contains("entities") must beTrue
           names.contains("alerts") must beTrue
           names.contains("sites") must beTrue
         }

@@ -17,13 +17,9 @@
 
 package scrupal.core.api
 
-import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import reactivemongo.bson.Macros._
 import scrupal.core.BundleType
 
-import scrupal.db.DataAccessObject
 import scrupal.utils.Registry
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal
@@ -33,9 +29,10 @@ import scrupal.utils.Registry
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   */
 case class Entity (
-   id : Identifier,
-   description: String,
-   instanceType: BundleType
+  id : Identifier,
+  description: String,
+  instanceType: BundleType,
+  module: Module
 ) extends StorableRegistrable[Entity] with Describable with Validator {
   def registry = Entity
   def asT = this
@@ -106,6 +103,7 @@ object Entity extends Registry[Entity] {
   val registrantsName: String = "entity"
   val registryName: String = "Entities"
 
+  /* TODO: Delete this when we're sure we never need to store entities in the DB
   case class EntityDao(db: DefaultDB) extends DataAccessObject[Entity,Identifier](db, "entities") {
     implicit val modelHandler :  BSONDocumentReader[Entity] with BSONDocumentWriter[Entity] with BSONHandler[BSONDocument,Entity] = handler[Entity]
     implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
@@ -113,6 +111,7 @@ object Entity extends Registry[Entity] {
       Index(key = Seq("_id" -> IndexType.Ascending), name = Some("UniqueId"))
     )
   }
+  */
 }
 
 
