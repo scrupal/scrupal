@@ -11,6 +11,8 @@ import reactivemongo.bson._
 
 trait BSONDocumentHandler[T] extends BSONDocumentReader[T] with BSONDocumentWriter[T] with BSONHandler[BSONDocument,T]
 
+// TODO: https://groups.google.com/forum/#!topic/reactivemongo/DMP_fAA6kBU
+
 /** A BSONDocument Builder
   * Provides a DSL for composing BSNDocuments from primitives and providing conversions from plain old Scala types.
   */

@@ -22,6 +22,10 @@ trait Storable[IdType] {
   def _id: IdType
 }
 
+trait AutoStorable extends Storable[BSONObjectID] {
+  val _id: BSONObjectID = BSONObjectID.generate
+}
+
 
 /** An Abstraction For Easier Access to MongoDB Collections
   * Provides a variety of useful methods assuming that the collection holds instances of [[Model]] and those instances
