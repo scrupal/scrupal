@@ -17,11 +17,12 @@
 package scrupal.core
 
 import com.typesafe.config.{ConfigParseOptions, ConfigFactory, ConfigRenderOptions, Config}
+import scrupal.core.Patterns._
 import scala.util.matching.Regex
 
 import org.joda.time.DateTime
 import reactivemongo.bson._
-import scrupal.utils.{Icons, AlertKind}
+import scrupal.utils.{Configuration, Icons, AlertKind}
 
 /** Scrupal Core API Library.
   * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
@@ -41,7 +42,6 @@ package object api {
 
   type ValidationResult = Option[Seq[String]]
 
-
   implicit val IdentifierBSONHandler = new BSONHandler[BSONString,Identifier] {
     override def write(t: Identifier): BSONString = BSONString(t.name)
     override def read(bson: BSONString): Identifier = Symbol(bson.value)
@@ -51,7 +51,6 @@ package object api {
     override def write(t: Short): BSONInteger = BSONInteger(t.toInt)
     override def read(bson: BSONInteger): Short = bson.value.toShort
   }
-
 
   implicit val DateTimeBSONHandler = new BSONHandler[BSONDateTime,DateTime] {
     override def write(t: DateTime): BSONDateTime = BSONDateTime(t.getMillis)
@@ -73,6 +72,14 @@ package object api {
     override def read(bson: BSONString): Config = ConfigFactory.parseString(bson.value, ConfigParseOptions.defaults())
   }
 
+  implicit val ConfigurationHandler: BSONHandler[BSONString,Configuration] = new BSONHandler[BSONString,Configuration] {
+    override def write(c: Configuration): BSONString =
+      BSONString(c.underlying.root.render (ConfigRenderOptions.concise()))
+    override def read(bson: BSONString): Configuration =
+      Configuration(ConfigFactory.parseString(bson.value, ConfigParseOptions.defaults()))
+
+  }
+
   implicit val RegexHandler: BSONHandler[BSONString,Regex] = new BSONHandler[BSONString,Regex] {
     override def write(t: Regex): BSONString = BSONString(t.pattern.pattern())
     override def read(bson: BSONString): Regex = new Regex(bson.value)
@@ -83,9 +90,12 @@ package object api {
     * to only ever live in memory but they can be references in the database. So when a Type is a field of some
     * class that is stored in the database, what actually gets stored is just the name of the type.
     */
-  implicit val TypeHandler: BSONHandler[BSONString,Type] = new BSONHandler[BSONString,Type] {
-    override def write(t: Type): BSONString = BSONString(t.id.name)
-    override def read(bson: BSONString): Type = Type.of(Symbol(bson.value))
+  class BSONHandlerForAType[T <: Type ] extends BSONHandler[BSONString,T] {
+    override def write(t: T): BSONString = BSONString(t.id.name)
+    override def read(bson: BSONString): T = Type.as(Symbol(bson.value))
   }
+
+  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForAType[Type]
+  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForAType[BundleType]
 
 }
