@@ -17,7 +17,6 @@
 package scrupal.core
 
 import com.typesafe.config.{ConfigParseOptions, ConfigFactory, ConfigRenderOptions, Config}
-import scrupal.core.Patterns._
 import scala.util.matching.Regex
 
 import org.joda.time.DateTime
@@ -85,17 +84,7 @@ package object api {
     override def read(bson: BSONString): Regex = new Regex(bson.value)
   }
 
-  /** Handle reading/writing Type instances to and from BSON.
-    * Note that types are a little special. We write them as strings and restore them via lookup. Types are intended
-    * to only ever live in memory but they can be references in the database. So when a Type is a field of some
-    * class that is stored in the database, what actually gets stored is just the name of the type.
-    */
-  class BSONHandlerForAType[T <: Type ] extends BSONHandler[BSONString,T] {
-    override def write(t: T): BSONString = BSONString(t.id.name)
-    override def read(bson: BSONString): T = Type.as(Symbol(bson.value))
-  }
-
-  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForAType[Type]
-  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForAType[BundleType]
+  implicit val TypeHandler : BSONHandler[BSONString,Type] = new TypeHandlerForBSON[Type]
+  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new TypeHandlerForBSON[BundleType]
 
 }
