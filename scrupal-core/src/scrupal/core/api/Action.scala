@@ -19,6 +19,12 @@ package scrupal.core.api
 import play.twirl.api.Html
 import reactivemongo.bson.BSONDocument
 
+trait Request[E] {
+  val entity: E
+  val instance: Instance
+  val args: Map[String,Any]
+}
+
 trait Result[P] {
   val payload: P
   val disposition : Disposition
@@ -28,21 +34,17 @@ trait BSONResult extends Result[BSONDocument]
 trait HTMLResult extends Result[Html]
 trait TextResult extends Result[String]
 
-trait ActionArgs {
-  val params: Map[String,Any]
-}
-
 /** An Action Invokable On An Entity
   *
   * Actions bring behavior to entities. Each entity can declare a set of actions that its users can invoke from the
   * REST api. Unlike the methods provided by the [[Entity]] class, these Actions operate on the Instances of the
   * entity themselves. The Entity methods are more like operations on the collection of Entities.
   */
-trait Action[E <: Entity,T] extends ( (E, Instance, ActionArgs) => Result[T]) {
+trait Action[E <: Entity,T] extends ( Request[E] => Result[T]) {
   /** Objects mixing in this trait will define apply to implement the Action.
     * Note that the result type is fixed to return a BSONDocument because Methods are only invokable from the REST api
     * which requires results to be in the form of a BSONDocument
     * @return The Play Action that results in a JsObject to send to the client
     */
-  def apply(instance: Instance, args: ActionArgs) : Result[T]
+  def apply(request: Request[E]) : Result[T]
 }
