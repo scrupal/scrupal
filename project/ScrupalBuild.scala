@@ -29,14 +29,17 @@ import com.typesafe.sbt.digest.Import.digest
 
 object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Dependencies {
 
-  lazy val utils = Project(BuildInfo.appName + "-utils", file("./scrupal-utils"))
+  import sbtunidoc.{ Plugin => UnidocPlugin }
+
+  val base_name = BuildInfo.projectName
+
+  lazy val utils = Project(base_name + "-utils", file("./scrupal-utils"))
     .settings(buildSettings ++ Seq(
-    resolvers ++= all_resolvers,
     libraryDependencies ++= utils_dependencies
   ):_*)
   lazy val utils_deps = utils % "compile->compile;test->test"
 
-  lazy val db = Project(BuildInfo.appName + "-db", file("./scrupal-db"))
+  lazy val db = Project(base_name + "-db", file("./scrupal-db"))
     // .enablePlugins(PlayScala)
     .settings(buildSettings ++ Seq(
       resolvers ++= all_resolvers,
@@ -45,7 +48,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
   ).dependsOn(utils_deps)
   lazy val db_deps = db % "compile->compile;test->test"
 
-  lazy val core = Project(BuildInfo.appName + "-core", file("./scrupal-core"))
+  lazy val core = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtTwirl)
     .settings(buildSettings ++ twirlSettings ++ Seq(
       resolvers ++= all_resolvers,
@@ -54,7 +57,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .dependsOn(utils_deps, db_deps)
   lazy val core_deps = core % "compile->compile;test->test"
 
-  lazy val http = Project(BuildInfo.appName + "-http", file("./scrupal-http"))
+  lazy val http = Project(base_name + "-http", file("./scrupal-http"))
     .settings(
       buildSettings ++ Seq(
         resolvers ++= all_resolvers,
@@ -63,7 +66,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .dependsOn(utils_deps, db_deps, core_deps)
   lazy val http_deps = http % "compile->compile;test->test"
 
-  lazy val config_proj = Project(BuildInfo.appName + "-config", file("./scrupal-config"))
+  lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
     .settings(buildSettings ++ Seq(
       resolvers ++= all_resolvers,
       libraryDependencies ++= http_dependencies
@@ -87,11 +90,11 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
   val web_deps = web % "compile->compile;test->test"
   */
 
-  lazy val root = Project(BuildInfo.appName, file("."))
-    .settings(buildSettings ++ Seq(
-      resolvers ++= all_resolvers,
+  lazy val root = Project(base_name, file("."))
+    .settings(buildSettings ++ docSettings ++ Seq(
       libraryDependencies ++= root_dependencies
     ):_*)
+    .settings(UnidocPlugin.unidocSettings: _*)
     .dependsOn(config_deps)
 
   override def rootProject = Some(root)

@@ -215,9 +215,9 @@ abstract class DataAccessObject[Model <: Storable[Id],Id](db: => DefaultDB, coll
   /**
    * Bulk inserts multiple models.
    *
-   * @param objs A [[scala.collection.TraversableOnce]] of models.
-   * @param bulkSize
-   * @param bulkByteSize
+   * @param objs A collection of model objects (any traversable collection type)
+   * @param bulkSize The size of the bulk insert
+   * @param bulkByteSize The size in bytes of the bulk insert
    * @return The number of successful insertions.
    */
   def bulkInsert(objs: TraversableOnce[Model],

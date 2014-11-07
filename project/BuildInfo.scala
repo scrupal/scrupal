@@ -16,13 +16,37 @@
   **********************************************************************************************************************/
 import java.io.File
 
+import scala.language.postfixOps
+
+import com.typesafe.config.ConfigFactory
+import sbt._
+
 /** Build Information
- * Capture basic information about the build.
+ * Capture basic information about the build that is configured in the project/build_info.conf file
  */
 object BuildInfo {
-  val appName = "scrupal"
+  val project_conf = new File("project/project.conf")
+  val conf = ConfigFactory.parseFile(project_conf).resolve()
+  val projectName = conf.getString("project.name")
+  val projectVersion = conf.getString("project.version")
+  val buildNumber = conf.getString("build.number")
+  val buildIdentifier = conf.getString("build.id")
+  val buildUrl = conf.getString("build.url")
 
-  import com.typesafe.config._
-  val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
-  val buildVersion = conf.getString("app.version")
+  object devnull extends ProcessLogger {
+    def info (s: => String) {}
+    def error (s: => String) { }
+    def buffer[T] (f: => T): T = f
+  }
+
+  val currentBranchPattern = """\*\s+([^\s]+)""".r
+
+  def gitBranches = "git branch --no-color" lines_! devnull mkString
+
+  def currBranch = ("git status -sb" lines_! devnull headOption) getOrElse "-" stripPrefix "## "
+
+  def currentGitBranch = currentBranchPattern findFirstMatchIn gitBranches map (_ group 1) getOrElse "-"
+
+  def currentProject(state: State) = Project.extract (state).currentProject.id
+
 }

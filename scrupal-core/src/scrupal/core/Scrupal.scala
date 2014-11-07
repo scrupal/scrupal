@@ -219,19 +219,17 @@ object Scrupal extends ScrupalComponent
     * we're either going to default the data (first time run, no db) or override most of it with the values from the
     * database. The Play configuration is complete by the time this returns.
     *
-	 * Called just after configuration has been loaded, to give the application an opportunity to modify it.
-	 *
-	 * @param config the loaded configuration
-	 * @param path the application path
-	 * @param classloader The applications classloader
-	 * @param mode The mode the application is running in
-	 * @return The configuration that the application should use
-
-	override def onLoadConfig(
+	  * Called just after configuration has been loaded, to give the application an opportunity to modify it.
+	  *
+	  * @param config the loaded configuration
+	  * @param path the application path
+	  * @return The configuration that the application should use
+    */
+	def onLoadConfig(
     config: Configuration,
-    path: File,
-    classloader: ClassLoader,
+    path: File
   ): Configuration = {
+  /*
     // Let Play do whatever it needs to do in its default implementation of this method.
 		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
 
@@ -241,13 +239,15 @@ object Scrupal extends ScrupalComponent
     }
 
     newconf
+  */
+    Configuration.default
  	}
 
 	/**
 	 * Called Just before the action is used.
 	 *
 	 */
-	override def doFilter(a: EssentialAction): EssentialAction = {
+	def doFilter(a: Action[_,_]): Action[_,_]= {
 		a
 	}
 
@@ -255,14 +255,14 @@ object Scrupal extends ScrupalComponent
   /**
 	 * Called when an exception occurred.
 	 *
-	 * The default is to send the framework default error page.
+	 * The default is to send the default error page.
 	 *
 	 * @param request The HTTP request header
 	 * @param ex The exception
 	 * @return The result to send to the client
 	 */
-	override def onError(request: RequestHeader, ex: Throwable)  = {
-		DefaultGlobal.onError(request, ex)
+	def onError(request: Request[_], ex: Throwable) = {
+
 	/*
 		try {
 			InternalServerError(Play.maybeApplication.map {
@@ -291,8 +291,7 @@ object Scrupal extends ScrupalComponent
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-	override def onHandlerNotFound(request: RequestHeader)  = {
-		DefaultGlobal.onHandlerNotFound(request)
+  def onHandlerNotFound(request: Request[_])  = {
 		/*
 		NotFound(Play.maybeApplication.map {
 			case app if app.mode != Mode.Prod => views.html.defaultpages.devNotFound.f
@@ -309,15 +308,12 @@ object Scrupal extends ScrupalComponent
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-	override def onBadRequest(request: RequestHeader, error: String)  = {
-		DefaultGlobal.onBadRequest(request, error)
+	def onBadRequest(request: Request[_], error: String)  = {
 		/*
 		BadRequest(views.html.defaultpages.badRequest(request, error))
 		*/
 	}
 
-	override def onRequestCompletion(request: RequestHeader) {
-		DefaultGlobal.onRequestCompletion(request)
+	def onRequestCompletion(request: Request[_]) {
 	}
-*/
 }

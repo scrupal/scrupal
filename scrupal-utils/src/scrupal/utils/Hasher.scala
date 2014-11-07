@@ -140,14 +140,15 @@ trait Hasher extends Registrable[Hasher] with ScrupalComponent {
    */
   protected def fullEqualityComparison(a: String, b: String) : Boolean = {
 
-    /**
-     * Define a tail recursive function to iterate over all the elements of the string and compute the sum
-     * of the XOR of the character pairs. If the strings are equal, this will yield a zero result at the end. If not,
-     * then the strings are not equal. Note that this algorithm depends on a and b being the same length to avoid
-     * checking both a and b for being isEmpty.
-     * @param a - First string to compare
-     * @param b - Second string to compare
-     * @param result - The ongoing computed result of the recursion
+    /* Recursive computation method.
+      *
+      * Define a tail recursive function to iterate over all the elements of the string and compute the sum
+      * of the XOR of the character pairs. If the strings are equal, this will yield a zero result at the end. If not,
+      * then the strings are not equal. Note that this algorithm depends on a and b being the same length to avoid
+      * checking both a and b for being isEmpty.
+      * @param a - First string to compare
+      * @param b - Second string to compare
+      * @param result - The ongoing computed result of the recursion
      */
     @tailrec
     def compute(a: String, b: String, result: Int = 0) : Int = {

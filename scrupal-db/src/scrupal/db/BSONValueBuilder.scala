@@ -47,7 +47,7 @@ trait BSONValueBuilder {
   /** Explicitly create a [[reactivemongo.bson.BSONDocument]]  from its constituent elements
     * This is likely the simplest constructor for a document. You just list the elements that you want as tuples.
     * Use it like this:
-    * {{{$elements("foo" -> 3, "bar" -> 42.0) }}}
+    * {{{\$elements("foo" -> 3, "bar" -> 42.0) }}}
     * @param elements The elements you want included in the document
     * @return Corresponding BSONDocument
     */
@@ -62,7 +62,7 @@ trait BSONValueBuilder {
     */
   def $array(elements: Producer[BSONValue]*): BSONArray = BSONArray(elements: _*)
 
-  /** Explicitly create an [[reactivemongo.bson.BSONArray]] from a [[Traversable]] of its elements
+  /** Explicitly create an [[BSONArray]] from a [[Traversable]] of its elements
     *
     * @param elements
     * @return
@@ -349,7 +349,7 @@ trait GeospatialQueryOperators extends BSONValueBuilder {
 
   implicit def toBSONArray(coords: Coordinate) :BSONArray = BSONArray(coords.longitude, coords.lattitude)
 
-  /** Specifies a rectangular box using legacy coordinate pairs for $geoWithin queries.
+  /** Specifies a rectangular box using legacy coordinate pairs for [[\$geoWithin]] queries.
     *
     * @param bottom_left
     * @param top_right
@@ -364,14 +364,15 @@ trait GeospatialQueryOperators extends BSONValueBuilder {
     )
   }
 
-  /** Specifies a circle using legacy coordinate pairs to $geoWithin queries when using planar geometry.
+  /** Specifies a circle using legacy coordinate pairs to \$geoWithin queries when using planar geometry.
     *
     */
   def $center(center: Coordinate, radius: Double) = {
     BSONDocument("$center" -> BSONArray(toBSONArray(center), BSONDouble(radius)))
   }
 
-  /** Specifies a circle using either legacy coordinate pairs or GeoJSON format for $geoWithin queries when using spherical geometry.
+  /** Specifies a circle using either legacy coordinate pairs or GeoJSON format for \$geoWithin queries
+    * when using spherical geometry.
     *
     */
   def $centerSphere(center: Coordinate, radius: Double) = {
@@ -397,7 +398,7 @@ trait GeospatialQueryOperators extends BSONValueBuilder {
     )
   }
 
-  /** Specifies a polygon to using legacy coordinate pairs for $geoWithin queries.
+  /** Specifies a polygon to using legacy coordinate pairs for \$geoWithin queries.
     *
     * @param coordinates
     * @return
@@ -425,7 +426,7 @@ trait GeospatialQueryOperators extends BSONValueBuilder {
   /** Selects geometries that intersect with a GeoJSON geometry
    * @param typ The type of geometric object
    * @param coordinates The coordinates of the geometric object
-   * @return BSONDocument for $geoIntersects clause
+   * @return BSONDocument for \$geoIntersects clause
    */
   def $geoIntersects(typ: GeoJSONTypes.Kind, coordinates: Traversable[Traversable[Coordinate]]) = {
     BSONDocument("$geoIntersects" -> $geometry(typ, coordinates))
@@ -495,7 +496,7 @@ trait QueryModifiers extends BSONValueBuilder{
     * @return
     */
   def $hint = ???
-  /**
+  /* TODO: Remaining Query Modifiers in BSONValueBuilder
   def $maxScan	Limits the number of documents scanned.
 def $maxTimeMS	Specifies a cumulative time limit in milliseconds for processing operations on a cursor. See maxTimeMS().
 def $max	Specifies an exclusive upper limit for the index to use in a query. See max().

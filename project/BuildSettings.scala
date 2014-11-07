@@ -41,6 +41,7 @@ trait BuildSettings
     javacOptions in doc ++= Seq ("-source", "1.7"),
     scalacOptions   ++= Seq(
       "-J-Xss8m",
+      "-J-Xmx1024m",
       "-feature",
       "-Xlint",
       "-unchecked",
@@ -49,7 +50,8 @@ trait BuildSettings
       "-language:postfixOps",
       "-language:reflectiveCalls",
       "-encoding", "utf8",
-      "-Ywarn-adapted-args"
+      "-Ywarn-adapted-args",
+      "-target:jvm-1.7"
     ),
     sourceDirectories in Compile := Seq(baseDirectory.value / "src"),
     sourceDirectories in Test := Seq(baseDirectory.value / "test"),
@@ -65,7 +67,7 @@ trait BuildSettings
     parallelExecution in Test := false,
     logBuffered in Test := false,
     shellPrompt     := BuildCommands.buildShellPrompt,
-    version         := BuildInfo.buildVersion,
+    version         := BuildInfo.projectVersion,
     BuildCommands.printClasspath <<= BuildCommands.print_class_path
   )
 
@@ -73,4 +75,32 @@ trait BuildSettings
     sourceDirectories in (Compile, TwirlKeys.compileTemplates) := (unmanagedSourceDirectories in Compile).value,
     TwirlKeys.templateFormats += ("html" -> "play.twirl.api.HtmlFormat")
   )
+
+  val docSettings : Seq[Def.Setting[_]] = Seq(
+    apiURL := Some(url("http://scrupal.org/api/")),
+    scalacOptions in (Compile, doc) ++= Seq("-unchecked", "-deprecation", "-implicits"),
+    scalacOptions in (Compile, doc) ++= Opts.doc.title("Scrupal API"),
+    scalacOptions in (Compile, doc) ++= Opts.doc.version(BuildInfo.projectVersion),
+    autoAPIMappings := true,
+    apiMappings ++= {
+      val cp: Seq[Attributed[File]] = (fullClasspath in Compile).value
+      def findManagedDependency(organization: String, name: String): File = {
+        ( for {
+          entry <- cp
+          module <- entry.get(moduleID.key)
+          if module.organization == organization
+          if module.name.startsWith(name)
+          jarFile = entry.data
+        } yield jarFile
+          ).head
+      }
+      Map(
+        findManagedDependency("org.reactivemongo",  "reactivemongo") → url("http://reactivemongo.org/releases/0.10.5/api/"),
+        findManagedDependency("org.scala-lang", "scala-library") → url(s"http://www.scala-lang.org/api/$scalaVersion/"),
+        findManagedDependency("com.typesafe.akka", "akka-actor") → url(s"http://doc.akka.io/api/akka/"),
+        findManagedDependency("com.typesafe", "config") → url("http://typesafehub.github.io/config/latest/api/")
+      )
+    }
+  )
+
 }

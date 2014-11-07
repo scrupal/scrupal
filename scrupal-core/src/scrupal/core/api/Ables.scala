@@ -23,9 +23,9 @@ import scrupal.utils.{Registrable, Version}
 import scrupal.db.Storable
 
 /** Something that can be created and keeps track of its modification time.
-  * For reasons similar to [[Storable[T]]], the data provided by this trait is accessible to everyone
+  * For reasons similar to [[scrupal.db.Storable]], the data provided by this trait is accessible to everyone
   * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Creatable uses
-  * the same justifications for this design as does [[Storable[T] ]]
+  * the same justifications for this design as does [[scrupal.db.Storable]]
   */
 trait Creatable  {
   def created : Option[DateTime]
@@ -35,9 +35,9 @@ trait Creatable  {
 }
 
 /** Something that can be modified and keeps track of its times of modification and creation.
-  * For reasons similar to [[Storable]], the data provided by this trait is accessible to everyone
+  * For reasons similar to [[scrupal.db.Storable]], the data provided by this trait is accessible to everyone
   * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Modifiable uses
-  * the same justifications for this design as does [[Storable]]
+  * the same justifications for this design as does [[scrupal.db.Storable]]
   */
 trait Modifiable extends Creatable {
   def modified : Option[DateTime]
