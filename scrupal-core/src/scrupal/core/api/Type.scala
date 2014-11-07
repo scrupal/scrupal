@@ -17,13 +17,11 @@
 package scrupal.core.api
 
 import reactivemongo.bson._
-import scrupal.core.CoreModule
 
 import scala.language.existentials
+import scala.util.{Success, Failure, Try}
 
 import scrupal.utils.{Registry, Pluralizer, Registrable}
-
-import scala.util.{Success, Failure, Try}
 
 /** A generic Type used as a placeholder for subclasses that compose types.
   * Note that the name of the Type is a Symbol. Symbols are interned so there is only ever one copy of the name of
@@ -36,7 +34,7 @@ import scala.util.{Success, Failure, Try}
   * Modules must cooperate on defining types in such a way that their names do not conflict.
   */
 trait Type extends Registrable[Type] with Describable with Validator {
-  val module: Module
+  val module: Identifier
   def registry = Type
 
   /** The plural of the name of the type.
@@ -122,7 +120,7 @@ object Type extends Registry[Type] {
     override val kind = 'NotAKind
     override val trivial = true
     val description = "Not A Type"
-    val module = CoreModule
+    val module = 'NotAModule
     def asT = this
     def apply(value: BSONValue) = Some(Seq("NotAType is not valid"))
   }
@@ -133,7 +131,7 @@ object Type extends Registry[Type] {
     override val kind = 'Unfound
     override val trivial = true
     val description = "A type that was not loaded in memory"
-    val module = CoreModule
+    val module = 'NotAModule
     def asT = this
     def apply(value: BSONValue) =
       Some(Seq(
@@ -147,6 +145,13 @@ object Type extends Registry[Type] {
     }
   }
 
+  def as[T <: Type](id: Identifier) : T = {
+    Type(id) match {
+      case Some(typ) => typ.asInstanceOf[T]
+      case None => toss(s"Could not find type named '$id'")
+    }
+  }
+
   /** Retrieve the module in which a Type was defined
     * Every Type is associated with a module. This utility helps you find the associated module for a given type id
     * @param id The Symbol for the type to look up
@@ -155,6 +160,10 @@ object Type extends Registry[Type] {
   def moduleOf(id: Identifier) : Option[Module] = {
     lookup(id) match {
       case Some(ty:Type) => Some(ty.module)
+        Module(ty.module) match {
+          case Some(mod:Module) ⇒ Some(mod)
+          case None ⇒ None
+        }
       case _ => None
     }
   }

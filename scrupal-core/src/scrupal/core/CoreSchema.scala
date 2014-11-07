@@ -75,11 +75,14 @@ class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
     // Now, install all the CoreModule's types and entities
     // val f2 = for (ty <- CoreModule.types) yield { types.insert( ty ) }
-    val f3 = for (en <- CoreModule.entities) yield { entities.insert( en ).map { wr ⇒ en.label → !wr.hasErrors } }
+    /*val f3 = for (en <- CoreModule.entities) yield { entities.insert( en ).map { wr ⇒ en.label → !wr.hasErrors } }
 
     val combined = Future sequence (/*Seq(f1)  ++*/ f3)
 
     for (f <- futures; c <- combined) yield { f ++ c }
+    */
+    Future[Seq[(String,Boolean)]](Seq())
+
   }
 
 }

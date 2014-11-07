@@ -1,6 +1,6 @@
 package scrupal.core.api
 
-import reactivemongo.bson.{BSONArray, BSONValue}
+import reactivemongo.bson.{BSONArray, BSONDocument, BSONValue}
 
 /** Generic BSONValue Validator as a Functor. You can apply these validations in other validations making them
   * composable.
@@ -32,13 +32,39 @@ trait Validator extends ((BSONValue) => ValidationResult) {
       Some(errors)
   }
 
-  protected def validateArray(a: BSONArray, validators: Seq[Validator]) = {
+  protected def validateArray(a: BSONArray, validators: Seq[Validator]) : ValidationResult = {
     val combine = for (item <- validators.zip(a.values); result = item._1(item._2) if result.isDefined) yield result
     val list = {combine.flatMap { _.toSeq }}.flatten
     if (list.isEmpty)
       None
     else
       Some(list)
+  }
+
+  protected def validateMaps(document: BSONValue,
+    validators: Map[String,Validator],
+    defaults: Map[String,BSONValue]) : ValidationResult =
+  {
+    document match {
+      case doc: BSONDocument ⇒
+        val elems = doc.elements.toMap // read it all in once, we'll look at everything in the typical case
+        val combined = for ( (key,validator) ← validators) yield {
+          if (elems.contains(key)) {
+            validator(elems.get(key).get)
+          } else if (defaults.contains(key)) {
+            validator(defaults.get(key).get)
+          } else {
+            Some(Seq(s"Element '$key' is missing and has no default."))
+          }
+        }
+        val list = { combined.flatMap { _.toSeq }}.flatten
+        if (list.isEmpty)
+          None
+        else
+          Some(list.toSeq)
+      case x: BSONValue ⇒
+        Some(Seq(s"Expected a BSONDocument but got: '$x'"))
+    }
   }
 
   protected def single(value: BSONValue)(validator: (BSONValue) => Option[String]): ValidationResult = {

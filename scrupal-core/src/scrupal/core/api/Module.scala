@@ -17,7 +17,7 @@
 
 package scrupal.core.api
 
-import reactivemongo.bson.BSONObjectID
+import scrupal.core.{EmptyMutableConfiguration, MutableConfiguration}
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{Configuration, Registrable, Registry, Version}
 
@@ -48,10 +48,9 @@ case class Module(
   description: String,
   version: Version,
   obsoletes: Version,
-  config: BSONObjectID,
-  configVars: Map[String,Type] = Map.empty[String,Type],
+  config: MutableConfiguration = EmptyMutableConfiguration,
   var enabled: Boolean = true
-) extends Registrable[Module] with Describable with Enablable with Versionable with Configurable {
+) extends Registrable[Module] with Describable with Enablable with Versionable {
   def registry = Module
   def asT = this
 
@@ -92,7 +91,7 @@ case class Module(
 
   /** The set of Features that this Module provides.
     * These features can be enabled and disabled through the admin interface and the module can provide its own
-    * functionality for when those events occur. See [[scrupal.api.Feature]]
+    * functionality for when those events occur. See [[scrupal.core.api.Feature]]
     */
   def features : Seq[Feature] = Seq()
 

@@ -31,12 +31,12 @@ class CoreSpec extends Specification {
         withCoreSchema { schema : CoreSchema =>
 
 
-          val foo = Module('foo, "Foo Man Chew", Version(0, 1, 0), Version(0, 0, 0), CoreConfigObjectId)
+          val foo = Module('foo, "Foo Man Chew", Version(0, 1, 0), Version(0, 0, 0))
           foo.id must beEqualTo('foo)
           log.info("Module ID=" + foo.id)
 
-          val thai = new StringType('Thai, "Thai Foon", foo, ".*".r)
-          val buns = new BundleType('Buns, "Buns Aye", foo, Map('tie -> thai))
+          val thai = new StringType('Thai, "Thai Foon", foo.id, ".*".r)
+          val buns = new BundleType('Buns, "Buns Aye", foo.id, Map('tie -> thai))
 
           /*        val ty_id = schema.ypes.insert()
           val ty = Types.fetch(ty_id)
@@ -53,7 +53,7 @@ class CoreSpec extends Specification {
   */
           dbContext.get must beEqualTo(schema.dbc)
 
-          val e_id = schema.entities.insertSync(new Entity('Plun, "Plunderous Thundering Fun", 'Buns))
+          val e_id = schema.entities.insertSync(new Entity('Plun, "Plunderous Thundering Fun", buns))
           e_id.ok must beTrue
           val instance = Instance('Inst, "Instance", "Instigating Instance", 'Plun, BSONDocument())
           val wr = schema.instances.insertSync(instance)

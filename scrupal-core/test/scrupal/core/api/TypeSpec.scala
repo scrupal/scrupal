@@ -26,10 +26,10 @@ import scrupal.utils.Version
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {
 
-  object TestModule extends Module('TestModule, "Test Module", Version(0,1,0), Version(0,0,0), BSONObjectID("000102030405060708091011") )
+  object TestModule extends Module('TestModule, "Test Module", Version(0,1,0), Version(0,0,0) )
 
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
-  object MiddlePeriod extends AnyType('MiddlePeriod, "A type for validating URI strings.", TestModule) {
+  object MiddlePeriod extends AnyType('MiddlePeriod, "A type for validating URI strings.", TestModule.id) {
     override def validate(value: BSONValue) = single(value) {
       case v: BSONString => {
         val a = v.value.split('.')
@@ -59,7 +59,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object rangeTy extends RangeType('aRange, "Ten from 10", TestModule, 10, 20)
+  object rangeTy extends RangeType('aRange, "Ten from 10", TestModule.id, 10, 20)
 
   "RangeType(10,20)" should {
     "accept 17" in {
@@ -79,7 +79,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object realTy extends RealType('aReal, "Ten from 10", TestModule, 10.1, 20.9)
+  object realTy extends RealType('aReal, "Ten from 10", TestModule.id, 10.1, 20.9)
 
   "RangeType(10.1,20.9)" should {
     "accept 17.0" in {
@@ -99,7 +99,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object enumTy extends EnumType('enumTy, "Enum example", TestModule, Map(
+  object enumTy extends EnumType('enumTy, "Enum example", TestModule.id, Map(
     'one -> 1, 'two -> 2, 'three -> 3, 'four -> 5, 'five -> 8, 'six -> 13
   ))
 
@@ -115,7 +115,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object blobTy extends BLOBType('blobTy, "Blob example", TestModule, "application/binary", 4)
+  object blobTy extends BLOBType('blobTy, "Blob example", TestModule.id, "application/binary", 4)
 
   "BLOBType(4)" should {
     "reject a string that is too long" in {
@@ -132,7 +132,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object listTy extends ListType('listTy, "List example", TestModule, enumTy)
+  object listTy extends ListType('listTy, "List example", TestModule.id, enumTy)
 
   "ListType(enumTy)" should {
     "reject BSONArray(6,7)" in {
@@ -157,7 +157,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object setTy extends SetType('setTy, "Set example", TestModule, rangeTy)
+  object setTy extends SetType('setTy, "Set example", TestModule.id, rangeTy)
 
   "SetType(rangeTy)" should {
     "reject BSONArray(\"foo\")" in {
@@ -182,7 +182,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object mapTy extends MapType('mapTy, "Map example", TestModule, realTy)
+  object mapTy extends MapType('mapTy, "Map example", TestModule.id, realTy)
 
   "MapType(realTy)" should {
     "reject JsObject('foo' -> 17)" in {
@@ -199,7 +199,7 @@ class TypeSpec extends Specification {
     }
   }
 
-  object trait1 extends BundleType('trait1, "Trait example 1", TestModule,
+  object trait1 extends BundleType('trait1, "Trait example 1", TestModule.id,
     fields = Map (
       'even -> MiddlePeriod,
       'email -> EmailAddress_t,
@@ -209,7 +209,7 @@ class TypeSpec extends Specification {
     )
   )
 
-  object trait2 extends BundleType('trait2, "Trait example 2", TestModule,
+  object trait2 extends BundleType('trait2, "Trait example 2", TestModule.id,
     fields = Map(
       'list -> listTy,
       'set -> setTy,
@@ -217,7 +217,7 @@ class TypeSpec extends Specification {
     )
   )
 
-  object AnEntity extends BundleType('AnEntity, "Entity example", TestModule,
+  object AnEntity extends BundleType('AnEntity, "Entity example", TestModule.id,
     fields = Map('trait1 -> trait1, 'trait2 -> trait2)
   )
 

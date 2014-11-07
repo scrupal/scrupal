@@ -19,37 +19,33 @@ package scrupal.core.api
 
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.{BSONDocument, BSONHandler, BSONDocumentWriter, BSONDocumentReader}
+import reactivemongo.bson._
 import reactivemongo.bson.Macros._
+import scrupal.core.BundleType
 
 import scrupal.db.DataAccessObject
 import scrupal.utils.Registry
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal
-  * An Entity brings together several things:The BundleType of an Instance's JSon payload, the web c
+  * An Entity brings together several things:The BundleType of an Instance's  payload,
   * definitions of the RESTful methods, security constraints, and extension actions for the REST API.
   * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
-  * There, a
   */
-case class Entity(
+case class Entity (
    id : Identifier,
    description: String,
-   instanceTypeId: Identifier
-) extends StorableRegistrable[Entity] with Describable {
+   instanceType: BundleType
+) extends StorableRegistrable[Entity] with Describable with Validator {
   def registry = Entity
   def asT = this
 
-  /** Obtain the type of this Entity's Instance bundle. */
-  def instanceType : Type = Type(instanceTypeId).getOrElse(Type.NotAType)
-
-  /** Entity Instances must be defined as a Bundle. Enforce that here */
-  require(instanceType.kind == 'Bundle)
+  def apply(value: BSONValue) : ValidationResult = instanceType(value)
 
   /** The set of additional operations that can be invoked for this Entity in addition to the standard fetch,
     * create, update, relete,
     */
-  val methods: Map[Symbol, Method] = Map()
+  val methods: Map[Symbol, Action[_,_]] = Map()
 
   /** Fetch a single instance of this entity kind
     * Presumably this entity is stored somewhere and this method retrieve it, puts the data into a JsObject and

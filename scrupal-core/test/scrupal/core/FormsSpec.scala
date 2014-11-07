@@ -3,11 +3,9 @@ package scrupal.core
 import org.specs2.mutable.Specification
 import reactivemongo.bson._
 import scrupal.core.api.Forms._
-import scrupal.core.api.Type
+import scrupal.core.api._
 
-/**
- * Created by reidspencer on 11/5/14.
- */
+/** Test Suite for Forms */
 class FormsSpec extends Specification {
 
   def throwRequirementFailed = throwA[IllegalArgumentException]("requirement failed")

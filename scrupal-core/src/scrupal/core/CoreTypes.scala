@@ -17,6 +17,9 @@
 
 package scrupal.core
 
+import java.util.Date
+
+import org.joda.time.DateTime
 import reactivemongo.bson._
 import scrupal.core.api._
 import scrupal.core.Patterns._
@@ -28,7 +31,7 @@ import scala.language.existentials
 case class AnyType(
   id: Identifier,
   description: String,
-  module: Module
+  module: Identifier
 ) extends Type {
   def asT = this
   def apply(value: BSONValue) : ValidationResult = None
@@ -39,7 +42,7 @@ case class AnyType(
 case class BooleanType(
   id : Identifier,
   description: String,
-  module: Module
+  module: Identifier
 ) extends Type {
   def asT = this
   override def kind = 'Boolean
@@ -69,7 +72,7 @@ case class BooleanType(
 case class StringType (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   regex : Regex,
   maxLen : Int = Int.MaxValue
 ) extends Type {
@@ -94,7 +97,7 @@ case class StringType (
 case class RangeType (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   min : Long = Long.MinValue,
   max : Long = Long.MaxValue
 ) extends Type {
@@ -122,7 +125,7 @@ case class RangeType (
 case class RealType (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   min : Double = Double.MinValue,
   max : Double = Double.MaxValue
 ) extends Type {
@@ -143,6 +146,32 @@ case class RealType (
   override def kind = 'Real
 }
 
+/** A point-in-time value between a minimum and maximum time point
+  *
+  * @param id
+  * @param description
+  * @param module
+  * @param min
+  * @param max
+  */
+case class TimestampType (
+  id : Identifier,
+  description: String,
+  module: Identifier,
+  min: Date = new Date(0L),
+  max: Date = new Date(Long.MaxValue)
+) extends Type {
+  assert(min.getTime <= max.getTime)
+  def asT = this
+  def apply(value: BSONValue) = single(value) {
+    case BSONLong(l) if l < min.getTime => Some(s"Timestamp $l is out of range, below minimum of $min")
+    case BSONLong(l) if l > max.getTime => Some(s"Timestamp $l is out of range, above maximum of $max")
+    case BSONLong(l) => None
+    case x: BSONValue => wrongClass("BSONLong",x)
+  }
+}
+
+
 /** A BLOB type has a specified MIME content type and a minimum and maximum length
   *
   * @param id
@@ -153,7 +182,7 @@ case class RealType (
 case class BLOBType  (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   mime : String,
   maxLen : Long = Long.MaxValue
 ) extends Type {
@@ -193,7 +222,7 @@ case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extend
 case class EnumType  (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   enumerators : Map[Identifier, Int]
 ) extends Type {
   require(enumerators.nonEmpty)
@@ -208,7 +237,7 @@ case class EnumType  (
 case class MultiEnumType(
   id: Identifier,
   description: String,
-  module: Module,
+  module: Identifier,
   enumerators: Map[Identifier, Int]
 ) extends Type {
   require(enumerators.nonEmpty)
@@ -230,7 +259,7 @@ case class MultiEnumType(
 case class ListType  (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   elemType : Type
 ) extends CompoundType {
   def asT = this
@@ -252,7 +281,7 @@ case class ListType  (
 case class SetType  (
   override val id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   elemType : Type
 ) extends CompoundType {
   def asT = this
@@ -274,7 +303,7 @@ case class SetType  (
 case class MapType  (
   override val id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   elemType : Type
 ) extends CompoundType {
   def asT = this
@@ -307,7 +336,7 @@ case class MapType  (
 case class BundleType (
   id : Identifier,
   description : String,
-  module: Module,
+  module: Identifier,
   fields : Map[Identifier, Type]
 ) extends Type {
   require(!fields.isEmpty)
@@ -339,67 +368,67 @@ case class BundleType (
   }
 }
 
+object AnyType_t extends AnyType('Any, "A type that accepts any value", Core)
 
-object AnyType_t extends
-  AnyType('Any, "A type that accepts any value", CoreModule)
-
-object AnyString_t extends
-  StringType('AnyString, "A type that accepts any string input", CoreModule, ".*".r, 1024*1024)
+object AnyString_t extends StringType('AnyString, "A type that accepts any string input", Core, ".*".r, 1024*1024)
 
 object NonEmptyString_t extends
-  StringType('NonEmptyString, "A type that accepts any string input except empty", CoreModule, ".+".r, 1024*1024)
+  StringType('NonEmptyString, "A type that accepts any string input except empty", Core, ".+".r, 1024*1024)
 
 object Password_t extends
-  StringType('Password, "A type for human written passwords", CoreModule, anchored(Password), 64)
+  StringType('Password, "A type for human written passwords", Core, anchored(Password), 64)
 
 object AnyInteger_t extends
-  RangeType('Integer, "A type that accepts any integer value", CoreModule, Int.MinValue, Int.MaxValue)
+  RangeType('AnyInteger, "A type that accepts any integer value", Core, Int.MinValue, Int.MaxValue)
 
 object AnyReal_t extends
-  RealType('Real, "A type that accepts any double floating point value", CoreModule, Double.MinValue, Double.MaxValue)
+  RealType('AnyReal, "A type that accepts any double floating point value", Core, Double.MinValue, Double.MaxValue)
+
+object AnyTimestamp_t extends
+  TimestampType('AnyTimestamp, "A type that accepts any timestamp value", Core)
 
 object Boolean_t extends
-  BooleanType('Boolean, "A Boolean truth value accepting 0/1 values or true/false, on/off, etc.", CoreModule)
+  BooleanType('Boolean, "A Boolean truth value accepting 0/1 values or true/false, on/off, etc.", Core)
 
 /** The Scrupal Type for the identifier of things */
 object Identifier_t
-  extends StringType('Identifier, "Scrupal Identifier", CoreModule, anchored(Identifier), 64)
+  extends StringType('Identifier, "Scrupal Identifier", Core, anchored(Identifier), 64)
 
 object Description_t
-  extends StringType('Description, "Scrupal Description", CoreModule, anchored(Markdown), 1024)
+  extends StringType('Description, "Scrupal Description", Core, anchored(Markdown), 1024)
 
 object Markdown_t
-  extends StringType('Markdown, "Markdown document type", CoreModule, anchored(Markdown))
+  extends StringType('Markdown, "Markdown document type", Core, anchored(Markdown))
 
 /** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
 object DomainName_t
-  extends StringType('DomainName, "RFC compliant Domain Name", CoreModule, anchored(DomainName), 253)
+  extends StringType('DomainName, "RFC compliant Domain Name", Core, anchored(DomainName), 253)
 
 /** The Scrupal Type for TCP port numbers */
 object TcpPort_t
-  extends RangeType('TcpPort, "A type for TCP port numbers", CoreModule, 1, 65535) {
+  extends RangeType('TcpPort, "A type for TCP port numbers", Core, 1, 65535) {
 }
 
 /** The Scrupal Type for Uniform Resource Locators.
   * We should probably have one for URIs too,  per http://tools.ietf.org/html/rfc3986
   */
 object URL_t
-  extends StringType ('URL, "Uniform Resource Locator", CoreModule, anchored(UniformResourceLocator))
+  extends StringType ('URL, "Uniform Resource Locator", Core, anchored(UniformResourceLocator))
 
 /** The Scrupal Type for IP version 4 addresses */
 object IPv4Address_t
-  extends StringType('IPv4Address, "A type for IP v4 Addresses", CoreModule, anchored(IPv4Address), 15)
+  extends StringType('IPv4Address, "A type for IP v4 Addresses", Core, anchored(IPv4Address), 15)
 
 /** The Scrupal Type for Email addresses */
 object EmailAddress_t
-  extends StringType('EmailAddress, "An email address", CoreModule, anchored(EmailAddress), 253)
+  extends StringType('EmailAddress, "An email address", Core, anchored(EmailAddress), 253)
 
 object LegalName_t
-  extends StringType('LegalName, "The name of a person or corporate entity", CoreModule, anchored(LegalName), 128)
+  extends StringType('LegalName, "The name of a person or corporate entity", Core, anchored(LegalName), 128)
 
 /** The Scrupal Type for information about Sites */
 object SiteInfo_t
-  extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.", CoreModule,
+  extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.", Core,
     fields = Map(
       'name -> Identifier_t,
       'title -> Identifier_t,
@@ -411,7 +440,7 @@ object SiteInfo_t
 )
 
 object PageBundle_t
-  extends BundleType('PageBundle, "Information bundle for a page entity.", CoreModule,
+  extends BundleType('PageBundle, "Information bundle for a page entity.", Core,
     fields = Map (
       'body -> Markdown_t
     )

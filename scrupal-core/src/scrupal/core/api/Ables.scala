@@ -18,13 +18,9 @@
 package scrupal.core.api
 
 import org.joda.time.DateTime
-import reactivemongo.bson.BSONObjectID
+import scrupal.core.MutableConfiguration
 import scrupal.utils.{Registrable, Version}
 import scrupal.db.Storable
-
-trait StorableRegistrable[T <: StorableRegistrable[T]] extends Registrable[T] with Storable[Identifier] {
-  def _id = id
-}
 
 /** Something that can be created and keeps track of its modification time.
   * For reasons similar to [[Storable[T]]], the data provided by this trait is accessible to everyone
@@ -38,7 +34,7 @@ trait Creatable  {
   def canModify = false
 }
 
-/** Something that can be modified and keeps track of its time of modification
+/** Something that can be modified and keeps track of its times of modification and creation.
   * For reasons similar to [[Storable]], the data provided by this trait is accessible to everyone
   * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Modifiable uses
   * the same justifications for this design as does [[Storable]]
@@ -50,7 +46,7 @@ trait Modifiable extends Creatable {
   override def canModify = true
 }
 
-/** Something that can be named with a Symbol  */
+/** Something that can be named with a String  */
 trait Nameable  {
   def name : String
   def isNamed : Boolean = ! name.isEmpty
@@ -62,6 +58,7 @@ trait Describable {
   def isDescribed : Boolean = ! description.isEmpty
 }
 
+/** Something that can be enabled or disabled */
 trait Enablable  {
   var enabled : Boolean
   def isEnabled = enabled
@@ -69,16 +66,18 @@ trait Enablable  {
   def disable() : Unit = enabled = false
 }
 
+/** Something that has a version and can obsolete other version */
 trait Versionable {
   def version: Version
   def obsoletes: Version
 }
 
+/** Something that can be configured */
 trait Configurable {
-  def config: BSONObjectID
-  def configVars: Map[String,Type]
+  def config: MutableConfiguration
 }
 
+/** Something that has an expiration date */
 trait Expirable {
   def expiry : Option[DateTime]
   def expires = expiry.isDefined
@@ -89,3 +88,18 @@ trait Expirable {
   def unexpired : Boolean = !expired
 
 }
+
+/** Something that contains facets */
+trait Facetable {
+  def facets : Map[String,Facet]
+  def facet(name:String): Option[Facet]= facets.get(name)
+}
+
+/** Something that is both storable and registrable
+  * This may seem a bit silly but it does happen :)
+  * @tparam T
+  */
+trait StorableRegistrable[T <: StorableRegistrable[T]] extends Registrable[T] with Storable[Identifier] {
+  def _id = id
+}
+
