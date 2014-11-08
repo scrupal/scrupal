@@ -19,9 +19,13 @@ package scrupal.core.api
 
 import java.net.URL
 
-import scrupal.core.CoreSchema
+import scrupal.core.{Scrupal, CoreSchema}
 import scrupal.db.DBContext
 import scrupal.utils.Configuration
+
+import spray.http._
+
+import scala.concurrent.Future
 
 
 /** A generic Context trait with just enough defaulted information to render a BasicPage.
@@ -30,11 +34,17 @@ import scrupal.utils.Configuration
   */
 trait Context {
   val config : Configuration
+  val appName : String = "Application"
   val siteName : String = "Scrupal"
   val themeProvider : String = "scrupal"
   val themeName : String = "amelia"
   val user : String = "guest"
   val description : String = ""
+  val uri: Uri = "http://localhost/"
+  val method: HttpMethod = HttpMethods.GET
+  val protocol: HttpProtocol = HttpProtocols.`HTTP/1.1`
+  val headers: Map[String,HttpHeader] = Map.empty[String,HttpHeader]
+
   def alerts : Seq[Alert] = Seq()
   def suggestURL : URL = new URL("/")
 }
@@ -43,11 +53,14 @@ trait Context {
   * This information is generally overridden by subclasses, but this is the minimum we need to render a page. Note that
   * because this is a WrappedRequest[A], all the fields of Request are fields of this class too.
   * @param request The request upon which the context is based
-  * @tparam A The type of content for the request
   */
-class BasicContext[A](request: Request[_]) extends Context {
+class HttpContext(request: HttpRequest) extends Context {
   def secure : Boolean = false
   val config = Configuration.empty
+  override val uri = request.uri
+  override val method = request.method
+  override val protocol = request.protocol
+  override val headers = request.headers.map { h ⇒ h.name → h } toMap
 }
 
 /** A Site context which pulls the information necessary to render something for a site.
@@ -55,15 +68,13 @@ class BasicContext[A](request: Request[_]) extends Context {
   * conditions are right, otherwise a BasicContext is created and an error returned.
   * @param site The site that this request should be processed by
   * @param request The request upon which the context is based
-  * @tparam A The type of content for the request
   */
-class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[_]) extends BasicContext[A](request) {
+class SiteContext(val site: Site, request: HttpRequest) extends HttpContext(request) {
   override val siteName : String = site.label
   override val description : String = site.description
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
   val modules: Seq[Module] = Module.all //FIXME: Should be just the ones for the site
-  val dbContext : DBContext = schema.dbc
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -71,19 +82,18 @@ class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[_]
   * @param user The user that initiated the request.
   * @param site The site that this request should be processed by
   * @param request The request upon which the context is based
-  * @tparam A The type of content for the request
   */
-class UserContext[A](override val user: String, schema: CoreSchema, site: Site, request: Request[_])
-    extends SiteContext[A](schema, site, request) {
+class UserContext(override val user: String, site: Site, request: HttpRequest)
+    extends SiteContext(site, request) {
   val principal  = Nil // TODO: Finish UserContext implementation
 }
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
-  def apply[A](request: Request[_]) = new BasicContext[A](request)
-  def apply[A](schema: CoreSchema, site: Site, request: Request[_]) = new SiteContext(schema, site, request)
-  def apply[A](user: String, schema: CoreSchema, site: Site, request: Request[_]) =
-    new UserContext[A](user, schema, site, request)
+  def apply(request: HttpRequest) = new HttpContext(request)
+  def apply(site: Site, request: HttpRequest) = new SiteContext(site, request)
+  def apply(user: String, site: Site, request: HttpRequest) =
+    new UserContext(user, site, request)
 
 
 }
@@ -96,48 +106,25 @@ object Context {
   * used. This ContextualAction is used by controllers wherever they need Scrupal relevant contextual information.
   * Their action block is provided a ConcreteContext from which information can be derived.
 
-trait ContextProvider extends RichResults {
+trait ContextProvider extends ((HttpRequest) ⇒ Context) {
+  val scrupal: Scrupal
 
-  type BasicActionBlock[A] = (BasicContext[A]) => Future[Result]
-
-  class BasicAction extends ActionBuilder[BasicContext] {
-    def invokeBlock[A](request: HttpRequest, block: BasicActionBlock[A] ) : Future[Result] = {
-      block( new BasicContext[A](request) )
-    }
-  }
-  object BasicAction extends BasicAction
-  type AnyBasicContext = BasicContext[AnyContent]
-
-  type SiteActionBlock[A] = (SiteContext[A]) => Future[Result]
-
-  class SiteAction extends ActionBuilder[SiteContext] {
-    def invokeBlock[A](request: HttpRequest, block: SiteActionBlock[A]) : Future[Result] = {
-      if (Global.ScrupalIsConfigured) {
-        val parts : Array[String] = request.host.split(":")
-        // HTTP Requires the Host Header, but we guard anyway and assume "localhost" if its empty
-        val host: String = if (parts.length > 0) parts(0) else "localhost" ;
-        // Look up the Site by host requested in the request and deal with what we find
-        {
-          Global.DataYouShouldNotModify.sites.get(host) map { site: Site =>
-            if (site.data.enabled) {
-              if (site.data.requireHttps) {
-                request.headers.get("X-Forwarded-Proto").collect {
-                  case "https" =>
-                    site.withCoreSchema { schema: CoreSchema =>
-                      block( Context(schema, site, request) )
-                    }
-                  case _ => {
-                    implicit val ctxt = Context(request)
-                    Future.successful(Forbidden("request to site '" + site.data._id.name + "'", "it requires https."))
-                  }
-                } getOrElse {
-                  implicit val ctxt = Context(request)
-                  Future.successful(Forbidden("request to site '" + site.data._id.name + "'", "it requires https."))
-                }
-              } else {
-                site.withCoreSchema { schema: CoreSchema =>
-                  block( Context(schema, site, request) )
-                }
+  def apply(request: HttpRequest) : Context = {
+    if (scrupal.isReady) {
+      // HTTP Requires the Host Header, but we guard anyway and assume "localhost" if its empty
+      val host = request.uri.authority.host.address
+      val port = request.uri.authority.port
+      val site = Site.forHost(host) map { site: Site ⇒
+        if (site.enabled) {
+          if (site.requireHttps) {
+            request.protocol.value {
+              case "https" ⇒ Context(site, request)
+              case _ => Context(request)
+            }
+          } else if (request.protocl{
+            site.withCoreSchema { schema: CoreSchema =>
+              block( Context(schema, site, request) )
+            }
               }
             } else {
               implicit val ctxt = Context(request)

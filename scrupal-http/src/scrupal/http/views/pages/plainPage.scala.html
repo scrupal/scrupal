@@ -1,6 +1,6 @@
 @(title: String)(content: Html)(implicit context : scrupal.controllers.Context)
-@import scrupal.views.html
-@html.basicPage(title) { } {
+@import scrupal.core.views.html.pages
+@pages.basicPage(title) { } {
 <body>
 <div class="container">
 @content

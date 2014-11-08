@@ -1,5 +1,4 @@
-@(alerts: Seq[scrupal.db.Alert])(implicit context : scrupal.controllers.Context)
-
+@(alerts: Seq[scrupal.core.api.Alert])(implicit context : scrupal.core.api.Context)
 @for(alert <- alerts) {
 @if(alert.unexpired) {
 <div class="alert alert-dismissible @alert.cssClass">

@@ -5,10 +5,8 @@
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/joda-time/joda-time/docs/joda-time-2.5-javadoc.jar!/" />
-      <root url="jar://$USER_HOME$/.ivy2/cache/joda-time/joda-time/docs/joda-time-2.5-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/joda-time/joda-time/srcs/joda-time-2.5-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ivy2/cache/joda-time/joda-time/srcs/joda-time-2.5-sources.jar!/" />
     </SOURCES>
   </library>

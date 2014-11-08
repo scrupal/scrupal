@@ -27,6 +27,7 @@ import play.api.mvc.Action
 import play.api.{Mode, Play, Routes}
 import scrupal.core.CoreFeatures
 import scrupal.core.api.{Instance, Module}
+import scrupal.http.controllers.Assets
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.ExecutionContext.Implicits.global

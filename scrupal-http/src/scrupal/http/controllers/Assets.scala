@@ -15,20 +15,14 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web.controllers
+package scrupal.http.controllers
 
 import java.io.File
 import java.net.URL
 
-import controllers.WebJarAssets
-import play.api.Play.current
-import play.api.mvc._
-import play.api.{Mode, Play}
-import play.utils.UriEncoding
-
 /**
  * Asset controller for core assets. This one gets used by the templates
- */
+ *
 object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
 {
   // Save the Play AssetBuilder object under a new name so we can refer to it without referring to ourself!
@@ -196,3 +190,4 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
     }
   }
 }
+*/

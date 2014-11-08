@@ -1,5 +1,5 @@
-@()(implicit context : scrupal.controllers.Context)
-@import scrupal.api.Feature
+@()(implicit context : scrupal.core.api.Context)
+@import scrupal.core.api.Feature
 @if(Feature.enabled('DebugFooter)){
 @** NOTE: This has to be HTML because it might get mixed into a non-angular page. *@
 <div class="span10 row" style="font-size: 0.5em">
@@ -7,7 +7,8 @@
     <caption style="font-size: 1.2em; font-weight: bold;">Context Details</caption>
     <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
     <tbody>
-        <tr><th>Site</th><td>@context.appName</td></tr>
+        <tr><th>Site</th><td>@context.siteName</td></tr>
+        <tr><th>Application</th><td>@context.appName<td></tr>
         <tr><th>User</th><td>@context.user</td></tr>
         <tr><th>Theme Provider</th><td>@context.themeProvider</td></tr>
         <tr><th>Theme Name</th><td>@context.themeName</td></tr>
@@ -20,7 +21,6 @@
         <tr><th>Request</th><td>@context.method: @context.uri</td></tr>
         <tr><th>Version</th><td>@context.version</td></tr>
         <tr><th>Remote</th><td>@context.remoteAddress</td></tr>
-        <tr><th>Flash</th><td>@context.flash.toString</td></tr>
     </tbody>
 </table>
 </div>

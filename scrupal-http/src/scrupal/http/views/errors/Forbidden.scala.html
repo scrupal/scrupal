@@ -1,6 +1,6 @@
-@(what: String, why: String)(implicit context : scrupal.controllers.Context)
+@(what: String, why: String)(implicit context : scrupal.core.api.Context)
 
-@import scrupal.views.html
+@import scrupal.http.views.html
 
 @html.markedPage("Not Found - " + what) {
 

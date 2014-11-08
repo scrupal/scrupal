@@ -54,7 +54,9 @@ trait Dependencies
   val sprayV = "1.3.2"
   val spray_can               = "io.spray"            %%  "spray-can"             % sprayV
   val spray_routing           = "io.spray"            %%  "spray-routing"         % sprayV
+  val spray_http              = "io.spray"            %%  "spray-http"            % sprayV
   val spray_httpx             = "io.spray"            %%  "spray-httpx"           % sprayV
+  val spray_json              = "io.spray"            %%  "spray-json"            % "1.3.1"
 
   // Akka Stuff
   val akka_actor              = "com.typesafe.akka"   %%  "akka-actor"            % akkaV
@@ -142,7 +144,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
-    twirl_api, reactivemongo
+    twirl_api, reactivemongo, spray_http
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(
