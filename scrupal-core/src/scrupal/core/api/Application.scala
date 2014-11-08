@@ -2,10 +2,9 @@ package scrupal.core.api
 
 import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson.Macros._
 import reactivemongo.bson.{BSONHandler, BSONDocumentWriter, BSONDocumentReader, BSONDocument}
-import scrupal.db.{DataAccessObject, Storable}
+import scrupal.db.DataAccessObject
 import scrupal.utils.Registry
 
 /** A Scrupal Application
@@ -29,18 +28,16 @@ object Application extends Registry[Application] {
   def registryName = "Applications"
   def registrantsName = "application"
 
-  /** Data Access Object For Instances
-    * This DataAccessObject sublcass represents the "instances" collection in the database and permits management of
+  /** Data Access Object For Applications
+    * This DataAccessObject sublcass represents the "applications" collection in the database and permits management of
     * that collection as well as conversion to and from BSON format.
-    * @param db A parameterless function returning a [[reactivemongo.api.DefaultDB]] instance.
+    * @param db A [[reactivemongo.api.DefaultDB]] instance in which to find the collection
     */
-  case class InstanceDao(db: DefaultDB) extends DataAccessObject[Application,Symbol](db, "applications") {
+  case class ApplicationDao(db: DefaultDB) extends DataAccessObject[Application,Symbol](db, "applications") {
     implicit val modelHandler  : BSONDocumentReader[Application]
       with BSONDocumentWriter[Application]
       with BSONHandler[BSONDocument,Application] = handler[Application]
 
     implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
   }
-
-
 }

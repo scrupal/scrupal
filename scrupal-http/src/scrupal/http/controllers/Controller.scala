@@ -1,5 +1,6 @@
 package scrupal.http.controllers
 
+import scrupal.core.Scrupal
 import scrupal.core.api.{Identifier, Type, Module}
 import scrupal.utils.{Registrable, Registry}
 // import play.twirl.api._
@@ -34,7 +35,7 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
     * Note that this does not include checking of the context path. That will have already done before the
     * routes here are invoked. So, this should only check within that 'context"
     */
-  def routes: Route
+  def routes(scrupal: Scrupal): Route
 
   /** Required method for registration */
   def registry: Registry[Controller] = Controller

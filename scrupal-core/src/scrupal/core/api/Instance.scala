@@ -33,6 +33,7 @@ case class Instance(
   description: String,
   entityId: Identifier,
   payload: BSONDocument,
+  // TODO: facets: Map[String,Facet],
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None
 ) extends Storable[Identifier] with Nameable with Describable with Modifiable {

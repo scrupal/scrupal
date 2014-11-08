@@ -90,6 +90,26 @@ trait Type extends Registrable[Type] with Describable with BSONValidator {
 
 }
 
+case class Not_A_Type() extends Type {
+  def id = 'NotAType
+  override val kind = 'NotAKind
+  override val trivial = true
+  val description = "Not A Type"
+  val module = 'NotAModule
+  def asT = this
+  def apply(value: BSONValue) = Some(Seq("NotAType is not valid"))
+}
+
+case class UnfoundType(id: Symbol) extends Type {
+  override val kind = 'Unfound
+  override val trivial = true
+  val description = "A type that was not loaded in memory"
+  val module = 'NotAModule
+  def asT = this
+  def apply(value: BSONValue) =
+    Some(Seq(
+      s"Unfound type '${id.name}' cannot be used for validation. The module defining the type is not loaded."))
+}
 
 
 /** Abstract base class of Types that refer to another Type that is the element type of the compound type
@@ -115,28 +135,7 @@ object Type extends Registry[Type] {
     */
   def isKindOf(name: Symbol, kind: Symbol) : Boolean = lookupOrElse(name,NotAType).kind == kind
 
-  case class Not_A_Type() extends Type {
-    def id = 'NotAType
-    override val kind = 'NotAKind
-    override val trivial = true
-    val description = "Not A Type"
-    val module = 'NotAModule
-    def asT = this
-    def apply(value: BSONValue) = Some(Seq("NotAType is not valid"))
-  }
-
   lazy val NotAType = Not_A_Type()
-
-  case class UnfoundType(id: Symbol) extends Type {
-    override val kind = 'Unfound
-    override val trivial = true
-    val description = "A type that was not loaded in memory"
-    val module = 'NotAModule
-    def asT = this
-    def apply(value: BSONValue) =
-      Some(Seq(
-        s"Unfound type '${id.name}' cannot be used for validation. The module defining the type is not loaded."))
-  }
 
   def of(id: Identifier) : Type = {
     Type(id) match {

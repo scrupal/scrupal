@@ -34,10 +34,10 @@ object Boot extends App with ScrupalComponent
   checkReady()
 
   // we need an ActorSystem to host our application in
-  implicit val system = ActorSystem("scrupal")
+  implicit val system = ActorSystem("Scrupal-Http")
 
   // create and start our service actor
-  val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal), "ScrupalService")
+  val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal), ScrupalServiceActor.name)
 
   val interface = config.getString("scrupal.http.interface").getOrElse("localhost")
   val port = config.getInt("scrupal.http.port").getOrElse(8888)

@@ -24,14 +24,33 @@ import reactivemongo.bson._
 import scrupal.utils.{Configuration, Icons, AlertKind}
 
 /** Scrupal Core API Library.
-  * This package provides all the abstract type definitions needed to write a module for Scrupal. Since Scrupal itself
-  * is simply the "Core" module, this API provides essentially everything needed to write Scrupal itself and any
-  * extension to Scrupal through the introduction of a new module.
+  * This package provides all the abstract type definitions that Scrupal provides. These are the core abstractions
+  * needed to write an application with Scrupal. We use the Acronym *MANIFEST* to remember what the key types of objects
+  * Scrupal defines:
   *
-  * ITEMS = Instance, Type, Entity, Module, Site
-  * ITEMS are the main object types in Scrupal.
+  * - M - Module: A container of functionality that defines Applications, Nodes, Entities, and Types
+  *
+  * - A - Application: A URL context and a set of enabled modules, entities and nodes
+  *
+  * - N - Node: A content generation function
+  *
+  * - I - Instance: An instance of an entity (essentially a document)
+  *
+  * - F - Facet: Something to add on to an instance's main payload
+  *
+  * - E - Entity: A type of instance with definitions for the actions that can be performed on it
+  *
+  * - S - Site: Site management data and a set of applications enabled for it.
+  *
+  * - T - Type: A fundamental data type used for validating BSONValue structured information (Instances and Node results)
+  *
+  * If you can grok these few concepts then you have understood the core concepts of Scrupal.
+  *
+  * At the package level we define mostly implicit BSON translaters needed throughout the core, for convenience.
   */
 package object api {
+
+  lazy val system = scrupal.core.system
 
   /** The typical type of identifer.
     * We use Symbol because they are memoized by the compiler which means we only pay for the memory of a given

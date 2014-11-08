@@ -56,6 +56,7 @@ trait Dependencies
   val spray_routing           = "io.spray"            %%  "spray-routing"         % sprayV
   val spray_http              = "io.spray"            %%  "spray-http"            % sprayV
   val spray_httpx             = "io.spray"            %%  "spray-httpx"           % sprayV
+  val spray_caching           = "io.spray"            %%  "spray-caching"         % sprayV
   val spray_json              = "io.spray"            %%  "spray-json"            % "1.3.1"
 
   // Akka Stuff
@@ -63,11 +64,12 @@ trait Dependencies
   val akka_slf4j              = "com.typesafe.akka"   %%  "akka-slf4j"            % akkaV
 
   // Fundamentals
-  val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.3"
+  val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.4"
 
   // Databass, Caches, Data Storage stuff
   // val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
   val reactivemongo           = "org.reactivemongo"   %% "reactivemongo"          % "0.11.0-SNAPSHOT"
+  val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.5"
 
   // WebJars based UI components
   val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.3.0"
@@ -144,11 +146,12 @@ trait Dependencies
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
-    twirl_api, reactivemongo, spray_http
+    twirl_api, reactivemongo, spray_http, scala_arm
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(
-    spray_can, spray_routing, spray_httpx, akka_actor, twirl_api,
+    spray_can, spray_routing, spray_httpx, spray_caching, livestream_scredis,
+    akka_actor, twirl_api,
     Test.spray_testkit, Test.akka_testkit
   ) ++ common_dependencies
 

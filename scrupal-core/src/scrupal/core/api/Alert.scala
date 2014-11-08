@@ -74,7 +74,7 @@ case class Alert (
   def iconHtml : Html = Icons.html(iconKind)
 
   implicit def Elem2Html(e : Elem) : Html = Html(e.buildString(stripComments = true))
-  implicit def Node2Html(n : Node) : Html = Html(n.buildString(stripComments = true))
+  implicit def Node2Html(n : scala.xml.Node) : Html = Html(n.buildString(stripComments = true))
   implicit def NodeSeq2Html(ns : NodeSeq) : Html = {
     Html(ns.foldLeft[StringBuilder](new StringBuilder) { (s,n) => s.append( n.buildString(stripComments=true))}.toString())
   }

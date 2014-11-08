@@ -13,7 +13,7 @@ class FormsSpec extends Specification {
   "Forms.Input" should {
     "reject NotAType, UnFoundType, and AnyType" in {
       Input("foo", "Foo", Type.NotAType) must throwRequirementFailed
-      Input("foo", "Foo", Type.UnfoundType('unfound)) must throwRequirementFailed
+      Input("foo", "Foo", UnfoundType('unfound)) must throwRequirementFailed
       Input("foo", "Foo", AnyType_t) must throwRequirementFailed
     }
     "accept a valid number" in {

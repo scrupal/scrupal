@@ -61,10 +61,14 @@ object Patterns {
   val Markdown = "[-\\s\\w~`!@#$%^&*()_+={}\\[]|\\\\:;\"'<>,.?/]*".r
   val Password = between(6,64,Markdown)
   val LegalName =  join(Identifier,zeroOrMore(join(" ".r, Identifier)))
+
+  // TODO: convert these patterns to use the constructors so we can comprehend them!
   val DomainName = "(?:(?:[a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9])\\.){0,126}(?:[A-Za-z0-9][-A-Za-z0-9]*[A-Za-z0-9])".r
   val TcpPort =
     "(?:\\d|\\d{2}|\\d{3}|\\d{4}|[0-5]\\d{4}|6(?:(?:[0-4]\\d{3})|5(?:(?:[0-4]\\d{2})|5(?:(?:[0-2]\\d)|3[0-5]))))".r
   val IPv4Address =
     "(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])".r
   val UniformResourceLocator = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]$".r
+
+  val Title = between(4,70,"[-\\s\\w\\d+:%!_{}|;<>,.?]".r)
 }

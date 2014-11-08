@@ -91,6 +91,13 @@ abstract class Module(
     */
   def types: Seq[Type]
 
+  /** The set of nodes this module defines.
+    * A node is simply a dynamic content generator. It is a Function0 (no arguments, returns a result) and can be
+    * used in templates and other places to generate dynamic content either from a template or directly from code.
+    * @return The sequence of nodes defined by this module.
+    */
+  def nodes: Seq[Node]
+
   /** The entities that this module supports.
     * An entity combines together a BundleType for storage, a set of REST API handlers,
     * additional operations that can be requested, and

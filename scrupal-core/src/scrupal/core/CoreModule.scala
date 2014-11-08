@@ -79,6 +79,8 @@ object CoreModule extends Module(
     PageEntity
   )
 
+  override def nodes = Seq[Node]()
+
   override def handlers = Seq()
 
   override def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( new CoreSchema(dbc) )

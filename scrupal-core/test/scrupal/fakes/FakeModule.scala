@@ -33,6 +33,7 @@ case class FakeModule(
   features: Seq[Feature] = Seq(),
   types : Seq[Type] = Seq(),
   entities : Seq[Entity] = Seq(),
+  nodes: Seq[Node] = Seq(),
   handlers : Seq[HandlerFor[Event]] = Seq()
 ) extends AbstractFakeModule(id, version, obsoletes, isEnabled) {
 

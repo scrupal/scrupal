@@ -426,6 +426,9 @@ object EmailAddress_t
 object LegalName_t
   extends StringType('LegalName, "The name of a person or corporate entity", Core, anchored(LegalName), 128)
 
+object Title_t
+  extends StringType('Title, "A string that is valid for a page title", Core, anchored(Title), 70)
+
 /** The Scrupal Type for information about Sites */
 object SiteInfo_t
   extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.", Core,
@@ -442,6 +445,12 @@ object SiteInfo_t
 object PageBundle_t
   extends BundleType('PageBundle, "Information bundle for a page entity.", Core,
     fields = Map (
+      'title -> Title_t,
       'body -> Markdown_t
+     // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
+     // 'master -> Node_t,
+     // 'layout -> Node_t,
+     // 'body -> Node_t,
+     // 'blocks ->
     )
 )

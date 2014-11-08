@@ -1,5 +1,6 @@
 package scrupal.http.controllers
 
+import scrupal.core.Scrupal
 import scrupal.core.api.{Identifier, Module, Entity, Site}
 import spray.routing.{Directives, Route}
 import spray.routing._
@@ -35,7 +36,7 @@ case class EntityController(id: Identifier, priority: Int, site: Site) extends C
 
   val entities = getEntities(site)
 
-  def routes : Route = {
+  def routes(scrupal: Scrupal) : Route = {
     get {
       complete("get")
     } ~

@@ -20,6 +20,7 @@ package scrupal.http.controllers
 import java.io.File
 import java.net.URL
 
+import scrupal.core.Scrupal
 import spray.routing.Route
 
 /**
@@ -27,7 +28,7 @@ import spray.routing.Route
  */
 object Assets extends BasicController('Assets, "assets",-1)
 {
-  def routes : Route = complete("Assets Not Implemented")
+  def routes(scrupal: Scrupal) : Route = complete("Assets Not Implemented")
 
   def favicon() = "/assets/favicon.ico"
   def theme(provider: String, name: String) = "/assets/themes/default.css"

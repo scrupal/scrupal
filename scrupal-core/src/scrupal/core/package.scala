@@ -1,5 +1,6 @@
 package scrupal
 
+import akka.actor.ActorSystem
 import reactivemongo.bson.BSONObjectID
 
 /** Scrupal Utilities
@@ -9,6 +10,7 @@ import reactivemongo.bson.BSONObjectID
 package object core {
 
   val Core: Symbol = 'Core
-  val CoreConfigObjectId : BSONObjectID = BSONObjectID("000000000000000000000000")
+
+  implicit val system: ActorSystem = ActorSystem("Scrupal-Core")
 
 }

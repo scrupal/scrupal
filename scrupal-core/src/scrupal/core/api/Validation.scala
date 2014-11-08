@@ -18,8 +18,6 @@ trait SelfValidator {
  */
 trait ValueValidator[T] extends ((T) => ValidationResult) {
 
-  def apply(value: T) : ValidationResult
-
   protected def validate(values: Seq[T], elemType: ValueValidator[T]) : ValidationResult = {
     val errors = { for (v <- values; e = elemType(v) if e.isDefined) yield { e.get } }.flatten.toSeq
     if (errors.isEmpty)
@@ -51,7 +49,6 @@ trait BSONValidator extends ValueValidator[BSONValue] {
     else
       Some(errors)
   }
-
 
   protected def validateArray(a: BSONArray, validators: Seq[BSONValidator]) : ValidationResult = {
     val combine = for (item <- validators.zip(a.values); result = item._1(item._2) if result.isDefined) yield result

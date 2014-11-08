@@ -17,10 +17,16 @@
 
 package scrupal.core.api
 
+import akka.actor.{Props, Actor, ActorLogging}
 import reactivemongo.bson._
 import scrupal.core.BundleType
 
 import scrupal.utils.Registry
+
+object Entity extends Registry[Entity] {
+  val registrantsName: String = "entity"
+  val registryName: String = "Entities"
+}
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal
   * An Entity brings together several things:The BundleType of an Instance's  payload,
@@ -34,7 +40,8 @@ case class Entity (
   instanceType: BundleType,
   module: Module,
   var enabled : Boolean = true
-) extends StorableRegistrable[Entity] with Describable with Enablable with BSONValidator {
+) extends StorableRegistrable[Entity] with Describable with Enablable with BSONValidator
+{
   def registry = Entity
   def asT = this
 
@@ -43,7 +50,36 @@ case class Entity (
   /** The set of additional operations that can be invoked for this Entity in addition to the standard fetch,
     * create, update, relete,
     */
-  val methods: Map[Symbol, Action[_,_]] = Map()
+  val actions: Map[Symbol, Action[_,_]] = Map()
+
+  case class Create(id: String, instance: BSONDocument)
+  case class Retrieve(id: String)
+  case class Update(id: String, fields: BSONDocument)
+  case class Delete(id: String)
+  case class Query(fields: BSONDocument)
+  case class Option(id: String, option: String)
+  case class Get(id: String, what: String, data: BSONDocument)
+  case class Put(id: String, what: String, data: BSONDocument)
+  case class AddFacet(id: String, name: String, facet: Facet)
+
+  class Worker(entity: Entity) extends Actor with ActorLogging {
+    def receive : Receive = {
+      // TODO: Implement Entity.receive to process messages
+      case a: Action[_, _] =>
+      case Create(id: String, instance: BSONDocument) =>
+      case Retrieve(id: String) =>
+      case Update(id: String, fields: BSONDocument) =>
+      case Delete(id: String) =>
+      case Query(fields: BSONDocument) =>
+      case Option(id: String, option: String) =>
+      case Get(id: String, what: String, data: BSONDocument) =>
+      case Put(id: String, what: String, data: BSONDocument) =>
+      case AddFacet(id: String, name: String, facet: Facet) =>
+    }
+  }
+
+  private[this] val worker = system.actorOf(Props(classOf[Worker], this), "Entity.Worker." + label)
+
 
   /** Fetch a single instance of this entity kind
     * Presumably this entity is stored somewhere and this method retrieve it, puts the data into a JsObject and
@@ -51,27 +87,29 @@ case class Entity (
     * @param id The identifier of the instance to be retrieved
     * @return The JsObject representing the payload of the entity retrieved
     */
-  def fetch(id: String)  = ???
+  def retrieve(id: String)  = worker ! Retrieve(id)
 
   /** Create a single instance of this entity kind
     * Presumably the entity
     * @param instance
     * @return
     */
-  def create(instance: BSONDocument ) = ???
+  def create(id:String, instance: BSONDocument ) = worker ! Create(id, instance)
 
   /** Update all or a few of the fields of an entity
     * @param id
     * @param fields
     * @return
     */
-  def update(id: String, fields: BSONDocument) = ???
+  def update(id: String, fields: BSONDocument) = worker ! Update(id, fields)
 
   /** Delete an entity
     * @param id
     * @return
     */
-  def delete(id: String) = ???
+  def delete(id: String) = worker ! Delete(id)
+
+  def query(fields: BSONDocument) = worker ! Query(fields)
 
   /** Get meta information about an entity
     *
@@ -79,7 +117,7 @@ case class Entity (
     * @param option
     * @return
     */
-  def option(id: String, option: String) = ???
+  def option(id: String, option: String) = worker ! Option(id, option)
 
   /** Extension of fetch to retrieve not the entity but some aspect, or invoke some functionality
     *
@@ -88,7 +126,7 @@ case class Entity (
     * @param data
     * @return
     */
-  def get(id: String, what: String, data: BSONDocument) = ???
+  def get(id: String, what: String, data: BSONDocument) = worker ! Get(id, what, data)
 
   /** Extension of update to send data as parameter to functionality or update something that is not part of the entity
     *
@@ -97,22 +135,9 @@ case class Entity (
     * @param data
     * @return
     */
-  def put(id: String, what: String, data: BSONDocument)  = ???
+  def put(id: String, what: String, data: BSONDocument)  = worker ! Put(id, what, data)
+
+  def addFacet(id: String, name: String, facet: Facet) = worker ! AddFacet(id, name, facet)
+
 }
-
-object Entity extends Registry[Entity] {
-  val registrantsName: String = "entity"
-  val registryName: String = "Entities"
-
-  /* TODO: Delete this when we're sure we never need to store entities in the DB
-  case class EntityDao(db: DefaultDB) extends DataAccessObject[Entity,Identifier](db, "entities") {
-    implicit val modelHandler :  BSONDocumentReader[Entity] with BSONDocumentWriter[Entity] with BSONHandler[BSONDocument,Entity] = handler[Entity]
-    implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
-    override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("_id" -> IndexType.Ascending), name = Some("UniqueId"))
-    )
-  }
-  */
-}
-
 

@@ -17,6 +17,8 @@
 
 package scrupal
 
+import akka.actor.ActorSystem
+
 import scala.concurrent.duration._
 
 import reactivemongo.api.FailoverStrategy
@@ -42,6 +44,7 @@ import reactivemongo.api.FailoverStrategy
   */
 package object db {
 
+  // NOTE: If needed: val system = ActorSystem("Scrupal-DB")
 
   type DB = reactivemongo.api.DefaultDB
 
