@@ -62,7 +62,7 @@ case class Entity (
   case class Put(id: String, what: String, data: BSONDocument)
   case class AddFacet(id: String, name: String, facet: Facet)
 
-  class Worker(entity: Entity) extends Actor with ActorLogging {
+  class Worker() extends Actor with ActorLogging {
     def receive : Receive = {
       // TODO: Implement Entity.receive to process messages
       case a: Action[_, _] =>
