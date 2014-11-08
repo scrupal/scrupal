@@ -1,5 +1,6 @@
 package scrupal.db
 
+import org.joda.time.DateTime
 import reactivemongo.api.commands.bson._
 
 import scala.concurrent.duration._
@@ -22,8 +23,12 @@ trait Storable[IdType] {
   def _id: IdType
 }
 
-trait AutoStorable extends Storable[BSONObjectID] {
-  val _id: BSONObjectID = BSONObjectID.generate
+/** A type of Storable with fields automatically filled in by the DAO */
+// TODO: implement support for AutoStorable
+trait AutoStorable extends Storable[Option[BSONObjectID]] {
+  val _id: Option[BSONObjectID] = None
+  val created: Option[DateTime] = None
+  val modified: Option[DateTime] = None
 }
 
 

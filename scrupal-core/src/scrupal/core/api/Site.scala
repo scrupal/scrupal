@@ -24,7 +24,7 @@ import reactivemongo.bson.{BSONDocument, BSONHandler, BSONDocumentWriter, BSONDo
 import reactivemongo.bson.Macros._
 
 import scrupal.db.{BSONDocumentHandler, DataAccessObject}
-import scrupal.utils.Registry
+import scrupal.utils.{AbstractRegistry, Pluralizer, Registry}
 
 /** Site Top Level Object
   * Scrupal manages sites.
@@ -38,6 +38,7 @@ case class Site (
   var enabled: Boolean = false,
   siteIndex: Option[Identifier] = None,
   requireHttps: Boolean = false,
+  applications: Seq[Application] = Seq.empty[Application],
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
 ) extends StorableRegistrable[Site] with Nameable with Describable with Enablable with Modifiable {
@@ -50,6 +51,23 @@ object Site extends Registry[Site] {
   val registryName: String = "Sites"
 
 //  implicit val dtHandler = DateTimeBSONHandler
+  private[this] val _byhost = new AbstractRegistry[String, Site] {
+    def reg(site:Site) = _register(site.host,site)
+    def unreg(site:Site) = _unregister(site.host)
+  }
+
+  override def register(site: Site) : Unit = {
+    _byhost.reg(site)
+    super.register(site)
+  }
+
+  override def unregister(site: Site) : Unit = {
+    _byhost.unreg(site)
+    super.unregister(site)
+  }
+
+  def forHost(hostName: String) = _byhost.lookup(hostName)
+
 
   case class SiteDao(db: DefaultDB) extends DataAccessObject[Site,Symbol](db, "sites") {
     implicit val modelHandler : BSONDocumentReader[Site] with BSONDocumentWriter[Site] with BSONHandler[BSONDocument,Site] = handler[Site]

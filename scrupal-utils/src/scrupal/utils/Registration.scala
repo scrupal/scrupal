@@ -66,6 +66,8 @@ trait AbstractRegistry[K, V <: AnyRef] {
 
   def isEmpty : Boolean = _registry.isEmpty
 
+  def nonEmpty : Boolean = _registry.nonEmpty
+
   protected def _all = _registry.values.toSeq
 
   protected def _registry: Map[K, V] = _registrants.get
@@ -105,6 +107,12 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] with Scr
   def apply(name: Symbol) : Option[T] = lookup(name)
 
   def all = _all
+
+
+  def find(ids: Seq[Symbol]) : Seq[T] = {
+    all.filter { t ⇒ ids.contains(t.id) }
+  }
+
 
   def register(thing : T) : Unit = {
     if (contains(thing.id) ) {

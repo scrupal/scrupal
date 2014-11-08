@@ -58,8 +58,9 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
   lazy val core_deps = core % "compile->compile;test->test"
 
   lazy val http = Project(base_name + "-http", file("./scrupal-http"))
+    .enablePlugins(SbtTwirl)
     .settings(
-      buildSettings ++ Seq(
+      buildSettings ++ twirlSettings ++ Seq(
         resolvers ++= all_resolvers,
         libraryDependencies ++= http_dependencies
     ):_*)

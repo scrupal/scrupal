@@ -15,21 +15,20 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web
+package scrupal.core.api
+
+import java.net.URL
 
 import scrupal.core.CoreSchema
-import scrupal.core.api.Module
+import scrupal.db.DBContext
 import scrupal.utils.Configuration
-import spray.http.{HttpRequest, Uri}
 
-import scala.concurrent.Future
 
 /** A generic Context trait with just enough defaulted information to render a BasicPage.
   * This allows us, regardless of the error condition of a page, to render custom errors at least in some
   * default way. Classes that mix in Context will override and extend what's available in their context.
   */
 trait Context {
-  val request : HttpRequest
   val config : Configuration
   val siteName : String = "Scrupal"
   val themeProvider : String = "scrupal"
@@ -37,7 +36,7 @@ trait Context {
   val user : String = "guest"
   val description : String = ""
   def alerts : Seq[Alert] = Seq()
-  def suggestURL : Uri = Uri("/")
+  def suggestURL : URL = new URL("/")
 }
 
 /** A Basic context which just mixes the Context trait with the WrappedRequest.
@@ -46,8 +45,9 @@ trait Context {
   * @param request The request upon which the context is based
   * @tparam A The type of content for the request
   */
-abstract class BasicContext[A](request: HttpRequest) extends Context {
+class BasicContext[A](request: Request[_]) extends Context {
   def secure : Boolean = false
+  val config = Configuration.empty
 }
 
 /** A Site context which pulls the information necessary to render something for a site.
@@ -57,13 +57,13 @@ abstract class BasicContext[A](request: HttpRequest) extends Context {
   * @param request The request upon which the context is based
   * @tparam A The type of content for the request
   */
-class SiteContext[A](val schema: CoreSchema, val site: Site, request: HttpRequest) extends BasicContext[A](request) {
-  override val siteName : String = site.data._id.name
-  override val description : String = site.data.description
+class SiteContext[A](val schema: CoreSchema, val site: Site, request: Request[_]) extends BasicContext[A](request) {
+  override val siteName : String = site.label
+  override val description : String = site.description
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
-  val modules: Seq[Module] = site.modules
-  val dbContext : DBContext = site.dbContext
+  val modules: Seq[Module] = Module.all //FIXME: Should be just the ones for the site
+  val dbContext : DBContext = schema.dbc
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -73,42 +73,29 @@ class SiteContext[A](val schema: CoreSchema, val site: Site, request: HttpReques
   * @param request The request upon which the context is based
   * @tparam A The type of content for the request
   */
-class UserContext[A](override val user: String, schema: CoreSchema, site: Site, request: HttpRequest)
+class UserContext[A](override val user: String, schema: CoreSchema, site: Site, request: Request[_])
     extends SiteContext[A](schema, site, request) {
   val principal  = Nil // TODO: Finish UserContext implementation
 }
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
-  def apply[A](request: HttpRequest) = new BasicContext[A](request)
-  def apply[A](schema: CoreSchema, site: Site, request: HttpRequest) = new SiteContext(schema, site, request)
-  def apply[A](user: String, schema: CoreSchema, site: Site, request: HttpRequest) =
+  def apply[A](request: Request[_]) = new BasicContext[A](request)
+  def apply[A](schema: CoreSchema, site: Site, request: Request[_]) = new SiteContext(schema, site, request)
+  def apply[A](user: String, schema: CoreSchema, site: Site, request: Request[_]) =
     new UserContext[A](user, schema, site, request)
 
-  /** This one is degenerate, mostly for testing */
-  def apply() = new AnyRef with Context {
-    def headers: play.api.mvc.Headers = new Headers { val data = Seq() }
-    def id: Long = 0
-    def method: String = "GET"
-    def path: String = "/"
-    def queryString: Map[String,Seq[String]] = Map()
-    def remoteAddress: String = ""
-    def tags: Map[String,String] = Map()
-    def uri: String = "/"
-    def version: String = "1.1"
-    override def secure: Boolean = false
-  }
 
 }
 
 
-/** A trait for producing a Request's context via ContextualAction action builder
+/* A trait for producing a Request's context via ContextualAction action builder
   * This trait simply defines the ContextualAction object which is an ActionBuilder with a ConcreteContext type. We
   * construct the ConcreteContext using the request provided to invokeBlock[A] and then invoke the block or generate
   * an error if this is more appropriate. Note that we derive from RichResults so the error factories there can be
   * used. This ContextualAction is used by controllers wherever they need Scrupal relevant contextual information.
   * Their action block is provided a ConcreteContext from which information can be derived.
-  */
+
 trait ContextProvider extends RichResults {
 
   type BasicActionBlock[A] = (BasicContext[A]) => Future[Result]
@@ -188,3 +175,4 @@ trait ContextProvider extends RichResults {
 
   type AnyUserContext = UserContext[AnyContent]
 }
+*/

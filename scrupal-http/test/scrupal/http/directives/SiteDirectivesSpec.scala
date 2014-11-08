@@ -18,11 +18,6 @@ class SiteDirectivesSpec extends Specification with Specs2RouteTest with HttpSer
   var s3 = Site('site3, "TestSite", "Testing only", "site3", enabled=true, requireHttps=false)
   var s4 = Site('site4, "TestSite", "Testing only", "site4", enabled=true, requireHttps=true)
 
-  Scrupal.addSite(s1)
-  Scrupal.addSite(s2)
-  Scrupal.addSite(s3)
-  Scrupal.addSite(s4)
-
   "site" should {
     "reject disabled site" in {
       Get(Uri("https://site2/")) ~> site { site => complete("works") } ~> check {

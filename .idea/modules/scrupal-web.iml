@@ -33,13 +33,6 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:twirl-api_2.11:1.0.3" level="project" />
     <orderEntry type="library" name="SBT: io.github.nremond:pbkdf2-scala_2.11:0.4" level="project" />
     <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final" level="project" />
-    <orderEntry type="library" name="SBT: io.spray:spray-can_2.11:1.3.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: io.spray:spray-http_2.11:1.3.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: io.spray:spray-httpx_2.11:1.3.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: io.spray:spray-io_2.11:1.3.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: io.spray:spray-routing_2.11:1.3.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: io.spray:spray-testkit_2.11:1.3.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: io.spray:spray-util_2.11:1.3.2-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5" level="project" />
     <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.1" level="project" />
     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-api:2.0.2" level="project" />

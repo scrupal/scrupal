@@ -20,7 +20,7 @@ package scrupal.core
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-import com.typesafe.config.ConfigValue
+import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 import scrupal.core.api._
 import scrupal.db.DBContext
 import scrupal.utils.{ScrupalComponent, Configuration}
@@ -32,47 +32,31 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
-object Scrupal extends ScrupalComponent
+class Scrupal extends ScrupalComponent
 {
-  /** The only global data cache in memory that Scrupal has!
-    * While most of the data that is needed to service a request is constructed into a Context object for each request
-    * and thereby encouraging a share-none philosophy, sometimes that's just not the right thing to do for performance
-    * reasons. Some data is so pervasively used and immutable that packaging it into the Context is just a waste. So,
-    * those few bits of global data that Scrupal might need live here, everything else you get through the Context
-    * object which is implicitly passed down to the controllers by mixing in ContextProvider and onward down to the
-    * templates.
-    * - Rule1: when placing something here, always say WHY its a good idea to have it here.
-    * - Rule2: REALLY, REALLY document why it might need to be a var rather than a val!
-    * - Rule3: Never create global data elsewhere, only here.
-    */
-  object DataYouShouldNotModify
-  {
-    /** The Set of sites that we serve is loaded once from the database at startup. These change very infrequently and
-      * are needed for request processing on every request in order to construct the Context for the request.
-      * Consequently we do not want to put them in a Cache nor query them from teh DB. They just need to be here in
-      * memory available for use on each request. The sites reference is a var, nobody should ever change it, except
-      * when new sites are added to the database which is an administrative action tha toccurs infrequently so we don't
-      * expect mutation churn on this data.
-      * Note: the objects themselves are not ever mutated. When we want to make a change,
-      * the new one is added and the old one is removed. So, our only vulnerability is a brief moment when the list
-      * contains a duplicate.
-      * Note that the type is a Map[String,Site] because we want to index it quickly by the host name we are
-      * serving so as to avoid a scan of this data structure on every request.
-      */
-    val sites : AtomicReference[Map[String,Site]] = new AtomicReference(Map.empty[String,Site])
-  }
-
   val Copyright = "2013, 2014 viritude llc"
 
-  val dbContext : AtomicReference[DBContext] = new AtomicReference[DBContext]
+  val _dbContext : AtomicReference[DBContext] = new AtomicReference[DBContext]
+  val _configuration : AtomicReference[Configuration] = new AtomicReference[Configuration]
 
+  def withConfiguration[T](f: (Configuration) ⇒ T) : T = {
+    val config = _configuration.get
+    require(config != null)
+    f(config)
+  }
 
-  /** Simple utility to determine if we are considered configured or not.
-    * Some first-time logic depends on this in order to determine whether to do the "unconfigured" action or to
-    * proceed normally.
-    * @return
+  def withDBContext[T](f: (DBContext) ⇒ T) : T = {
+    val dbc = _dbContext.get()
+    require(dbc != null)
+    f(dbc)
+  }
+
+  /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
+    * Registry then we have had to found a database and loaded the sites. So that is our indicator of whether we
+    * are configured yet or not.
+    * @return True iff there are sites loaded
     */
-  def isConfigured : Boolean = DataYouShouldNotModify.sites.get.nonEmpty
+  def isReady : Boolean = _configuration.get() != null && Site.nonEmpty
 
   /**
 	 * Called before the application starts.
@@ -80,13 +64,16 @@ object Scrupal extends ScrupalComponent
 	 * Resources managed by plugins, such as database connections, are likely not available at this point.
 	 *
 	 */
-	def beforeStart() {
-    val config : Configuration = Configuration.from(new File("conf/application.conf"))
+	def beforeStart() = {
+
+    val config = onLoadConfig(Configuration.default)
+    _configuration.set(config)
 
     // Get the database started up
     DBContext.startup()
 
-    dbContext.set(DBContext.fromConfiguration())
+    val dbc = DBContext.fromConfiguration(Some(config))
+    _dbContext.set(dbc)
 
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
@@ -101,75 +88,16 @@ object Scrupal extends ScrupalComponent
     // TODO: scan classpath for additional modules
 
     // We are now ready to process the registered modules
-    Module.processModules
+    Module.processModules()
 
-    // Set things from configuration
-    // Features
-    config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enabled(value) }
-    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enabled(value) }
-    config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enabled(value) }
+    // Load the configuratoin
+    load(config, dbc)
 
-    DataYouShouldNotModify.sites.set(load(config)(dbContext.get()))
+    config -> dbc
   }
-
-  def reload(config: Configuration) = {
-  }
-
-  def unload(config: Configuration) = {
-  }
-
-  def addSite(site: Site) : Scrupal.type = {
-    val original_map = DataYouShouldNotModify.sites.get()
-    val new_map = original_map + (site.host -> site)
-    DataYouShouldNotModify.sites.set( new_map )
-    this
-  }
-
-  def getSite(host: String) : Option[Site] = {
-    DataYouShouldNotModify.sites.get.get(host)
-  }
-
-	/**
-	 * Called once the application is started.
-	 */
-	def onStart() {
-	}
-
-	/**
-	 * Called on application stop.
-	 */
-	def onStop() {
-	}
 
   def afterStop(): Unit = {
-    DataYouShouldNotModify.sites.set( Map.empty[String,Site] )
     DBContext.shutdown()
-  }
-
-  /** The Scrupal default Configuration
-    * We provide this here to override the empty set provided by Play so that in case the user messed up the
-    * configuration file or this is a first time run, we have all the configuration data that Scrupal needs,
-    * at least in a default form. Note that to make sure this gets used, we call DefaultGlobal.onLoadConfig in our
-    * override of onLoadConfig (below). We do this to make sure Play gets a chance to do its own processing before we
-    * start overriding the configuration from the database.
-   */
-   def configuration: Configuration = {
-    Configuration.empty ++ Configuration.from( Map(
-      "application.global"  -> "scrupal.api.Global",
-      "application.home"    -> ".",
-      "ehcacheplugin"       -> "disabled",
-      "evolutionplugin"     -> "disabled",
-      "http.port"           -> 8000,
-      "https.port"          -> None,
-      "logger.application"  -> "DEBUG",
-      "logger.play"	        -> "INFO",
-      "logger.root"	        -> "INFO",
-      "redis.database"      -> 0,
-      "redis.host"	        -> "localhost",
-      "redis.maxIdle"	      -> 8,
-      "redis.port"	        -> 6379,
-      "smtp.mock"	          -> true
-    ))
   }
 
   type FlatConfig =  TreeMap[String,ConfigValue]
@@ -182,12 +110,13 @@ object Scrupal extends ScrupalComponent
   }
 
   /** Load the Sites from configuration
-    * Site loading is based on the Play Database configuration. There should be a one-to-one correspondence between a
-    * site name and its db url/driver pair per usual Play configuration. Note that multiple sites may utilize the
+    * Site loading is based on the database configuration. Whatever databases are loaded, they are scanned and any
+    * sites in them are fetched and instantiated into the memory registry. Note that multiple sites may utilize the
     * same database information. We utilize this to open the database and load the site objects they contain
     * @param config The Scrupal Configuration to use to determine the initial loading
+    * @param context The database context from which to load the
     */
-  def load(config: Configuration)(implicit context: DBContext) : Map[String, Site] = {
+  def load(config: Configuration, context: DBContext) : Map[String, Site] = {
     Try {
       val result: mutable.Map[String, Site] = mutable.Map()
       val schema = new CoreSchema(context)
@@ -214,33 +143,42 @@ object Scrupal extends ScrupalComponent
     }
   }
 
-  /** Merge the Scrupal Configuration with the Play Configuration
-    * Scrupal stores all its configuration data in the database, even the configuration for Play. So,
-    * we're either going to default the data (first time run, no db) or override most of it with the values from the
-    * database. The Play configuration is complete by the time this returns.
+  /**
+   * Called once the application is started.
+   */
+  def onStart() {
+  }
+
+  /**
+   * Called on application stop.
+   */
+  def onStop() {
+  }
+
+
+  /** Provide handling of configuration loading
     *
-	  * Called just after configuration has been loaded, to give the application an opportunity to modify it.
+    * This method can be overridden by subclasses to refine the configuration read from default sources or do anything
+    * else that might be interesting. This default version just prints the configuration to the log at TRACE level.
 	  *
 	  * @param config the loaded configuration
-	  * @param path the application path
-	  * @return The configuration that the application should use
+	  * @return The configuration that Scrupal should use
     */
-	def onLoadConfig(
-    config: Configuration,
-    path: File
-  ): Configuration = {
-  /*
-    // Let Play do whatever it needs to do in its default implementation of this method.
-		val newconf = DefaultGlobal.onLoadConfig(config, path, classloader, mode)
-
-    Logger.trace("STARTUP CONFIGURATION VALUES")
-    interestingConfig(newconf) foreach { case (key: String, value: ConfigValue) =>
-      Logger.trace ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
+	def onLoadConfig(config: Configuration): Configuration = {
+    // Trace log the configuration
+    log.trace("STARTUP CONFIGURATION VALUES")
+    interestingConfig(config) foreach { case (key: String, value: ConfigValue) =>
+      log.trace ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
     }
 
-    newconf
-  */
-    Configuration.default
+    // Make things from the configuration override defaults and database read settings
+    // Features
+    config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enabled(value) }
+    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enabled(value) }
+    config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enabled(value) }
+
+    // return the configuration
+    config
  	}
 
 	/**

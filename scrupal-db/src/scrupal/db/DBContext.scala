@@ -34,9 +34,12 @@ import scala.util.{Failure, Success, Try}
   * This just collects together the driver, connection and [[reactivemongo.api.MongoConnection.ParsedURI]].
   * The utility methods withContext, withConnection and withDatabase provide functional access to the
   * context, connection and database.
+  *
   */
 case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
                      user: Option[String] = None, pass: Option[String] = None) extends Registrable[DBContext] with ScrupalComponent {
+
+  // TODO: Implement multiple database support from same URI
 
   def registry = DBContext
   def asT = this
@@ -121,8 +124,9 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
   private case class State(driver: MongoDriver, counter: AtomicInteger = new AtomicInteger(1))
   private var state: Option[State] = None
 
-  def fromConfiguration() : DBContext = {
-    val helper = new ConfigHelper(Configuration.default)
+  def fromConfiguration(conf: Option[Configuration] = None) : DBContext = {
+    val topConfig = conf.getOrElse(Configuration.default)
+    val helper = new ConfigHelper(topConfig)
     val config = helper.getDbConfig
     config.getConfig("db.scrupal") match {
       case Some(cfg) => fromSpecificConfig('scrupal, cfg)

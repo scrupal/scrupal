@@ -20,6 +20,10 @@ trait SiteDirectives {
     validate(site.enabled,s"Site '${site.name}' is disabled.")
   }
 
+  def scrupalIsReady(scrupal: Scrupal) = {
+    validate(scrupal.isReady, s"Scrupal is not configured!")
+  }
+
   /*
 
   schemeName { scheme =>
@@ -42,7 +46,7 @@ trait SiteDirectives {
 
   def site: Directive1[Site] = {
     hostName.flatMap { host:String ⇒
-      Scrupal.getSite(host) match {
+      Site.forHost(host) match {
         case Some(site) ⇒
           siteScheme(site) & siteEnabled(site) & extract(ctx => site)
         case None ⇒

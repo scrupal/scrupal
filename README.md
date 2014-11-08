@@ -63,4 +63,5 @@ one developer working on it until 2015 and it has undergone several machinations
 patterned after the spray and akka projects in terms of its structure.
 
 - - -
+
 <sub><sup>&copy; Copyright 2015, Reactific Software, Inc.. All Rights Reserved.</sup></sub>

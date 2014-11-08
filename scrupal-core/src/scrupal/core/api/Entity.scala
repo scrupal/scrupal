@@ -32,8 +32,9 @@ case class Entity (
   id : Identifier,
   description: String,
   instanceType: BundleType,
-  module: Module
-) extends StorableRegistrable[Entity] with Describable with BSONValidator {
+  module: Module,
+  var enabled : Boolean = true
+) extends StorableRegistrable[Entity] with Describable with Enablable with BSONValidator {
   def registry = Entity
   def asT = this
 

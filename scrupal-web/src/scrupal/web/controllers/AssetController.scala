@@ -1,5 +1,6 @@
 package scrupal.web.controllers
 
+import scrupal.http.controllers.BasicController
 import spray.http.Uri
 import spray.routing.Directives._
 import spray.routing._

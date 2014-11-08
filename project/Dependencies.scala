@@ -51,7 +51,7 @@ trait Dependencies
 
   // Spray Stuff
   val akkaV = "2.3.6"
-  val sprayV = "1.3.2-SNAPSHOT"
+  val sprayV = "1.3.2"
   val spray_can               = "io.spray"            %%  "spray-can"             % sprayV
   val spray_routing           = "io.spray"            %%  "spray-routing"         % sprayV
   val spray_httpx             = "io.spray"            %%  "spray-httpx"           % sprayV
@@ -146,13 +146,11 @@ trait Dependencies
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(
-    spray_can, spray_routing, spray_httpx, akka_actor,
+    spray_can, spray_routing, spray_httpx, akka_actor, twirl_api,
     Test.spray_testkit, Test.akka_testkit
   ) ++ common_dependencies
 
-  val web_dependencies : Seq[ModuleID] = Seq(
-    spray_can, spray_routing, spray_httpx,
-    akka_actor,
+  val web_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
     webjars_play,
     requirejs, requirejs_domready,
     angularjs, angular_drag_drop, angular_multi_select,

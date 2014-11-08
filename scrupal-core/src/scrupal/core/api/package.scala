@@ -87,4 +87,9 @@ package object api {
   implicit val TypeHandler : BSONHandler[BSONString,Type] = new TypeHandlerForBSON[Type]
   implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new TypeHandlerForBSON[BundleType]
 
+  implicit val AppSeqHandler : BSONHandler[BSONArray,Seq[Application]] = new BSONHandler[BSONArray, Seq[Application]] {
+    override def write(sa: Seq[Application]): BSONArray = BSONArray(sa map { app ⇒ app._id.name })
+    override def read(array: BSONArray): Seq[Application] =
+      Application.find(array.values.toSeq.map{ v ⇒ Symbol(v.asInstanceOf[BSONString].value) })
+  }
 }

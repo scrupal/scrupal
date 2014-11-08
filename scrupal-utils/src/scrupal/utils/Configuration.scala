@@ -687,7 +687,7 @@ object Configuration extends ScrupalComponent {
   private[this] lazy val dontAllowMissingConfig = ConfigFactory.load(dontAllowMissingConfigOptions)
 
   /**
-   * loads `Configuration` from config.resource or config.file. If not found default to 'conf/application.conf' in Dev mode
+   * loads `Configuration` based on the environment it finds itself in. from config.resource or config.file. If not found default to 'conf/application.conf' in Dev mode
    * @return  configuration to be used
    */
   private[scrupal] def loadDev(appPath: File, devSettings: Map[String, String]): Config = {
@@ -750,7 +750,7 @@ object Configuration extends ScrupalComponent {
     new Configuration(config)
   }
 
-  def from(file: File) = new Configuration(loadDev(file, Map.empty[String,String]))
+  def from(dir: File) = new Configuration(loadDev(dir, Map.empty[String,String]))
 
   def from(underlying: Config) = new Configuration(underlying)
 

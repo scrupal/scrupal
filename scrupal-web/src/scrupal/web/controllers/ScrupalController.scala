@@ -20,8 +20,7 @@ package scrupal.web.controllers
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import scrupal.core.api._
-import scrupal.core.Type
-import scrupal.core.api.Module
+import scrupal.http.controllers.Controller
 
 /** One line sentence description here.
   * Further description here.
@@ -37,6 +36,5 @@ trait ScrupalController extends Controller with ContextProvider {
   def types       : Seq[Type]    = Module.all flatMap { module => module.types }
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 
-  def dateStr(millis: Long) : String = new DateTime(millis).toString(ISODateTimeFormat.dateTime)
 
 }

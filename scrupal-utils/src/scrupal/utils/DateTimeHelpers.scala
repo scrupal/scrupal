@@ -3,8 +3,8 @@ package scrupal.utils
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-import org.joda.time.Period
-import org.joda.time.format.{PeriodFormatter, PeriodFormatterBuilder}
+import org.joda.time.{DateTime, Period}
+import org.joda.time.format.{ISODateTimeFormat, PeriodFormatter, PeriodFormatterBuilder}
 
 import scala.concurrent.duration._
 
@@ -12,6 +12,8 @@ import scala.concurrent.duration._
  */
 object DateTimeHelpers {
 
+  def dateStr(millis: Long) : String = new DateTime(millis).toString(ISODateTimeFormat.dateTime)
+  def dateStr(dt: DateTime) : String = dateStr(dt.getMillis)
 
   def makeDurationReadable(duration: Duration) = {
     var builder = new PeriodFormatterBuilder()

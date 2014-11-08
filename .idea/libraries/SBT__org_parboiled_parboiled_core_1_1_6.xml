@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="SBT: org.parboiled:parboiled-core:1.1.6">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.parboiled/parboiled-core/jars/parboiled-core-1.1.6.jar!/" />
       <root url="jar://$USER_HOME$/.ivy2/cache/org.parboiled/parboiled-core/bundles/parboiled-core-1.1.6.jar!/" />
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.parboiled/parboiled-core/jars/parboiled-core-1.1.6.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.parboiled/parboiled-core/docs/parboiled-core-1.1.6-javadoc.jar!/" />
