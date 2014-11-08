@@ -54,7 +54,7 @@ trait Context {
   * because this is a WrappedRequest[A], all the fields of Request are fields of this class too.
   * @param request The request upon which the context is based
   */
-class HttpContext(request: HttpRequest) extends Context {
+case class HttpContext(request: HttpRequest) extends Context {
   def secure : Boolean = false
   val config = Configuration.empty
   override val uri = request.uri

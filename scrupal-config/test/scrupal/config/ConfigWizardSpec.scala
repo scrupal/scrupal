@@ -30,7 +30,7 @@ class ConfigWizardSpec extends Specification {
 
   "ConfigWizard" should {
     "be ready to test" in {
-      failure
+      failure("not implemented")
     }
   }
 

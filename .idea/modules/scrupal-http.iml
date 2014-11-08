@@ -13,8 +13,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-http/target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-http/target/scala-2.11/resource_managed/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-http/test/resources" type="java-test-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-http/target/resolution-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-http/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-http/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

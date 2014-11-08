@@ -1,9 +1,6 @@
 @(what: String, why: String)(implicit context : scrupal.core.api.Context)
-
-@import scrupal.http.views.html
-
-@html.markedPage("Not Found - " + what) {
-
+@import scrupal.http.views.html.pages
+@pages.markedPage("Not Found - " + what) {
 # Nuh Uh! I Can't Do That!
 **Drat!** Because @why, you can't @what. That's just the way it is.
 

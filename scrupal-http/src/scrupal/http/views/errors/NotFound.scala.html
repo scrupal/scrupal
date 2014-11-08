@@ -1,9 +1,9 @@
 @(what: String, causes: Seq[String] = Seq(), suggestions: Seq[String] =Seq())(
-    implicit context : scrupal.controllers.Context)
+    implicit context : scrupal.core.api.Context)
 
-@import scrupal.views.html
+@import scrupal.http.views.html.pages
 
-@html.markedPage("Not Found - " + what) {
+@pages.markedPage("Not Found - " + what) {
 # There's A Hole In The Fabric Of The InterWebz!
 **Oops!** We couldn't find @what. That might be because:
 @for(c <- causes) {+ @c

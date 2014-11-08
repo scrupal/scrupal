@@ -1,10 +1,6 @@
-@(what: scrupal.api.Feature, why: Option[String])(implicit context : scrupal.controllers.Context)
-
-@import scrupal.views.html
-
-
-@html.angularPage("Not Implemented: " + what) {
-} {
+@(what: scrupal.core.api.Feature, why: Option[String])(implicit context : scrupal.core.api.Context)
+@import scrupal.http.views.html.pages
+@pages.markedPage("Not Implemented: " + what) {
 <h3 class="text-error">Pardon Our Mess</h3>
 <p>We have been planning to implement <b><em>@what.name</em></b> (@what.description), but currently it is not because
 @if(why.isDefined) {
@@ -12,8 +8,5 @@
 } else {
 we haven't gotten around to it yet!
 }
-If you really need this feature, please let us know by voting for it below.</p>
-<form action="@what.voteRoute" method="put" > @** FIXME: HTML doesn't support PUT here! It sends as GET *@
-  <button type="submit">Vote For @what.name</button>
-</form>
+</p>
 }

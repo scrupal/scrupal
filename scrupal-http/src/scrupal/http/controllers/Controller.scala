@@ -1,10 +1,10 @@
 package scrupal.http.controllers
 
-import scrupal.core.api.{Type, Module}
+import scrupal.core.api.{Identifier, Type, Module}
 import scrupal.utils.{Registrable, Registry}
 // import play.twirl.api._
 // import spray.httpx.TwirlSupport
-import spray.routing.Route
+import spray.routing.{Directives, Route}
 
 /** Abstract Controller
   *
@@ -13,7 +13,7 @@ import spray.routing.Route
   *
   * Created by reidspencer on 10/29/14.
   */
-trait Controller extends /* TwirlSupport with */ Registrable[Controller]  {
+trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Directives {
 
   /** The contextual path prefix
     * This is the first element of the path for any requests having to do with this controller.
@@ -50,7 +50,7 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller]  {
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 }
 
-abstract class BasicController(val context_path: String, val controller_priority: Int = 0) extends Controller
+abstract class BasicController(val id: Identifier, val context_path: String, val priority: Int = 0) extends Controller
 
 object Controller extends Registry[Controller] {
   override val registryName: String = "Controllers"

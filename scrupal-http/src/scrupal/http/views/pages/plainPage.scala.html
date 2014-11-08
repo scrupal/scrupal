@@ -1,10 +1,10 @@
-@(title: String)(content: Html)(implicit context : scrupal.controllers.Context)
-@import scrupal.core.views.html.pages
-@pages.basicPage(title) { } {
+@(title: String)(content: Html)(implicit context : scrupal.core.api.Context)
+@basicPage(title) { } {
 <body>
 <div class="container">
 @content
-@html.debug()
+@debug()
 </div>
 </body>
+} {
 }

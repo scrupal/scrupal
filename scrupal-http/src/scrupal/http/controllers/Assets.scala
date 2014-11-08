@@ -20,11 +20,21 @@ package scrupal.http.controllers
 import java.io.File
 import java.net.URL
 
+import spray.routing.Route
+
 /**
  * Asset controller for core assets. This one gets used by the templates
- *
-object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
+ */
+object Assets extends BasicController('Assets, "assets",-1)
 {
+  def routes : Route = complete("Assets Not Implemented")
+
+  def favicon() = "/assets/favicon.ico"
+  def theme(provider: String, name: String) = "/assets/themes/default.css"
+  def css(name: String) = s"/assets/css/$name"
+  def css_s(name: String) = s"/assets/css/$name"
+
+  /* FIXME: Implement Assets controller
   // Save the Play AssetBuilder object under a new name so we can refer to it without referring to ourself!
   val assetBuilder = controllers.Assets
   def fallback(path : String, file : String) : Action[AnyContent] = {
@@ -189,5 +199,6 @@ object Assets extends WebJarAssets(controllers.Assets) with ContextProvider
       case (true, true) => suffix_r.replaceFirstIn(file, ".min$1")
     }
   }
+  */
 }
-*/
+

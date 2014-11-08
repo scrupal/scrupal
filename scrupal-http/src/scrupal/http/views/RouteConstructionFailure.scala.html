@@ -1,25 +1,21 @@
-@(xcptn: Throwable)
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Scrupal: Unable To Process Routes</title>
-</head>
-<h1>Unable To Process Routes</h1>
-<p>Unfortunately, Scrupal failed to construct its routes so it cannot process requests. This
-    usually means there is a software problem that affects route construction in the controllers.
-</p>
-<dl>
-    <dt>Exception Class</dt><dd>@{xcptn.getClass.getName}</dd>
-    <dt>Exception Message</dt><dd>@{xcptn.getMessage}</dd>
-    <dt>Stack Trace</dt><dd>
-    <code style="color: black">
-        <small style="font-size: 25%; line-height: 25%; margin-top:1em">
-@for(ste <- xcptn.getStackTrace) {
-   @{ste.toString} @if(ste.isNativeMethod){ (native)}<br/>
+@(xcptn: Throwable)(implicit context: scrupal.core.api.Context)
+@pages.plainPage("Unable To Process Routes") {
+    <h1>Unable To Process Routes</h1>
+    <p>Unfortunately, Scrupal failed to construct its routes so it cannot process requests. This
+        usually means there is a software problem that affects route construction in the controllers.
+    </p>
+    <dl>
+        <dt>Exception Class</dt><dd>@xcptn.getClass.getName</dd>
+        <dt>Exception Message</dt><dd>@xcptn.getMessage</dd>
+        <dt>Stack Trace</dt>
+        <dd>
+            <code style="color : black">
+                <small style="font-size : 25% ; line-height : 25% ; margin-top: 1em">
+                @for(ste <- xcptn.getStackTrace) {
+                    @ste.toString @if(ste.isNativeMethod) { (native)} <br/>
+                }
+                </small>
+            </code>
+        </dd>
+    </dl>
 }
-        </small>
-    </code>
-</dd>
-</dl>
-</html>

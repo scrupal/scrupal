@@ -2,6 +2,7 @@ package scrupal.http.actors
 
 import akka.actor.Actor
 import scrupal.core.Scrupal
+import scrupal.core.api.HttpContext
 import scrupal.http.controllers.Controller
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
@@ -63,8 +64,11 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
         path("") {
           get {
             respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
-              complete {
-                _root_.scrupal.http.views.html.RouteConstructionFailure(xcptn).toString()
+              requestInstance { request =>
+                complete {
+                  val context = HttpContext(request)
+                  _root_.scrupal.http.views.html.RouteConstructionFailure(xcptn)(context).toString()
+                }
               }
             }
           }
