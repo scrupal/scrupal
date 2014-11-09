@@ -57,7 +57,7 @@ trait Dependencies
   val spray_http              = "io.spray"            %%  "spray-http"            % sprayV
   val spray_httpx             = "io.spray"            %%  "spray-httpx"           % sprayV
   val spray_caching           = "io.spray"            %%  "spray-caching"         % sprayV
-  val spray_json              = "io.spray"            %%  "spray-json"            % "1.3.1"
+  //val spray_json              = "io.spray"            %%  "spray-json"            % "1.3.1"
 
   // Akka Stuff
   val akka_actor              = "com.typesafe.akka"   %%  "akka-actor"            % akkaV

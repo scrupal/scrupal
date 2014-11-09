@@ -13,7 +13,7 @@ abstract class AbstractFakeModule(
   version: Version=Version(0,1,0),
   obsoletes: Version=Version(0,0,0),
   isEnabled : Boolean =true
-)  extends Module(id, "Fake Module", version, obsoletes, isEnabled) {
+)  extends Module(id, "Fake Module", version, obsoletes, enabled = isEnabled) {
 
   override def moreDetailsURL: URL = new URL("No URL, Fake Module")
   override def author: String = "No author, Fake Module"

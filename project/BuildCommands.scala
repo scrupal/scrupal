@@ -17,6 +17,7 @@
 import sbt.Keys._
 import sbt._
 import scala.language.postfixOps
+import sbt.complete.Parsers._
 
 /**
  * Augment the Play shell prompt with the Shell prompt which show the current project,
@@ -29,7 +30,7 @@ object BuildCommands
   addCommandAlias("tu", "test-only scrupal.utils")
   addCommandAlias("tc", "test-only scrupal.controllers")
 
-  val printClasspath = TaskKey[File]("print-class-path")
+  val printClasspath = TaskKey[File]("print-class-path", "Print the project's class path line by line.")
 
   def print_class_path = (target, fullClasspath in Compile, compile in Compile) map { (out, cp, analysis) =>
     println(cp.files.map(_.getCanonicalPath).mkString("\n"))
@@ -44,5 +45,15 @@ object BuildCommands
     (state: State) => {
       "%s - %s - %s> ".format (BuildInfo.currentProject(state), BuildInfo.currentGitBranch, BuildInfo.projectVersion)
     }
+  }
+
+  // FIXME: Trying to do something like "testOnly"
+  // SEE: https://github.com/sbt/sbt/blob/0.13/main/src/main/scala/sbt/Defaults.scala
+
+  val compileOnly = inputKey[Unit]("Compile just the specified files")
+
+  compileOnly := {
+    val args: Seq[String] = spaceDelimited("<arg>").parsed
+    args foreach println
   }
 }

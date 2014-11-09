@@ -17,7 +17,7 @@
 
 package scrupal.core
 
-import scrupal.db.{DataAccessObject, DBContext, Schema}
+import scrupal.db._
 import scrupal.core.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,13 +29,14 @@ import scala.concurrent.Future
  */
 class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
-  val (features,sites,instances,alerts) = dbc.withDatabase { db ⇒
+  val (features,sites,nodes,instances,alerts, principals) = dbc.withDatabase(CoreModule.dbName) { db ⇒
     (
       Feature.FeatureDao(db),
       Site.SiteDao(db),
-      // Entity.EntityDao(db),
+      Node.NodeDao(db),
       Instance.InstanceDao(db),
-      Alert.AlertDao(db)
+      Alert.AlertDao(db),
+      Principal.PrincipalDAO(db)
     )
   }
 
@@ -45,11 +46,11 @@ class CoreSchema(dbc: DBContext) extends Schema(dbc) {
   // val tokens = dbc.withDatabase { db => new TokenDao(db) }
 
 
-  def daos : Seq[DataAccessObject[_,_]] = {
-    Seq( features, sites, instances, /* aliases, tokens, */ alerts )
+  def daos : Seq[DataAccessInterface[_,_]] = {
+    Seq( features, sites, nodes, instances,/* aliases, tokens, */ alerts, principals )
   }
 
-  def validateDao(dao: DataAccessObject[_,_]) : Boolean = {
+  def validateDao(dao: DataAccessInterface[_,_]) : Boolean = {
     // FIXME: this needs to be written properly
     dao.collection.name match {
       case "sites" => true

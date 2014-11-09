@@ -18,10 +18,9 @@ package scrupal.core.api
 
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.{BSONDocument, BSONHandler, BSONDocumentWriter, BSONDocumentReader}
-import reactivemongo.bson.Macros.handler
-import scrupal.db.DataAccessObject
-import scrupal.utils.{Registry}
+import reactivemongo.bson._
+import scrupal.db.IdentifierDAO
+import scrupal.utils.Registry
 
 /** A Feature of a Module.
   * Features are things that can be enabled or disabled that affect how a Module does its work. Scrupal handles the
@@ -84,9 +83,10 @@ object Feature extends Registry[Feature] {
   implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
   implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled
 
-  case class FeatureDao(db: DefaultDB) extends DataAccessObject[Feature,Symbol](db, "features") {
-    implicit val modelHandler : BSONDocumentReader[Feature] with BSONDocumentWriter[Feature] with BSONHandler[BSONDocument,Feature] = handler[Feature]
-    implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
+  case class FeatureDao(db: DefaultDB) extends IdentifierDAO[Feature] {
+    final def collectionName = "features"
+    implicit val reader : IdentifierDAO[Feature]#Reader = Macros.reader[Feature]
+    implicit val writer : IdentifierDAO[Feature]#Writer  = Macros.writer[Feature]
     override def indices : Traversable[Index] = super.indices ++ Seq(
       Index(key = Seq("module" -> IndexType.Ascending), name = Some("Module"))
     )

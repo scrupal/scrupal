@@ -19,10 +19,10 @@ package scrupal.core
 
 import java.util.Date
 
-import org.joda.time.DateTime
 import reactivemongo.bson._
 import scrupal.core.api._
 import scrupal.core.Patterns._
+import spray.http.{MediaTypes, MediaType}
 
 import scala.util.matching.Regex
 import scala.language.existentials
@@ -51,9 +51,9 @@ case class BooleanType(
 
   def apply(value: BSONValue) : ValidationResult = single(value) {
     case BSONBoolean(b) => None
-    case BSONInteger(bi)if (bi == 0 || bi == 1) => None
+    case BSONInteger(bi)if bi == 0 || bi == 1 => None
     case BSONInteger(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")
-    case BSONLong(bi)   if (bi == 0 || bi == 1) => None
+    case BSONLong(bi)   if bi == 0 || bi == 1 => None
     case BSONLong(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")
     case BSONString(bs) if verity.contains(bs.toLowerCase)  => None
     case BSONString(bs) if falseness.contains(bs.toLowerCase) => None
@@ -316,32 +316,11 @@ case class MapType  (
   }
 }
 
-/** A group of named and typed fields that are related in some way.
-  * An bundle type defines the structure of the fundamental unit of storage in Scrupal: An instance.  BundleTypes
-  * are analogous to table definitions in relational databases, but with one important difference. An BundleType can
-  * define itself recursively. That is, one of the fields of an Bundle can be another Bundle Type. Cycles in the
-  * definitions of BundleTypes are not permitted. In this way it is possible to assemble entities from a large
-  * collection of smaller bundle concepts (traits if you will). Like relational tables, bundle types define the names
-  * and types of a group of fields (columns) that are in some way related. For example, a street name, city name,
-  * country and postal code are fields of an address bundle because they are related by the common purpose of
-  * specifying a location.
-  *
-  * Note that BundleTypes, along with ListType, SetType and MapType make the type system fully composable. You
-  * can create an arbitrarily complex data structure (not that we recommend that you do so).
-  *
-  * @param id The name of the trait
-  * @param description A description of the trait in terms of its purpose or utility
-  * @param fields A map of the field name symbols to their Type
-  */
-case class BundleType (
-  id : Identifier,
-  description : String,
-  module: Identifier,
-  fields : Map[Identifier, Type]
-) extends Type {
-  require(!fields.isEmpty)
-  def asT = this
-  override def kind = 'Bundle
+trait StructuredType extends Type {
+  val id : Identifier
+  val description : String
+  val module: Identifier
+  val fields : Map[Identifier, Type]
   def apply(value: BSONValue) : ValidationResult = {
     value match {
       case d: BSONDocument =>
@@ -366,6 +345,58 @@ case class BundleType (
         wrongClass("BSONDocument", x).map { s => Seq(s) }
     }
   }
+}
+
+/** A group of named and typed fields that are related in some way.
+  * An bundle type defines the structure of the fundamental unit of storage in Scrupal: An instance.  BundleTypes
+  * are analogous to table definitions in relational databases, but with one important difference. An BundleType can
+  * define itself recursively. That is, one of the fields of an Bundle can be another Bundle Type. Cycles in the
+  * definitions of BundleTypes are not permitted. In this way it is possible to assemble entities from a large
+  * collection of smaller bundle concepts (traits if you will). Like relational tables, bundle types define the names
+  * and types of a group of fields (columns) that are in some way related. For example, a street name, city name,
+  * country and postal code are fields of an address bundle because they are related by the common purpose of
+  * specifying a location.
+  *
+  * Note that BundleTypes, along with ListType, SetType and MapType make the type system fully composable. You
+  * can create an arbitrarily complex data structure (not that we recommend that you do so).
+  *
+  * @param id The name of the trait
+  * @param description A description of the trait in terms of its purpose or utility
+  * @param fields A map of the field name symbols to their Type
+  */
+case class BundleType (
+  id : Identifier,
+  description : String,
+  module: Identifier,
+  fields : Map[Identifier, Type]
+) extends StructuredType {
+  require(fields.nonEmpty)
+  def asT = this
+  override def kind = 'Bundle
+}
+
+/** Abstract Node Type
+  *
+  * A NodeType defines a way to generate
+  * NodeType inherits this trait so it defines an apply method with
+  * a matching signature. The intent is that the BSONDocument supplied to the NodeType is validated against the
+  * node types fields. Because a Type is also a validator
+  * @param id
+  * @param description
+  * @param module
+  * @param fields
+  * @param mediaType
+  */
+case class NodeType (
+  id : Identifier,
+  description : String,
+  module: Identifier,
+  fields : Map[Identifier, Type],
+  mediaType : MediaType = MediaTypes.`text/html`
+) extends StructuredType
+{
+  def asT : NodeType = this
+  override def kind = 'Node
 }
 
 object AnyType_t extends AnyType('Any, "A type that accepts any value", Core)
@@ -449,7 +480,7 @@ object PageBundle_t
       'body -> Markdown_t
      // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
      // 'master -> Node_t,
-     // 'layout -> Node_t,
+     // 'defaultLayout -> Node_t,
      // 'body -> Node_t,
      // 'blocks ->
     )

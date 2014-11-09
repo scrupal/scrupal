@@ -20,9 +20,8 @@ package scrupal.core.api
 import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.{BSONDocumentReader, BSONHandler, BSONDocumentWriter, BSONDocument}
-import reactivemongo.bson.Macros._
-import scrupal.db.{Storable, DataAccessObject}
+import reactivemongo.bson._
+import scrupal.db.{IdentifierDAO, Storable}
 
 /** The basic unit of storage and operation in Scrupal
   * Further description needed here.
@@ -46,14 +45,11 @@ object Instance {
     * that collection as well as conversion to and from BSON format.
     * @param db A parameterless function returning a [[reactivemongo.api.DefaultDB]] instance.
     */
-  case class InstanceDao(db: DefaultDB) extends DataAccessObject[Instance,Symbol](db, "instances") {
-    implicit val modelHandler  : BSONDocumentReader[Instance]
-      with BSONDocumentWriter[Instance]
-      with BSONHandler[BSONDocument,Instance]
-        = handler[Instance]
 
-    implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
-
+  case class InstanceDao(db: DefaultDB) extends IdentifierDAO[Instance] {
+    final def collectionName = "instances"
+    implicit val reader : IdentifierDAO[Instance]#Reader = Macros.reader[Instance]
+    implicit val writer : IdentifierDAO[Instance]#Writer = Macros.writer[Instance]
     override def indices : Traversable[Index] = super.indices ++ Seq(
       Index(key = Seq("entity" -> IndexType.Ascending), name = Some("Entity"))
     )

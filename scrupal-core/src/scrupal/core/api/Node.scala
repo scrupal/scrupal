@@ -1,27 +1,53 @@
 package scrupal.core.api
 
-import scrupal.utils.Registry
+
+import scrupal.db.DisambiguousStorable
+import scrupal.utils.{Registrable, Registry}
 import spray.http.{MediaTypes, MediaType}
+
+import scala.concurrent.Future
+
+/** A function that generates content
+  *
+  * This is the basic characteristics of a Node. It is simply a function that receives a Context
+  * and produces content as a Byte array. The Context provides the setting in which it is
+  * generating the content. All dynamic content in Scrupal is generated through a Generator.
+  */
+trait Generator extends ((Context) => Future[Array[Byte]])
 
 /** Content Generating Node
   *
-  * A node is a content generating function. It takes no input and generates output as an Array of Byte. It must
-  * also declare a stable (val) MediaType that it generates that is understood by Spray.
- */
-trait Node extends (()=>Array[Byte])
-  with StorableRegistrable[Node]
-  with Describable with Modifiable with Enablable
-{
-  def registry : Registry[Node] = Node
-  def asT : Node = this
-  val mediaType : MediaType = MediaTypes.`text/html`
+  * This is the fundamental type of a node. It has some housekeeping information and can generate
+  * some content in the form of an Array of Bytes. Modules define their own kinds of nodes by deriving
+  * subclasses from this trait. As such, the Node class hierarchy defines the types of Nodes that
+  * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
+  * very numerous. For that reason, they are not registered in an object registry.
+  */
+abstract class Node extends DisambiguousStorable[Identifier] with Describable with Modifiable with Enablable with Generator {
+  val mediaType : MediaType
 }
 
-object Node extends Registry[Node] {
-  def registryName = "Nodes"
-  def registrantsName = "node"
+trait Arranger extends ((Context, Map[String,Node]) => Array[Byte])
 
-  val `application/bson` = MediaType.custom("application", "bson", fileExtensions = Seq("bson"),
-    binary = true, compressible = true, allowArbitrarySubtypes = false)
+trait Layout extends Registrable[Layout] with Describable with Arranger {
+  val id : Identifier
+  val description: String
+  val mediaType : MediaType
+  def registry = Layout
+  def asT = this
+}
+
+object Layout extends Registry[Layout] {
+  def registryName = "Layouts"
+  def registrantsName = "layout"
+
+  object default extends Layout {
+    val id = 'default
+    val description = "Default Layout"
+    val mediaType = MediaTypes.`text/html`
+    def apply(ctxt: Context, args: Map[String,Node]) : Array[Byte] = {
+      scrupal.core.views.html.pages.defaultLayout(ctxt, args).body.getBytes(utf8)
+    }
+  }
 
 }

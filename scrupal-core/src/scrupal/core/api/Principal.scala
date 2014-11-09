@@ -18,7 +18,8 @@
 package scrupal.core.api
 
 import org.joda.time.DateTime
-import scrupal.db.Storable
+import reactivemongo.bson.Macros
+import scrupal.db.{ScrupalDB, IdentifierDAO, Storable}
 import scrupal.utils.Hash
 
 /**
@@ -41,3 +42,11 @@ case class Principal(
   complexity: Long = 0,
   override val created: Option[DateTime] = None
 ) extends Storable[Identifier] with Creatable
+
+object Principal {
+  case class PrincipalDAO(db: ScrupalDB) extends IdentifierDAO[Principal] {
+    final def collectionName = "principals"
+    implicit val reader : IdentifierDAO[Principal]#Reader = Macros.reader[Principal]
+    implicit val writer : IdentifierDAO[Principal]#Writer = Macros.writer[Principal]
+  }
+}

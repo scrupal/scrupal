@@ -19,21 +19,21 @@ package scrupal.core.api
 
 import java.net.URL
 
-import scrupal.core.{Scrupal, CoreSchema}
+import scrupal.core.{CoreSchema, Scrupal}
 import scrupal.db.DBContext
 import scrupal.utils.Configuration
 
 import spray.http._
 
-import scala.concurrent.Future
-
+import scala.concurrent.ExecutionContext
 
 /** A generic Context trait with just enough defaulted information to render a BasicPage.
   * This allows us, regardless of the error condition of a page, to render custom errors at least in some
   * default way. Classes that mix in Context will override and extend what's available in their context.
   */
 trait Context {
-  val config : Configuration
+  val scrupal: Scrupal
+  val site : Option[Site] = None
   val appName : String = "Application"
   val siteName : String = "Scrupal"
   val themeProvider : String = "scrupal"
@@ -47,6 +47,16 @@ trait Context {
 
   def alerts : Seq[Alert] = Seq()
   def suggestURL : URL = new URL("/")
+
+  def withScrupalStuff[T]( f: (Configuration, DBContext, CoreSchema, ExecutionContext) => T) : T = {
+     scrupal.withConfiguration { config =>
+       scrupal.withCoreSchema { (dbc, db, cs) =>
+         scrupal.withExecutionContext { ec =>
+           f(config, dbc, cs, ec)
+         }
+       }
+     }
+  }
 }
 
 /** A Basic context which just mixes the Context trait with the WrappedRequest.
@@ -54,7 +64,7 @@ trait Context {
   * because this is a WrappedRequest[A], all the fields of Request are fields of this class too.
   * @param request The request upon which the context is based
   */
-case class HttpContext(request: HttpRequest) extends Context {
+case class HttpContext(scrupal: Scrupal, request: HttpRequest) extends Context {
   def secure : Boolean = false
   val config = Configuration.empty
   override val uri = request.uri
@@ -66,12 +76,13 @@ case class HttpContext(request: HttpRequest) extends Context {
 /** A Site context which pulls the information necessary to render something for a site.
   * SiteContext is presumed to be created with a SiteAction from the ContextProvider which will only create on if the
   * conditions are right, otherwise a BasicContext is created and an error returned.
-  * @param site The site that this request should be processed by
+  * @param theSite The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class SiteContext(val site: Site, request: HttpRequest) extends HttpContext(request) {
-  override val siteName : String = site.label
-  override val description : String = site.description
+class SiteContext(scrupal: Scrupal, theSite: Site, request: HttpRequest) extends HttpContext(scrupal, request) {
+  override val site : Option[Site] = Some(theSite)
+  override val siteName : String = theSite.label
+  override val description : String = theSite.description
   override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
   val modules: Seq[Module] = Module.all //FIXME: Should be just the ones for the site
@@ -83,17 +94,17 @@ class SiteContext(val site: Site, request: HttpRequest) extends HttpContext(requ
   * @param site The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class UserContext(override val user: String, site: Site, request: HttpRequest)
-    extends SiteContext(site, request) {
+class UserContext(scrupal: Scrupal, override val user: String, site: Site, request: HttpRequest)
+    extends SiteContext(scrupal, site, request) {
   val principal  = Nil // TODO: Finish UserContext implementation
 }
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
-  def apply(request: HttpRequest) = new HttpContext(request)
-  def apply(site: Site, request: HttpRequest) = new SiteContext(site, request)
-  def apply(user: String, site: Site, request: HttpRequest) =
-    new UserContext(user, site, request)
+  def apply(scrupal: Scrupal, request: HttpRequest) = new HttpContext(scrupal, request)
+  def apply(scrupal: Scrupal, site: Site, request: HttpRequest) = new SiteContext(scrupal, site, request)
+  def apply(scrupal: Scrupal, user: String, site: Site, request: HttpRequest) =
+    new UserContext(scrupal, user, site, request)
 
 
 }

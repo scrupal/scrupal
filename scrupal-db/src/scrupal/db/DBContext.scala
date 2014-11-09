@@ -21,11 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.typesafe.config.ConfigFactory
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.api.{DefaultDB, MongoConnection, MongoDriver}
+import reactivemongo.api.{MongoConnection, MongoDriver}
 import scrupal.utils._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -38,71 +36,24 @@ import scala.util.{Failure, Success, Try}
   */
 case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
                      user: Option[String] = None, pass: Option[String] = None) extends Registrable[DBContext] with ScrupalComponent {
-
-  // TODO: Implement multiple database support from same URI
-
   def registry = DBContext
   def asT = this
 
   val parsedURI = MongoConnection.parseURI(mongo_uri) match {
-    case Success(uri) =>
-      uri.db match {
-        case Some(db) => uri
-        case None => toss("MongDB URI, " + mongo_uri + " does not specify a database.")
-      }
-      uri
-    case Failure(xcptn) =>
-      throw xcptn
+    case Success(uri) => uri
+    case Failure(xcptn) => throw xcptn
   }
 
   val connection = driver.connection(parsedURI)
-  val database = connection.db(
-    parsedURI.db.getOrElse {
-      toss("MongoDB URI, " + mongo_uri + " does not specify a database.")
-    }
-  )
 
-  def withDatabase[T](f: (DefaultDB) => T) : T = { f(database) }
-
-  def withCollection[T](collName: String)(f : (BSONCollection) => T) : T = {
-    withDatabase { db =>
-      val coll = db.collection[BSONCollection](collName, DefaultFailoverStrategy)
-      f(coll)
-    }
+  def withDatabase[T](dbName: String)(f: (ScrupalDB) => T) : T = {
+    implicit val database = new ScrupalDB(dbName, connection)
+    f(database)
   }
 
-  def emptyDatabase() : Future[List[(String, Boolean)]] = {
-    withDatabase { db =>
-      db.collectionNames flatMap { names =>
-        val futures = for (cName <- names if !cName.startsWith("system.")) yield {
-          val coll = db.collection[BSONCollection](cName)
-          coll.drop() map { b => cName -> true }
-        }
-        Future sequence futures
-      }
-    }
-  }
-
-  def emptyCollection(collName: String) : Future[Boolean] = {
-    withDatabase { db =>
-      val coll = db.collection[BSONCollection](collName)
-      coll.drop map { foo => true}
-    }
-  }
-
-  def hasCollection(collName: String) : Future[Boolean] = {
-    withDatabase { db ⇒
-      db.collectionNames.map { list ⇒ list.contains(collName) }
-    }
-  }
-
-  def isEmpty : Future[Boolean] = {
-    withDatabase { db =>
-      db.collectionNames.map { list =>
-        val names = list.filterNot { name ⇒ name.startsWith("system.") }
-        names.isEmpty
-      }
-    }
+  def withCollection[T](db: ScrupalDB, collName: String)(f : (BSONCollection) => T) : T = {
+    val coll = db.collection[BSONCollection](collName, DefaultFailoverStrategy)
+    f(coll)
   }
 
   def close() = Try {

@@ -44,24 +44,24 @@ case class TestEntity(
 }
 
 object TestEntity {
-  case class TestEntityDao(db: DefaultDB) extends DataAccessObject[TestEntity,Identifier](db,"test_entities") {
-    implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
-    implicit val modelHandler = Macros.handler[TestEntity]
+  case class TestEntityDao(db: DefaultDB) extends IdentifierDAO[TestEntity] {
+    final val collectionName = "test_entities"
+    implicit val reader = Macros.reader[TestEntity]
+    implicit val writer = Macros.writer[TestEntity]
   }
-
 }
 
 class TestSchema(dbc: DBContext) extends Schema(dbc) {
 
   import TestEntity._
 
-  val test_entities = dbc.withDatabase { db => new TestEntityDao(db) }
+  val test_entities = dbc.withDatabase("TestSchema") { db => new TestEntityDao(db) }
 
-  def daos : Seq[DataAccessObject[_,_]] = {
+  def daos : Seq[DataAccessInterface[_,_]] = {
     Seq( test_entities )
   }
 
-  def validateDao(dao: DataAccessObject[_,_]) : Boolean = true
+  def validateDao(dao: DataAccessInterface[_,_]) : Boolean = true
 }
 
 class EntitySpec extends Specification

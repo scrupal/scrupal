@@ -2,9 +2,8 @@ package scrupal.core.api
 
 import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
-import reactivemongo.bson.Macros._
-import reactivemongo.bson.{BSONHandler, BSONDocumentWriter, BSONDocumentReader, BSONDocument}
-import scrupal.db.DataAccessObject
+import reactivemongo.bson._
+import scrupal.db.{IdentifierDAO}
 import scrupal.utils.Registry
 
 /** A Scrupal Application
@@ -33,11 +32,9 @@ object Application extends Registry[Application] {
     * that collection as well as conversion to and from BSON format.
     * @param db A [[reactivemongo.api.DefaultDB]] instance in which to find the collection
     */
-  case class ApplicationDao(db: DefaultDB) extends DataAccessObject[Application,Symbol](db, "applications") {
-    implicit val modelHandler  : BSONDocumentReader[Application]
-      with BSONDocumentWriter[Application]
-      with BSONHandler[BSONDocument,Application] = handler[Application]
-
-    implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
+  case class ApplicationDao(db: DefaultDB) extends IdentifierDAO[Application] {
+    final def collectionName: String = "application"
+    implicit val reader = Macros.reader[Application]
+    implicit val writer = Macros.writer[Application]
   }
 }

@@ -1,0 +1,19 @@
+@(implicit ctxt: scrupal.core.api.Context, args: Map[String,scrupal.core.api.Node])
+@import scrupal.core.views.html._
+@import spray.http.MediaTypes
+
+@pages.plainPage("Default Layout") {
+  <p>A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout which just
+  lists the contents down the page. This probably isn't what you want, but it's what you've got until you
+  create a defaultLayout for your pages.
+  </p>
+  @for( (key,node) <- args) {
+    <h1>@node._id : @node.kind - @node.description</h1>
+    <div>@{node.mediaType match {
+      case MediaTypes.`text/html` => node(ctxt)
+      case MediaTypes.`text/plain` => node(ctxt)
+      case _ => <span>Media Type: {node.mediaType}</span>
+    }}
+    </div>
+  }
+}

@@ -30,7 +30,7 @@ import scala.util.Try
 abstract class Schema(val dbc: DBContext)
 {
 
-  def daos : Seq[DataAccessObject[_,_]]
+  def daos : Seq[DataAccessInterface[_,_]]
 
   def create(implicit context: DBContext) : Future[Seq[(String,Boolean)]] = {
     val futures = for (dao <- daos) yield {
@@ -40,7 +40,7 @@ abstract class Schema(val dbc: DBContext)
   }
 
 
-  def validateDao(dao: DataAccessObject[_,_]) : Boolean
+  def validateDao(dao: DataAccessInterface[_,_]) : Boolean
 
   def collectionNames: Seq[String] = daos map { dao => dao.collection.name }
 

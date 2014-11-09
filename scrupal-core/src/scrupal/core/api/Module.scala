@@ -50,6 +50,7 @@ abstract class Module(
   val description: String,
   val version: Version,
   val obsoletes: Version,
+  val dbName: String = "scrupal",
   var enabled: Boolean = true
 ) extends Registrable[Module] with Describable with Enablable with Versionable with SelfValidator{
   def registry = Module
@@ -185,7 +186,7 @@ object Module extends Registry[Module] {
     // For each module ...
     all foreach { case mod: Module =>
       // In a database session ...
-      context.withDatabase { implicit db =>
+      context.withDatabase(mod.dbName) { implicit db =>
         // For each schema ...
         mod.schemas.foreach { schema: Schema =>
           // Create the schema

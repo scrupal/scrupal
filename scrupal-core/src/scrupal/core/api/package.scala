@@ -16,12 +16,18 @@
   **********************************************************************************************************************/
 package scrupal.core
 
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
+
 import com.typesafe.config.{ConfigParseOptions, ConfigFactory, ConfigRenderOptions, Config}
+import play.twirl.api.Html
+import spray.http.{MediaTypes, MediaType}
 import scala.util.matching.Regex
 
 import org.joda.time.DateTime
 import reactivemongo.bson._
-import scrupal.utils.{Configuration, Icons, AlertKind}
+import scrupal.utils.{ScrupalComponent, Configuration, Icons, AlertKind}
 
 /** Scrupal Core API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the core abstractions
@@ -48,9 +54,11 @@ import scrupal.utils.{Configuration, Icons, AlertKind}
   *
   * At the package level we define mostly implicit BSON translaters needed throughout the core, for convenience.
   */
-package object api {
+package object api extends ScrupalComponent {
 
   lazy val system = scrupal.core.system
+
+  lazy val utf8 = Charset.forName("UTF-8")
 
   /** The typical type of identifer.
     * We use Symbol because they are memoized by the compiler which means we only pay for the memory of a given
@@ -60,6 +68,8 @@ package object api {
 
   type ValidationResult = Option[Seq[String]]
 
+  implicit val IdentifierConverter = (id: Identifier) ⇒ reactivemongo.bson.BSONString(id.name)
+
   implicit val IdentifierBSONHandler = new BSONHandler[BSONString,Identifier] {
     override def write(t: Identifier): BSONString = BSONString(t.name)
     override def read(bson: BSONString): Identifier = Symbol(bson.value)
@@ -68,6 +78,11 @@ package object api {
   implicit val ShortBSONHandler = new BSONHandler[BSONInteger,Short] {
     override def write(t: Short): BSONInteger = BSONInteger(t.toInt)
     override def read(bson: BSONInteger): Short = bson.value.toShort
+  }
+
+  implicit val URLHandler = new BSONHandler[BSONString,URL] {
+    override def write(t: URL): BSONString = BSONString(t.toString)
+    override def read(bson: BSONString): URL = new URL(bson.value)
   }
 
   implicit val DateTimeBSONHandler = new BSONHandler[BSONDateTime,DateTime] {
@@ -95,7 +110,6 @@ package object api {
       BSONString(c.underlying.root.render (ConfigRenderOptions.concise()))
     override def read(bson: BSONString): Configuration =
       Configuration(ConfigFactory.parseString(bson.value, ConfigParseOptions.defaults()))
-
   }
 
   implicit val RegexHandler: BSONHandler[BSONString,Regex] = new BSONHandler[BSONString,Regex] {
@@ -110,5 +124,31 @@ package object api {
     override def write(sa: Seq[Application]): BSONArray = BSONArray(sa map { app ⇒ app._id.name })
     override def read(array: BSONArray): Seq[Application] =
       Application.find(array.values.toSeq.map{ v ⇒ Symbol(v.asInstanceOf[BSONString].value) })
+  }
+
+  implicit val MediaTypeHandler : BSONHandler[BSONArray,MediaType] = new BSONHandler[BSONArray,MediaType] {
+    override def write(mt: MediaType): BSONArray = BSONArray(mt.mainType, mt.subType)
+    override def read(bson: BSONArray): MediaType = {
+      val key = bson.values(0).asInstanceOf[BSONString].value → bson.values(1).asInstanceOf[BSONString].value
+      MediaTypes.getForKey(key) match {
+        case Some(mt) ⇒ mt
+        case None ⇒ toss(s"MediaType `$key` is unknown.")
+      }
+    }
+  }
+
+  implicit val ArrayByteHandler : BSONHandler[BSONBinary,Array[Byte]] = new BSONHandler[BSONBinary,Array[Byte]] {
+    override def write(bytes: Array[Byte]) : BSONBinary = BSONBinary(bytes, Subtype.GenericBinarySubtype)
+    override def read(bson: BSONBinary) : Array[Byte] = bson.value.readArray(bson.value.size)
+  }
+
+  implicit val HtmlHandler : BSONHandler[BSONBinary,Html] = new BSONHandler[BSONBinary,Html] {
+    override def write(html: Html) : BSONBinary = BSONBinary(html.body.getBytes("UTF-8"), Subtype.GenericBinarySubtype)
+    override def read(bson: BSONBinary) : Html = Html(new String(bson.value.readArray(bson.value.size)))
+  }
+
+  implicit val FileHandler : BSONHandler[BSONString,File] = new BSONHandler[BSONString,File] {
+    override def write(f: File): BSONString = BSONString(f.getPath)
+    override def read(bson: BSONString): File = new File(bson.value)
   }
 }

@@ -29,28 +29,37 @@ class DBContextSpec extends Specification() {
       DBContext.isStartedUp must beFalse
     }
 
-    "create DB From URI and drop it" in {
-      new WithFakeDB("test_fromURI") {
-        withDBContext { dbc ⇒
-          val dbc = DBContext.fromURI('test_fromURI1, "mongodb://localhost/test_fromURI")
-          Await.result(dbc.isEmpty, one_second) must beTrue
-          dbc.withDatabase { db => db.drop()}
-          success
+    "ensure withEmptyDB gives us an empty one" in {
+      new FakeDBContext("ensure_empty") {
+        val future = withEmptyDB("test_empty") { db =>
+          db.isEmpty
         }
+        Await.result(future, timeout) must beTrue
+      }
+      DBContext.numberOfStartups must beEqualTo(0)
+    }
+
+    "drop new or existing database" in {
+      new FakeDBContext("create_and_drop") {
+        val future = withDB("test_dropDB") { db =>
+          db.drop()
+        }
+        Await.result(future, timeout)
+        success
       }
       DBContext.numberOfStartups must beEqualTo(0)
     }
 
     "empty an existing database" in {
-      new WithFakeDB("test_emptyDatabase") {
-        withDBContext { dbc ⇒
-          val f1 = dbc.isEmpty
-          val f2 = dbc.withDatabase { db =>
+      new FakeDBContext("test_emptyDatabase") {
+        withEmptyDB("text_emptyDatabase") { implicit db =>
+          val f1 = db.isEmpty
+          val f2 = {
             val coll = db.collection[BSONCollection]("foo")
             coll.insert(BSONDocument("_id" -> BSONString("foo"))).map { le => true}
           }
-          val f3 = dbc.emptyDatabase().map { x => x.count { p => p._2} == x.size}
-          val f4 = dbc.isEmpty
+          val f3 = db.emptyDatabase.map { x => x.count { p => p._2} == x.size}
+          val f4 = db.isEmpty
           val f = Future sequence List(f1, f2, f3, f4)
           val list = Await.result(f, one_second)
           for (r <- list) r must beTrue

@@ -30,6 +30,8 @@ import com.typesafe.sbt.digest.Import.digest
 object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Dependencies {
 
   import sbtunidoc.{ Plugin => UnidocPlugin }
+  import spray.revolver.RevolverPlugin._
+
 
   val base_name = BuildInfo.projectName
 
@@ -60,7 +62,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
   lazy val http = Project(base_name + "-http", file("./scrupal-http"))
     .enablePlugins(SbtTwirl)
     .settings(
-      buildSettings ++ twirlSettings ++ Seq(
+      buildSettings ++ twirlSettings ++ Revolver.settings ++ Seq(
         resolvers ++= all_resolvers,
         libraryDependencies ++= http_dependencies
     ):_*)

@@ -2,7 +2,7 @@ package scrupal.db
 
 import org.specs2.mutable.Specification
 import reactivemongo.api.DefaultDB
-import reactivemongo.bson.Macros._
+import reactivemongo.bson._
 
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
@@ -14,15 +14,16 @@ class DataAccessObjectSpec extends Specification{
 
   case class TestData(_id: Long, int: Int, str: String, list: List[String]) extends Storable[Long]
 
-  class TestDao(db: DefaultDB, name: String) extends DataAccessObject[TestData,Long](db, name) {
-    implicit val modelHandler = handler[TestData]
-    implicit val idHandler = reactivemongo.bson.BSONLong
+  case class TestDao(db: DefaultDB, collectionName: String) extends DataAccessObject[TestData,Long] {
+    val reader = Macros.reader[TestData]
+    val writer = Macros.writer[TestData]
+    val converter = (id: Long) => BSONLong(id)
   }
 
   "DataAccessObject" should {
     "create new collection" in {
-      new WithFakeDB("test_newCollection") {
-        val future = withDB { db ⇒
+      new FakeDBContext("create_new_collection") {
+        val future = withEmptyDB("test_newCollection") { db ⇒
           val dao = new TestDao(db, "testdata")
           dao.ensureIndices.map { list ⇒ list.exists( p ⇒ p) }
         }
@@ -31,12 +32,12 @@ class DataAccessObjectSpec extends Specification{
     }
 
     "drop collections" in {
-      new WithFakeDB("test_dropCollection") {
-        val future = withDBContext { dbc ⇒
-          val dao = new TestDao(dbc.database, "testdata")
+      new FakeDBContext("drop_collections") {
+        val future = withEmptyDB("test_dropCollection") { db ⇒
+          val dao = new TestDao(db, "testdata")
           dao.ensureIndices.flatMap { list ⇒
             list.exists(p ⇒ p) must beTrue
-            dao.drop.flatMap { u ⇒ dbc.hasCollection("testdata") }
+            dao.drop.flatMap { u ⇒ db.hasCollection("testdata") }
           }
         }
         Await.result(future, timeout) must beFalse
@@ -44,8 +45,8 @@ class DataAccessObjectSpec extends Specification{
     }
 
     "insert and find items" in {
-      new WithFakeDB("test_insertFind", Duration(5,"seconds")) {
-        val future = withDB { db ⇒
+      new FakeDBContext("insert_and_find", Duration(5,"seconds")) {
+        val future = withEmptyDB("test_insertFind") { db ⇒
           val dao = new TestDao(db, "testdata")
           dao.ensureIndices.flatMap { list ⇒
             list.exists(p ⇒ p) must beTrue

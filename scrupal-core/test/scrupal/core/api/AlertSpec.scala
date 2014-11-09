@@ -82,17 +82,21 @@ class AlertSpec extends Specification
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
 
-    "save to and fetch from the DB" in  new FakeScrupal("AlertSpec") {
+    "save to and fetch from the DB" in new FakeScrupal("AlertSpec") {
       withCoreSchema { schema: CoreSchema =>
-        schema.dbc.emptyCollection("alerts")
-        val a1 = new Alert('foo, "Alert", "Description", "Message", AlertKind.Warning )
-        val fa1 = schema.alerts.insert(a1)
-        Await.result(fa1,Duration(5,TimeUnit.SECONDS)).ok must beTrue
-        val fa2 = schema.alerts.fetch('foo)
-        val a2 = Await.result(fa2,Duration(1,TimeUnit.SECONDS)).get
-        val saved_time = a2.expires
-        a2._id must beEqualTo('foo)
-        a1._id must beEqualTo('foo)
+				withEmptyDB("AlertSpect") { db =>
+					val f = db.dropCollection("alerts") map { result =>
+						val a1 = new Alert('foo, "Alert", "Description", "Message", AlertKind.Warning )
+						val fa1 = schema.alerts.insert(a1)
+						Await.result(fa1,Duration(5,TimeUnit.SECONDS)).ok must beTrue
+						val fa2 = schema.alerts.fetch('foo)
+						val a2 = Await.result(fa2,Duration(1,TimeUnit.SECONDS)).get
+						val saved_time = a2.expires
+						a2._id must beEqualTo('foo)
+						a1._id must beEqualTo('foo)
+					}
+					Await.result(f,Duration(5,TimeUnit.SECONDS))
+				}
       }
     }
 	}

@@ -20,11 +20,10 @@ import org.joda.time.DateTime
 
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.{BSONDocument, BSONHandler, BSONDocumentWriter, BSONDocumentReader}
-import reactivemongo.bson.Macros._
+import reactivemongo.bson._
 
-import scrupal.db.{BSONDocumentHandler, DataAccessObject}
-import scrupal.utils.{AbstractRegistry, Pluralizer, Registry}
+import scrupal.db.IdentifierDAO
+import scrupal.utils.{AbstractRegistry, Registry}
 
 /** Site Top Level Object
   * Scrupal manages sites.
@@ -68,10 +67,10 @@ object Site extends Registry[Site] {
 
   def forHost(hostName: String) = _byhost.lookup(hostName)
 
-
-  case class SiteDao(db: DefaultDB) extends DataAccessObject[Site,Symbol](db, "sites") {
-    implicit val modelHandler : BSONDocumentReader[Site] with BSONDocumentWriter[Site] with BSONHandler[BSONDocument,Site] = handler[Site]
-    implicit val idHandler = (id: Symbol) ⇒ reactivemongo.bson.BSONString(id.name)
+  case class SiteDao(db: DefaultDB) extends IdentifierDAO[Site] {
+    final def collectionName = "sites"
+    implicit val reader : IdentifierDAO[Site]#Reader = Macros.reader[Site]
+    implicit val writer : IdentifierDAO[Site]#Writer = Macros.writer[Site]
     override def indices : Traversable[Index] = super.indices ++ Seq(
       Index(key = Seq("host" -> IndexType.Ascending), name = Some("Host"))
     )

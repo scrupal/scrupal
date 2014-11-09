@@ -1,5 +1,5 @@
 @(what: scrupal.core.api.Feature, why: Option[String])(implicit context : scrupal.core.api.Context)
-@import scrupal.http.views.html.pages
+@import scrupal.core.views.html.pages
 @pages.markedPage("Not Implemented: " + what) {
 <h3 class="text-error">Pardon Our Mess</h3>
 <p>We have been planning to implement <b><em>@what.name</em></b> (@what.description), but currently it is not because

@@ -1,33 +1,29 @@
 package scrupal.db
 
+import play.api.libs.iteratee.Iteratee
+import reactivemongo.api.QueryOpts
+import reactivemongo.api.commands.{WriteResult, GetLastError}
 import reactivemongo.api.commands.bson._
+import reactivemongo.api.indexes.Index
+import reactivemongo.bson._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Random
 
-import reactivemongo.api.indexes.Index
-import reactivemongo.api._
-import reactivemongo.bson._
-import reactivemongo.api.commands._
+trait DisambiguousStorable[ID] extends Storable[ID] {
+  val kind : Symbol // always make final and add as last parameter to case class constructor with default value
+}
 
-import play.api.libs.iteratee.Iteratee
-
-
-
-/** An Abstraction For Easier Access to MongoDB Collections
-  * Provides a variety of useful methods assuming that the collection holds instances of [[Model]] and those instances
-  * are indexed by [[Id]].
- * A DAO defines how to work with a specific collection.
- *
- * @tparam Model The representation of a document in the collection, typically a case class that extends Storable[Id]
- * @tparam Id The type of the _id field in the document which must guarantee uniqueness.
+/**
+ * Created by reid on 11/9/14.
  */
-abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInterface[Model,Id]
-{
+abstract class VariantDataAccessObject[Model <: DisambiguousStorable[ID],ID] extends DataAccessInterface[Model,ID] {
   import BSONValueBuilder._
 
-  type Reader = BSONDocumentReader[Model]
-  type Writer = BSONDocumentWriter[Model]
+  class Reader(reader: VariantBSONDocumentReader[Model])
+    extends VariantBSONReaderWrapper[BSONDocument,Model](reader) with BSONDocumentReader[Model]
+  class Writer(writer : VariantBSONDocumentWriter[Model])
+    extends VariantBSONWriterWrapper[Model,BSONDocument](writer) with BSONDocumentWriter[Model]
 
   implicit val reader : Reader
   implicit val writer : Writer
@@ -44,38 +40,38 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
     collection.runCommand(command).map(_.value)
   }
 
+
   /** Retrieves at most one model matching the given selector. */
   def findOne(selector: BSONDocument)
-             (implicit ec: ExecutionContext): Future[Option[Model]] = {
+      (implicit ec: ExecutionContext): Future[Option[Model]] = {
     collection.find(selector).one[Model]
   }
 
   /** Find all matching instances of Model for the given selector and return them.
-   * Note that you should only do this for smallish collection. For larger connections,
+    * Note that you should only do this for smallish collection. For larger connections,
     * page through them with the [[findByPage]] method.
-   *
-   * @param selector Document for selecting the instances
-   * @param sort Document for sorting the instances, if any.
-   */
+    *
+    * @param selector Document for selecting the instances
+    * @param sort Document for sorting the instances, if any.
+    */
   def findAll(selector: BSONDocument, sort: BSONDocument = $empty)
-             (implicit ec: ExecutionContext): Future[Seq[Model]] = {
+      (implicit ec: ExecutionContext): Future[Seq[Model]] = {
     collection.find(selector).sort(sort).cursor[Model].collect[Seq]()
   }
 
   /** Find matching instances of Model for the given selector and return a sorted page of them
-   * This allows you to constrain the size of the result set so you don't unload too many instances into memory.
-   *
-   * @param selector Document for selecting the instances.
-   * @param page The page number to retrieve (0-based).
-   * @param pageSize Maximum number of elements in each page.
+    * This allows you to constrain the size of the result set so you don't unload too many instances into memory.
+    *
+    * @param selector Document for selecting the instances.
+    * @param page The page number to retrieve (0-based).
+    * @param pageSize Maximum number of elements in each page.
     * @param sort Document for sorting the instances, if any.
-   */
+    */
   def findByPage(selector: BSONDocument, page: Int, pageSize: Int, sort: BSONDocument = $empty)
-          (implicit ec: ExecutionContext): Future[Seq[Model]] = {
-
-    collection.find(selector).sort(sort)
-      .options(QueryOpts(skipN = (page-1)*pageSize, batchSizeN = pageSize))
-      .cursor[Model].collect[Seq](pageSize)
+      (implicit ec: ExecutionContext): Future[Seq[Model]] = {
+      collection.find(selector).sort(sort)
+        .options(QueryOpts(skipN = (page-1)*pageSize, batchSizeN = pageSize))
+        .cursor[Model].collect[Seq](pageSize)
   }
   /**
    * Updates and returns a single model. It returns the old document by default.
@@ -88,8 +84,8 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @param upsert When true, findAndUpdate() creates a new model if no model matches the query.
    */
   def findAndUpdate(selector: BSONDocument, update: BSONDocument, sort: BSONDocument,fetchNewObject: Boolean = true,
-                    upsert: Boolean = false)
-                   (implicit ec: ExecutionContext): Future[Option[Model]]= {
+    upsert: Boolean = false)
+      (implicit ec: ExecutionContext): Future[Option[Model]]= {
 
     import BSONFindAndModifyImplicits._
     val command = BSONFindAndModifyCommand.FindAndModify (
@@ -108,8 +104,8 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
     * @return
     */
 
-   def findAndRemove(selector: BSONDocument, sort: BSONDocument = BSONDocument.empty)
-                    (implicit ec: ExecutionContext): Future[Option[Model]] = {
+  def findAndRemove(selector: BSONDocument, sort: BSONDocument = BSONDocument.empty)
+      (implicit ec: ExecutionContext): Future[Option[Model]] = {
 
     import BSONFindAndModifyImplicits._
     val command = BSONFindAndModifyCommand.FindAndModify (
@@ -136,7 +132,7 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
 
   /** Inserts the given model. */
   def insert(obj: Model, writeConcern: GetLastError = defaultWriteConcern)
-            (implicit ec: ExecutionContext): Future[WriteResult] = {
+      (implicit ec: ExecutionContext): Future[WriteResult] = {
     collection.insert(obj, writeConcern)
   }
 
@@ -149,8 +145,8 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @return The number of successful insertions.
    */
   def bulkInsert(objs: TraversableOnce[Model],
-                  bulkSize: Int /*= bulk.MaxDocs*/, bulkByteSize: Int /*= bulk.MaxBulkSize*/)
-                (implicit ec: ExecutionContext): Future[Int] = {
+    bulkSize: Int /*= bulk.MaxDocs*/, bulkByteSize: Int /*= bulk.MaxBulkSize*/)
+      (implicit ec: ExecutionContext): Future[Int] = {
     /*
     val enumerator = Enumerator.enumerate(objs)
     collection.bulkInsert(enumerator, bulkSize, bulkByteSize) map { result =>
@@ -174,9 +170,9 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    */
   def update[U <: BSONDocumentWriter[Model]]
     (selector: Model, update: U, writeConcern: GetLastError = defaultWriteConcern,
-     upsert: Boolean = false, multi: Boolean = false)
-    (implicit ec: ExecutionContext, u: BSONDocumentWriter[U]): Future[WriteResult] = {
-      collection.update(writer.write(selector), u.write(update), writeConcern, upsert, multi)
+    upsert: Boolean = false, multi: Boolean = false)
+      (implicit ec: ExecutionContext, u: BSONDocumentWriter[U]): Future[WriteResult] = {
+    collection.update(writer.write(selector), u.write(update), writeConcern, upsert, multi)
   }
 
   /**
@@ -188,9 +184,9 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @tparam U Type of the update query.
    */
   def updateById[U <: BSONDocumentWriter[Model]]
-    (id: Id, update: U,writeConcern: GetLastError = defaultWriteConcern)
-    (implicit ec: ExecutionContext, updateWriter: BSONDocumentWriter[U]): Future[WriteResult] = {
-      collection.update($id(id), updateWriter.write(update), writeConcern)
+    (id: ID, update: U,writeConcern: GetLastError = defaultWriteConcern)
+      (implicit ec: ExecutionContext, updateWriter: BSONDocumentWriter[U]): Future[WriteResult] = {
+    collection.update($id(id), updateWriter.write(update), writeConcern)
   }
 
   /**
@@ -203,20 +199,20 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @param firstMatchOnly Remove only the first matching document.
    */
   def remove(selector: BSONDocument, firstMatchOnly: Boolean = false, writeConcern: GetLastError = defaultWriteConcern)
-            (implicit ec: ExecutionContext): Future[WriteResult] = {
+      (implicit ec: ExecutionContext): Future[WriteResult] = {
     collection.remove(selector, writeConcern, firstMatchOnly)
   }
 
   /** Removes the document with the given ID. */
-  def removeById(id: Id, writeConcern: GetLastError = defaultWriteConcern)
-                (implicit ec: ExecutionContext): Future[WriteResult] = {
+  def removeById(id: ID, writeConcern: GetLastError = defaultWriteConcern)
+      (implicit ec: ExecutionContext): Future[WriteResult] = {
     collection.remove($id(id), writeConcern)
   }
 
 
   /** Removes all documents in this collection. */
   def removeAll(writeConcern: GetLastError = defaultWriteConcern)
-               (implicit ec: ExecutionContext): Future[WriteResult] = {
+      (implicit ec: ExecutionContext): Future[WriteResult] = {
     collection.remove(query = BSONDocument.empty, writeConcern = writeConcern, firstMatchOnly = false)
   }
 
@@ -234,7 +230,7 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @tparam A Type of fold result.
    */
   def fold[A](selector: BSONDocument, sort: BSONDocument, state: A)(f: (A, Model) => A)
-             (implicit ec: ExecutionContext): Future[A] = {
+      (implicit ec: ExecutionContext): Future[A] = {
     collection.find(selector).sort(sort).cursor[Model]
       .enumerate()
       .apply(Iteratee.fold(state)(f))
@@ -250,7 +246,7 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @param f function to be applied.
    */
   def foreach(selector: BSONDocument, sort: BSONDocument)(f: (Model) => Unit)
-             (implicit ec: ExecutionContext): Future[Unit] = {
+      (implicit ec: ExecutionContext): Future[Unit] = {
     collection.find(selector).sort(sort).cursor[Model]
       .enumerate()
       .apply(Iteratee.foreach(f))
@@ -304,6 +300,6 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
   }
 }
 
-abstract class IdentifierDAO[Model <: Storable[Symbol]] extends DataAccessObject[Model,Symbol] {
+abstract class VariantIdentifierDAO[Model <: DisambiguousStorable[Symbol]] extends VariantDataAccessObject[Model,Symbol] {
   implicit val converter = (id: Symbol) => BSONString(id.name)
 }

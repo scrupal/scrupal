@@ -39,40 +39,42 @@ class CoreSpec extends Specification {
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in {
-      new FakeScrupal("CoreSpec") {
-        withCoreSchema { schema : CoreSchema =>
+      new FakeScrupal("Support CRUD") {
+        withEmptyDB("SupportCRUD") { db =>
+          withCoreSchema { schema : CoreSchema =>
 
 
-          val foo = new TestModule
+            val foo = new TestModule
 
-          foo.id must beEqualTo('foo)
+            foo.id must beEqualTo('foo)
 
-          /*        val ty_id = schema.ypes.insert()
-          val ty = Types.fetch(ty_id)
-          val ty2 = ty.get
-          ty2.id must beEqualTo('Thai)
-          ty_id must beEqualTo(ty2.id)
-          ty2.moduleId must beEqualTo( 'foo )
+            /*        val ty_id = schema.ypes.insert()
+            val ty = Types.fetch(ty_id)
+            val ty2 = ty.get
+            ty2.id must beEqualTo('Thai)
+            ty_id must beEqualTo(ty2.id)
+            ty2.moduleId must beEqualTo( 'foo )
 
-          val bun_id = Types.insert( new BundleType('Buns, "Buns Aye", m_id, HashMap('tie -> Type('Thai).get)))
-          val bun = Types.fetch(bun_id)
-          val bun2 = bun.get
-          bun2.id must beEqualTo('Buns)
-          bun_id must beEqualTo(bun2.id)
-  */
-          dbContext.get must beEqualTo(schema.dbc)
+            val bun_id = Types.insert( new BundleType('Buns, "Buns Aye", m_id, HashMap('tie -> Type('Thai).get)))
+            val bun = Types.fetch(bun_id)
+            val bun2 = bun.get
+            bun2.id must beEqualTo('Buns)
+            bun_id must beEqualTo(bun2.id)
+    */
+            dbContext.get must beEqualTo(schema.dbc)
 
-          val instance = Instance('Inst, "Instance", "Instigating Instance", foo.plun.id, BSONDocument())
-          val wr = schema.instances.insertSync(instance)
-          wr.hasErrors must beFalse
-          val oi2 = schema.instances.fetchSync('Inst)
-          oi2.isDefined must beTrue
-          val i2 = oi2.get
-          i2._id must beEqualTo('Inst)
-          i2.name must beEqualTo("Instance")
-          i2.entityId must beEqualTo('Plun)
+            val instance = Instance('Inst, "Instance", "Instigating Instance", foo.plun.id, BSONDocument())
+            val wr = schema.instances.insertSync(instance)
+            wr.hasErrors must beFalse
+            val oi2 = schema.instances.fetchSync('Inst)
+            oi2.isDefined must beTrue
+            val i2 = oi2.get
+            i2._id must beEqualTo('Inst)
+            i2.name must beEqualTo("Instance")
+            i2.entityId must beEqualTo('Plun)
 
-          // FIXME: Do Update and Delete too!
+            // FIXME: Do Update and Delete too!
+          }
         }
       }
     }

@@ -21,12 +21,12 @@ import org.joda.time.DateTime
 import play.twirl.api.Html
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.{BSONDocumentReader, BSONDocumentWriter, BSONHandler, BSONDocument}
+import reactivemongo.bson._
 import reactivemongo.bson.Macros._
-import scrupal.db.{Storable, DataAccessObject}
+import scrupal.db.{IdentifierDAO, Storable}
 import scrupal.utils.{AlertKind, Icons}
 
-import scala.xml.{Elem, Node, NodeSeq}
+import scala.xml.{Elem, NodeSeq}
 
 /**
  * Representation of an alert message that is shown at the top of every page. Alerts are queued and each user
@@ -83,9 +83,12 @@ case class Alert (
 
 object Alert {
 
-  case class AlertDao(db: DefaultDB) extends DataAccessObject[Alert,Identifier](db, "alerts") {
-    implicit val modelHandler : BSONDocumentReader[Alert] with BSONDocumentWriter[Alert] with BSONHandler[BSONDocument,Alert] = handler[Alert]
-    implicit val idHandler = (id: Identifier) ⇒ reactivemongo.bson.BSONString(id.name)
+  implicit val AlertHandler = handler[Alert]
+
+  case class AlertDao(db: DefaultDB) extends IdentifierDAO[Alert] {
+    implicit val reader : IdentifierDAO[Alert]#Reader = Macros.reader[Alert]
+    implicit val writer : IdentifierDAO[Alert]#Writer = Macros.writer[Alert]
+    final def collectionName : String = "alerts"
     override def indices : Traversable[Index] = super.indices ++ Seq(
       Index(key = Seq("_id" -> IndexType.Ascending), name = Some("UniqueId"))
     )

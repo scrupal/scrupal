@@ -17,16 +17,16 @@
 
 package scrupal.core
 
-import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 import scrupal.core.api._
-import scrupal.db.DBContext
+import scrupal.db.{ScrupalDB, DBContext}
 import scrupal.utils.{ScrupalComponent, Configuration}
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
@@ -38,6 +38,7 @@ class Scrupal extends ScrupalComponent
 
   val _dbContext : AtomicReference[DBContext] = new AtomicReference[DBContext]
   val _configuration : AtomicReference[Configuration] = new AtomicReference[Configuration]
+  val _executionContext : AtomicReference[ExecutionContext] = new AtomicReference[ExecutionContext]
 
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = {
     val config = _configuration.get
@@ -49,6 +50,20 @@ class Scrupal extends ScrupalComponent
     val dbc = _dbContext.get()
     require(dbc != null)
     f(dbc)
+  }
+
+  def withCoreSchema[T](f: (DBContext, ScrupalDB, CoreSchema) => T) : T = {
+    withDBContext { dbc =>
+      dbc.withDatabase(CoreModule.dbName) { db =>
+        f(dbc, db, new CoreSchema(dbc))
+      }
+    }
+  }
+
+  def withExecutionContext[T](f: (ExecutionContext) => T) : T = {
+    implicit val ec = _executionContext.get()
+    require(ec != null)
+    f(ec)
   }
 
   /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
@@ -118,9 +133,8 @@ class Scrupal extends ScrupalComponent
     */
   def load(config: Configuration, context: DBContext) : Map[String, Site] = {
     Try {
-      val result: mutable.Map[String, Site] = mutable.Map()
-      val schema = new CoreSchema(context)
-      context.withDatabase { db =>
+      val result: mutable.Map[String, Site] = mutable.Map() // FIXME: shouldn't need this, have the code below construct it
+      withCoreSchema { (dbc, db, schema) =>
         schema.validate match {
           case Success(true) =>
             val sites = schema.sites.fetchAllSync(5.seconds)
