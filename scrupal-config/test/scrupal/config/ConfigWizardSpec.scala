@@ -17,20 +17,16 @@
 
 package scrupal.config
 
-import org.specs2.mutable.Specification
-import scrupal.core.FakeScrupal
-import scrupal.core.api.Instance
-import scrupal.db.DBContext
-import scrupal.utils.ConfigHelper
+import scrupal.fakes.ScrupalSpecification
 
 /** This is the test suite for the Config.Step class
   *
   */
-class ConfigWizardSpec extends Specification {
+class ConfigWizardSpec extends ScrupalSpecification("ConfigWizardSpec") {
 
   "ConfigWizard" should {
     "be ready to test" in {
-      failure("not implemented")
+      pending("ConfigWizard needs work")
     }
   }
 

@@ -17,25 +17,24 @@
 
 package scrupal.core
 
-import org.specs2.mutable.Specification
+import scrupal.fakes.ScrupalSpecification
+
 
 /** One line sentence description here.
   * Further description here.
   */
-class CoreSchemaSpec extends Specification {
+class CoreSchemaSpec extends ScrupalSpecification("CoreSchemaSpec") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {
-      new FakeScrupal {
-        withCoreSchema { schema =>
-          val names = schema.collectionNames
-          names.contains("features") must beTrue
-          names.contains("instances") must beTrue
-          names.contains("alerts") must beTrue
-          names.contains("sites") must beTrue
-        }
-        success
+      withCoreSchema { schema =>
+        val names = schema.collectionNames
+        names.contains("features") must beTrue
+        names.contains("instances") must beTrue
+        names.contains("alerts") must beTrue
+        names.contains("sites") must beTrue
       }
+      success
     }
   }
 }

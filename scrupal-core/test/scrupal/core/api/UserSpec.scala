@@ -17,8 +17,8 @@
 
 package scrupal.core.api
 
-import org.specs2.mutable.Specification
-import scrupal.core.{CoreSchema, FakeScrupal}
+import scrupal.core.CoreSchema
+import scrupal.fakes.ScrupalSpecification
 import scrupal.utils.HasherKinds
 
 
@@ -26,12 +26,12 @@ import scrupal.utils.HasherKinds
  * Test that our basic abstractions for accessing the database hold water.
  */
 
-class UserSpec extends Specification
+class UserSpec extends ScrupalSpecification("UserSpec")
 {
   sequential
 
 	"Principal" should {
-		"save, load and delete from DB" in new FakeScrupal("test-Principal") {
+		"save, load and delete from DB" in {
       withCoreSchema { schema: CoreSchema =>
         val p = new Principal('id, "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString(), "", 0L, None)
         p._id must beEqualTo('id)
@@ -48,7 +48,7 @@ class UserSpec extends Specification
   }
 
   "Handle" should {
-    "save, load and delete from DB" in new FakeScrupal("test-Handle") {
+    "save, load and delete from DB" in {
       withCoreSchema { schema: CoreSchema =>
         val p = new Principal('id, "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString(), "", 0L, None )
         p._id must beEqualTo('id)
@@ -64,7 +64,7 @@ class UserSpec extends Specification
   */    }
     }
 
-    "allow many-to-many relations with Principal" in new FakeScrupal("test-Handle2") {
+    "allow many-to-many relations with Principal" in {
       withCoreSchema { schema: CoreSchema =>
 /* FIXME:        import schema._
         val p1 = new Principal( "nobody@nowhere.ex", "openpw", HasherKinds.SCrypt.toString() )

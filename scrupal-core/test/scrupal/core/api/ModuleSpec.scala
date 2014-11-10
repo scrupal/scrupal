@@ -26,19 +26,24 @@ import scala.collection.immutable.HashMap
 
 /** Test specifications for the API Module class */
 class ModuleSpec extends Specification {
-  object Module1 extends FakeModule('Module1, Version(1,0,0), Version(0,8,20)) {
+
+  sequential // FIXME: Garbage collection affects this when run in parallel
+
+  val db = "test-modules"
+
+  object Module1 extends FakeModule('Module1, db, Version(1,0,0), Version(0,8,20)) {
     override val types = Seq(
       new RangeType('Foo, "Fooness", id, 0, 0)
     )
   }
 
-  object Module2 extends FakeModule('Module2, Version(1,0,0), Version(0,9,1)) {
+  object Module2 extends FakeModule('Module2, db, Version(1,0,0), Version(0,9,1)) {
     override val dependencies = Map[Symbol,Version](
       'Module1 -> Version(0,8,21)
     )
   }
 
-  object Module3 extends FakeModule('Module3, Version(1,0,0), Version(0,9,1)) {
+  object Module3 extends FakeModule('Module3, db, Version(1,0,0), Version(0,9,1)) {
     override val dependencies = HashMap[Symbol,Version](
       'Module1 -> Version(0,9,10)
     )

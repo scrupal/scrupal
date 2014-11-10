@@ -3,7 +3,6 @@
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../scrupal-core/target/scala-2.11/classes" />
     <output-test url="file://$MODULE_DIR$/../../scrupal-core/target/scala-2.11/test-classes" />
-    <exclude-output />
     <content url="file://$MODULE_DIR$/../../scrupal-core">
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/target/scala-2.11/twirl/main" isTestSource="false" />
@@ -13,8 +12,10 @@
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/target/scala-2.11/resource_managed/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/test/resources" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/target/scala-2.11/classes" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/test-reports" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

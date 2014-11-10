@@ -56,6 +56,11 @@ case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
     f(coll)
   }
 
+  def checkExists(dbNames:Seq[String]) : Seq[String] = {
+    // FIXME: Reactive mongo doesn't support "getDatabaseNames" call to Mongo.
+    dbNames
+  }
+
   def close() = Try {
     if (connection != null) {
       log.debug("Closing registered context:" + id.name + " with connection: " + connection)

@@ -156,6 +156,7 @@ case class LayoutNode (
 }
 
 object LayoutNode {
+
   implicit val TagsHandler = new BSONHandler[BSONDocument, Map[String,Symbol]] {
     def read(doc: BSONDocument) : Map[String,Symbol] = {
       for ((key,value) <- doc.elements) yield { key -> Symbol(value.asInstanceOf[BSONString].value) }

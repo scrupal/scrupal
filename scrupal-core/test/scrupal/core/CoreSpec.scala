@@ -17,17 +17,14 @@
 
 package scrupal.core
 
-import org.specs2.mutable.Specification
 import reactivemongo.bson.BSONDocument
-import scrupal.core.api.{Entity, Instance, Module}
-import scrupal.fakes.FakeModule
-import scrupal.utils.Version
+import scrupal.core.api.{Entity, Instance}
+import scrupal.fakes.{ScrupalSpecification, FakeModule}
 
 /** Top Level Test Suite for Core */
-class CoreSpec extends Specification {
+class CoreSpec extends ScrupalSpecification("CoreSpec") {
 
-
-  class TestModule extends FakeModule('foo) {
+  class TestModule(db: String) extends FakeModule('foo, db) {
     val thai = StringType('Thai, "Thai Foon", id, ".*".r)
     val buns = BundleType('Buns, "Buns Aye", id, Map('tie -> thai))
     val plun = Entity('Plun, "Plunderous Thundering Fun", buns, this)
@@ -39,16 +36,13 @@ class CoreSpec extends Specification {
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in {
-      new FakeScrupal("Support CRUD") {
-        withEmptyDB("SupportCRUD") { db =>
+        withEmptyDB(CoreModule.dbName) { db =>
           withCoreSchema { schema : CoreSchema =>
-
-
-            val foo = new TestModule
+            val foo = new TestModule(CoreModule.dbName)
 
             foo.id must beEqualTo('foo)
 
-            /*        val ty_id = schema.ypes.insert()
+            /*        val ty_id = schema.types.insert()
             val ty = Types.fetch(ty_id)
             val ty2 = ty.get
             ty2.id must beEqualTo('Thai)
@@ -61,8 +55,6 @@ class CoreSpec extends Specification {
             bun2.id must beEqualTo('Buns)
             bun_id must beEqualTo(bun2.id)
     */
-            dbContext.get must beEqualTo(schema.dbc)
-
             val instance = Instance('Inst, "Instance", "Instigating Instance", foo.plun.id, BSONDocument())
             val wr = schema.instances.insertSync(instance)
             wr.hasErrors must beFalse
@@ -78,5 +70,4 @@ class CoreSpec extends Specification {
         }
       }
     }
-  }
 }

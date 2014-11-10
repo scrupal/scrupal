@@ -1,0 +1,4 @@
+This is a file to
+test whether asset
+loading from the file system
+works or not.

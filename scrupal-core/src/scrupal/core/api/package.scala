@@ -117,8 +117,13 @@ package object api extends ScrupalComponent {
     override def read(bson: BSONString): Regex = new Regex(bson.value)
   }
 
-  implicit val TypeHandler : BSONHandler[BSONString,Type] = new TypeHandlerForBSON[Type]
-  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new TypeHandlerForBSON[BundleType]
+  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForType[Type]
+  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForType[BundleType]
+
+  implicit val ModuleHandler : BSONHandler[BSONString,Module] = new BSONHandler[BSONString,Module] {
+    override def write(m: Module): BSONString = BSONString(m.id.name)
+    override def read(bson: BSONString): Module = Module(Symbol(bson.value)).get
+  }
 
   implicit val AppSeqHandler : BSONHandler[BSONArray,Seq[Application]] = new BSONHandler[BSONArray, Seq[Application]] {
     override def write(sa: Seq[Application]): BSONArray = BSONArray(sa map { app ⇒ app._id.name })

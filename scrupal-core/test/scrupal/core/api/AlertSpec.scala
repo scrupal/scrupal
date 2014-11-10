@@ -19,8 +19,8 @@ package scrupal.core.api
 import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
-import org.specs2.mutable.Specification
-import scrupal.core.{CoreSchema, FakeScrupal}
+import scrupal.core.{CoreModule, CoreSchema}
+import scrupal.fakes.ScrupalSpecification
 import scrupal.utils.Icons
 import scrupal.utils.AlertKind
 
@@ -31,11 +31,12 @@ import scala.concurrent.duration.Duration
  * One line sentence description here.
  * Further description here.
  */
-class AlertSpec extends Specification
-{
+class AlertSpec extends ScrupalSpecification("AlertSpec") {
+
+
 	"Alert" should {
 
-	  val t :DateTime =  DateTime.now().plusDays(1)
+		lazy val t :DateTime =  DateTime.now().plusDays(1)
 
 		"construct with one argument and give sane results" in {
 			val alert =  new Alert( 'Alert, "Alert", "Description", "<span>Note Message</span>", AlertKind.Note )
@@ -82,20 +83,21 @@ class AlertSpec extends Specification
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
 
-    "save to and fetch from the DB" in new FakeScrupal("AlertSpec") {
+    "save to and fetch from the DB" in  {
       withCoreSchema { schema: CoreSchema =>
-				withEmptyDB("AlertSpect") { db =>
-					val f = db.dropCollection("alerts") map { result =>
+				withEmptyDB(CoreModule.dbName) { db =>
+					val future = db.dropCollection("alerts") flatMap { result =>
 						val a1 = new Alert('foo, "Alert", "Description", "Message", AlertKind.Warning )
-						val fa1 = schema.alerts.insert(a1)
-						Await.result(fa1,Duration(5,TimeUnit.SECONDS)).ok must beTrue
-						val fa2 = schema.alerts.fetch('foo)
-						val a2 = Await.result(fa2,Duration(1,TimeUnit.SECONDS)).get
-						val saved_time = a2.expires
-						a2._id must beEqualTo('foo)
-						a1._id must beEqualTo('foo)
+						schema.alerts.insert(a1) flatMap { wr =>
+							schema.alerts.fetch('foo) map { optAlert =>
+								val a2 = optAlert.get
+								val saved_time = a2.expires
+								a2._id must beEqualTo('foo)
+								a1._id must beEqualTo('foo)
+							}
+						}
 					}
-					Await.result(f,Duration(5,TimeUnit.SECONDS))
+					Await.result(future,Duration(5,TimeUnit.SECONDS))
 				}
       }
     }

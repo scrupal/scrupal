@@ -12,8 +12,9 @@ abstract class AbstractFakeModule(
   id: Symbol,
   version: Version=Version(0,1,0),
   obsoletes: Version=Version(0,0,0),
+  dbName: String,
   isEnabled : Boolean =true
-)  extends Module(id, "Fake Module", version, obsoletes, enabled = isEnabled) {
+)  extends Module(id, "Fake Module", version, obsoletes, dbName, enabled = isEnabled) {
 
   override def moreDetailsURL: URL = new URL("No URL, Fake Module")
   override def author: String = "No author, Fake Module"
@@ -27,6 +28,7 @@ abstract class AbstractFakeModule(
  */
 case class FakeModule(
   override val id: Symbol,
+  override val dbName: String,
   override val version: Version=Version(0,1,0),
   override val obsoletes: Version=Version(0,0,0),
   override val isEnabled: Boolean = true,
@@ -35,6 +37,6 @@ case class FakeModule(
   entities : Seq[Entity] = Seq(),
   nodes: Seq[Node] = Seq(),
   handlers : Seq[HandlerFor[Event]] = Seq()
-) extends AbstractFakeModule(id, version, obsoletes, isEnabled) {
+) extends AbstractFakeModule(id, version, obsoletes, dbName, isEnabled) {
 
 }

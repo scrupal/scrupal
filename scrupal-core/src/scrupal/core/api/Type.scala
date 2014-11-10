@@ -144,13 +144,6 @@ object Type extends Registry[Type] {
     }
   }
 
-  def as[T <: Type](id: Identifier) : T = {
-    Type(id) match {
-      case Some(typ) => typ.asInstanceOf[T]
-      case None => toss(s"Could not find type named '$id'")
-    }
-  }
-
   /** Retrieve the module in which a Type was defined
     * Every Type is associated with a module. This utility helps you find the associated module for a given type id
     * @param id The Symbol for the type to look up

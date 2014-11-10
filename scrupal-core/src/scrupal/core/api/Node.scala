@@ -30,7 +30,7 @@ abstract class Node extends DisambiguousStorable[Identifier] with Describable wi
 trait Arranger extends ((Context, Map[String,Node]) => Array[Byte])
 
 trait Layout extends Registrable[Layout] with Describable with Arranger {
-  val id : Identifier
+  def id : Identifier
   val description: String
   val mediaType : MediaType
   def registry = Layout
@@ -42,7 +42,7 @@ object Layout extends Registry[Layout] {
   def registrantsName = "layout"
 
   object default extends Layout {
-    val id = 'default
+    def id = 'default
     val description = "Default Layout"
     val mediaType = MediaTypes.`text/html`
     def apply(ctxt: Context, args: Map[String,Node]) : Array[Byte] = {

@@ -17,13 +17,13 @@
 
 package scrupal.core
 
-import org.specs2.mutable.Specification
+import scrupal.fakes.ScrupalSpecification
 
 
 /** One line sentence description here.
   * Further description here.
   */
-class CoreModuleSpec extends Specification {
+class CoreModuleSpec extends ScrupalSpecification("CoreModuleSpec") {
 
   "CoreModule" should {
     "define types" in {

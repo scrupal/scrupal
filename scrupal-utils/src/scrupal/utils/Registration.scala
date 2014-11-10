@@ -113,6 +113,12 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] with Scr
     all.filter { t ⇒ ids.contains(t.id) }
   }
 
+  def as[T <: Registrable[T]](id: Symbol) : T = {
+    this(id) match {
+      case Some(typ) => typ.asInstanceOf[T]
+      case None => toss(s"Could not find type named '$id'")
+    }
+  }
 
   def register(thing : T) : Unit = {
     if (contains(thing.id) ) {

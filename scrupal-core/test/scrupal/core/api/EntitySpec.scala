@@ -18,11 +18,12 @@
 package scrupal.core.api
 
 import org.joda.time.DateTime
-import org.specs2.mutable.Specification
-import reactivemongo.api.{DefaultDB, DB}
+import reactivemongo.api.DefaultDB
 import reactivemongo.bson.Macros
-import scrupal.core.FakeScrupal
 import scrupal.db._
+import scrupal.fakes.{ScrupalSpecification}
+
+import scala.concurrent.Await
 
 /**
  * Test that our basic abstractions for accessing the database hold water.
@@ -64,7 +65,7 @@ class TestSchema(dbc: DBContext) extends Schema(dbc) {
   def validateDao(dao: DataAccessInterface[_,_]) : Boolean = true
 }
 
-class EntitySpec extends Specification
+class EntitySpec extends ScrupalSpecification("EntitySpec")
 {
 	val te =  TestEntity('Test, "Test", "This is a test", SomeValue(1,2), None, None)
 
@@ -74,21 +75,32 @@ class EntitySpec extends Specification
 			te.equals(other) must beFalse
 			te.equals(te) must beTrue
 		}
-    "save, load and delete from DB" in new FakeScrupal("test-EntitySpec") {
+    "save, load and delete from DB" in {
       withDBContext { context : DBContext =>
         val ts = new TestSchema(context)
-        ts.create(context)
-        val te2 = ts.test_entities.upsertSync(te)
-        val te3 = ts.test_entities.fetchSync(te._id)
-        te3.isDefined must beTrue
-        val te4 = te3.get
-        te4._id must beEqualTo(te._id)
-        te4.testVal.equals(te4.testVal) must beTrue
-        val te5 = TestEntity(te4._id, "Test", "This is a test", SomeValue(2,3), None, None)
-        ts.test_entities.upsert(te5)
-        te4.testVal.equals(te5.testVal) must beFalse
-        te5._id must beEqualTo(te4._id)
-        // FIXME: ts.test_entities.delete(te5) must beTrue
+        val future = ts.create(context) flatMap { cr1 =>
+          for (r <- cr1) { r._2 must beTrue }
+          ts.test_entities.upsert(te) flatMap { te1 =>
+            te1.isDefined must beTrue
+            ts.test_entities.fetch(te._id) flatMap { te3 =>
+              te3.isDefined must beTrue
+              val te4 = te3.get
+              te4._id must beEqualTo(te._id)
+              te4.testVal.equals(te.testVal) must beTrue
+              val te5 = TestEntity(te4._id, "Test", "This is a test", SomeValue(2, 3), None, None)
+              te4.testVal.equals(te5.testVal) must beFalse
+              te5._id must beEqualTo(te4._id)
+              ts.test_entities.upsert(te5) flatMap { te6 =>
+                te6.isDefined must beTrue
+                te6.get._id must beEqualTo(te5._id)
+                ts.test_entities.removeById(te5._id) map { result =>
+                  result.hasErrors must beFalse
+                }
+              }
+            }
+          }
+        }
+        Await.result(future, timeout)
       }
     }
   }

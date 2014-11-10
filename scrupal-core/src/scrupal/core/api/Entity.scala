@@ -20,12 +20,19 @@ package scrupal.core.api
 import akka.actor.{Props, Actor, ActorLogging}
 import reactivemongo.bson._
 import scrupal.core.BundleType
+import scrupal.db.{IdentifierDAO, ScrupalDB}
 
 import scrupal.utils.Registry
 
 object Entity extends Registry[Entity] {
   val registrantsName: String = "entity"
   val registryName: String = "Entities"
+
+  case class EntityDao(db: ScrupalDB) extends IdentifierDAO[Entity] {
+    implicit val reader: Reader = Macros.reader[Entity]
+    implicit val writer: Writer = Macros.writer[Entity]
+    def collectionName: String = "entities"
+  }
 }
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal

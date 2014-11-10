@@ -1,6 +1,5 @@
 package scrupal.db
 
-import org.specs2.mutable.Specification
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.{BSONString, BSONDocument}
 
@@ -9,63 +8,44 @@ import scala.concurrent.{Await, Future, duration}
 
 /** Test Cases For DBContext
  */
-class DBContextSpec extends Specification() {
+class DBContextSpec extends DBContextSpecification("DBContextSpec") {
 
   sequential
 
-  val one_second = Duration(1,duration.SECONDS)
+  lazy val one_second = Duration(1,duration.SECONDS)
 
   "DBContext" should {
-    "startup and shutdown only once" in {
-      DBContext.startup()
-      DBContext.startup()
-      DBContext.numberOfStartups must beEqualTo(2)
-      DBContext.isStartedUp must beTrue
-      DBContext.shutdown()
-      DBContext.numberOfStartups must beEqualTo(1)
-      DBContext.isStartedUp must beTrue
-      DBContext.shutdown()
-      DBContext.numberOfStartups must beEqualTo(0)
-      DBContext.isStartedUp must beFalse
+
+    "drop new or existing database" in {
+      withDB("test_dropDB") { db =>
+        val future = db.drop().map { _ => false }
+        // FIXME: This should really check if the db is gone after the drop() future completes
+        Await.result(future, timeout) must beFalse
+      }
     }
 
     "ensure withEmptyDB gives us an empty one" in {
-      new FakeDBContext("ensure_empty") {
-        val future = withEmptyDB("test_empty") { db =>
-          db.isEmpty
-        }
+      withEmptyDB("test_empty") { db =>
+        val future = db.isEmpty
         Await.result(future, timeout) must beTrue
       }
-      DBContext.numberOfStartups must beEqualTo(0)
-    }
-
-    "drop new or existing database" in {
-      new FakeDBContext("create_and_drop") {
-        val future = withDB("test_dropDB") { db =>
-          db.drop()
-        }
-        Await.result(future, timeout)
-        success
-      }
-      DBContext.numberOfStartups must beEqualTo(0)
     }
 
     "empty an existing database" in {
-      new FakeDBContext("test_emptyDatabase") {
-        withEmptyDB("text_emptyDatabase") { implicit db =>
-          val f1 = db.isEmpty
-          val f2 = {
-            val coll = db.collection[BSONCollection]("foo")
-            coll.insert(BSONDocument("_id" -> BSONString("foo"))).map { le => true}
+      withEmptyDB("text_emptyDatabase") { implicit db =>
+        val future = db.isEmpty.flatMap { didEmpty =>
+          didEmpty must beTrue
+          val coll = db.collection[BSONCollection]("foo")
+          coll.insert(BSONDocument("_id" -> BSONString("foo"))).map { le => true} flatMap { truth =>
+            truth must beTrue
+            db.emptyDatabase.map { x => x.count { p => p._2} == x.size} flatMap { truth =>
+              truth must beTrue
+              db.isEmpty
+            }
           }
-          val f3 = db.emptyDatabase.map { x => x.count { p => p._2} == x.size}
-          val f4 = db.isEmpty
-          val f = Future sequence List(f1, f2, f3, f4)
-          val list = Await.result(f, one_second)
-          for (r <- list) r must beTrue
         }
+        Await.result(future, timeout) must beTrue
       }
-      DBContext.numberOfStartups must beEqualTo(0)
     }
   }
 }

@@ -37,5 +37,4 @@ class ScrupalDB(name: String, connection: MongoConnection,
       names.isEmpty
     }
   }
-
 }

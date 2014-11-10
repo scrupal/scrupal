@@ -32,13 +32,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
-class Scrupal extends ScrupalComponent
+class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DBContext = null) extends ScrupalComponent
 {
   val Copyright = "2013, 2014 viritude llc"
 
-  val _dbContext : AtomicReference[DBContext] = new AtomicReference[DBContext]
-  val _configuration : AtomicReference[Configuration] = new AtomicReference[Configuration]
-  val _executionContext : AtomicReference[ExecutionContext] = new AtomicReference[ExecutionContext]
+  val _dbContext : AtomicReference[DBContext] = new AtomicReference[DBContext](dbc)
+  val _configuration : AtomicReference[Configuration] = new AtomicReference[Configuration](config)
+  val _executionContext : AtomicReference[ExecutionContext] = new AtomicReference[ExecutionContext](ec)
+
 
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = {
     val config = _configuration.get

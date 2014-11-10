@@ -12,7 +12,7 @@ class EntityControllerSpec extends Specification with Specs2RouteTest with HttpS
 
   "EntityController" should {
     "forward a legitimate request" in {
-      failure("not implemented")
+      pending("EntityController not implemented")
     }
   }
 }
