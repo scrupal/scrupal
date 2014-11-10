@@ -14,14 +14,13 @@ import spray.routing._
 import scala.util.{Failure, Success, Try}
 
 object ScrupalServiceActor {
-  def props(scrupal: Scrupal)(implicit askTimeout: Timeout): Props =
-    Props(classOf[ScrupalServiceActor], scrupal, askTimeout)
+  def props(scrupal: Scrupal)(implicit askTimeout: Timeout): Props = Props(classOf[ScrupalServiceActor], scrupal)
   def name = "Scrupal-Service"
 }
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ScrupalServiceActor(val scrupal: Scrupal, implicit val askTimeout: Timeout) extends Actor with ScrupalService {
+class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout) extends Actor with ScrupalService {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
@@ -46,7 +45,7 @@ class ScrupalServiceActor(val scrupal: Scrupal, implicit val askTimeout: Timeout
   */
 trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives {
 
-  def createRouter(scrupal: Scrupal) (implicit ask_timeout: Timeout) : Route = {
+  def createRouter(scrupal: Scrupal) : Route = {
     Try {
       // Fold all the controller routes into one big one, sorted by priority
       val sorted_controllers = Controller.all.sortBy { c => c.priority}
@@ -71,7 +70,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
             respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
               requestInstance { request =>
                 complete {
-                  val context = HttpContext(request)
+                  val context = HttpContext(scrupal, request)
                   _root_.scrupal.http.views.html.RouteConstructionFailure(xcptn)(context).toString()
                 }
               }

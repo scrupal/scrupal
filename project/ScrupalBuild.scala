@@ -36,7 +36,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
   val base_name = BuildInfo.projectName
 
   lazy val utils = Project(base_name + "-utils", file("./scrupal-utils"))
-    .settings(buildSettings ++ Seq(
+    .settings(buildSettings ++ Revolver.settings ++ Seq(
     libraryDependencies ++= utils_dependencies
   ):_*)
   lazy val utils_deps = utils % "compile->compile;test->test"

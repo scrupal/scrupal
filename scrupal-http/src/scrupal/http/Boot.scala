@@ -36,13 +36,13 @@ object Boot extends App with ScrupalComponent
   // we need an ActorSystem to host our application in
   implicit val system = ActorSystem("Scrupal-Http")
 
+  implicit val timeout = Timeout(5.seconds)
+
   // create and start our service actor
-  val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal), ScrupalServiceActor.name)
+  val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal, timeout), ScrupalServiceActor.name)
 
   val interface = config.getString("scrupal.http.interface").getOrElse("localhost")
   val port = config.getInt("scrupal.http.port").getOrElse(8888)
-
-  implicit val timeout = Timeout(5.seconds)
 
   // start a new HTTP server on port 8080 with our service actor as the handler
   IO(Http) ? Http.Bind(service, interface, port)
