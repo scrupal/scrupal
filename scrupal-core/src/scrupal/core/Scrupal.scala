@@ -19,10 +19,6 @@ package scrupal.core
 
 import java.util.concurrent.atomic.AtomicReference
 
-import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
-import scrupal.core.api._
-import scrupal.db.{ScrupalDB, DBContext}
-import scrupal.utils.{ScrupalComponent, Configuration}
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable
@@ -31,6 +27,12 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
+
+import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
+
+import scrupal.core.api._
+import scrupal.db.{ScrupalDB, DBContext}
+import scrupal.utils.{ScrupalComponent, Configuration}
 
 class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DBContext = null) extends ScrupalComponent
 {
@@ -140,8 +142,8 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
           case Success(true) =>
             val sites = schema.sites.fetchAllSync(5.seconds)
             for (s <- sites) {
-              log.debug("Loading site '" + s._id.name + "' for host " + s.host + ", index=" + s.siteIndex
-                + ", " +"enabled: " + s.enabled)
+              log.debug("Loading site '" + s._id.name + "' for host " + s.host + ", index=" + s.siteRoot.toString
+                + ", " +"enabled: " + s.isEnabled)
               result.put(s.host, s)
             }
           case Success(false) =>

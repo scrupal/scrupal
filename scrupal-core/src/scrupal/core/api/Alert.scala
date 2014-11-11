@@ -85,7 +85,7 @@ object Alert {
 
   implicit val AlertHandler = handler[Alert]
 
-  case class AlertDao(db: DefaultDB) extends IdentifierDAO[Alert] {
+  case class AlertDAO(db: DefaultDB) extends IdentifierDAO[Alert] {
     implicit val reader : IdentifierDAO[Alert]#Reader = Macros.reader[Alert]
     implicit val writer : IdentifierDAO[Alert]#Writer = Macros.writer[Alert]
     final def collectionName : String = "alerts"

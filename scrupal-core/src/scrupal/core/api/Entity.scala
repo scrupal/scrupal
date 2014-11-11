@@ -20,39 +20,43 @@ package scrupal.core.api
 import akka.actor.{Props, Actor, ActorLogging}
 import reactivemongo.bson._
 import scrupal.core.BundleType
-import scrupal.db.{IdentifierDAO, ScrupalDB}
+import scrupal.db.{VariantStorableRegistrable, StorableRegistrable, IdentifierDAO, ScrupalDB}
 
-import scrupal.utils.Registry
+import scrupal.utils.{Pluralizer, Registry}
 
 object Entity extends Registry[Entity] {
   val registrantsName: String = "entity"
   val registryName: String = "Entities"
 
   case class EntityDao(db: ScrupalDB) extends IdentifierDAO[Entity] {
-    implicit val reader: Reader = Macros.reader[Entity]
-    implicit val writer: Writer = Macros.writer[Entity]
+    implicit val reader: Reader = EntityHandler.asInstanceOf[Reader]
+    implicit val writer: Writer = EntityHandler.asInstanceOf[Writer]
+
     def collectionName: String = "entities"
   }
 }
 
-/** The fundamental unit of storage, behavior and interaction in Scrupal
+/** The fundamental unit of storage, behavior and interaction in Scrupal.
+  *
   * An Entity brings together several things:The BundleType of an Instance's  payload,
   * definitions of the RESTful methods, security constraints, and extension actions for the REST API.
   * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   */
-case class Entity (
-  id : Identifier,
-  description: String,
-  instanceType: BundleType,
-  module: Module,
-  var enabled : Boolean = true
-) extends StorableRegistrable[Entity] with Describable with Enablable with BSONValidator
+trait Entity
+  extends VariantStorableRegistrable[Entity] with ModuleOwned
+          with Authorable with Describable with Enablable with Pathable with BSONValidator[BSONDocument]
 {
+  def moduleOf = { Module.all.find(mod ⇒ mod.entities.contains(this)) }
+
+  def instanceType: BundleType
+
   def registry = Entity
   def asT = this
 
-  def apply(value: BSONValue) : ValidationResult = instanceType(value)
+  def apply(value: BSONDocument) : ValidationResult = instanceType(value)
+
+  val plural_path = Pluralizer.pluralize(path)
 
   /** The set of additional operations that can be invoked for this Entity in addition to the standard fetch,
     * create, update, relete,

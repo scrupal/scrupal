@@ -19,7 +19,6 @@ package scrupal.core.api
 
 import java.net.URL
 
-import scrupal.core.{EmptyMutableConfiguration, MutableConfiguration}
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{Registrable, Registry, Version}
 
@@ -33,43 +32,19 @@ import scala.collection.immutable.HashMap
   * provide is fixed within Scrupal.
   * @param id The name of the module
   * @param description A brief description of the module (purpose
-  * @param version The version of this module. Whenever a module is changed and released publicly,
-  *                it must have a new Version. How the Version numbers change depends on the kind of change that was
-  *                made. See the [[scrupal.utils.Version]] class for details on how this should be utilized.
-  * @param obsoletes The version of this module that this version of it obsoletes. A module is not expected to
-  *                  maintain backwards compatibility for all previous versions. Instead,
-  *                  it must maintain backwards compatibility with some previous set of released versions. The
-  *                  `obsoletes` value, then, identifies the latest version which is obsoleted by this version of the
-  *                  module. All module versions subsequent to `obsoletes` are considered to be compatible with
-  *                  `version`. All modules versions prior to and including `obsoletes` are considered to be
-  *                  incompatible with `version` (although, depending on the feature in question, some compatibility
-  *                  may remain).
   */
-abstract class Module(
-  val id : Identifier,
-  val description: String,
-  val version: Version,
-  val obsoletes: Version,
-  val dbName: String = "scrupal",
-  var enabled: Boolean = true
-) extends Registrable[Module] with Describable with Enablable with Versionable with SelfValidator{
+trait Module extends Registrable[Module] with Authorable with Describable with Enablable with Versionable with SelfValidator
+{
+  /** The name of the database your module's schema wants to live in
+    *
+    * Generally most modules want to live in the "scrupal" database along with Core and most everything else. However,
+    * if you override this, your module's own content will be
+    */
+  val dbName: String = "scrupal"
   def registry = Module
   def asT = this
 
   def moreDetailsURL : URL
-
-  def author : String
-
-  def copyright : String
-
-  def license : String
-
-  /** The set of configuration settings for the Module grouped into named sections.
-    * We use the Play! Configuration class here. It is a Scala wrapper around the very lovely Typesafe Configuration
-    * library written in Java. We provide, elsewhere, our own way to fetch and restore these things from the database
-    * via Json serialization.
-    * Java*/
-  def config : MutableConfiguration = EmptyMutableConfiguration
 
   /** A mapping of the Module's dependencies.
     * The dependencies map provides the version for each named module this module depends on. The default value lists
@@ -118,7 +93,6 @@ abstract class Module(
     */
   def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( )
 
-
   /** Determine compatibility between `this` [[scrupal.core.api.Module]] and `that`.
     * This module is compatible with `that` if either `that` does not depend on `this` or the version `that` requires
     * comes after the `obsoletes` version of `this`
@@ -134,22 +108,13 @@ abstract class Module(
 
   override final def enable() = {
     // TODO: Make sure an invalid module never gets enabled
-    enabled = true
+    super.enable()
   }
-  /** Validate A Module's Content
-    *
-    * This provides a safety check against making declarative mistakes in the definition of a module. It makes a full
-    * pass through the entire stucture of the module and ensures that everything makes sense and the Module is ready
-    * to be used. Scrupal validates a module when it is first loaded and will disable it should validation fail.
-    * Whenever it is enabled, validation is re-run again.
-    * @return
-    */
-  private[scrupal] final def _validate : ValidationResult = {
+
+  def validate() : ValidationResult = {
     // TODO: Write the module validator
     None
   }
-
-  def validate() : ValidationResult = _validate
 }
 
 /** Amalgamated information about all registered Modules
@@ -165,18 +130,22 @@ object Module extends Registry[Module] {
   private[scrupal] def processModules() : Unit = {
     // For each module ...
     all foreach { case (mod: Module) =>
+      require(mod != null)
 
       // For each type in the module ...
       mod.types foreach { case typ: Type =>
+        require(typ != null)
         // Touch the type by asking for it's id's length. This just makes sure it gets instantiated and thus registered
         val symbol: Symbol = typ.id
         require(symbol.name.length > 0)
       }
       mod.features foreach { case feature: Feature =>
+        require(feature != null)
         // Touch the feature by asking for it's id's length. This just makes sure it gets instantiated & registered
         require(feature.id.name.length > 0)
       }
       mod.entities foreach { case entity : Entity =>
+        require(entity != null)
         require(entity.id.name.length > 0)
       }
     }

@@ -21,29 +21,46 @@ import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
+import scrupal.core.Node
 
-import scrupal.db.IdentifierDAO
+import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
 import scrupal.utils.{AbstractRegistry, Registry}
 
 /** Site Top Level Object
   * Scrupal manages sites.
  * Created by reidspencer on 11/3/14.
  */
-case class Site (
-  id: Identifier,
+trait Site
+  extends VariantStorableRegistrable[Site]
+          with Nameable with Describable with Enablable with Modifiable
+{
+  def requireHttps: Boolean = false
+  def host: String
+  def applications: Seq[Application]
+  def siteRoot: Node
+  def registry = Site
+  def asT = this
+  val kind = 'Site
+}
+
+case class BasicSite (
+  id : Identifier,
   name: String,
   description: String,
   host: String,
-  var enabled: Boolean = false,
-  siteIndex: Option[Identifier] = None,
-  requireHttps: Boolean = false,
+  siteRoot: Node = Node.Empty,
   applications: Seq[Application] = Seq.empty[Application],
+  override val requireHttps: Boolean = false,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-) extends StorableRegistrable[Site] with Nameable with Describable with Enablable with Modifiable {
-  def registry = Site
-  def asT = this
+) extends Site
+
+object BasicSite {
+  implicit val nodeReader = Node.NodeReader
+  implicit val nodeWriter = Node.NodeWriter
+  implicit val BasicSiteHandler = Macros.handler[BasicSite]
 }
+
 
 object Site extends Registry[Site] {
   val registrantsName: String = "site"
@@ -67,12 +84,42 @@ object Site extends Registry[Site] {
 
   def forHost(hostName: String) = _byhost.lookup(hostName)
 
-  case class SiteDao(db: DefaultDB) extends IdentifierDAO[Site] {
-    final def collectionName = "sites"
-    implicit val reader : IdentifierDAO[Site]#Reader = Macros.reader[Site]
-    implicit val writer : IdentifierDAO[Site]#Writer = Macros.writer[Site]
+  implicit lazy val SiteReader = new VariantBSONDocumentReader[Site] {
+    def read(doc: BSONDocument) : Site = {
+      doc.getAs[BSONString]("kind") match {
+        case Some(str) =>
+          str.value match {
+            case "Basic"  => BasicSite.BasicSiteHandler.read(doc)
+            case _ ⇒ toss(s"Unknown kind of Site: '${str.value}")
+          }
+        case None => toss(s"Field 'kind' is missing from Node: ${doc.toString()}")
+      }
+    }
+  }
+
+  implicit val SiteWriter = new VariantBSONDocumentWriter[Site] {
+    def write(app: Site) : BSONDocument = {
+      app.kind match {
+        case 'Basic  => BasicSite.BasicSiteHandler.write(app.asInstanceOf[BasicSite])
+        case _ ⇒ toss(s"Unknown kind of Site: ${app.kind}")
+      }
+    }
+  }
+
+  /** Data Access Object For Sites
+    * This DataAccessObject sublcass represents the "sites" collection in the database and permits management of
+    * that collection as well as conversion to and from BSON format.
+    * @param db A [[reactivemongo.api.DefaultDB]] instance in which to find the collection
+    */
+
+  case class SiteDAO(db: DefaultDB) extends VariantIdentifierDAO[Site] {
+    final def collectionName: String = "sites"
+    implicit val writer = new Writer(SiteWriter)
+    implicit val reader = new Reader(SiteReader)
+
     override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("host" -> IndexType.Ascending), name = Some("Host"))
+      Index(key = Seq("path" -> IndexType.Ascending), name = Some("path")),
+      Index(key = Seq("kind" -> IndexType.Ascending), name = Some("kind"))
     )
   }
 }

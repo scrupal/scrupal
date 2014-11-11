@@ -175,7 +175,7 @@ object HasherKinds extends Enumeration {
 class PBKDF2Hasher extends Hasher {
 
   // Provide the name of this hasher
-  override def id = 'PBKDF2
+  val id = 'PBKDF2 ; register()
 
   def defaultIterations = if ( isFastMode ) 12500 else 25000
 
@@ -190,6 +190,7 @@ class PBKDF2Hasher extends Hasher {
     val encrypted = PBKDF2(plainText.getBytes, salt.getBytes, iterations.toInt, keyLengthInBytes)
     HashingResult(id, new String(encrypted), salt, iterations)
   }
+  register()
 }
 
 /**
@@ -198,7 +199,8 @@ class PBKDF2Hasher extends Hasher {
 class BCryptHasher extends Hasher {
 
   // Provide the name of this hasher
-  override def id = 'BCrypt
+  val id = 'BCrypt ;   register()
+
 
   def defaultRounds = if ( isFastMode ) 4 else 10
 
@@ -219,7 +221,7 @@ class BCryptHasher extends Hasher {
  */
 class SCryptHasher extends Hasher {
 
-  override def id = 'SCrypt
+  override val id = 'SCrypt ; register()
 
   def default_args = if (isFastMode)  (16384 << 16) | (1 << 8) | 1  else (1024 << 16) | (8 << 8) | 1
 

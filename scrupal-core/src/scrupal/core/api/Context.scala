@@ -66,7 +66,7 @@ trait Context {
   */
 case class HttpContext(scrupal: Scrupal, request: HttpRequest) extends Context {
   def secure : Boolean = false
-  val config = Configuration.empty
+  val config = Settings.Empty
   override val uri = request.uri
   override val method = request.method
   override val protocol = request.protocol

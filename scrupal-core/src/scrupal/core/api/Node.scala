@@ -1,7 +1,7 @@
 package scrupal.core.api
 
 
-import scrupal.db.DisambiguousStorable
+import scrupal.db.VariantStorable
 import scrupal.utils.{Registrable, Registry}
 import spray.http.{MediaTypes, MediaType}
 
@@ -23,15 +23,13 @@ trait Generator extends ((Context) => Future[Array[Byte]])
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-abstract class Node extends DisambiguousStorable[Identifier] with Describable with Modifiable with Enablable with Generator {
+abstract class Node extends VariantStorable[Identifier] with Describable with Modifiable with Enablable with Generator {
   val mediaType : MediaType
 }
 
 trait Arranger extends ((Context, Map[String,Node]) => Array[Byte])
 
 trait Layout extends Registrable[Layout] with Describable with Arranger {
-  def id : Identifier
-  val description: String
   val mediaType : MediaType
   def registry = Layout
   def asT = this

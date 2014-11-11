@@ -51,7 +51,7 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 }
 
-abstract class BasicController(val id: Identifier, val context_path: String, val priority: Int = 0) extends Controller
+abstract class BasicController(val id : Identifier, val context_path: String, val priority: Int = 0) extends Controller
 
 object Controller extends Registry[Controller] {
   override val registryName: String = "Controllers"

@@ -17,7 +17,7 @@ trait SiteDirectives {
   }
 
   def siteEnabled(site: Site) = {
-    validate(site.enabled,s"Site '${site.name}' is disabled.")
+    validate(site.isEnabled,s"Site '${site.name}' is disabled.")
   }
 
   def scrupalIsReady(scrupal: Scrupal) = {

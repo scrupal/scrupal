@@ -34,7 +34,7 @@ import scrupal.utils.Hash
  * @param complexity The complexity factor for the Hasher algorithm
  */
 case class Principal(
-  _id: Identifier,
+  _id : Identifier,
   email: String,
   password: String,
   hasher: String,

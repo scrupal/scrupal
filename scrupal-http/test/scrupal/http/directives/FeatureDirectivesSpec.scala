@@ -12,10 +12,10 @@ class FeatureDirectivesSpec extends Specification with Specs2RouteTest with Http
 
   def actorRefFactory = system
 
-  var f1 = Feature('Module, 'disabled_unimnplemented, "Feature", false, false)
-  var f2 = Feature('Module, 'disabled_imnplemented, "Feature", false, true)
-  var f3 = Feature('Module, 'enabled_unimnplemented, "Feature", true, false)
-  var f4 = Feature('Module, 'enabled_imnplemented, "Feature", true, true)
+  var f1 = Feature('disabled_unimnplemented, "Feature", false).disable()
+  var f2 = Feature('disabled_imnplemented, "Feature", true).disable()
+  var f3 = Feature('enabled_unimnplemented, "Feature", false)
+  var f4 = Feature('enabled_imnplemented, "Feature", true)
 
   "feature" should {
     "reject disabled and unimplemented features" in {

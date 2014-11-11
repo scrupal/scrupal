@@ -33,9 +33,10 @@ import scrupal.utils.{Registry, Pluralizer, Registrable}
   * Types are interned by the Registry[Type] utility. This means that types share a single global name space.
   * Modules must cooperate on defining types in such a way that their names do not conflict.
   */
-trait Type extends Registrable[Type] with Describable with BSONValidator {
-  val module: Identifier
+trait Type extends Registrable[Type] with Describable with BSONValidator[BSONValue] {
   def registry = Type
+
+  type ScalaValueType
 
   /** The plural of the name of the type.
     * The name given to the type should be the singular form (Color not Colors) but things associated with this type
@@ -44,6 +45,8 @@ trait Type extends Registrable[Type] with Describable with BSONValidator {
     * cost for it unless it gets used.
     */
   lazy val plural = Pluralizer.pluralize(label)
+
+  def moduleOf = { Module.all.find(mod ⇒ mod.types.contains(this)) }
 
   /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
   def kind : Symbol = Symbol(super.getClass.getSimpleName.replace("$","_"))
@@ -64,8 +67,8 @@ trait Type extends Registrable[Type] with Describable with BSONValidator {
     * @param value
     * @return
     */
-  def convert[S,B <: BSONValue](value: B)(implicit reader: BSONReader[B,S]) : Try[S] = {
-    validate(value) match {
+  def convert[S <: ScalaValueType](value: BSONValue)(implicit reader: BSONReader[BSONValue,S]) : Try[S] = {
+    apply(value) match {
       case Some(error) => Failure[S](new ValidationError(asT, error, value))
       case None => reader.readTry(value)
     }
@@ -79,11 +82,11 @@ trait Type extends Registrable[Type] with Describable with BSONValidator {
     * @param writer
     * @return
     */
-  def convert[S,B <: BSONValue](value: S)(implicit writer: BSONWriter[S,B]) : Try[B] = {
+  def convert[S <: ScalaValueType](value: S)(implicit writer: BSONWriter[S,BSONValue]) : Try[BSONValue] = {
     writer.writeTry(value).flatMap { bson =>
-      validate(bson) match {
-        case Some(error) => Failure[B](new ValidationError(asT, error, bson))
-        case None => Success[B](bson)
+      apply(bson) match {
+        case Some(error) => Failure[BSONValue](new ValidationError(asT, error, bson))
+        case None => Success[BSONValue](bson)
       }
     }
   }
@@ -91,7 +94,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator {
 }
 
 case class Not_A_Type() extends Type {
-  def id = 'NotAType
+  lazy val id = 'NotAType
   override val kind = 'NotAKind
   override val trivial = true
   val description = "Not A Type"
@@ -118,6 +121,61 @@ trait CompoundType extends Type {
   def elemType: Type
 }
 
+trait IndexableType extends CompoundType
+
+trait DocumentType extends Type {
+  def validatorFor(id: String) : Option[Type]
+  def fieldNames: Iterable[String]
+  def allowMissingFields : Boolean = false
+  def allowExtraFields : Boolean = false
+
+  def apply(value: BSONValue) : ValidationResult = {
+    value match {
+      case d: BSONDocument =>
+        def doValidate(name: String, value: BSONValue) : Option[Seq[String]]= {
+          validatorFor(name) match {
+            case Some(validator) ⇒ validator.apply(value)
+            case None ⇒ {
+              if (!allowExtraFields)
+                Some(Seq(s"Field '$name' is spurious."))
+              else
+              // Don't validate or anything, spurious field
+                None
+            }
+          }
+        }
+        // Note: Stream this to a map up front because we're going to access everything so we might as well stream it once
+        val elements = d.elements.toMap
+        val errors = {
+          val field_results = for (
+            field ← elements ;
+            result = doValidate(field._1, field._2) if result.isDefined ;
+            x ← result
+          ) yield x
+
+          val missing_results = if (!allowMissingFields) {
+            for (
+              fieldName ← fieldNames if !elements.contains(fieldName)
+            ) yield {
+              Seq(s"Field '$fieldName' is missing")
+            }
+          } else {
+            Seq.empty[Seq[String]]
+          }
+
+          (field_results ++ missing_results).flatten.toSeq
+        }
+        if (errors.isEmpty)
+          None
+        else
+          Some(errors)
+      case x: BSONValue =>
+        wrongClass("BSONDocument", x).map { s => Seq(s) }
+    }
+  }
+
+}
+
 /** Type Registry and companion */
 object Type extends Registry[Type] {
 
@@ -141,22 +199,6 @@ object Type extends Registry[Type] {
     Type(id) match {
       case Some(typ) => typ
       case None => new UnfoundType(id)
-    }
-  }
-
-  /** Retrieve the module in which a Type was defined
-    * Every Type is associated with a module. This utility helps you find the associated module for a given type id
-    * @param id The Symbol for the type to look up
-    * @return Some[Module] if the ```id``` was found, None otherwise
-    */
-  def moduleOf(id: Identifier) : Option[Module] = {
-    lookup(id) match {
-      case Some(ty:Type) => Some(ty.module)
-        Module(ty.module) match {
-          case Some(mod:Module) ⇒ Some(mod)
-          case None ⇒ None
-        }
-      case _ => None
     }
   }
 }

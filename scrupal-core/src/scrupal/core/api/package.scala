@@ -19,15 +19,17 @@ package scrupal.core
 import java.io.File
 import java.net.URL
 import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.{ConfigParseOptions, ConfigFactory, ConfigRenderOptions, Config}
 import play.twirl.api.Html
 import spray.http.{MediaTypes, MediaType}
+import scala.concurrent.duration.{Duration}
+
 import scala.util.matching.Regex
 
 import org.joda.time.DateTime
 import reactivemongo.bson._
-import scrupal.utils.{ScrupalComponent, Configuration, Icons, AlertKind}
+import scrupal.utils._
 
 /** Scrupal Core API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the core abstractions
@@ -100,25 +102,31 @@ package object api extends ScrupalComponent {
     override def read(bson: BSONString): Icons.Kind = Icons.withName(bson.value)
   }
 
-  implicit val ConfigHandler: BSONHandler[BSONString,Config] = new BSONHandler[BSONString,Config] {
-    override def write(t: Config): BSONString = BSONString(t.root.render (ConfigRenderOptions.concise()))
-    override def read(bson: BSONString): Config = ConfigFactory.parseString(bson.value, ConfigParseOptions.defaults())
-  }
-
-  implicit val ConfigurationHandler: BSONHandler[BSONString,Configuration] = new BSONHandler[BSONString,Configuration] {
-    override def write(c: Configuration): BSONString =
-      BSONString(c.underlying.root.render (ConfigRenderOptions.concise()))
-    override def read(bson: BSONString): Configuration =
-      Configuration(ConfigFactory.parseString(bson.value, ConfigParseOptions.defaults()))
-  }
-
   implicit val RegexHandler: BSONHandler[BSONString,Regex] = new BSONHandler[BSONString,Regex] {
     override def write(t: Regex): BSONString = BSONString(t.pattern.pattern())
     override def read(bson: BSONString): Regex = new Regex(bson.value)
   }
 
-  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForType[Type]
-  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForType[BundleType]
+  implicit val DurationHandler: BSONHandler[BSONLong,Duration] = new BSONHandler[BSONLong,Duration] {
+    override def write(t: Duration): BSONLong = BSONLong(t.toNanos)
+    override def read(bson: BSONLong): Duration = Duration(bson.value, TimeUnit.NANOSECONDS)
+  }
+
+  /** Handle reading/writing Type instances to and from BSON.
+    * Note that types are a little special. We write them as strings and restore them via lookup. Types are intended
+    * to only ever live in memory but they can be references in the database. So when a Type is a field of some
+    * class that is stored in the database, what actually gets stored is just the name of the type.
+    */
+  class BSONHandlerForRegistrable[T <: Registrable[_]] extends BSONHandler[BSONString,T] {
+    override def write(t: T): BSONString = BSONString(t.id.name)
+    override def read(bson: BSONString): T = Type.as(Symbol(bson.value))
+  }
+
+  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForRegistrable[Type]
+  implicit val IndexableTypeHandler : BSONHandler[BSONString,IndexableType] = new BSONHandlerForRegistrable[IndexableType]
+  implicit val StructuredTypeHandler : BSONHandler[BSONString,StructuredType] = new BSONHandlerForRegistrable[StructuredType]
+  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForRegistrable[BundleType]
+  implicit val EntityHandler : BSONHandler[BSONString,Entity] = new BSONHandlerForRegistrable[Entity]
 
   implicit val ModuleHandler : BSONHandler[BSONString,Module] = new BSONHandler[BSONString,Module] {
     override def write(m: Module): BSONString = BSONString(m.id.name)
@@ -155,5 +163,10 @@ package object api extends ScrupalComponent {
   implicit val FileHandler : BSONHandler[BSONString,File] = new BSONHandler[BSONString,File] {
     override def write(f: File): BSONString = BSONString(f.getPath)
     override def read(bson: BSONString): File = new File(bson.value)
+  }
+
+  implicit val MapOfNamedDocumentsHandler = new BSONHandler[BSONDocument,Map[String,BSONValue]] {
+    override def write(elements: Map[String,BSONValue]): BSONDocument = BSONDocument(elements)
+    override def read(doc: BSONDocument): Map[String,BSONValue] = doc.elements.toMap
   }
 }

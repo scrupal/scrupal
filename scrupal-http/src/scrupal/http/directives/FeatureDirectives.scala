@@ -14,10 +14,10 @@ trait FeatureDirectives {
       if (theFeature.isEnabled) {
         pass
       } else {
-        reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.module}' is not enabled."))
+        reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not enabled."))
       }
     } else {
-      reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.module}' is not implemented."))
+      reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not implemented."))
     }
   }
 

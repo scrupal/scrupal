@@ -6,6 +6,7 @@ import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.commands._
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONObjectID, _}
+import scrupal.utils.Registrable
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -18,12 +19,21 @@ trait Storable[IdType] {
   def _id: IdType
 }
 
+/** Something that is both storable and registrable
+  * This may seem a bit silly but it does happen :)
+  */
+trait StorableRegistrable[T <: StorableRegistrable[T]] extends Registrable[T] with Storable[Symbol] {
+  lazy val _id = id
+}
+
+
+
 /** A type of Storable with fields automatically filled in by the DAO */
 // TODO: implement support for AutoStorable
 trait AutoStorable extends Storable[Option[BSONObjectID]] {
-  val _id: Option[BSONObjectID] = None
-  val created: Option[DateTime] = None
-  val modified: Option[DateTime] = None
+  lazy val _id: Option[BSONObjectID] = None
+  lazy val created: Option[DateTime] = None
+  lazy val modified: Option[DateTime] = None
 }
 
 

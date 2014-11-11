@@ -9,5 +9,5 @@ import scrupal.core.api._
 class FakeContext extends Context {
   val scrupal = new Scrupal(scala.concurrent.ExecutionContext.Implicits.global)
   scrupal.beforeStart()
-  override val site = Some(Site('context_site, "ContextSite", "Just For Testing", "localhost"))
+  override val site = Some(BasicSite('context_site, "ContextSite", "Just For Testing", "localhost"))
 }

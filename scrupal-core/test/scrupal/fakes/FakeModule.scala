@@ -10,11 +10,12 @@ import scrupal.utils.Version
  */
 abstract class AbstractFakeModule(
   id: Symbol,
-  version: Version=Version(0,1,0),
-  obsoletes: Version=Version(0,0,0),
-  dbName: String,
-  isEnabled : Boolean =true
-)  extends Module(id, "Fake Module", version, obsoletes, dbName, enabled = isEnabled) {
+  dbName: String
+)  extends Module {
+  val description = "Fake Module"
+  val version = Version(0,1,0)
+  val obsoletes =Version(0,0,0)
+  def handlers : Seq[HandlerFor[Event]] = Seq()
 
   override def moreDetailsURL: URL = new URL("No URL, Fake Module")
   override def author: String = "No author, Fake Module"
@@ -31,12 +32,11 @@ case class FakeModule(
   override val dbName: String,
   override val version: Version=Version(0,1,0),
   override val obsoletes: Version=Version(0,0,0),
-  override val isEnabled: Boolean = true,
   features: Seq[Feature] = Seq(),
   types : Seq[Type] = Seq(),
   entities : Seq[Entity] = Seq(),
   nodes: Seq[Node] = Seq(),
-  handlers : Seq[HandlerFor[Event]] = Seq()
-) extends AbstractFakeModule(id, version, obsoletes, dbName, isEnabled) {
+  override val handlers : Seq[HandlerFor[Event]] = Seq()
+) extends AbstractFakeModule(id, dbName) {
 
 }

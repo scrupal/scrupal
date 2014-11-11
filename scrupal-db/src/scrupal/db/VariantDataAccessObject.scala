@@ -6,18 +6,26 @@ import reactivemongo.api.commands.{WriteResult, GetLastError}
 import reactivemongo.api.commands.bson._
 import reactivemongo.api.indexes.Index
 import reactivemongo.bson._
+import scrupal.utils.Registrable
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Random
 
-trait DisambiguousStorable[ID] extends Storable[ID] {
-  val kind : Symbol // always make final and add as last parameter to case class constructor with default value
+trait VariantStorable[ID] extends Storable[ID] {
+  def kind : Symbol // always make final and add as last parameter to case class constructor with default value
+}
+
+/** Something that is both variantly storable and registrable
+  */
+trait VariantStorableRegistrable[T <: VariantStorableRegistrable[T]]
+  extends VariantStorable[Symbol] with Registrable[T] {
+  lazy val _id = id
 }
 
 /**
  * Created by reid on 11/9/14.
  */
-abstract class VariantDataAccessObject[Model <: DisambiguousStorable[ID],ID] extends DataAccessInterface[Model,ID] {
+abstract class VariantDataAccessObject[Model <: VariantStorable[ID],ID] extends DataAccessInterface[Model,ID] {
   import BSONValueBuilder._
 
   class Reader(reader: VariantBSONDocumentReader[Model])
@@ -300,6 +308,6 @@ abstract class VariantDataAccessObject[Model <: DisambiguousStorable[ID],ID] ext
   }
 }
 
-abstract class VariantIdentifierDAO[Model <: DisambiguousStorable[Symbol]] extends VariantDataAccessObject[Model,Symbol] {
+abstract class VariantIdentifierDAO[Model <: VariantStorable[Symbol]] extends VariantDataAccessObject[Model,Symbol] {
   implicit val converter = (id: Symbol) => BSONString(id.name)
 }

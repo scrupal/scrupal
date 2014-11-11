@@ -31,11 +31,11 @@ class CoreSchema(dbc: DBContext) extends Schema(dbc) {
 
   val (features,sites,nodes,instances,alerts, principals) = dbc.withDatabase(CoreModule.dbName) { db ⇒
     (
-      Feature.FeatureDao(db),
-      Site.SiteDao(db),
-      Node.NodeDao(db),
-      Instance.InstanceDao(db),
-      Alert.AlertDao(db),
+      Feature.FeatureDAO(db),
+      Site.SiteDAO(db),
+      Node.NodeDAO(db),
+      Instance.InstanceDAO(db),
+      Alert.AlertDAO(db),
       Principal.PrincipalDAO(db)
     )
   }

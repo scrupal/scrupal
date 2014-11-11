@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.utils
 
 import scala.util.matching.Regex
 
@@ -69,6 +69,8 @@ object Patterns {
   val IPv4Address =
     "(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])".r
   val UniformResourceLocator = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]$".r
+
+  val URLPathable = "[-A-Za-z0-9_.~]{1,64}".r
 
   val Title = between(4,70,"[-\\s\\w\\d+:%!_{}|;<>,.?]".r)
 }

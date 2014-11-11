@@ -5,12 +5,12 @@ import java.net.URL
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
-import reactivemongo.api.{FailoverStrategy, DefaultDB}
+import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 import resource._
 import scrupal.core.api._
-import scrupal.db.{VariantIdentifierDAO, DefaultFailoverStrategy, VariantDataAccessObject}
+import scrupal.db.VariantIdentifierDAO
 import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.Future
@@ -21,7 +21,7 @@ import scala.concurrent.Future
   * during node substitution so the result is visible to the end user.
   */
 case class MessageNode(
-  val _id: Identifier,
+  _id : Identifier,
   description: String,
   css_class: String,
   message: Html,
@@ -51,7 +51,7 @@ object MessageNode {
   *
   */
 case class BasicNode (
-  _id: Identifier,
+  _id : Identifier,
   description: String,
   payload: Array[Byte],
   mediaType: MediaType = MediaTypes.`text/html`,
@@ -79,7 +79,7 @@ object BasicNode {
   * @param created
   */
 case class AssetNode (
-  _id: Identifier,
+  _id : Identifier,
   description: String,
   file: File,
   override val mediaType: MediaType = MediaTypes.`text/html`,
@@ -108,7 +108,7 @@ object AssetNode {
   * This node type contains a URL to a resource and generates a link to it.
   */
 case class LinkNode (
-  _id: Identifier,
+  _id : Identifier,
   description: String,
   url: URL,
   var enabled: Boolean = true,
@@ -129,7 +129,7 @@ object LinkNode {
 trait HtmlSubstituter extends ((Map[String, Node], Context) => Html)
 
 case class LayoutNode (
-  _id: Identifier,
+  _id : Identifier,
   description: String,
   tags: Map[String, Symbol],
   layoutId: Identifier,
@@ -171,6 +171,8 @@ object LayoutNode {
 
 object Node {
 
+  lazy val Empty = MessageNode('empty, "Empty Node", "text-danger", Html("This node is completely empty."))
+
   implicit lazy val NodeReader = new VariantBSONDocumentReader[Node] {
     def read(doc: BSONDocument) : Node = {
       doc.getAs[BSONString]("kind") match {
@@ -199,7 +201,7 @@ object Node {
     }
   }
 
-  case class NodeDao(db: DefaultDB) extends VariantIdentifierDAO[Node] {
+  case class NodeDAO(db: DefaultDB) extends VariantIdentifierDAO[Node] {
     final def collectionName: String = "nodes"
     implicit val writer = new Writer(NodeWriter)
     implicit val reader = new Reader(NodeReader)

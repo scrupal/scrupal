@@ -19,15 +19,15 @@ package scrupal.core
 
 import reactivemongo.bson.BSONDocument
 import scrupal.core.api.{Entity, Instance}
-import scrupal.fakes.{ScrupalSpecification, FakeModule}
+import scrupal.fakes.{FakeEntity, ScrupalSpecification, FakeModule}
 
 /** Top Level Test Suite for Core */
 class CoreSpec extends ScrupalSpecification("CoreSpec") {
 
   class TestModule(db: String) extends FakeModule('foo, db) {
-    val thai = StringType('Thai, "Thai Foon", id, ".*".r)
-    val buns = BundleType('Buns, "Buns Aye", id, Map('tie -> thai))
-    val plun = Entity('Plun, "Plunderous Thundering Fun", buns, this)
+    val thai = StringType('Thai, "Thai Foon", ".*".r)
+    val buns = BundleType('Buns, "Buns Aye", Map("tie" -> thai))
+    val plun = FakeEntity("Plun", buns)
 
     override val types = Seq(thai, buns)
 

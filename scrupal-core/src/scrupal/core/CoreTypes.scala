@@ -21,17 +21,18 @@ import java.util.Date
 
 import reactivemongo.bson._
 import scrupal.core.api._
-import scrupal.core.Patterns._
+import scrupal.utils.Patterns
+import Patterns._
 import spray.http.{MediaTypes, MediaType}
 
+import scala.concurrent.duration.Duration
 import scala.util.matching.Regex
 import scala.language.existentials
 
 /** A type that can take any value and always validates successfully */
 case class AnyType(
-  id: Identifier,
-  description: String,
-  module: Identifier
+  id : Identifier,
+  description: String
 ) extends Type {
   def asT = this
   def apply(value: BSONValue) : ValidationResult = None
@@ -41,9 +42,10 @@ case class AnyType(
 
 case class BooleanType(
   id : Identifier,
-  description: String,
-  module: Identifier
+  description: String
 ) extends Type {
+  override type ScalaValueType = Boolean
+
   def asT = this
   override def kind = 'Boolean
   def verity = List("true", "on", "yes", "confirmed")
@@ -72,10 +74,10 @@ case class BooleanType(
 case class StringType (
   id : Identifier,
   description : String,
-  module: Identifier,
   regex : Regex,
   maxLen : Int = Int.MaxValue
 ) extends Type {
+  override type ScalaValueType = String
   require(maxLen >= 0)
   def asT = this
   def apply(value: BSONValue) = single(value) {
@@ -97,10 +99,10 @@ case class StringType (
 case class RangeType (
   id : Identifier,
   description : String,
-  module: Identifier,
   min : Long = Long.MinValue,
   max : Long = Long.MaxValue
 ) extends Type {
+  override type ScalaValueType = Long
   require(min <= max)
   def asT = this
   def apply(value: BSONValue) = single(value) {
@@ -125,10 +127,10 @@ case class RangeType (
 case class RealType (
   id : Identifier,
   description : String,
-  module: Identifier,
   min : Double = Double.MinValue,
   max : Double = Double.MaxValue
 ) extends Type {
+  override type ScalaValueType = Double
   require(min <= max)
   def asT = this
   def apply(value: BSONValue) =  single(value) {
@@ -150,17 +152,16 @@ case class RealType (
   *
   * @param id
   * @param description
-  * @param module
   * @param min
   * @param max
   */
 case class TimestampType (
   id : Identifier,
   description: String,
-  module: Identifier,
   min: Date = new Date(0L),
   max: Date = new Date(Long.MaxValue)
 ) extends Type {
+  override type ScalaValueType = Duration
   assert(min.getTime <= max.getTime)
   def asT = this
   def apply(value: BSONValue) = single(value) {
@@ -182,10 +183,10 @@ case class TimestampType (
 case class BLOBType  (
   id : Identifier,
   description : String,
-  module: Identifier,
   mime : String,
   maxLen : Long = Long.MaxValue
 ) extends Type {
+  override type ScalaValueType = Array[Byte]
   assert(maxLen >= 0)
   assert(mime.contains("/"))
   def asT = this
@@ -200,7 +201,7 @@ case class BLOBType  (
 
 }
 
-case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator {
+case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator[BSONValue] {
 
   def apply(value: BSONValue): ValidationResult = single(value) {
     case BSONInteger(x) if !enumerators.exists { y => y._2 == x} =>
@@ -222,9 +223,9 @@ case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extend
 case class EnumType  (
   id : Identifier,
   description : String,
-  module: Identifier,
   enumerators : Map[Identifier, Int]
 ) extends Type {
+  override type ScalaValueType = Int
   require(enumerators.nonEmpty)
   def asT = this
   def apply(value: BSONValue) = EnumValidator(enumerators,label)(value)
@@ -235,11 +236,11 @@ case class EnumType  (
 }
 
 case class MultiEnumType(
-  id: Identifier,
+  id : Identifier,
   description: String,
-  module: Identifier,
   enumerators: Map[Identifier, Int]
 ) extends Type {
+  override type ScalaValueType = Seq[Int]
   require(enumerators.nonEmpty)
   def asT = this
   def apply(value: BSONValue) = {
@@ -259,9 +260,9 @@ case class MultiEnumType(
 case class ListType  (
   id : Identifier,
   description : String,
-  module: Identifier,
   elemType : Type
-) extends CompoundType {
+) extends IndexableType {
+  override type ScalaValueType = Seq[elemType.ScalaValueType]
   def asT = this
   override def kind = 'List
   def apply(value: BSONValue) : ValidationResult = {
@@ -279,11 +280,11 @@ case class ListType  (
   * @param elemType
   */
 case class SetType  (
-  override val id : Identifier,
+  id : Identifier,
   description : String,
-  module: Identifier,
   elemType : Type
-) extends CompoundType {
+) extends IndexableType {
+  override type ScalaValueType = Seq[elemType.ScalaValueType]
   def asT = this
   override def kind = 'Set
   def apply(value: BSONValue) : ValidationResult = {
@@ -303,48 +304,20 @@ case class SetType  (
 case class MapType  (
   override val id : Identifier,
   description : String,
-  module: Identifier,
   elemType : Type
-) extends CompoundType {
+) extends DocumentType {
+  override type ScalaValueType = Map[Identifier, elemType.ScalaValueType]
   def asT = this
   override def kind = 'Map
-  def apply(value: BSONValue) : ValidationResult = {
-    value match {
-      case d: BSONDocument => validate(d.elements.map { pair => pair._2 }.toSeq, elemType)
-      case x: BSONValue => wrongClass("BSONDocument", x).map { s => Seq(s) }
-    }
-  }
+  def validatorFor(id: String) : Option[Type] = Some(elemType)
+  def fieldNames: Seq[String] = Seq.empty[String]
 }
 
-trait StructuredType extends Type {
-  val id : Identifier
-  val description : String
-  val module: Identifier
-  val fields : Map[Identifier, Type]
-  def apply(value: BSONValue) : ValidationResult = {
-    value match {
-      case d: BSONDocument =>
-        // Note: Stream this to a map up front because we're going to access everything so we might as well stream it once
-        val elems = d.elements.toMap
-        def dovalidate(field: (Identifier, Type)) = {
-          if (!elems.contains(field._1.name))
-            Some(Seq(s"Field '${field._1.name}' is missing."))
-          else
-            field._2.validate(elems.get(field._1.name).get)
-        }
-        val errors = {
-          for (field <- fields; result = dovalidate(field) if result.isDefined) yield {
-            result.get
-          }
-        }.flatten.toSeq
-        if (errors.isEmpty)
-          None
-        else
-          Some(errors)
-      case x: BSONValue =>
-        wrongClass("BSONDocument", x).map { s => Seq(s) }
-    }
-  }
+trait StructuredType extends DocumentType {
+  val fields : Map[String, Type]
+  def validatorFor(id:String) : Option[Type] = fields.get(id)
+  def fieldNames : Iterable[String] = fields.keys
+  def size = fields.size
 }
 
 /** A group of named and typed fields that are related in some way.
@@ -367,12 +340,16 @@ trait StructuredType extends Type {
 case class BundleType (
   id : Identifier,
   description : String,
-  module: Identifier,
-  fields : Map[Identifier, Type]
+  fields : Map[String, Type]
 ) extends StructuredType {
+  override type ScalaValueType = Map[String,Any]
   require(fields.nonEmpty)
   def asT = this
   override def kind = 'Bundle
+}
+
+object BundleType {
+  val Empty = BundleType('EmptyBundleType, "A Bundle with no fields", Map.empty[String,Type])
 }
 
 /** Abstract Node Type
@@ -390,94 +367,96 @@ case class BundleType (
 case class NodeType (
   id : Identifier,
   description : String,
-  module: Identifier,
-  fields : Map[Identifier, Type],
+  fields : Map[String, Type],
   mediaType : MediaType = MediaTypes.`text/html`
 ) extends StructuredType
 {
+  override type ScalaValueType = Map[String,Any]
   def asT : NodeType = this
   override def kind = 'Node
 }
 
-object AnyType_t extends AnyType('Any, "A type that accepts any value", Core)
+object AnyType_t extends AnyType('Any, "A type that accepts any value")
 
-object AnyString_t extends StringType('AnyString, "A type that accepts any string input", Core, ".*".r, 1024*1024)
+object AnyString_t extends StringType('AnyString, "A type that accepts any string input", ".*".r, 1024*1024)
+
+object TheBoolean_t extends BooleanType('TheBoolean, "A type that accepts true/false values")
 
 object NonEmptyString_t extends
-  StringType('NonEmptyString, "A type that accepts any string input except empty", Core, ".+".r, 1024*1024)
+  StringType('NonEmptyString, "A type that accepts any string input except empty", ".+".r, 1024*1024)
 
 object Password_t extends
-  StringType('Password, "A type for human written passwords", Core, anchored(Password), 64)
+  StringType('Password, "A type for human written passwords", anchored(Password), 64)
 
 object AnyInteger_t extends
-  RangeType('AnyInteger, "A type that accepts any integer value", Core, Int.MinValue, Int.MaxValue)
+  RangeType('AnyInteger, "A type that accepts any integer value", Int.MinValue, Int.MaxValue)
 
 object AnyReal_t extends
-  RealType('AnyReal, "A type that accepts any double floating point value", Core, Double.MinValue, Double.MaxValue)
+  RealType('AnyReal, "A type that accepts any double floating point value", Double.MinValue, Double.MaxValue)
 
 object AnyTimestamp_t extends
-  TimestampType('AnyTimestamp, "A type that accepts any timestamp value", Core)
+  TimestampType('AnyTimestamp, "A type that accepts any timestamp value")
 
 object Boolean_t extends
-  BooleanType('Boolean, "A Boolean truth value accepting 0/1 values or true/false, on/off, etc.", Core)
+  BooleanType('Boolean, "A Boolean truth value accepting 0/1 values or true/false, on/off, etc.")
 
 /** The Scrupal Type for the identifier of things */
 object Identifier_t
-  extends StringType('Identifier, "Scrupal Identifier", Core, anchored(Identifier), 64)
+  extends StringType('Identifier, "Scrupal Identifier", anchored(Identifier), 64)
 
 object Description_t
-  extends StringType('Description, "Scrupal Description", Core, anchored(Markdown), 1024)
+  extends StringType('Description, "Scrupal Description", anchored(Markdown), 1024)
 
 object Markdown_t
-  extends StringType('Markdown, "Markdown document type", Core, anchored(Markdown))
+  extends StringType('Markdown, "Markdown document type", anchored(Markdown))
 
 /** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
 object DomainName_t
-  extends StringType('DomainName, "RFC compliant Domain Name", Core, anchored(DomainName), 253)
+  extends StringType('DomainName, "RFC compliant Domain Name", anchored(DomainName), 253)
 
 /** The Scrupal Type for TCP port numbers */
 object TcpPort_t
-  extends RangeType('TcpPort, "A type for TCP port numbers", Core, 1, 65535) {
+  extends RangeType('TcpPort, "A type for TCP port numbers", 1, 65535) {
 }
 
 /** The Scrupal Type for Uniform Resource Locators.
   * We should probably have one for URIs too,  per http://tools.ietf.org/html/rfc3986
   */
 object URL_t
-  extends StringType ('URL, "Uniform Resource Locator", Core, anchored(UniformResourceLocator))
+  extends StringType ('URL, "Uniform Resource Locator", anchored(UniformResourceLocator))
 
 /** The Scrupal Type for IP version 4 addresses */
 object IPv4Address_t
-  extends StringType('IPv4Address, "A type for IP v4 Addresses", Core, anchored(IPv4Address), 15)
+  extends StringType('IPv4Address, "A type for IP v4 Addresses", anchored(IPv4Address), 15)
 
 /** The Scrupal Type for Email addresses */
 object EmailAddress_t
-  extends StringType('EmailAddress, "An email address", Core, anchored(EmailAddress), 253)
+  extends StringType('EmailAddress, "An email address", anchored(EmailAddress), 253)
 
 object LegalName_t
-  extends StringType('LegalName, "The name of a person or corporate entity", Core, anchored(LegalName), 128)
+  extends StringType('LegalName, "The name of a person or corporate entity", anchored(LegalName), 128)
 
 object Title_t
-  extends StringType('Title, "A string that is valid for a page title", Core, anchored(Title), 70)
+  extends StringType('Title, "A string that is valid for a page title", anchored(Title), 70)
 
 /** The Scrupal Type for information about Sites */
 object SiteInfo_t
-  extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.", Core,
+  extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.",
     fields = Map(
-      'name -> Identifier_t,
-      'title -> Identifier_t,
-      'domain -> DomainName_t,
-      'port -> TcpPort_t,
-      'admin_email -> EmailAddress_t,
-      'copyright -> Identifier_t
+      "name" -> Identifier_t,
+      "title" -> Identifier_t,
+      "domain" -> DomainName_t,
+      "port" -> TcpPort_t,
+      "admin_email" -> EmailAddress_t,
+      "copyright" -> Identifier_t
     )
 )
 
 object PageBundle_t
-  extends BundleType('PageBundle, "Information bundle for a page entity.", Core,
+  extends BundleType('PageBundle, "Information bundle for a page entity.",
     fields = Map (
-      'title -> Title_t,
-      'body -> Markdown_t
+      "title" -> Title_t,
+      "body" -> Markdown_t
      // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
      // 'master -> Node_t,
      // 'defaultLayout -> Node_t,

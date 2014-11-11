@@ -23,7 +23,7 @@ import scala.util.Random
 
 trait Identifiable {
   def id : Symbol
-  def label = id.name
+  lazy val label = id.name
 }
 
 /**
@@ -121,18 +121,20 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] with Scr
   }
 
   def register(thing : T) : Unit = {
+    val theName = thing.id.toString() // If id is null, let's fail before we do anything
     if (contains(thing.id) ) {
-      toss(s"There is already a $registrantsName named ${thing.label} registered with $registryName")
+      toss(s"There is already a $registrantsName named $theName registered with $registryName")
     }
     _register(thing.id,thing)
-    log.debug(s"Registered ${thing.getClass.getName} as ${thing.label} with $size other ${Pluralizer.pluralize(registrantsName)}")
+    log.debug(s"Registered ${thing.getClass.getName} as $theName with $size other ${Pluralizer.pluralize(registrantsName)}")
   }
 
   def unregister(thing: T) : Unit = {
+    val theName = thing.id.toString // If id is null, let's fail before we do anything
     if (!contains(thing.id))
-        toss(s"There is no $registrantsName named ${thing.label} registered with $registryName")
+        toss(s"There is no $registrantsName named $theName registered with $registryName")
     _unregister(thing.id)
-    log.debug(s"Unregistered ${thing.getClass.getName} as ${thing.label} with $size other ${Pluralizer.pluralize(registrantsName)}")
+    log.debug(s"Unregistered ${thing.getClass.getName} as $theName with $size other ${Pluralizer.pluralize(registrantsName)}")
   }
 
   val rand = new Random(System.currentTimeMillis())

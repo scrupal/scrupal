@@ -16,7 +16,7 @@ trait SelfValidator {
 /** Generic Value Validator as a Function. You can apply these validations in other validations making them
   * composable.
  */
-trait ValueValidator[T] extends ((T) => ValidationResult) {
+trait ValueValidator[T <: BSONValue] extends ((T) => ValidationResult) {
 
   protected def validate(values: Seq[T], elemType: ValueValidator[T]) : ValidationResult = {
     val errors = { for (v <- values; e = elemType(v) if e.isDefined) yield { e.get } }.flatten.toSeq
@@ -34,7 +34,9 @@ trait ValueValidator[T] extends ((T) => ValidationResult) {
     Some(s"Expected value of type $expected but got type ${actual.getClass.getSimpleName}")
 }
 
-trait BSONValidator extends ValueValidator[BSONValue] {
+trait BSONValidator[BSONValueType <: BSONValue] extends ValueValidator[BSONValueType] {
+
+  type BVT = BSONValidator[BSONValueType]
 
   /** The validation method for validating a JsArray
     * This traverses the array and validates that each element conforms to the `elemType`
@@ -42,16 +44,25 @@ trait BSONValidator extends ValueValidator[BSONValue] {
     * @param elemType The Type each element of the array should have. By default
     * @return JsSuccess(true) when valid, JsError otherwise
     */
-  protected def validate(value : BSONArray, elemType: BSONValidator) : ValidationResult = {
-    val errors = { for (v <- value.values; e = elemType(v) if e.isDefined) yield { e.get } }.flatten.toSeq
+  protected def validate(value : BSONArray, elemType: BVT) : ValidationResult = {
+    val errors = {
+      for (
+        v <- value.values;
+        e = elemType(v.asInstanceOf[BSONValueType]) if e.isDefined
+      ) yield { e.get }
+    }.flatten.toSeq
     if (errors.isEmpty)
       None
     else
       Some(errors)
   }
 
-  protected def validateArray(a: BSONArray, validators: Seq[BSONValidator]) : ValidationResult = {
-    val combine = for (item <- validators.zip(a.values); result = item._1(item._2) if result.isDefined) yield result
+  protected def validateArray(a: BSONArray, validators: Seq[BVT]) : ValidationResult = {
+    val combine = for (
+      item <- validators.zip(a.values);
+      result = item._1(item._2.asInstanceOf[BSONValueType]) if result.isDefined
+    ) yield result
+
     val list = {combine.flatMap { _.toSeq }}.flatten
     if (list.isEmpty)
       None
@@ -59,8 +70,8 @@ trait BSONValidator extends ValueValidator[BSONValue] {
       Some(list)
   }
 
-  protected def validateMaps(document: BSONValue,
-    validators: Map[String,BSONValidator],
+  protected def validateMaps(document: BSONValueType,
+    validators: Map[String,BSONValidator[BSONValue]],
     defaults: Map[String,BSONValue]) : ValidationResult =
   {
     document match {

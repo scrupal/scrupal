@@ -46,7 +46,7 @@ object Instance {
     * @param db A parameterless function returning a [[reactivemongo.api.DefaultDB]] instance.
     */
 
-  case class InstanceDao(db: DefaultDB) extends IdentifierDAO[Instance] {
+  case class InstanceDAO(db: DefaultDB) extends IdentifierDAO[Instance] {
     final def collectionName = "instances"
     implicit val reader : IdentifierDAO[Instance]#Reader = Macros.reader[Instance]
     implicit val writer : IdentifierDAO[Instance]#Writer = Macros.writer[Instance]

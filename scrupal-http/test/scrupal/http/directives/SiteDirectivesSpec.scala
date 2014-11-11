@@ -2,7 +2,7 @@ package scrupal.http.directives
 
 import org.specs2.mutable.Specification
 import scrupal.core.Scrupal
-import scrupal.core.api.Site
+import scrupal.core.api.BasicSite
 import spray.testkit.Specs2RouteTest
 import spray.routing.{SchemeRejection, HttpService}
 import spray.http.Uri
@@ -13,10 +13,10 @@ class SiteDirectivesSpec extends Specification with Specs2RouteTest with HttpSer
 
   def actorRefFactory = system
 
-  var s1 = Site('site1, "TestSite", "Testing only", "site1", enabled=false, requireHttps=false)
-  var s2 = Site('site2, "TestSite", "Testing only", "site2", enabled=false, requireHttps=true)
-  var s3 = Site('site3, "TestSite", "Testing only", "site3", enabled=true, requireHttps=false)
-  var s4 = Site('site4, "TestSite", "Testing only", "site4", enabled=true, requireHttps=true)
+  var s1 = BasicSite('site1, "TestSite", "Testing only", "site1", requireHttps=false).disable()
+  var s2 = BasicSite('site2, "TestSite", "Testing only", "site2", requireHttps=true).disable()
+  var s3 = BasicSite('site3, "TestSite", "Testing only", "site3", requireHttps=false)
+  var s4 = BasicSite('site4, "TestSite", "Testing only", "site4", requireHttps=true)
 
   "site" should {
     "reject disabled site" in {

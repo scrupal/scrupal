@@ -24,14 +24,14 @@ import org.specs2.mutable.Specification
   */
 class FeatureSpec extends Specification {
 
-  val impl_on = Feature('Core, 'ImplementedOn, "Testing Feature: Implemented/On", true, true)
-  val impl_off = Feature('Core, 'ImplementedOff, "Testing Feature: Implemented/Off", false, true)
-  val unimpl_on = Feature('Core, 'UnimplementedOn, "Testing Feature: Unimplemented/On", true, false)
-  val unimpl_off = Feature('Core, 'UnimplementedOff, "Testing Feature: Unimplemented/Off", false, false)
+  val impl_on = Feature('Enabled_Implemented, "Testing Feature: Enabled_Implemented", implemented=true)
+  val impl_off = Feature('Disabled_Implemented, "Testing Feature: Disabled_Implemented", implemented=true).disable
+  val unimpl_on = Feature('Enabled_Unimplemented, "Testing Feature: Enabled_Unimplemented",  implemented=false)
+  val unimpl_off = Feature('Disabled_Unimplemented, "Testing Feature: Disabled_Unimplemented", implemented=false).disable
 
   "Feature" should {
     "create with three arguments" in {
-      val other = Feature('Core, 'other, "Other", enabled=false)
+      val other = Feature('other, "Other").disable()
       other.isEnabled must beFalse
       other.implemented must beTrue
     }
@@ -50,7 +50,7 @@ class FeatureSpec extends Specification {
       t2.isEnabled must beFalse
     }
     "enable and disable on request" in {
-      val f = Feature('Core, 'TestFeature, "Testing Feature", enabled=false)
+      val f = Feature('TestFeature, "Testing Feature").disable()
       f.isEnabled must beFalse
       f.enable()
       f.isEnabled must beTrue

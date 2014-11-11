@@ -33,7 +33,7 @@ class ModuleSpec extends Specification {
 
   object Module1 extends FakeModule('Module1, db, Version(1,0,0), Version(0,8,20)) {
     override val types = Seq(
-      new RangeType('Foo, "Fooness", id, 0, 0)
+      new RangeType('Foo, "Fooness", 0, 0)
     )
   }
 

@@ -16,7 +16,7 @@ object Forms {
   type FormOptions = Map[Symbol, String]
   val EmptyOptions = Map.empty[Symbol,String]
 
-  trait FormThing extends Storable[String] with BSONValidator {
+  trait FormThing extends Storable[String] with BSONValidator[BSONValue] {
     val default: BSONValue
   }
 
@@ -57,7 +57,7 @@ object Forms {
   ) extends FormThing {
     require(typ.nonTrivial)
 
-    def apply(value: BSONValue): ValidationResult = typ.validate(value)
+    def apply(value: BSONValue): ValidationResult = typ(value)
 
     def id: String = opts.getOrElse('id,_id).toString
 
@@ -104,7 +104,7 @@ object Forms {
     def fill[T](t: T): Input = ???
   }
 
-  case class SubmitAction(_id: String, handler: Option[Handler]) extends BSONValidator {
+  case class SubmitAction(_id: String, handler: Option[Handler]) extends BSONValidator[BSONValue] {
     def apply(value: BSONValue): ValidationResult = None // TODO: Implement this
   }
 

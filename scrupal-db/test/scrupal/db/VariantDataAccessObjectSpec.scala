@@ -13,7 +13,7 @@ class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAcc
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-  trait Noom extends DisambiguousStorable[Long] { val identity = "I am Noom" }
+  trait Noom extends VariantStorable[Long] { val identity = "I am Noom" }
 
   implicit val IdentifierBSONHandler = new BSONHandler[BSONString,Symbol] {
     override def write(t: Symbol): BSONString = BSONString(t.name)

@@ -19,7 +19,7 @@ package scrupal.core
 
 import java.net.URL
 
-import reactivemongo.bson.{BSONString, BSONValue}
+import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONString, BSONValue}
 import scrupal.db.{Schema,DBContext}
 import scrupal.core.api._
 import scrupal.utils.Version
@@ -31,49 +31,49 @@ import CoreFeatures._
   * its functionality. The Core module defines the simple, trait, bundle and entity types
  * Further description here.
  */
-object CoreModule extends Module(
-  Core,
-  "Scrupal's Core module for core, essential functionality.",
-  Version(0,1,0),
-  Version(0,0,0),
-  enabled = true
-) {
+object CoreModule extends Module {
+  def id = Core
+  val description = "Scrupal's Core module for core, essential functionality."
+  val version = Version(0,1,0)
+  val obsoletes = Version(0,0,0)
+  val moreDetailsURL = new URL("http://modules.scrupal.org/doc/" + label)
+  val author : String = "Reid Spencer"
+  val copyright : String = "(C) 2014 Reactific Systems, Inc. All Rights Reserved"
+  val license : String = "GPLv3"
 
-  def moreDetailsURL = new URL("http://modules.scrupal.org/doc/" + label)
+  val notes_key = "Notes"
+  override val settingsType =
+    BundleType('CoreConfiguration, "The definition of the CoreModule's configuration parameters", Map(
+      enabled_key → TheBoolean_t,
+      notes_key → Markdown_t
+    ))
 
-  def author : String = "Reid Spencer"
-
-  def copyright : String = "(C) 2014 Reactific Systems, Inc. All Rights Reserved"
-
-  def license : String = "GPLv3"
-
-  override def config =   MutableConfiguration(
-    Map(
-      "Notes" → Markdown_t
-    ),
-    Map[String,BSONValue](
-      "Notes" → BSONString("No notes.")
-    )
+  override val settingsDefault = Map(
+    enabled_key → BSONBoolean(value=true),
+    notes_key → BSONString("No notes.")
   )
 
   override def features = Seq(
     DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
   )
 
-
   /** The core types that Scrupal provides to all modules */
   override def types = Seq[Type](
     AnyType_t, AnyString_t, NonEmptyString_t, Password_t, AnyInteger_t, AnyReal_t, AnyTimestamp_t, Boolean_t,
     Identifier_t, Description_t, Markdown_t, DomainName_t, TcpPort_t, URL_t, IPv4Address_t, EmailAddress_t,
-    LegalName_t, SiteInfo_t, PageBundle_t
+    LegalName_t, SiteInfo_t, PageBundle_t, settingsType
   )
 
-  val PageEntity = Entity(
-    'Page,
-    "An entity for simple HTML5 pages.",
-    PageBundle_t,
-    this
-  )
+  object PageEntity extends Entity {
+    def id = 'Page
+    def path = "page"
+    def kind = 'Page
+    val description =  "An entity for simple HTML5 pages."
+    val author = CoreModule.author
+    val copyright = CoreModule.copyright
+    val license = CoreModule.license
+    val instanceType = PageBundle_t
+  }
 
   override def entities = Seq[Entity](
     PageEntity

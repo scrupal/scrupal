@@ -34,7 +34,7 @@ import scala.util.{Failure, Success, Try}
   * context, connection and database.
   *
   */
-case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
+case class DBContext(val id: Symbol, mongo_uri: String, driver: MongoDriver,
                      user: Option[String] = None, pass: Option[String] = None) extends Registrable[DBContext] with ScrupalComponent {
   def registry = DBContext
   def asT = this

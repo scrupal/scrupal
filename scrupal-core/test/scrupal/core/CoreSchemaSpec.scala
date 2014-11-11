@@ -33,6 +33,8 @@ class CoreSchemaSpec extends ScrupalSpecification("CoreSchemaSpec") {
         names.contains("instances") must beTrue
         names.contains("alerts") must beTrue
         names.contains("sites") must beTrue
+        names.contains("nodes") must beTrue
+        names.contains("principals") must beTrue
       }
       success
     }

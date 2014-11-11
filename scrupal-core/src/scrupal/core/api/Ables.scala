@@ -18,9 +18,17 @@
 package scrupal.core.api
 
 import org.joda.time.DateTime
-import scrupal.core.MutableConfiguration
-import scrupal.utils.{Registrable, Version}
-import scrupal.db.Storable
+import reactivemongo.bson.{BSONBoolean, BSONValue, BSONDocument}
+import scrupal.core.{TheBoolean_t, BundleType}
+import scrupal.utils.{Patterns, Version}
+
+import scala.concurrent.duration.Duration
+
+trait Authorable {
+  def author : String
+  def copyright : String
+  def license: String
+}
 
 /** Something that can be created and keeps track of its modification time.
   * For reasons similar to [[scrupal.db.Storable]], the data provided by this trait is accessible to everyone
@@ -46,6 +54,10 @@ trait Modifiable extends Creatable {
   override def canModify = true
 }
 
+trait ModuleOwned {
+  def moduleOf : Option[Module]
+}
+
 /** Something that can be named with a String  */
 trait Nameable  {
   def name : String
@@ -58,23 +70,51 @@ trait Describable {
   def isDescribed : Boolean = ! description.isEmpty
 }
 
-/** Something that can be enabled or disabled */
-trait Enablable  {
-  var enabled : Boolean
-  def isEnabled = enabled
-  def enable() : Unit = enabled = true
-  def disable() : Unit = enabled = false
+/** Something that can be configured */
+trait Settingsable extends SettingsInterface {
+  def settingsType : BundleType
+  def settingsDefault : Map[String,BSONValue]
+  def settings : Settings = Settings(settingsType, settingsDefault, BSONDocument(settingsDefault))
+  def validate(doc: BSONDocument) : ValidationResult = settings.apply(doc)
+  def validate(path: String) : ValidationResult = settings.validate(path)
+  def getString(path: String) : Option[String] = settings.getString(path)
+  def getBoolean(path: String) : Option[Boolean] = settings.getBoolean(path)
+  def getInt(path: String) : Option[Int] = settings.getInt(path)
+  def getLong(path: String) : Option[Long] = settings.getLong(path)
+  def getDouble(path: String) : Option[Double] = settings.getDouble(path)
+  def getNumber(path: String) : Option[Number] = settings.getNumber(path)
+  def getDuration(path: String) : Option[Duration] = settings.getDuration(path)
+  def getMilliseconds(path: String) : Option[Long] = settings.getMilliseconds(path)
+  def getNanoseconds(path: String) : Option[Long] = settings.getNanoseconds(path)
+  def setBoolean(path: String, value: Boolean) : Unit = settings.setBoolean(path, value)
 }
+
+/** Something that can be enabled or disabled */
+trait Enablable extends Settingsable {
+  final val enabled_key = "enabled"
+  def settingsType = BundleType('enableSettings, "enableSettings", Map(enabled_key → TheBoolean_t))
+  def settingsDefault : Map[String,BSONValue] = Map(enabled_key → BSONBoolean(value=true))
+  def isEnabled = getBoolean(enabled_key).get
+  def enable() : this.type = { setBoolean(enabled_key,value=true); this }
+  def disable() : this.type = { setBoolean(enabled_key,value=false); this }
+  /** Determine if the thing is enabled or not with a dynamic value
+    *
+    * @param how How to check for enablement: true or false
+    */
+  def enabled(how: Boolean): Unit = isEnabled == how
+}
+
+/** Something that contains a path component for a URL */
+trait Pathable {
+  def path : String
+  def pathIsValid : Boolean = Patterns.anchored(Patterns.URLPathable).pattern.matcher(path).matches()
+}
+
 
 /** Something that has a version and can obsolete other version */
 trait Versionable {
   def version: Version
   def obsoletes: Version
-}
-
-/** Something that can be configured */
-trait Configurable {
-  def config: MutableConfiguration
 }
 
 /** Something that has an expiration date */
@@ -93,13 +133,5 @@ trait Expirable {
 trait Facetable {
   def facets : Map[String,Facet]
   def facet(name:String): Option[Facet]= facets.get(name)
-}
-
-/** Something that is both storable and registrable
-  * This may seem a bit silly but it does happen :)
-  * @tparam T
-  */
-trait StorableRegistrable[T <: StorableRegistrable[T]] extends Registrable[T] with Storable[Identifier] {
-  def _id = id
 }
 

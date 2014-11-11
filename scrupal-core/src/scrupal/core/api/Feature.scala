@@ -19,7 +19,7 @@ package scrupal.core.api
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import scrupal.db.IdentifierDAO
+import scrupal.db.{StorableRegistrable, IdentifierDAO}
 import scrupal.utils.Registry
 
 /** A Feature of a Module.
@@ -30,33 +30,17 @@ import scrupal.utils.Registry
   * used. This makes accessing the enabled state of a feature simple.
   */
 case class Feature(
-  module: Symbol,
   id: Symbol,
   description: String,
-  private var enabled: Boolean = true,
   implemented: Boolean = true
-) extends StorableRegistrable[Feature]  {
+) extends StorableRegistrable[Feature] with Describable with Enablable with ModuleOwned {
   def registry = Feature
   def asT = this
 
-  /** Enable the feature */
-  def enable() = enabled = true
-
-  /** Disable the feature */
-  def disable() = enabled = false
-
-  /** Determine if the feature is enabled or not
-    *
-    * @param how How to check for enablement: true or false
-    */
-  def enabled(how: Boolean): Unit = enabled = how
-
-  /** @return Return true iff the feature is enabled
-    */
-  def isEnabled = enabled
+  def moduleOf = { Module.all.find(mod ⇒ mod.features.contains(this)) }
 
   /** Get the name of the feature */
-  def name = _id.name
+  def name = id.name
 
   /** Determine if the feature is enabled
     * When you have an object reference for a feature, you can determine its enablement by just using this
@@ -66,7 +50,7 @@ case class Feature(
     * }}}
     * @return
     */
-  def apply() : Boolean = enabled
+  def apply() : Boolean = isEnabled
 
 }
 
@@ -83,7 +67,7 @@ object Feature extends Registry[Feature] {
   implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
   implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled
 
-  case class FeatureDao(db: DefaultDB) extends IdentifierDAO[Feature] {
+  case class FeatureDAO(db: DefaultDB) extends IdentifierDAO[Feature] {
     final def collectionName = "features"
     implicit val reader : IdentifierDAO[Feature]#Reader = Macros.reader[Feature]
     implicit val writer : IdentifierDAO[Feature]#Writer  = Macros.writer[Feature]
@@ -92,7 +76,7 @@ object Feature extends Registry[Feature] {
     )
   }
 
-  object NotAFeature extends Feature('Core, 'NotAFeature, "This is not a feature", false) {
+  object NotAFeature extends Feature('NotAFeature, "This is not a feature", false) {
     override def apply() = toss(description)
     override def enable() = toss(description)
     override def disable() = toss(description)
