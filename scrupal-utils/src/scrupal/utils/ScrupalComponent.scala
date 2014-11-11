@@ -27,7 +27,7 @@ import grizzled.slf4j.Logger
  */
 trait ScrupalComponent {
 
-  def logger_identity: String = this.getClass.getCanonicalName
+  def logger_identity: String = this.getClass.getName
 
   val log = Logger({ if (logger_identity == null) "scrupal.utils.NoCanonicalName" else logger_identity })
 
