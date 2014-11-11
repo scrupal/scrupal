@@ -3,7 +3,7 @@ package scrupal.fakes
 import java.net.URL
 
 import scrupal.core.api._
-import scrupal.utils.Version
+import scrupal.utils.{OSSLicense, Version}
 
 /** Make Module Creation More Light weight
   * This just just adds boilerplate and defaults to make instantiation easier
@@ -20,7 +20,7 @@ abstract class AbstractFakeModule(
   override def moreDetailsURL: URL = new URL("No URL, Fake Module")
   override def author: String = "No author, Fake Module"
   override def copyright: String = "No copyright, Fake Module"
-  override def license: String = "No license, Fake Module"
+  override def license = OSSLicense.GPLv3
 }
 
 /** Fake Module

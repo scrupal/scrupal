@@ -63,33 +63,33 @@ trait Entity
     */
   val actions: Map[Symbol, Action[_,_]] = Map()
 
-  case class Create(id: String, instance: BSONDocument)
-  case class Retrieve(id: String)
-  case class Update(id: String, fields: BSONDocument)
-  case class Delete(id: String)
-  case class Query(fields: BSONDocument)
-  case class Option(id: String, option: String)
-  case class Get(id: String, what: String, data: BSONDocument)
-  case class Put(id: String, what: String, data: BSONDocument)
-  case class AddFacet(id: String, name: String, facet: Facet)
+  case class Create(id: String, instance: BSONDocument, ctxt: Context)
+  case class Retrieve(id: String, ctxt: Context)
+  case class Update(id: String, fields: BSONDocument, ctxt: Context)
+  case class Delete(id: String, ctxt: Context)
+  case class Query(fields: BSONDocument, ctxt: Context)
+  case class Option(id: String, option: String, ctxt: Context)
+  case class Get(id: String, what: String, data: BSONDocument, ctxt: Context)
+  case class Put(id: String, what: String, data: BSONDocument, ctxt: Context)
+  case class AddFacet(id: String, name: String, facet: Facet, ctxt: Context)
 
-  class Worker() extends Actor with ActorLogging {
+  class DefaultWorker extends Actor with ActorLogging {
     def receive : Receive = {
       // TODO: Implement Entity.receive to process messages
       case a: Action[_, _] =>
-      case Create(id: String, instance: BSONDocument) =>
-      case Retrieve(id: String) =>
-      case Update(id: String, fields: BSONDocument) =>
-      case Delete(id: String) =>
-      case Query(fields: BSONDocument) =>
-      case Option(id: String, option: String) =>
-      case Get(id: String, what: String, data: BSONDocument) =>
-      case Put(id: String, what: String, data: BSONDocument) =>
-      case AddFacet(id: String, name: String, facet: Facet) =>
+      case Create(id: String, instance: BSONDocument, ctxt: Context) =>
+      case Retrieve(id: String, ctxt: Context) =>
+      case Update(id: String, fields: BSONDocument, ctxt: Context) =>
+      case Delete(id: String, ctxt: Context) =>
+      case Query(fields: BSONDocument, ctxt: Context) =>
+      case Option(id: String, option: String, ctxt: Context) =>
+      case Get(id: String, what: String, data: BSONDocument, ctxt: Context) =>
+      case Put(id: String, what: String, data: BSONDocument, ctxt: Context) =>
+      case AddFacet(id: String, name: String, facet: Facet, ctxt: Context) =>
     }
   }
 
-  private[this] val worker = system.actorOf(Props(classOf[Worker], this), "Entity.Worker." + label)
+  protected val worker = system.actorOf(Props(classOf[DefaultWorker], this), "EntityWorker-" + label)
 
 
   /** Fetch a single instance of this entity kind
@@ -98,29 +98,29 @@ trait Entity
     * @param id The identifier of the instance to be retrieved
     * @return The JsObject representing the payload of the entity retrieved
     */
-  def retrieve(id: String)  = worker ! Retrieve(id)
+  def retrieve(id: String, ctxt: Context)  = worker ! Retrieve(id, ctxt)
 
   /** Create a single instance of this entity kind
     * Presumably the entity
     * @param instance
     * @return
     */
-  def create(id:String, instance: BSONDocument ) = worker ! Create(id, instance)
+  def create(id:String, instance: BSONDocument, ctxt: Context ) = worker ! Create(id, instance, ctxt)
 
   /** Update all or a few of the fields of an entity
     * @param id
     * @param fields
     * @return
     */
-  def update(id: String, fields: BSONDocument) = worker ! Update(id, fields)
+  def update(id: String, fields: BSONDocument, ctxt: Context) = worker ! Update(id, fields, ctxt)
 
   /** Delete an entity
     * @param id
     * @return
     */
-  def delete(id: String) = worker ! Delete(id)
+  def delete(id: String, ctxt: Context) = worker ! Delete(id, ctxt)
 
-  def query(fields: BSONDocument) = worker ! Query(fields)
+  def query(fields: BSONDocument, ctxt: Context) = worker ! Query(fields, ctxt)
 
   /** Get meta information about an entity
     *
@@ -128,7 +128,7 @@ trait Entity
     * @param option
     * @return
     */
-  def option(id: String, option: String) = worker ! Option(id, option)
+  def option(id: String, option: String, ctxt: Context) = worker ! Option(id, option, ctxt)
 
   /** Extension of fetch to retrieve not the entity but some aspect, or invoke some functionality
     *
@@ -137,7 +137,7 @@ trait Entity
     * @param data
     * @return
     */
-  def get(id: String, what: String, data: BSONDocument) = worker ! Get(id, what, data)
+  def get(id: String, what: String, data: BSONDocument, ctxt: Context) = worker ! Get(id, what, data, ctxt)
 
   /** Extension of update to send data as parameter to functionality or update something that is not part of the entity
     *
@@ -146,9 +146,9 @@ trait Entity
     * @param data
     * @return
     */
-  def put(id: String, what: String, data: BSONDocument)  = worker ! Put(id, what, data)
+  def put(id: String, what: String, data: BSONDocument, ctxt: Context)  = worker ! Put(id, what, data, ctxt)
 
-  def addFacet(id: String, name: String, facet: Facet) = worker ! AddFacet(id, name, facet)
+  def addFacet(id: String, name: String, facet: Facet, ctxt: Context) = worker ! AddFacet(id, name, facet, ctxt)
 
 }
 

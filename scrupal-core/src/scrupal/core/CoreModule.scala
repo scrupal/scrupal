@@ -22,7 +22,7 @@ import java.net.URL
 import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONString, BSONValue}
 import scrupal.db.{Schema,DBContext}
 import scrupal.core.api._
-import scrupal.utils.Version
+import scrupal.utils.{OSSLicense, Version}
 
 import CoreFeatures._
 
@@ -39,7 +39,7 @@ object CoreModule extends Module {
   val moreDetailsURL = new URL("http://modules.scrupal.org/doc/" + label)
   val author : String = "Reid Spencer"
   val copyright : String = "(C) 2014 Reactific Systems, Inc. All Rights Reserved"
-  val license : String = "GPLv3"
+  val license = OSSLicense.GPLv3
 
   val notes_key = "Notes"
   override val settingsType =

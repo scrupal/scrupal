@@ -26,7 +26,7 @@ import scrupal.utils.HasherKinds
  * Test that our basic abstractions for accessing the database hold water.
  */
 
-class UserSpec extends ScrupalSpecification("UserSpec")
+class PrincipalSpec extends ScrupalSpecification("PrincipalSpec")
 {
   sequential
 

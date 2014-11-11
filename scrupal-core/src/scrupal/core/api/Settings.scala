@@ -9,6 +9,11 @@ import reactivemongo.bson._
 import scrupal.core._
 import scrupal.utils.ScrupalComponent
 
+/** Interface To Settings
+  * This defines the interface to value extraction from some cache of settings
+  *
+  * FIXME: Extract the BSON Specific parts of the implementations and put in scrupal-db
+  */
 trait SettingsInterface {
 
   def validate(doc: BSONDocument) : ValidationResult

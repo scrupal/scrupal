@@ -20,14 +20,14 @@ package scrupal.core.api
 import org.joda.time.DateTime
 import reactivemongo.bson.{BSONBoolean, BSONValue, BSONDocument}
 import scrupal.core.{TheBoolean_t, BundleType}
-import scrupal.utils.{Patterns, Version}
+import scrupal.utils.{OSSLicense, Patterns, Version}
 
 import scala.concurrent.duration.Duration
 
 trait Authorable {
   def author : String
   def copyright : String
-  def license: String
+  def license: OSSLicense
 }
 
 /** Something that can be created and keeps track of its modification time.

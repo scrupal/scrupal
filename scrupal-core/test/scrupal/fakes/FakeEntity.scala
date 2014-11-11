@@ -2,6 +2,7 @@ package scrupal.fakes
 
 import scrupal.core.BundleType
 import scrupal.core.api.Entity
+import scrupal.utils.OSSLicense
 
 /**
  * Created by reidspencer on 11/11/14.
@@ -18,7 +19,7 @@ case class FakeEntity(name: String, instanceType: BundleType) extends Entity {
 
   val copyright: String = "copyright"
 
-  val license: String = "license"
+  val license: OSSLicense = OSSLicense.GPLv3
 
   val description: String = name
 }
