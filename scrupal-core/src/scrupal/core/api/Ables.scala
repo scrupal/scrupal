@@ -73,8 +73,8 @@ trait Describable {
 /** Something that can be configured */
 trait Settingsable extends SettingsInterface {
   def settingsType : BundleType
-  def settingsDefault : Map[String,BSONValue]
-  def settings : Settings = Settings(settingsType, settingsDefault, BSONDocument(settingsDefault))
+  def settingsDefault : BSONDocument
+  def settings : Settings = Settings(settingsType, settingsDefault, settingsDefault)
   def validate(doc: BSONDocument) : ValidationResult = settings.apply(doc)
   def validate(path: String) : ValidationResult = settings.validate(path)
   def getString(path: String) : Option[String] = settings.getString(path)
@@ -93,7 +93,7 @@ trait Settingsable extends SettingsInterface {
 trait Enablable extends Settingsable {
   final val enabled_key = "enabled"
   def settingsType = BundleType('enableSettings, "enableSettings", Map(enabled_key → TheBoolean_t))
-  def settingsDefault : Map[String,BSONValue] = Map(enabled_key → BSONBoolean(value=true))
+  def settingsDefault : BSONDocument = BSONDocument(Map(enabled_key → BSONBoolean(value=true)))
   def isEnabled = getBoolean(enabled_key).get
   def enable() : this.type = { setBoolean(enabled_key,value=true); this }
   def disable() : this.type = { setBoolean(enabled_key,value=false); this }

@@ -48,10 +48,10 @@ object CoreModule extends Module {
       notes_key → Markdown_t
     ))
 
-  override val settingsDefault = Map(
+  override val settingsDefault = BSONDocument(Map(
     enabled_key → BSONBoolean(value=true),
     notes_key → BSONString("No notes.")
-  )
+  ))
 
   override def features = Seq(
     DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications

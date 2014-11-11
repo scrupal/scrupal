@@ -72,7 +72,7 @@ trait BSONValidator[BSONValueType <: BSONValue] extends ValueValidator[BSONValue
 
   protected def validateMaps(document: BSONValueType,
     validators: Map[String,BSONValidator[BSONValue]],
-    defaults: Map[String,BSONValue]) : ValidationResult =
+    defaults: BSONDocument) : ValidationResult =
   {
     document match {
       case doc: BSONDocument ⇒
@@ -80,7 +80,7 @@ trait BSONValidator[BSONValueType <: BSONValue] extends ValueValidator[BSONValue
       val combined = for ( (key,validator) ← validators) yield {
           if (elems.contains(key)) {
             validator(elems.get(key).get)
-          } else if (defaults.contains(key)) {
+          } else if (defaults.elements.contains(key)) {
             validator(defaults.get(key).get)
           } else {
             Some(Seq(s"Element '$key' is missing and has no default."))
