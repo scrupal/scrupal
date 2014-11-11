@@ -17,6 +17,7 @@
 package scrupal.core.api
 
 import reactivemongo.bson._
+import scrupal.core.api.Bootstrappable
 
 import scala.language.existentials
 import scala.util.{Success, Failure, Try}
@@ -33,7 +34,7 @@ import scrupal.utils.{Registry, Pluralizer, Registrable}
   * Types are interned by the Registry[Type] utility. This means that types share a single global name space.
   * Modules must cooperate on defining types in such a way that their names do not conflict.
   */
-trait Type extends Registrable[Type] with Describable with BSONValidator[BSONValue] {
+trait Type extends Registrable[Type] with Describable with BSONValidator[BSONValue] with Bootstrappable {
   def registry = Type
 
   type ScalaValueType
@@ -90,7 +91,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
       }
     }
   }
-
+  private[scrupal] def bootstrap() = {}
 }
 
 case class Not_A_Type() extends Type {

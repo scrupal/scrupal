@@ -106,7 +106,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
     // TODO: scan classpath for additional modules
 
     // We are now ready to process the registered modules
-    Module.processModules()
+    Module.bootstrap(Seq.empty[String])
 
     // Load the configuratoin
     load(config, dbc)

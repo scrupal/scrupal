@@ -45,7 +45,8 @@ object Entity extends Registry[Entity] {
   */
 trait Entity
   extends VariantStorableRegistrable[Entity] with ModuleOwned
-          with Authorable with Describable with Enablable with Pathable with BSONValidator[BSONDocument]
+          with Authorable with Describable with Enablable
+          with Pathable with BSONValidator[BSONDocument] with Bootstrappable
 {
   def moduleOf = { Module.all.find(mod ⇒ mod.entities.contains(this)) }
 
@@ -150,5 +151,6 @@ trait Entity
 
   def addFacet(id: String, name: String, facet: Facet, ctxt: Context) = worker ! AddFacet(id, name, facet, ctxt)
 
+  private[scrupal] def bootstrap = {}
 }
 

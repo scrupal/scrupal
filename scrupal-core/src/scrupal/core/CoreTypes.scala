@@ -343,7 +343,6 @@ case class BundleType (
   fields : Map[String, Type]
 ) extends StructuredType {
   override type ScalaValueType = Map[String,Any]
-  require(fields.nonEmpty)
   def asT = this
   override def kind = 'Bundle
 }

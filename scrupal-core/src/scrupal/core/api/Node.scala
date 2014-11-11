@@ -23,8 +23,11 @@ trait Generator extends ((Context) => Future[Array[Byte]])
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-abstract class Node extends VariantStorable[Identifier] with Describable with Modifiable with Enablable with Generator {
+abstract class Node extends VariantStorable[Identifier]
+                            with Describable with Modifiable with Enablable with Generator with Bootstrappable
+{
   val mediaType : MediaType
+  private[scrupal] def bootstrap = {}
 }
 
 trait Arranger extends ((Context, Map[String,Node]) => Array[Byte])

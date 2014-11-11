@@ -19,6 +19,8 @@ package scrupal.core.api
 
 import java.net.URL
 
+import scrupal.core.CoreModule
+import scrupal.core.echo.EchoModule
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{Registrable, Registry, Version}
 
@@ -33,7 +35,9 @@ import scala.collection.immutable.HashMap
   * @param id The name of the module
   * @param description A brief description of the module (purpose
   */
-trait Module extends Registrable[Module] with Authorable with Describable with Enablable with Versionable with SelfValidator
+trait Module extends Registrable[Module]
+                     with Authorable with Describable with Enablable
+                     with Versionable with SelfValidator with Bootstrappable
 {
   /** The name of the database your module's schema wants to live in
     *
@@ -106,6 +110,20 @@ trait Module extends Registrable[Module] with Authorable with Describable with E
     }
   }
 
+  /** Load lazy instantiated objects into memory
+    *   This is part of the bootstrapping mechanism
+    */
+  private[scrupal] def bootstrap = {
+
+    // Touch the various aspects of the module by by asking for it's id's length.
+    // This just makes sure it gets instantiated & registered as well as not being null
+    features foreach { feature ⇒ require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap }
+    types    foreach { typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap }
+    entities foreach { entity  ⇒ require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap }
+    nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.name.length > 0) ; node.bootstrap }
+    // FIXME: What about handlers and schemas?
+  }
+
   override final def enable() = {
     // TODO: Make sure an invalid module never gets enabled
     super.enable()
@@ -127,28 +145,35 @@ object Module extends Registry[Module] {
   override val registryName = "Modules"
   override val registrantsName = "module"
 
-  private[scrupal] def processModules() : Unit = {
-    // For each module ...
-    all foreach { case (mod: Module) =>
-      require(mod != null)
+  /** Process Module Initialization
+    * Modules are always defined as singleton objects. As such, they are not instantiated until referenced. Instantiation
+    * causes them to be registered. So, we need to reference the modules to get them registered. And, in turn, they need
+    * to reference all the objects they use so they can be registered. This logic is handled in this function which is
+    * only called by Scrupal.beforeStart after the configuration has been obtained.
+    */
+  private[scrupal] def bootstrap(modules_to_bootstrap: Seq[String] ) : Unit = {
+    // First of all, nothing happens without the CoreModule. Bootstrap it first so we have CoreSchema and other
+    // things available
+    CoreModule.bootstrap
 
-      // For each type in the module ...
-      mod.types foreach { case typ: Type =>
-        require(typ != null)
-        // Touch the type by asking for it's id's length. This just makes sure it gets instantiated and thus registered
-        val symbol: Symbol = typ.id
-        require(symbol.name.length > 0)
-      }
-      mod.features foreach { case feature: Feature =>
-        require(feature != null)
-        // Touch the feature by asking for it's id's length. This just makes sure it gets instantiated & registered
-        require(feature.id.name.length > 0)
-      }
-      mod.entities foreach { case entity : Entity =>
-        require(entity != null)
-        require(entity.id.name.length > 0)
+    // Now that core is done, let's do the standard modules that come with the Core
+    EchoModule.bootstrap
+
+    // In case this is a brand new installation with no sites in the database,
+    // create the default site by poking it
+    require(DefaultSite.label.size > 0)
+
+    // Now we go through the configured modules
+    for (class_name ← modules_to_bootstrap) {
+      findModuleOnClasspath(class_name) match {
+        case Some(module) ⇒
+        case None ⇒ log.warn("Could not locate module with class name: " + class_name)
       }
     }
+  }
+
+  private[scrupal] def findModuleOnClasspath(name: String) : Option[Module] = {
+    None // TODO: Write ClassLoader code to load foreign modules on the classpath - maybe use OSGi ?
   }
 
   private[scrupal] def installSchemas(implicit context: DBContext) : Unit = {

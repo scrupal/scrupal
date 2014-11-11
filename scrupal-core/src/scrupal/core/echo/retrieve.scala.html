@@ -1,0 +1,6 @@
+@(id: String)(implicit ctxt: scrupal.core.api.Context)
+@import scrupal.core.views.html._
+@pages.plainPage("Retrieve - " + id) {
+<h1>Retrieve - @id</h1>
+@debug.display_context(ctxt)
+}

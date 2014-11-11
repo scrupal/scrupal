@@ -18,7 +18,7 @@
 package scrupal.core.api
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{BSONBoolean, BSONValue, BSONDocument}
+import reactivemongo.bson.{BSONBoolean, BSONDocument}
 import scrupal.core.{TheBoolean_t, BundleType}
 import scrupal.utils.{OSSLicense, Patterns, Version}
 
@@ -70,7 +70,7 @@ trait Describable {
   def isDescribed : Boolean = ! description.isEmpty
 }
 
-/** Something that can be configured */
+/** Something that has settings that can be specified and changed */
 trait Settingsable extends SettingsInterface {
   def settingsType : BundleType
   def settingsDefault : BSONDocument
@@ -89,10 +89,12 @@ trait Settingsable extends SettingsInterface {
   def setBoolean(path: String, value: Boolean) : Unit = settings.setBoolean(path, value)
 }
 
+object enableSettings extends BundleType('enableSettings, "enableSettings", Map("enabled" → TheBoolean_t))
+
 /** Something that can be enabled or disabled */
 trait Enablable extends Settingsable {
   final val enabled_key = "enabled"
-  def settingsType = BundleType('enableSettings, "enableSettings", Map(enabled_key → TheBoolean_t))
+  def settingsType : BundleType = enableSettings
   def settingsDefault : BSONDocument = BSONDocument(Map(enabled_key → BSONBoolean(value=true)))
   def isEnabled = getBoolean(enabled_key).get
   def enable() : this.type = { setBoolean(enabled_key,value=true); this }
@@ -135,3 +137,7 @@ trait Facetable {
   def facet(name:String): Option[Facet]= facets.get(name)
 }
 
+/** Something that participates in runtime bootstrap at startup */
+trait Bootstrappable {
+  private[scrupal] def bootstrap : Unit
+}

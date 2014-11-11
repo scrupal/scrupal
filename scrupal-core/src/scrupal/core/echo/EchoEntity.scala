@@ -16,7 +16,7 @@ object EchoEntity extends Entity {
 
   def kind: Symbol = 'Echo
 
-  def path: String = ""
+  def path: String = "echo"
 
   def instanceType: BundleType = BundleType.Empty
 
@@ -29,7 +29,7 @@ object EchoEntity extends Entity {
   def description: String = "An entity that stores nothing and merely echos its requests"
 
   override protected val worker =
-    system.actorOf(Props(classOf[EchoWorker], this), "EchoWorker")
+    system.actorOf(Props(classOf[EchoWorker]), "EchoWorker")
 
   class EchoWorker extends Actor with ActorLogging {
     def receive : Receive = {
@@ -37,6 +37,7 @@ object EchoEntity extends Entity {
       case a: Action[_, _] =>
       case Create(id: String, instance: BSONDocument, ctxt: Context) =>
       case Retrieve(id: String, ctxt: Context) =>
+        scrupal.core.echo.html.retrieve(id)(ctxt)
       case Update(id: String, fields: BSONDocument, ctxt: Context) =>
       case Delete(id: String, ctxt: Context) =>
       case Query(fields: BSONDocument, ctxt: Context) =>

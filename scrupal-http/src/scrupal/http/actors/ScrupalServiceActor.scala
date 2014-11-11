@@ -3,8 +3,8 @@ package scrupal.http.actors
 import akka.actor.{Props, ActorRef, Actor}
 import akka.util.Timeout
 import scrupal.core.Scrupal
-import scrupal.core.api.HttpContext
-import scrupal.http.controllers.Controller
+import scrupal.core.api.{Site, HttpContext}
+import scrupal.http.controllers.{EntityController, Controller}
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
@@ -29,9 +29,13 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   // val assets = new AssetsController
   // val webjars = new WebJarsController
 
+  // First, create all the controllers because routing depends on having controllers to make the routes.
+  val the_controllers = createControllers(scrupal)
+
   val the_router = createRouter(scrupal)
 
-  log.warn("Router: " + the_router)
+
+  log.warn("Router: " + the_router) // FIXME: turn down to trace when we're sure routing works
 
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
@@ -51,7 +55,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
       val sorted_controllers = Controller.all.sortBy { c => c.priority}
 
       if (sorted_controllers.isEmpty)
-        toss("No controllers found.")
+        toss("No controllers found")
 
       // Very first thing we want to always do is make sure Scrupal Is Ready
       val base_routing = scrupalIsReady(scrupal)
@@ -100,5 +104,10 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
   private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|reconfigure|doc|scaladoc)".r
    */
 
+  def createControllers(scrupal: Scrupal) : Seq[Controller] = {
+    Site.forEachEnabled { site ⇒
+      new EntityController('entity, 0, site)
+    }
+  }
 }
 

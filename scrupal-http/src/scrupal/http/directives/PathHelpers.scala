@@ -11,7 +11,7 @@ import spray.routing.Directives._
  * Created by reidspencer on 11/10/14.
  */
 trait PathHelpers {
-/* FIXME: Refuses To Compile
+  /* FIXME: Refuses To Compile
   type SegmentsResult[T <: HList] = shapeless.::[String,shapeless.::[T,HNil]]
 
   def rawPathPrefixWithMatch[T <: HList](segment: String, provided: T = HNil) : Directive[SegmentsResult[T]] = {
@@ -54,6 +54,8 @@ trait PathHelpers {
     }
   }
 }
+ */
+}
 
 /**
  * Spray's PathEnd matches trailing optional slashes... we can't have that
@@ -64,5 +66,4 @@ object PathEndNoSlash extends PathMatcher[HNil] {
     case Path.Empty ⇒ PathMatcher.Matched.Empty
     case _          ⇒ PathMatcher.Unmatched
   }
- */
 }

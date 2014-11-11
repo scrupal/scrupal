@@ -72,7 +72,9 @@ case class EntityController(id: Identifier, priority: Int, theSite: Site)
     site { aSite ⇒
       validate(aSite == theSite, s"Expected site ${theSite.name} but got ${aSite.name}") {
         get {
-          complete("get")
+          pathPrefix("echo") {
+            complete("This is echo")
+          }
         } ~
           put {
             complete("put")
@@ -88,6 +90,29 @@ case class EntityController(id: Identifier, priority: Int, theSite: Site)
           }
       }
     }
+  }
+
+  def entity_route(entity: Entity) : Route = {
+    get {
+      pathPrefix("echo") {
+        complete("This is echo")
+      }
+    } ~
+      put {
+        complete("put")
+      } ~
+      post {
+        complete("post")
+      } ~
+      delete {
+        complete("delete")
+      } ~
+      options {
+        complete("options")
+      }
+  }
+}
+
   }
 
   /*

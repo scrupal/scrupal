@@ -33,7 +33,7 @@ case class Feature(
   id: Symbol,
   description: String,
   implemented: Boolean = true
-) extends StorableRegistrable[Feature] with Describable with Enablable with ModuleOwned {
+) extends StorableRegistrable[Feature] with Describable with Enablable with ModuleOwned with Bootstrappable {
   def registry = Feature
   def asT = this
 
@@ -51,6 +51,8 @@ case class Feature(
     * @return
     */
   def apply() : Boolean = isEnabled
+
+  private[scrupal] def bootstrap = {}
 
 }
 

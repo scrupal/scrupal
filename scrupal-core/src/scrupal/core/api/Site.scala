@@ -22,6 +22,7 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 import scrupal.core.Node
+import scrupal.core.echo.EchoApp
 
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
 import scrupal.utils.{AbstractRegistry, Registry}
@@ -61,6 +62,9 @@ object BasicSite {
   implicit val BasicSiteHandler = Macros.handler[BasicSite]
 }
 
+object DefaultSite
+  extends BasicSite('Default, "Default", "The Default Scrupal Site", "localhost", Node.Empty, Seq(EchoApp),
+                    requireHttps = false, modified=Some(DateTime.now()), created=Some(DateTime.now()))
 
 object Site extends Registry[Site] {
   val registrantsName: String = "site"
@@ -83,6 +87,10 @@ object Site extends Registry[Site] {
   }
 
   def forHost(hostName: String) = _byhost.lookup(hostName)
+
+  def forEachEnabled[T](f : Site ⇒ T) : Seq[T] = {
+    for ( s ← all if s.isEnabled ) yield { f(s) }
+  }
 
   implicit lazy val SiteReader = new VariantBSONDocumentReader[Site] {
     def read(doc: BSONDocument) : Site = {
