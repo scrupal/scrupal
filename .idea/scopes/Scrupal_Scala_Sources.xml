@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Scrupal Scala Sources" pattern="src[scrupal-config]:scrupal.config..*||src[scrupal-db]:scrupal.db..*||src[scrupal-core]:scrupal.core..*||src[scrupal-core]:scrupal.core.actors..*||src[scrupal-core]:scrupal.core.api..*||src[scrupal-core]:scrupal.core.echo..*||src[scrupal-http]:scrupal.http.cache..*||src[scrupal-http]:scrupal.http.views..*||src[scrupal-http]:scrupal.http..*||src[scrupal-http]:scrupal.http.directives..*||src[scrupal-http]:scrupal.http.controllers..*||src[scrupal-utils]:scrupal.utils..*" />
+</component>
