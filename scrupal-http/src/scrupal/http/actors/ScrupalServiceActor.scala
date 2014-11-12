@@ -3,7 +3,7 @@ package scrupal.http.actors
 import akka.actor.{Props, ActorRef, Actor}
 import akka.util.Timeout
 import scrupal.core.Scrupal
-import scrupal.core.api.{Site, HttpContext}
+import scrupal.core.api.{Site, SprayContext}
 import scrupal.http.controllers.{EntityController, Controller}
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
@@ -62,9 +62,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
 
       // Now construct the routes from the prioritized set of controllers we found
       sorted_controllers.foldLeft[Route](reject) { (route, ctrlr) =>
-        route ~ pathPrefix(ctrlr.context_path) {
-          ctrlr.routes(scrupal)
-        }
+        route ~ ctrlr.routes(scrupal)
       }
     } match {
       case Success(r) ⇒ r
@@ -72,10 +70,10 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
         path("") {
           get {
             respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
-              requestInstance { request =>
+              extract( x ⇒ x ) { request_context ⇒
                 complete {
-                  val context = HttpContext(scrupal, request)
-                  _root_.scrupal.http.views.html.RouteConstructionFailure(xcptn)(context).toString()
+                  val scrupal_context = SprayContext(scrupal, request_context)
+                  _root_.scrupal.http.views.html.RouteConstructionFailure(xcptn)(scrupal_context).toString()
                 }
               }
             }

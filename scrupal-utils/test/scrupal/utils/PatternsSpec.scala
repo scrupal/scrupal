@@ -4,9 +4,7 @@ import org.specs2.mutable.Specification
 
 import scala.util.matching.Regex
 
-/**
- * Created by reidspencer on 11/10/14.
- */
+/** Test Suite For Patterns */
 class PatternsSpec extends Specification {
 import Patterns._
 
@@ -26,6 +24,7 @@ import Patterns._
     }
   }
 
+  // TODO: Finish writing Patterns test cases
   "atLeastOne" should {
     "match at least one item" in {
       pending

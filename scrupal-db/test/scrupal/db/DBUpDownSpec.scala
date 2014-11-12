@@ -9,16 +9,17 @@ class DBUpDownSpec extends Specification {
 
   "DBContext" should {
     "startup and shutdown only once" in {
+      val n = DBContext.numberOfStartups
       DBContext.startup()
       DBContext.startup()
-      DBContext.numberOfStartups must beEqualTo(2)
+      DBContext.numberOfStartups must beEqualTo(n+2)
       DBContext.isStartedUp must beTrue
       DBContext.shutdown()
-      DBContext.numberOfStartups must beEqualTo(1)
+      DBContext.numberOfStartups must beEqualTo(n+1)
       DBContext.isStartedUp must beTrue
       DBContext.shutdown()
-      DBContext.numberOfStartups must beEqualTo(0)
-      DBContext.isStartedUp must beFalse
+      DBContext.numberOfStartups must beEqualTo(n+0)
+      DBContext.isStartedUp must beEqualTo(n != 0)
     }
   }
 }

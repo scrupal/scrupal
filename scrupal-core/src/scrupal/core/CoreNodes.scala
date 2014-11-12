@@ -169,6 +169,140 @@ object LayoutNode {
   implicit val LayoutNodeHandler: BSONHandler[BSONDocument, LayoutNode] = Macros.handler[LayoutNode]
 }
 
+/** Generate content with Scala code
+  *
+  * For the professional programmer maintaining a site, this is essentially an Enumeratee that reads a stream of
+  * bytes (potentially empty) and produces a stream as output. The output is the generated content. The full power of
+  * Scala is at your fingertips with REPL like simplicity. The code is dynamically compiled and executed to produce
+  * the filter. Like Scrupaleasy, these can be producers, consuemrs or filters and are intented to execute stand-alone or
+  * in a pipeline.
+  * @param _id
+  * @param description
+  * @param coe
+  * @param modified
+  * @param created
+  * @param kind
+  */
+case class ScalaNode (
+  _id : Identifier,
+  description: String,
+  coe: String,
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None,
+  final val kind : Symbol = 'Scala
+) extends Node {
+  override val mediaType: MediaType = MediaTypes.`text/html`
+
+  def apply(ctxt: Context): Future[Array[Byte]] = Future.successful {
+    // TODO: Implement ScalaNode using Java ScriptEngine
+    // import javax.script.ScriptEngineManager
+    // val e = new ScriptEngineManager().getEngineByName("scala")
+    // e.eval("1 to n.asInstanceOf[Int] foreach println")
+    Array[Byte]()
+  }
+}
+
+/** Generate content With an operating system command
+  *
+  * This will invoke a local operating system command to generate content. As this forks the VM it should be
+  * restricted to administrative users. However, for those cases where python, bash, perl or a simple grep/awk/sed
+  * pipeline is the best thing, this is the tool to use. It simply passes the string to the local operating system's
+  * command processor for interpretation and execution. Whatever it generates is Streamed as a result to this node.
+  *
+  * @param _id
+  * @param description
+  * @param command
+  * @param modified
+  * @param created
+  * @param kind
+  */
+case class CommandNode (
+  _id : Identifier,
+  description: String,
+  command: String,
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None,
+  final val kind : Symbol = 'Scala
+) extends Node {
+  override val mediaType: MediaType = MediaTypes.`text/html`
+
+  def apply(ctxt: Context): Future[Array[Byte]] = Future.successful {
+    // TODO: implement CommandNode
+    Array[Byte]()
+  }
+}
+
+/** Generate Content with TwirlScript Template
+  * This allows users to create template type content in their browser. It looks a bit like twirl in that it is simply
+  * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
+  * You can substitute a node (@{node('mynode}), values from the [[scrupal.core.api.Context]] (@{context.`var_name`}),
+  * predefined variables/functions (@{datetime}), etc.
+  */
+case class TwirlScriptNode (
+  _id : Identifier,
+  description: String,
+  twirl_script: String,
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None,
+  final val kind : Symbol = 'Scala
+) extends Node {
+  override val mediaType: MediaType = MediaTypes.`text/html`
+
+  def apply(ctxt: Context): Future[Array[Byte]] = Future.successful {
+    // TODO: implement the TwirlScriptNode content generator
+    Array[Byte]()
+  }
+}
+
+/** Generate Content With Scrupalesy
+  *
+  * This gets to be fun. Scrupaleasy is a Scala DSL designed to be a very simple language to help generate some content
+  * Unlike the TwirlScriptNode, this is not a template but an actual program to generate content. Scrupaleasy should be
+  * dead simple: designed for non-programmers. For compatibility with TwirlScript it can access any of the same values
+  * with @{...} syntax but these can then be processed as UTF-8 characters, e.g. such as filtering. Setting up a Unix
+  * like piepeline should be its top construction, essentially { block1 } | { block2 } would compute output from
+  * block1 which is given as input to block2 which then yields the result. All Scrupaleasy scripts are either consumers,
+  * producers or filters. Consumers eat input but produce no output. Instead they can "throw" an error. Consumers are
+  * used to stop content from happening. They usually come at the end of a pipe to validate content. Producers ignore
+  * their input but produce output. They are usually the first thing in a pipeline. Filters read their input and
+  * convert it to some output. They are usually in the middle of a pipeline. You can compose a processing pipeline like
+  * this by invoking a Scrupaleasy thing from another. The DSL should provide:
+  *
+  * - Basic if/else and select-from-options logic flow
+  *
+  * - Functions to manipulate streams of characters (e.g. length, regex match, substring, beginsWith, etc.)
+  *
+  * - The infamous munge function for text editing of Mac lore
+  *
+  * - Insertions with a TwirlScript element: `@{foo(...)}`
+  *
+  * - Require statements: like Scala require and throws an exception to stop pipeline processing
+  *
+  * - A lot of fun and joy for Scrupal authors :)
+  *
+  * @param _id
+  * @param description
+  * @param scrupalesy
+  * @param modified
+  * @param created
+  * @param kind
+  */
+case class ScrupalesyNode (
+  _id : Identifier,
+  description: String,
+  scrupalesy: String,
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None,
+  final val kind : Symbol = 'Scala
+) extends Node {
+  override val mediaType: MediaType = MediaTypes.`text/html`
+
+  def apply(ctxt: Context): Future[Array[Byte]] = Future.successful {
+    // TODO: Implement ScrupaleasyNode
+    Array[Byte]()
+  }
+}
+
 object Node {
 
   lazy val Empty = MessageNode('empty, "Empty Node", "text-danger", Html("This node is completely empty."))

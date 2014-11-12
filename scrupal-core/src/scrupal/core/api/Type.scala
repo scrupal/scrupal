@@ -17,7 +17,6 @@
 package scrupal.core.api
 
 import reactivemongo.bson._
-import scrupal.core.api.Bootstrappable
 
 import scala.language.existentials
 import scala.util.{Success, Failure, Try}

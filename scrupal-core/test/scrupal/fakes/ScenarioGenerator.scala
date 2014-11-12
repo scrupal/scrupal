@@ -65,7 +65,7 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
       genModule(i)
     }
     val name = s"Application-$id"
-    BasicApplication(Symbol(name), name, name, name, modules)
+    BasicApplication(Symbol(name), name, name, modules)
   }
 
   def genSite(id: Int, apps: Int, mods: Int, ents: Int, instances: Int, nodes: Int) = {

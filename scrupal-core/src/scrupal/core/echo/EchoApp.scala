@@ -1,7 +1,7 @@
 package scrupal.core.echo
 
 import org.joda.time.DateTime
-import scrupal.core.api.{Module, Application}
+import scrupal.core.api.{BasicApplication, Module, Application}
 
 /** An Echoing Application
   * Almost the simplest of applications to construct this is mostly a test of the fundamentals but may have some
@@ -18,8 +18,6 @@ object EchoApp extends Application {
   val name: String = "Echo Application"
 
   val description: String = "An Application For echoing web requests back to your browser"
-
-  val path: String = "echo"
 
   val kind: Symbol = 'Echo
 

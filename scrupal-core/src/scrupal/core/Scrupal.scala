@@ -42,7 +42,6 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
   val _configuration : AtomicReference[Configuration] = new AtomicReference[Configuration](config)
   val _executionContext : AtomicReference[ExecutionContext] = new AtomicReference[ExecutionContext](ec)
 
-
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = {
     val config = _configuration.get
     require(config != null)
@@ -84,8 +83,13 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	 */
 	def beforeStart() = {
 
+
     val config = onLoadConfig(Configuration.default)
+
     _configuration.set(config)
+
+    // FIXME: This should be obtained from configuration instead
+    _executionContext.set(scala.concurrent.ExecutionContext.Implicits.global)
 
     // Get the database started up
     DBContext.startup()
@@ -104,9 +108,10 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
     require(CoreModule.id == 'Core)
 
     // TODO: scan classpath for additional modules
+    val configured_modules = Seq.empty[String]
 
     // We are now ready to process the registered modules
-    Module.bootstrap(Seq.empty[String])
+    Module.bootstrap(configured_modules)
 
     // Load the configuratoin
     load(config, dbc)

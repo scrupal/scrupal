@@ -139,5 +139,5 @@ trait Facetable {
 
 /** Something that participates in runtime bootstrap at startup */
 trait Bootstrappable {
-  private[scrupal] def bootstrap : Unit
+  private[scrupal] def bootstrap() : Unit
 }

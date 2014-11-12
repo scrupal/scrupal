@@ -5,7 +5,7 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
-import scrupal.utils.Registry
+import scrupal.utils.{AbstractRegistry, Patterns, Registry}
 
 /** A Scrupal Application
   * Applications are a fundamental unit of organization in Scrupal. A Site defines the set of applications that are to
@@ -22,7 +22,7 @@ trait Application
     * This is the path at the start of the Site's URL that this application uses.
     * @return
     */
-  def path: String
+  def path: String = id.name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
 
   /** Applicable Modules
     * This modules are assigned (enabled) within this application
@@ -35,7 +35,6 @@ case class BasicApplication(
   id : Identifier,
   name: String,
   description: String,
-  path : String,
   modules: Seq[Module] = Seq.empty[Module],
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None
@@ -50,6 +49,23 @@ object BasicApplication {
 object Application extends Registry[Application] {
   def registryName = "Applications"
   def registrantsName = "application"
+
+  private[this] val _bypath = new AbstractRegistry[String, Application] {
+    def reg(app:Application) = _register(app.path,app)
+    def unreg(app:Application) = _unregister(app.path)
+  }
+
+  override def register(app: Application) : Unit = {
+    _bypath.reg(app)
+    super.register(app)
+  }
+
+  override def unregister(app: Application) : Unit = {
+    _bypath.unreg(app)
+    super.unregister(app)
+  }
+
+  def forPath(path: String) = _bypath.lookup(path)
 
   implicit lazy val ApplicationReader = new VariantBSONDocumentReader[Application] {
     def read(doc: BSONDocument) : Application = {

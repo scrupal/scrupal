@@ -43,9 +43,10 @@ trait Result[P] {
   val payload: P
 }
 
-trait BSONResult extends Result[BSONDocument]
-trait HTMLResult extends Result[Html]
-trait TextResult extends Result[String]
+case class TextResult(payload: String, disposition: Disposition = Successful) extends Result[String]
+case class HTMLResult(payload: Html, disposition: Disposition = Successful) extends Result[Html]
+case class BSONResult(payload: BSONDocument, disposition: Disposition = Successful) extends Result[BSONDocument]
+// case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
 
 /** An Action Invokable On An Entity
   *

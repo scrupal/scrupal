@@ -17,12 +17,18 @@
 
 package scrupal.core.api
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{Props, Actor, ActorLogging}
+import akka.pattern.ask
+import akka.util.Timeout
 import reactivemongo.bson._
 import scrupal.core.BundleType
 import scrupal.db.{VariantStorableRegistrable, StorableRegistrable, IdentifierDAO, ScrupalDB}
 
 import scrupal.utils.{Pluralizer, Registry}
+
+import scala.concurrent.ExecutionContext
 
 object Entity extends Registry[Entity] {
   val registrantsName: String = "entity"
@@ -80,6 +86,7 @@ trait Entity
       case a: Action[_, _] =>
       case Create(id: String, instance: BSONDocument, ctxt: Context) =>
       case Retrieve(id: String, ctxt: Context) =>
+        sender ! TextResult("Message Response")
       case Update(id: String, fields: BSONDocument, ctxt: Context) =>
       case Delete(id: String, ctxt: Context) =>
       case Query(fields: BSONDocument, ctxt: Context) =>
@@ -90,7 +97,9 @@ trait Entity
     }
   }
 
-  protected val worker = system.actorOf(Props(classOf[DefaultWorker], this), "EntityWorker-" + label)
+  protected val worker  = system.actorOf(Props(classOf[DefaultWorker], this), "EntityWorker-" + label)
+
+  protected implicit val timeout : Timeout = Timeout(8000,TimeUnit.MILLISECONDS)
 
 
   /** Fetch a single instance of this entity kind
@@ -99,7 +108,11 @@ trait Entity
     * @param id The identifier of the instance to be retrieved
     * @return The JsObject representing the payload of the entity retrieved
     */
-  def retrieve(id: String, ctxt: Context)  = worker ! Retrieve(id, ctxt)
+  def retrieve(id: String, ctxt: Context) = {
+    ctxt.scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+      worker.ask(Retrieve(id, ctxt)).map { any ⇒ any.asInstanceOf[Result[_]] }
+    }
+  }
 
   /** Create a single instance of this entity kind
     * Presumably the entity
@@ -151,6 +164,6 @@ trait Entity
 
   def addFacet(id: String, name: String, facet: Facet, ctxt: Context) = worker ! AddFacet(id, name, facet, ctxt)
 
-  private[scrupal] def bootstrap = {}
+  private[scrupal] def bootstrap() = {}
 }
 

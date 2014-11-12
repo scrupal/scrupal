@@ -146,7 +146,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
-    twirl_api, reactivemongo, spray_http, scala_arm
+    twirl_api, reactivemongo, spray_http, spray_routing, scala_arm
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(

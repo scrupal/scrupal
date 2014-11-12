@@ -73,4 +73,6 @@ object Patterns {
   val URLPathable = "[-A-Za-z0-9_.~]{1,64}".r
 
   val Title = between(4,70,"[-\\s\\w\\d+:%!_{}|;<>,.?]".r)
+
+  val NotAllowedInUrl = "[^-\\w\\d._+|]".r
 }

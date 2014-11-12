@@ -1,9 +1,7 @@
 package scrupal.http.directives
 
 import shapeless.{HList, HNil}
-import spray.http.StatusCodes
 import spray.http.Uri.Path
-import spray.routing.PathMatcher.{Unmatched, Matched}
 import spray.routing._
 import spray.routing.Directives._
 
@@ -11,15 +9,7 @@ import spray.routing.Directives._
  * Created by reidspencer on 11/10/14.
  */
 trait PathHelpers {
-  /* FIXME: Refuses To Compile
-  type SegmentsResult[T <: HList] = shapeless.::[String,shapeless.::[T,HNil]]
-
-  def rawPathPrefixWithMatch[T <: HList](segment: String, provided: T = HNil) : Directive[SegmentsResult[T]] = {
-    val path : Path = Path.SingleSlash ++ Path(segment) ++ Path.SingleSlash
-    val provisions = shapeless.::(segment, provided)
-    val matcher = PathMatcher(path, provisions)
-    rawPathPrefix(matcher) hmap { x ⇒ val t = x.tail; val s = x.head ; HList(s,t)}
-  }
+  type SegmentsResult[T] = shapeless.::[String,shapeless.::[T,HNil]]
 
   def rawPathPrefixWithMatch[T](segments: Map[String,T]) : Directive[SegmentsResult[T]] = {
     val matcher = {
@@ -50,11 +40,12 @@ trait PathHelpers {
    */
   def directories[T](segments: Map[String,T]) = new Directive[SegmentsResult[T]] {
     def happly(f: SegmentsResult[T] ⇒ Route) : Route = {
-      rawPathPrefixWithMatch(segments).happly(f)
+      // match a slash followed by any of the segments in the map
+      rawPathPrefix(Slash) {
+        rawPathPrefixWithMatch(segments).happly(f)
+      }
     }
   }
-}
- */
 }
 
 /**

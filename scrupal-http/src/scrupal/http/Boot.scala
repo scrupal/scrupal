@@ -7,8 +7,8 @@ import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
 import scrupal.core.Scrupal
+import scrupal.core.api.Site
 import scrupal.http.actors.ScrupalServiceActor
-import scrupal.http.controllers.Controller
 import scrupal.utils.{ScrupalComponent, DateTimeHelpers}
 import spray.can.Http
 
@@ -56,11 +56,23 @@ object Boot extends App with ScrupalComponent
   }
 
   def checkReady() = {
-    // First, validate that there are no duplicate controller path contexts .. that would be bad :)
-    val routeNames = Controller.all.map { cntrlr => cntrlr.context_path }
-    val distinct_names = routeNames.distinct
-
-    if (distinct_names.size != routeNames.size)
-      toss("Cowardly refusing to start with conflicting controller context paths:" + routeNames)
+    for (s ← Site.all if s.isEnabled) {
+      val app_names = for (app ← s.applications if app.isEnabled) yield {
+        for (mod ← app.modules if mod.isEnabled) yield {
+          val paths = for (ent ← mod.entities if mod.isEnabled) yield {ent.path }
+          val distinct_paths = paths.distinct
+          if (paths.size != distinct_paths.size) {
+            toss(
+              s"Cowardly refusing to start with duplicate entity paths in module ${mod.label } in application ${mod
+                .label } in site ${s.label }")
+          }
+        }
+        app.label
+      }
+      val distinct_app_names = app_names.distinct
+      if (app_names.size != distinct_app_names.size) {
+        toss(s"Cowardly refusing to start with duplicate application names in site ${s.label }")
+      }
+    }
   }
 }

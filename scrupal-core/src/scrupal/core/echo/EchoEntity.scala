@@ -37,7 +37,8 @@ object EchoEntity extends Entity {
       case a: Action[_, _] =>
       case Create(id: String, instance: BSONDocument, ctxt: Context) =>
       case Retrieve(id: String, ctxt: Context) =>
-        scrupal.core.echo.html.retrieve(id)(ctxt)
+        val result = new HTMLResult(scrupal.core.echo.html.retrieve(id)(ctxt))
+        sender ! result
       case Update(id: String, fields: BSONDocument, ctxt: Context) =>
       case Delete(id: String, ctxt: Context) =>
       case Query(fields: BSONDocument, ctxt: Context) =>
