@@ -176,7 +176,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
   }
 
   /** Mapping of entity paths to Entities */
-  type EntityMap = Map[String,Entity]
+  type EntityMap = Map[String,(String,Entity)]
 
   /** Mapping of application paths to Applications and their corresponding EntityMap  */
   type AppEntityMap = Map[String,(Application,EntityMap)]
@@ -214,7 +214,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
                   entity ← mod.entities if entity.isEnabled;
                   name ← Seq(entity.path, entity.plural_path)
                 ) yield {
-                  name → entity
+                  name → (name → entity)
                 }
               }.toMap
             }
@@ -233,7 +233,6 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
     * around to it. The point of this is to hide the use of actors within Scrupal and have a nice, simple, quickly
     * responding synchronous call in order to obtain the Future to the eventual result of the action.
     * @param action The action to act upon (a Request => Result[P] function).
-    * @tparam P The type of the payload returned by the action
     * @return A Future to the eventual Result[P]
     */
   def handle(action: Action) : Future[Result[_]] = {

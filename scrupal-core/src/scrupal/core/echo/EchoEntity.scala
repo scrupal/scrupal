@@ -43,7 +43,7 @@ object EchoEntity extends Entity {
 
   override def retrieve(context: ApplicationContext, id: String) = {
     new Retrieve(context, id) {
-      override def apply() : HTMLResult = {
+      override def apply : HTMLResult = {
         HTMLResult(scrupal.core.echo.html.retrieve(id)(context))
       }
     }

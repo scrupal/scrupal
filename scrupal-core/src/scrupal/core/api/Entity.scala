@@ -24,7 +24,7 @@ import scrupal.db.{VariantStorableRegistrable, IdentifierDAO, ScrupalDB}
 import scrupal.utils.{Patterns, Pluralizer}
 
 trait EntityCommand extends Action {
-  def apply : Result[_] = BSONResult(BSONDocument(), Indeterminate)
+  def apply : Result[_]
 }
 
 trait EntityCollectionCommand extends EntityCommand {
@@ -33,7 +33,7 @@ trait EntityCollectionCommand extends EntityCommand {
 
 trait EntityInstanceCommand extends EntityCommand {
   def id: String
-  def what: String
+  def what: List[String]
 }
 
 /** Provider of EntityCommands for command parameters
@@ -78,51 +78,58 @@ trait EntityCommandProvider {
   def delete(context: ApplicationContext, id: String) : Delete
 
   /** Query Command (OPTIONS/plural) */
-  def query(context: ApplicationContext, fields: BSONDocument) : Query
+  def query(context: ApplicationContext, id: String, fields: BSONDocument) : Query
 
   /** Create Facet Command (POST/singular) */
-  def createFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument) : CreateFacet
+  def createFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument) : CreateFacet
 
   /** RetrieveAspect Command (GET/singular) */
-  def retrieveFacet(context: ApplicationContext, id: String, what: String) : RetrieveFacet
+  def retrieveFacet(context: ApplicationContext, id: String, what: List[String]) : RetrieveFacet
 
   /** UpdateAspect Command (PUT/singular) */
-  def updateFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument) : UpdateFacet
+  def updateFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument) : UpdateFacet
 
   /** XXX Command (DELETE/singular) */
-  def deleteFacet(context: ApplicationContext, id: String, what: String) : DeleteFacet
+  def deleteFacet(context: ApplicationContext, id: String, what: List[String]) : DeleteFacet
 
   /** XXX Command (OPTIONS/singular) */
-  def queryFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument) : QueryFacet
+  def queryFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument) : QueryFacet
 
   /** XXX Command (POST/singular) */
-  def invoke(context: ApplicationContext, id: String, what: String, args: BSONDocument) : Invoke
+  def invoke(context: ApplicationContext, id: String, what: List[String], args: BSONDocument) : Invoke
 }
 
-case class Create(context: ApplicationContext, id: String, instance: BSONDocument) extends EntityCollectionCommand
+abstract class Create(val context: ApplicationContext, val id: String, val instance: BSONDocument)
+  extends EntityCollectionCommand
 
-case class Retrieve(context: ApplicationContext, id: String) extends EntityCollectionCommand
+abstract class Retrieve(val context: ApplicationContext, val id: String)
+  extends EntityCollectionCommand
 
-case class Update(context: ApplicationContext, id: String, fields: BSONDocument) extends EntityCollectionCommand
+abstract class Update(val context: ApplicationContext, val id: String, fields: BSONDocument)
+  extends EntityCollectionCommand
 
-case class Delete(context: ApplicationContext, id: String) extends EntityCollectionCommand
+abstract class Delete(val context: ApplicationContext, val id: String)
+  extends EntityCollectionCommand
 
-case class Query(context: ApplicationContext, id: String, fields: BSONDocument) extends EntityCollectionCommand
+abstract class Query(val context: ApplicationContext, val id: String, fields: BSONDocument)
+  extends EntityCollectionCommand
 
-case class CreateFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument)
+abstract class CreateFacet(val context: ApplicationContext, val id: String, val what: List[String], val args: BSONDocument)
   extends EntityInstanceCommand
 
-case class RetrieveFacet(context: ApplicationContext, id: String, what: String) extends EntityInstanceCommand
-
-case class UpdateFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument)
+abstract class RetrieveFacet(val context: ApplicationContext, val id: String, val what: List[String])
   extends EntityInstanceCommand
 
-case class DeleteFacet(context: ApplicationContext, id: String, what: String) extends EntityInstanceCommand
-
-case class QueryFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument)
+abstract class UpdateFacet(val context: ApplicationContext, val id: String, val what: List[String], val args: BSONDocument)
   extends EntityInstanceCommand
 
-case class Invoke(context: ApplicationContext, id: String, what: String, args: BSONDocument)
+abstract class DeleteFacet(val context: ApplicationContext, val id: String, val what: List[String])
+  extends EntityInstanceCommand
+
+abstract class QueryFacet(val context: ApplicationContext, val id: String, val what: List[String], val args: BSONDocument)
+  extends EntityInstanceCommand
+
+abstract class Invoke(val context: ApplicationContext, val id: String, val what: List[String], val args: BSONDocument)
   extends EntityInstanceCommand
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal.
@@ -157,34 +164,102 @@ abstract class Entity
     */
   val actions: Map[Symbol, Action] = Map()
 
-  def create(context: ApplicationContext, id: String, instance: BSONDocument) : Create = Entity.NoopCreate
+  def create(context: ApplicationContext, id: String, instance: BSONDocument)
+    : Create = NoopCreate(context, id, instance)
 
-  def retrieve(context: ApplicationContext, id: String) : Retrieve = Entity.NoopRetrieve
+  def retrieve(context: ApplicationContext, id: String)
+    : Retrieve = NoopRetrieve(context, id)
 
-  def update(context: ApplicationContext, id: String, fields: BSONDocument) : Update = Entity.NoopUpdate
-  def delete(context: ApplicationContext, id: String) : Delete = Entity.NoopDelete
-  def query(context: ApplicationContext, fields: BSONDocument) : Query = Entity.NoopQuery
-  def createFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument)
-    : CreateFacet = Entity.NoopCreateFacet
+  def update(context: ApplicationContext, id: String, fields: BSONDocument)
+    : Update = NoopUpdate(context, id, fields)
 
-  /** RetrieveAspect Command (GET/singular) */
-  def retrieveFacet(context: ApplicationContext, id: String, what: String) : RetrieveFacet = Entity.NoopRetrieveFacet
+  def delete(context: ApplicationContext, id: String)
+    : Delete = NoopDelete(context, id)
 
-  /** UpdateAspect Command (PUT/singular) */
-  def updateFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument)
-    : UpdateFacet = Entity.NoopUpdateFacet
+  def query(context: ApplicationContext, id: String, fields: BSONDocument)
+    : Query = NoopQuery(context, id, fields)
 
-  /** XXX Command (DELETE/singular) */
-  def deleteFacet(context: ApplicationContext, id: String, what: String) : DeleteFacet = Entity.NoopDeleteFacet
+  def createFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
+    : CreateFacet = NoopCreateFacet(context, id, what, args)
 
-  /** XXX Command (OPTIONS/singular) */
-  def queryFacet(context: ApplicationContext, id: String, what: String, args: BSONDocument) : QueryFacet = Entity.NoopQueryFacet
+  def retrieveFacet(context: ApplicationContext, id: String, what: List[String])
+    : RetrieveFacet = NoopRetrieveFacet(context, id, what)
 
-  /** XXX Command (POST/singular) */
-  def invoke(context: ApplicationContext, id: String, what: String, args: BSONDocument) : Invoke = Entity.NoopInvoke
+  def updateFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
+    : UpdateFacet = NoopUpdateFacet(context, id, what, args)
+
+  def deleteFacet(context: ApplicationContext, id: String, what: List[String])
+    : DeleteFacet = NoopDeleteFacet(context, id, what)
+
+  def queryFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
+    : QueryFacet = NoopQueryFacet(context, id, what, args)
+
+  def invoke(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
+    : Invoke = NoopInvoke(context, id, what, args)
 
   private[scrupal] def bootstrap() = {}
 }
+
+trait NoopAction {
+  def apply : Result[_] = BSONResult(BSONDocument(), Indeterminate)
+}
+
+case class NoopCreate(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val instance: BSONDocument) extends Create(context, id,  instance) with NoopAction
+
+case class NoopRetrieve(
+  override val context: ApplicationContext,
+  override val id: String) extends Retrieve(context, id) with NoopAction
+
+case class NoopUpdate(
+  override val context: ApplicationContext,
+  override val id: String, fields: BSONDocument) extends Update(context, id, fields) with NoopAction
+
+case class NoopDelete(
+  override val context: ApplicationContext,
+  override val id: String) extends Delete(context, id) with NoopAction
+
+case class NoopQuery(
+  override val context: ApplicationContext,
+  override val id: String, fields: BSONDocument) extends Query(context, id, fields) with NoopAction
+
+case class NoopCreateFacet(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val what: List[String],
+  override val args: BSONDocument
+) extends CreateFacet(context, id, what, args) with NoopAction
+
+case class NoopRetrieveFacet(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val what: List[String]) extends RetrieveFacet(context, id, what) with NoopAction
+
+case class NoopUpdateFacet(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val what: List[String],
+  override val args: BSONDocument) extends UpdateFacet(context, id, what, args) with NoopAction
+
+case class NoopDeleteFacet(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val what: List[String]) extends DeleteFacet(context, id, what) with NoopAction
+
+case class NoopQueryFacet(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val what: List[String],
+  override val args: BSONDocument) extends QueryFacet(context, id, what, args) with NoopAction
+
+case class NoopInvoke(
+  override val context: ApplicationContext,
+  override val id: String,
+  override val what: List[String],
+  override val args: BSONDocument) extends Invoke(context, id, what, args) with NoopAction
+
 
 object Entity extends scrupal.utils.Registry[Entity] {
   val registrantsName: String = "entity"
@@ -196,18 +271,6 @@ object Entity extends scrupal.utils.Registry[Entity] {
 
     def collectionName: String = "entities"
   }
-
-  lazy val NoopCreate = new Create(ApplicationContext.Empty, "", BSONDocument())
-  lazy val NoopRetrieve = new Retrieve(ApplicationContext.Empty, "")
-  lazy val NoopUpdate = new Update(ApplicationContext.Empty, "", BSONDocument())
-  lazy val NoopDelete = new Delete(ApplicationContext.Empty, "")
-  lazy val NoopQuery = new Query(ApplicationContext.Empty, "", BSONDocument())
-  lazy val NoopCreateFacet = new CreateFacet(ApplicationContext.Empty, "", "", BSONDocument())
-  lazy val NoopRetrieveFacet = new RetrieveFacet(ApplicationContext.Empty, "", "")
-  lazy val NoopUpdateFacet = new UpdateFacet(ApplicationContext.Empty, "", "", BSONDocument())
-  lazy val NoopDeleteFacet = new DeleteFacet(ApplicationContext.Empty, "", "")
-  lazy val NoopQueryFacet = new QueryFacet(ApplicationContext.Empty, "", "", BSONDocument())
-  lazy val NoopInvoke = new Invoke(ApplicationContext.Empty, "", "", BSONDocument())
 
 }
 

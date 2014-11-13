@@ -39,7 +39,7 @@ trait PathHelpers {
             stringExtractionPair2PathMatcher(prefix, provided)
         }.reduceLeft(_ | _)
     }
-    rawPathPrefix(matcher) hmap { x ⇒ x.head }
+    rawPathPrefix(matcher ~ Slash) hmap { x ⇒ x.head }
   }
 
 

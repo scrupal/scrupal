@@ -17,7 +17,7 @@
 
 package scrupal.http
 
-import scrupal.core.api.{Result, TextResult, HTMLResult}
+import scrupal.core.api.{ExceptionResult, Result, TextResult, HTMLResult}
 import spray.http.{HttpCharsets, MediaTypes, ContentType}
 import spray.httpx.marshalling.{ToResponseMarshaller, BasicMarshallers}
 
@@ -39,6 +39,7 @@ trait ScrupalMarshallers extends BasicMarshallers{
       r match {
         case h: HTMLResult ⇒ h.payload.body
         case t: TextResult ⇒ t.payload
+        case x: ExceptionResult ⇒ x.payload.toString
       }
     }
   }
