@@ -20,9 +20,7 @@ package scrupal.http.controllers
 import scrupal.core.Scrupal
 import scrupal.core.api.{Identifier, Type, Module}
 import scrupal.utils.{Registrable, Registry}
-// import play.twirl.api._
-// import spray.httpx.TwirlSupport
-import spray.routing.{Directives, Route}
+import spray.routing.{Route, Directives}
 
 /** Abstract Controller
   *
@@ -32,12 +30,6 @@ import spray.routing.{Directives, Route}
   * Created by reidspencer on 10/29/14.
   */
 trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Directives {
-
-  /** The contextual path prefix
-    * This is the first element of the path for any requests having to do with this controller.
-    *
-    */
-  val context_path: String
 
   /** The priority of this controller for routing
     * This affects the controller's placement in the list of controllers that form the route processing.

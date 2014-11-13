@@ -51,10 +51,6 @@ trait Context {
   def appName : String = "<NoApplication>"
   def appPath : String = "<NoPath>"
 
-  val entity : Option[Entity] = None
-  def entityName : String = "<NoEntity>"
-
-
   val themeProvider : String = "scrupal"
   val themeName : String = "amelia"
   val user : String = "guest"
@@ -103,17 +99,18 @@ class SiteContext(scrupal: Scrupal, theSite: Site, request: RequestContext) exte
   val modules: Seq[Module] = Module.all //FIXME: Should be just the ones for the site
 }
 
+object SiteContext {
+  lazy val Empty = new SiteContext(null, null, null)
+}
+
 class ApplicationContext(scrupal: Scrupal, theSite: Site, request: RequestContext, app: Application)
   extends SiteContext(scrupal, theSite, request) {
   override val application = Some(app)
   override val appName = app.name
   override val appPath = app.path
 }
-
-class EntityContext(scrupal: Scrupal, theSite: Site, request: RequestContext, app: Application, ent: Entity)
-  extends ApplicationContext(scrupal, theSite, request, app) {
-  override val entity = Some(ent)
-  override val entityName = ent._id.name
+object ApplicationContext {
+  lazy val Empty = new ApplicationContext(null, null, null, null)
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -130,11 +127,16 @@ class UserContext(scrupal: Scrupal, override val user: String, site: Site, reque
 /** Some utility applicators for constructing the various Contexts */
 object Context {
   def apply(scrupal: Scrupal, request: RequestContext) = new SprayContext(scrupal, request)
+
   def apply(scrupal: Scrupal, site: Site, request: RequestContext) = new SiteContext(scrupal, site, request)
+
+  def apply(scrupal: Scrupal, site: Site, request: RequestContext, app: Application) =
+    new ApplicationContext(scrupal, site, request, app)
+
+
   def apply(scrupal: Scrupal, user: String, site: Site, request: RequestContext) =
     new UserContext(scrupal, user, site, request)
-  def apply(scrupal: Scrupal, site: Site, request: RequestContext, app: Application, entity: Entity) =
-    new EntityContext(scrupal, site, request, app, entity)
+
 }
 
 

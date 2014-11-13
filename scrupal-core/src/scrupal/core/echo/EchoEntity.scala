@@ -17,8 +17,6 @@
 
 package scrupal.core.echo
 
-import akka.actor.{Props, ActorLogging, Actor}
-import reactivemongo.bson.BSONDocument
 import scrupal.core.BundleType
 import scrupal.core.api._
 import scrupal.utils.OSSLicense
@@ -33,8 +31,6 @@ object EchoEntity extends Entity {
 
   def kind: Symbol = 'Echo
 
-  def path: String = "echo"
-
   def instanceType: BundleType = BundleType.Empty
 
   def author: String = "Reid Spencer"
@@ -45,26 +41,11 @@ object EchoEntity extends Entity {
 
   def description: String = "An entity that stores nothing and merely echos its requests"
 
-  override protected val worker =
-    system.actorOf(Props(classOf[EchoWorker]), "EchoWorker")
-
-  class EchoWorker extends Actor with ActorLogging {
-    def receive : Receive = {
-      // TODO: Implement Entity.receive to process messages
-      case a: Action[_, _] =>
-      case Create(id: String, instance: BSONDocument, ctxt: Context) =>
-      case Retrieve(id: String, ctxt: Context) =>
-        val result = new HTMLResult(scrupal.core.echo.html.retrieve(id)(ctxt))
-        sender ! result
-      case Update(id: String, fields: BSONDocument, ctxt: Context) =>
-      case Delete(id: String, ctxt: Context) =>
-      case Query(fields: BSONDocument, ctxt: Context) =>
-      case Option(id: String, option: String, ctxt: Context) =>
-      case Get(id: String, what: String, data: BSONDocument, ctxt: Context) =>
-      case Put(id: String, what: String, data: BSONDocument, ctxt: Context) =>
-      case AddFacet(id: String, name: String, facet: Facet, ctxt: Context) =>
+  override def retrieve(context: ApplicationContext, id: String) = {
+    new Retrieve(context, id) {
+      override def apply() : HTMLResult = {
+        HTMLResult(scrupal.core.echo.html.retrieve(id)(context))
+      }
     }
   }
-
-
 }

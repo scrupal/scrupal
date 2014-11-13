@@ -19,10 +19,14 @@ package scrupal.core
 
 import java.util.concurrent.atomic.AtomicReference
 
+import akka.actor.ActorRef
+import akka.pattern.ask
+import reactivemongo.bson.BSONDocument
+import scrupal.core.actors.EntityProcessor
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
@@ -171,6 +175,73 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
   def onStart() {
   }
 
+  /** Mapping of entity paths to Entities */
+  type EntityMap = Map[String,Entity]
+
+  /** Mapping of application paths to Applications and their corresponding EntityMap  */
+  type AppEntityMap = Map[String,(Application,EntityMap)]
+
+  /** Mapping of site names to Sites and their corresponding AppEntityMap
+    * This type just gives a name to a nested set of tuples that defines the top level structure in Scrupal.
+    * At the root we have various Sites which contain Applications which contain Entities (via Modules). Note
+    * that Modules provide entities generally, possibly to more than one site or application. This is how entity paths
+    * are mapped. The outer map maps the name of a site to a pair of the Site object and the middle map. The middle
+    * map, similarly, maps the path of the application to a pair of the Application object and the inner map. The
+    * inner map maps the path(s) of an entity (type) to the Entity object.
+    */
+  type SiteAppEntityMap = Map[String,(Site,AppEntityMap)]
+
+  /** Construct Top Level Structure For Current Situation
+    * This method constructs a TopLevelStructure instance that reflects the current enablement status of sites,
+    * applications, modules and entities. The intention here is to allow dynamic routing in an efficient way so that
+    * a request can be matched against this structure efficiently and the corresponding objects involved accessed.
+    * Note that the three object types (Site, Application, Entity) are the same three as in the Context. This isn't
+    * a coincidence. Also note that the inner map of entities will contain both the singular and plural forms of the
+    * entity's path as keys in the map. This makes it simple to invoke collection versus instance operations.
+    * The intent of all this is to match paths like {{{http://site/application/entity}}} dynamically and quickly
+    * locate the correct entity to which the request should be forwarded.
+    * @return The TopLevelStructure mapping sites to applications to entities
+    */
+  def getAppEntities : SiteAppEntityMap = {
+    Site.forEachEnabled { theSite ⇒
+      theSite.name → {
+        theSite → {
+          for (app ← theSite.applications if app.isEnabled) yield {
+            app.path -> {
+              app → {
+                for (
+                  mod ← app.modules if mod.isEnabled;
+                  entity ← mod.entities if entity.isEnabled;
+                  name ← Seq(entity.path, entity.plural_path)
+                ) yield {
+                  name → entity
+                }
+              }.toMap
+            }
+          }
+        }.toMap
+      }
+    }
+  }.toMap
+
+  // TODO: Instantiate the dispatching EntityProcessor (which requires configuration to work)
+  val THE_DISPATCHER : ActorRef = EntityProcessor.makeSingletonRef
+
+  /** Handle An Action
+    * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to
+    * the dispatcher for processing and (quickly) returns a future that will be completed when the dispatcher gets
+    * around to it. The point of this is to hide the use of actors within Scrupal and have a nice, simple, quickly
+    * responding synchronous call in order to obtain the Future to the eventual result of the action.
+    * @param action The action to act upon (a Request => Result[P] function).
+    * @tparam P The type of the payload returned by the action
+    * @return A Future to the eventual Result[P]
+    */
+  def handle(action: Action) : Future[Result[_]] = {
+    withExecutionContext { implicit ec: ExecutionContext ⇒
+      THE_DISPATCHER.ask(action)(scrupal.core.actors.timeout) map { any ⇒ any.asInstanceOf[Result[_]] }
+    }
+  }
+
   /**
    * Called on application stop.
    */
@@ -207,7 +278,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	 * Called Just before the action is used.
 	 *
 	 */
-	def doFilter(a: Action[_,_]): Action[_,_]= {
+	def doFilter(a: Action): Action = {
 		a
 	}
 
@@ -221,7 +292,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	 * @param ex The exception
 	 * @return The result to send to the client
 	 */
-	def onError(request: Request[_], ex: Throwable) = {
+	def onError(request: Request, ex: Throwable) = {
 
 	/*
 		try {
@@ -251,7 +322,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-  def onHandlerNotFound(request: Request[_])  = {
+  def onHandlerNotFound(request: Request)  = {
 		/*
 		NotFound(Play.maybeApplication.map {
 			case app if app.mode != Mode.Prod => views.html.defaultpages.devNotFound.f
@@ -268,12 +339,17 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-	def onBadRequest(request: Request[_], error: String)  = {
+	def onBadRequest(request: Request, error: String)  = {
 		/*
 		BadRequest(views.html.defaultpages.badRequest(request, error))
 		*/
 	}
 
-	def onRequestCompletion(request: Request[_]) {
+	def onRequestCompletion(request: Request) {
 	}
+}
+
+object Scrupal {
+
+
 }

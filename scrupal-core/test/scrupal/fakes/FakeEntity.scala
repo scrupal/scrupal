@@ -26,7 +26,6 @@ import scrupal.utils.OSSLicense
  */
 case class FakeEntity(name: String, instanceType: BundleType) extends Entity {
 
-  def path: String = name
   def id: Symbol = Symbol(name)
 
   final val kind: Symbol = 'FakeEntity

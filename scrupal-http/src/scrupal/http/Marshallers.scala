@@ -15,42 +15,33 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.http.controllers
+package scrupal.http
 
-import scrupal.core.Scrupal
-import scrupal.core.api.Site
-import scrupal.fakes.{ScenarioGenerator, ScrupalSpecification}
-import scrupal.http.directives.SiteDirectives
-import spray.http.MediaTypes
-import spray.routing.HttpService
-import spray.testkit.Specs2RouteTest
+import scrupal.core.api.{Result, TextResult, HTMLResult}
+import spray.http.{HttpCharsets, MediaTypes, ContentType}
+import spray.httpx.marshalling.{ToResponseMarshaller, BasicMarshallers}
 
-/** Test Suite for EntityController */
-class EntityControllerSpec extends ScrupalSpecification("EntityControllerSpec")
-                           with Specs2RouteTest with HttpService with SiteDirectives
-                            {
+trait ScrupalMarshallers extends BasicMarshallers{
 
-  def actorRefFactory = system
+  val html_ct = ContentType(MediaTypes.`text/html`,HttpCharsets.`UTF-8`)
+  val text_ct = ContentType(MediaTypes.`text/plain`,HttpCharsets.`UTF-8`)
 
-  "EntityController" should {
-    "compute entity routes sanely" in {
-      val sc = ScenarioGenerator("test-EntityRoutes")
-      pending("Use ScenarioGenerator")
-    }
-    "forward a legitimate request" in {
-      pending("EntityController not implemented")
-    }
-    "handle echo entity deftly" in {
-      val scrupal = new Scrupal
-      scrupal.beforeStart()
-      val sc = ScenarioGenerator("test-EntityRoutes")
+  def html_marshaller : ToResponseMarshaller[HTMLResult] = {
+    ToResponseMarshaller.delegate[HTMLResult,String](html_ct) { h ⇒ h.payload.body }
+  }
 
-      val ec = new EntityController('ec,0,Site.all(0), Map())
-      Get("http://localhost/echo/echo/foo") ~> ec.routes(scrupal) ~>
-      check {
-        mediaType must beEqualTo(MediaTypes.`text/plain`)
-        responseAs[String].contains("Retrieve - foo") must beTrue
+  def text_marshaller : ToResponseMarshaller[TextResult] = {
+    ToResponseMarshaller.delegate[TextResult,String](text_ct) { h ⇒ h.payload }
+  }
+
+  implicit val mystery_marshaller: ToResponseMarshaller[Result[_]] = {
+    ToResponseMarshaller.delegate[Result[_], String](text_ct, html_ct) { (r : Result[_], ct) ⇒
+      r match {
+        case h: HTMLResult ⇒ h.payload.body
+        case t: TextResult ⇒ t.payload
       }
     }
   }
+
+
 }

@@ -17,7 +17,7 @@
 package scrupal.core.api
 
 import play.twirl.api.Html
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
 
 /** Encapsulation Of An
   *
@@ -25,10 +25,8 @@ import reactivemongo.bson.BSONDocument
   * that entity, and the invocation arguments. This request information is passed to an Action when it is invoked.
   * @tparam E The type of entity to which the request is addressed.
   */
-trait Request[E] {
-  val entity: E
-  val instance: Instance
-  val args: Map[String,Any]
+trait Request {
+  def context : Context
 }
 
 /** Encapsulation of an Action's Result
@@ -39,13 +37,22 @@ trait Request[E] {
   * @tparam P The type of the resulting payload
   */
 trait Result[P] {
-  val disposition : Disposition
-  val payload: P
+  def disposition : Disposition
+  def payload: P
 }
 
 case class TextResult(payload: String, disposition: Disposition = Successful) extends Result[String]
 case class HTMLResult(payload: Html, disposition: Disposition = Successful) extends Result[Html]
 case class BSONResult(payload: BSONDocument, disposition: Disposition = Successful) extends Result[BSONDocument]
+case class ExceptionResult(error: Throwable, disposition: Disposition = Exception) extends Result[BSONDocument] {
+  val payload = {
+    val stack = error.getStackTrace.map { elem ⇒ BSONString(elem.toString) }
+    BSONDocument(
+      "$error" →BSONString(s"${error.getClass.getName}: ${error.getMessage}"),
+      "$stack" → BSONArray(stack)
+    )
+  }
+}
 // case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
 
 /** An Action Invokable On An Entity
@@ -54,11 +61,11 @@ case class BSONResult(payload: BSONDocument, disposition: Disposition = Successf
   * REST api. Unlike the methods provided by the [[Entity]] class, these Actions operate on the Instances of the
   * entity themselves. The Entity methods are more like operations on the collection of Entities.
   */
-trait Action[E <: Entity,T] extends ( Request[E] => Result[T]) {
+abstract class Action extends (() => Result[_]) with Request {
   /** Objects mixing in this trait will define apply to implement the Action.
     * Note that the result type is fixed to return a BSONDocument because Methods are only invokable from the REST api
     * which requires results to be in the form of a BSONDocument
     * @return The Play Action that results in a JsObject to send to the client
     */
-  def apply(request: Request[E]) : Result[T]
+  def apply() : Result[_]
 }

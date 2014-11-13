@@ -60,6 +60,7 @@ object Ambiguous      extends Disposition( -8, 'Ambiguous, "Request rejected bec
 object Conflict       extends Disposition( -9, 'Conflict, "Request rejected because it would cause a conflict between resources.")
 object TooComplex     extends Disposition(-10, 'TooComplex, "Request rejected because it implies processing ")
 object Exhausted      extends Disposition(-11, 'Exhausted, "Request processing started but a computing resource became exhausted")
+object Exception      extends Disposition(-13, 'Exception, "An exception occurred during the processing of the request")
 
 object Disposition extends Registry[Disposition] {
   val registryName = "Dispositions"

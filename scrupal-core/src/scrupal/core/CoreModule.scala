@@ -66,7 +66,6 @@ object CoreModule extends Module {
 
   object PageEntity extends Entity {
     def id = 'Page
-    def path = "page"
     def kind = 'Page
     val description =  "An entity for simple HTML5 pages."
     val author = CoreModule.author

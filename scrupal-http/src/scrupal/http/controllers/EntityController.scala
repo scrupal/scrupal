@@ -17,12 +17,13 @@
 
 package scrupal.http.controllers
 
+import reactivemongo.bson.BSONDocument
 import scrupal.core.Scrupal
 import scrupal.core.api._
+import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.{PathHelpers, SiteDirectives}
-import shapeless.{HNil}
+import shapeless.HNil
 import spray.http._
-import spray.httpx.marshalling.{ToResponseMarshaller, BasicMarshallers}
 import spray.routing.{Directives, Route}
 import spray.routing._
 
@@ -39,158 +40,73 @@ import scala.concurrent.ExecutionContext
   * start simply returning 404 instead of errors about unavailable resources.
   * Created by reid on 11/7/14.
   */
-case class EntityController(id: Identifier, priority: Int, theSite: Site)
-  extends Controller with Directives with SiteDirectives with PathHelpers with BasicMarshallers
+case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntities: Scrupal#AppEntityMap)
+  extends Controller with Directives with SiteDirectives with PathHelpers with ScrupalMarshallers
 {
-  val context_path : String = id.name
 
-  /** Mapping of Application to Entity By Path Segment
-    * This just provides a shorter name than listing out the map of map of entity. This is how entity paths
-    * are mapped. The outer map contains the application context path element. The inner map contains the name of
-    * the type of the entity in both singular and plural forms. The intent is to match paths like
-    * {{{/application/entity}}} and locate the correct entity to forward the request to.
-    */
-  type AppEntityMap = Map[String,Map[String,Entity]]
-
-  /** A pure function to convert a site into a mapping of the entities that it supports
-    *
-    * @return The map of entity names to entity instances
-    */
-  def getAppEntities : AppEntityMap = {
-    if (theSite.isEnabled) {
-      for (app ← theSite.applications if app.isEnabled) yield {
-        app.path -> {
-          for (
-            mod ← app.modules if mod.isEnabled ;
-            entity ← mod.entities if entity.isEnabled ;
-            name ← Seq(entity.path, entity.plural_path)
-          ) yield {
-            name → entity
-          }
-        }.toMap
-      }
-    }.toMap else {
-      Map.empty
-    }
-  }
-
-  val appEntities : AppEntityMap = getAppEntities
-
-  type AppEntityList = shapeless.::[Application,shapeless.::[Entity,HNil]]
+  type AppEntityList = shapeless.::[Application,shapeless.::[String,shapeless.::[Entity,HNil]]]
 
 
   def scrupal_entity : Directive[AppEntityList] = new Directive[AppEntityList] {
     def happly(f: AppEntityList ⇒ Route) = {
       directories(appEntities) {
-        case (appName, entities) ⇒ {
-          directories(entities) {
+        case (appName, app_entities) ⇒ {
+          directories(app_entities._2) {
             case (entityName, entity) ⇒ {
-              Application.forPath(appName).map { app ⇒
-                f(app :: entity :: HNil)
-              }.getOrElse {
-                reject(ValidationRejection(s"No application found matching '$appName'"))
-              }
+              val app = app_entities._1
+              f(app :: entityName :: entity :: HNil)
             }
           }
         }
-      }
-    }
-  }
-
-  val html_ct = ContentType(MediaTypes.`text/html`,HttpCharsets.`UTF-8`)
-  val text_ct = ContentType(MediaTypes.`text/plain`,HttpCharsets.`UTF-8`)
-
-  def html_marshaller : ToResponseMarshaller[HTMLResult] = {
-    ToResponseMarshaller.delegate[HTMLResult,String](html_ct) { h ⇒ h.payload.body }
-  }
-
-  def text_marshaller : ToResponseMarshaller[TextResult] = {
-    ToResponseMarshaller.delegate[TextResult,String](text_ct) { h ⇒ h.payload }
-  }
-
-  implicit val mystery_marshaller: ToResponseMarshaller[Result[_]] = {
-    ToResponseMarshaller.delegate[Result[_], String](text_ct, html_ct) { (r : Result[_], ct) ⇒
-      r match {
-        case h: HTMLResult ⇒ h.payload.body ;
-        case t: TextResult ⇒ t.payload
       }
     }
   }
 
   def request_context = extract( rc ⇒ rc )
 
+  def make_args(ctxt: ApplicationContext) : BSONDocument = {
+    // TODO: make arguments from BODY and HEADERS of HttpRequest
+    BSONDocument()
+  }
+
   def routes(scrupal: Scrupal) : Route = {
     scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
       site { aSite ⇒
         validate(aSite == theSite, s"Expected site ${theSite.name } but got ${aSite.name }") {
-          get {
-            scrupal_entity {
-              case (app: Application, entity: Entity) ⇒ {
-                path(".*".r ~ PathEnd) { id: String ⇒
+          scrupal_entity {
+            case (app: Application, entityName: String, entity: Entity) ⇒ {
+              if (entityName == entity.path) {
+                path(".+".r ~ PathEnd) { id: String ⇒
                   request_context { rc: RequestContext ⇒
-                    val ctxt = Context(scrupal, aSite, rc, app, entity)
-                    complete(entity.retrieve(id, ctxt))
+                    val ctxt = Context(scrupal, aSite, rc, app)
+                    post    { complete(scrupal.handle(entity.create(ctxt, id, make_args(ctxt)))) }
+                    get     { complete(scrupal.handle(entity.retrieve(ctxt, id))) }
+                    put     { complete(scrupal.handle(entity.update(ctxt, id, make_args(ctxt)))) }
+                    delete  { complete(scrupal.handle(entity.delete(ctxt, id))) }
+                    options { complete(scrupal.handle(entity.query(ctxt, make_args(ctxt)))) }
                   }
-                } ~
-                reject(ValidationRejection(s"Unacceptable path"))
+                } ~ reject(ValidationRejection(s"Request path is missing the entity identifier portion"))
+
+              } else if (entityName == entity.plural_path) {
+                path("[^/]+".r / "[^/]+".r ~ PathEnd) { (id: String, what: String) ⇒
+                  request_context { rc: RequestContext ⇒
+
+                    val ctxt = Context(scrupal, aSite, rc, app)
+                    post    { complete(scrupal.handle(entity.createFacet(ctxt, id, what, make_args(ctxt)))) }
+                    get     { complete(scrupal.handle(entity.retrieveFacet(ctxt, id, what))) }
+                    put     { complete(scrupal.handle(entity.updateFacet(ctxt, id, what, make_args(ctxt)))) }
+                    delete  { complete(scrupal.handle(entity.deleteFacet(ctxt, id, what))) }
+                    options { complete(scrupal.handle(entity.queryFacet(ctxt, id, what, make_args(ctxt)))) }
+                  }
+                } ~ reject(ValidationRejection(s"Request path is missing entity id and what portions"))
+
+              } else {
+                reject(ValidationRejection(s"Request path is poorly formed."))
               }
             }
-          } ~
-            put {
-              complete("put")
-            } ~
-            post {
-              complete("post")
-            } ~
-            delete {
-              complete("delete")
-            } ~
-            options {
-              complete("options")
-            } ~
-            reject
+          }
         }
       }
     }
   }
-
-  def entity_route(entity: Entity) : Route = {
-    get {
-      pathPrefix("echo") {
-        complete("This is echo")
-      }
-    } ~
-      put {
-        complete("put")
-      } ~
-      post {
-        complete("post")
-      } ~
-      delete {
-        complete("delete")
-      } ~
-      options {
-        complete("options")
-      }
-  }
 }
-
-
-  /*
-# Provide A REST based API For Scrupal Entities
-GET            /api/:kind/:id/:what                   scrupal.controllers.API.get(kind, id, what)
-PUT            /api/:kind/:id/:what                   scrupal.controllers.API.put(kind, id, what)
-
-GET            /api/:kind/:id                         scrupal.controllers.API.fetch(kind, id)
-POST           /api/:kind/:id                         scrupal.controllers.API.create(kind,id)
-PUT            /api/:kind/:id                         scrupal.controllers.API.update(kind, id)
-DELETE         /api/:kind/:id                         scrupal.controllers.API.delete(kind, id)
-OPTIONS        /api/:kind/:id                         scrupal.controllers.API.optionsOf(kind, id)
-
-GET            /api/:kind                             scrupal.controllers.API.fetchAll(kind)
-POST           /api/:kind                             scrupal.controllers.API.createAll(kind)
-PUT            /api/:kind                             scrupal.controllers.API.updateAll(kind)
-DELETE         /api/:kind                             scrupal.controllers.API.deleteAll(kind)
-OPTIONS        /api/:kind                             scrupal.controllers.API.optionsOfAll(kind)
-
-   */

@@ -120,9 +120,9 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
    */
 
   def createControllers(scrupal: Scrupal) : Seq[Controller] = {
-    Site.forEachEnabled { site ⇒
-      new EntityController('entity, 0, site)
+    for ( (siteName, (site,appEntities)) ← scrupal.getAppEntities) yield {
+      new EntityController(Symbol(siteName), 0, site, appEntities)
     }
-  }
+  }.toSeq
 }
 

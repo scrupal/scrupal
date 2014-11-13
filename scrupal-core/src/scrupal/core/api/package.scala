@@ -58,7 +58,7 @@ import scrupal.utils._
   */
 package object api extends ScrupalComponent {
 
-  lazy val system = scrupal.core.system
+  lazy val system = scrupal.core.actors.system
 
   lazy val utf8 = Charset.forName("UTF-8")
 
