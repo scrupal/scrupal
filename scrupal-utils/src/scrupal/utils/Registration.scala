@@ -51,7 +51,6 @@ trait Registrable[T <: Registrable[T]] extends Identifiable {
 }
 
 trait AbstractRegistry[K, V <: AnyRef] extends ScrupalComponent {
-
   def contains(key: K) : Boolean = _registry.contains(key)
 
   def exists(name: K) : Boolean = _registry.contains(name)
@@ -78,10 +77,19 @@ trait AbstractRegistry[K, V <: AnyRef] extends ScrupalComponent {
     val new_version = reg + (key → obj)
     if (_registrants.compareAndSet(reg, new_version))
       obj
-    else if (_registry.contains(key))
-      toss (s"Registration of key $key was pre-empted by another thread. Fix your race condition.")
-    else
-      _register(key, obj) // iterate by tail recursion until we succeed at registration without being pre-empted
+    else {
+      lookup(key) match {
+        case Some(value) ⇒
+          if (obj != value)
+            toss (s"Insertion of $key was preempted by another thread. Fix your race condition.")
+          else {
+            log.warn(s"Preemptive replacement of $key yielding same value is indicative of race condition.")
+            obj
+          }
+        case None ⇒
+          _register(key, obj) // iterate by tail recursion until we succeed at registration without being pre-empted
+      }
+    }
   }
 
   @tailrec
@@ -90,7 +98,7 @@ trait AbstractRegistry[K, V <: AnyRef] extends ScrupalComponent {
     val new_version = reg - key
     if (!_registrants.compareAndSet(reg, new_version))
       if (!_registry.contains(key))
-        toss (s"Unregistration of key $key was pre-empted by another thread. Fix your race condition.")
+        toss (s"Removal of $key was preempted by another thread. Fix your race condition.")
       else
         _unregister(key) // Try again in case of concurrency!
   }

@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
 import scrupal.core.{CoreModule, CoreSchema}
-import scrupal.fakes.ScrupalSpecification
+import scrupal.test.ScrupalSpecification
 import scrupal.utils.Icons
 import scrupal.utils.AlertKind
 

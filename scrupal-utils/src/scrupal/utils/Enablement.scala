@@ -17,15 +17,58 @@
 
 package scrupal.utils
 
-/** An Enablement Hierarchy For Immutable Objects
-  * We need to be able to enable and disable things but things relate to other things and so enablement is context
-  * dependent.
-  */
+import scala.collection.mutable
+
+/**
+ * Created by reid on 11/14/14.
+ */
+
+trait EnablementScope extends AbstractRegistry[Enablee,mutable.HashSet[EnablementScope]] {
+  def id : Symbol
+  def children : Seq[EnablementScope] = Seq.empty[EnablementScope]
+
+  def isEnabled(enablee: Enablee, forScope: EnablementScope = this) : Boolean = {
+    if (forScope != this && !children.contains(forScope))
+      toss(s"Scope ${forScope.id} is not a child of ${id} so enablement for $enablee cannot be determined.")
+    lookup(enablee) match {
+      case Some(set) ⇒ set.contains(forScope)
+      case None ⇒ false
+    }
+  }
+
+  def enable(enablee: Enablee, forScope: EnablementScope = this) : Unit  = {
+    if (forScope != this && !children.contains(forScope))
+      toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be enabled for it.")
+    val update_value = lookup(enablee) match {
+      case Some(set) ⇒ set + forScope
+      case None ⇒ mutable.HashSet(forScope)
+    }
+    _register(enablee, update_value)
+  }
+
+  def disable(enablee: Enablee, forScope: EnablementScope = this) : Unit = {
+    if (forScope != this && !children.contains(forScope))
+      toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be disabled for it.")
+    lookup(enablee) match {
+      case Some(set) ⇒
+        val update_value = set - forScope
+        if (update_value.isEmpty)
+          _unregister(enablee)
+        else
+          _register(enablee, update_value)
+      case None ⇒
+        log.debug(s"Attempt to disable $enablee that wasn't enabled.")
+    }
+  }
+}
 
 trait Enablee {
-  def isEnabled : Boolean
+  def parent : Option[Enablee] = None
+  def isEnabled(scope: EnablementScope) : Boolean = {
+    scope.isEnabled(this) && (parent match { case Some(e) ⇒ e.isEnabled(scope) ; case None ⇒ true } )
+  }
+  def isEnabled(scope: EnablementScope, how: Boolean): Boolean = { scope.isEnabled(this) == how }
+  def enable(scope: EnablementScope) : this.type = { scope.enable(this); this  }
+  def disable(scope: EnablementScope) : this.type = { scope.disable(this); this }
 }
 
-object Enablement {
-
-}

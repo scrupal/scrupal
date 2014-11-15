@@ -21,7 +21,7 @@ import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.bson.Macros
 import scrupal.db._
-import scrupal.fakes.{ScrupalSpecification}
+import scrupal.test.{ScrupalSpecification}
 
 import scala.concurrent.Await
 

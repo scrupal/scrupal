@@ -17,7 +17,7 @@
 
 package scrupal.core
 
-import scrupal.fakes.ScrupalSpecification
+import scrupal.test.ScrupalSpecification
 
 
 /** One line sentence description here.

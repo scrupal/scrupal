@@ -21,7 +21,7 @@ import java.io.File
 import java.net.URL
 
 import play.twirl.api.Html
-import scrupal.fakes.{ScrupalSpecification, FakeContext}
+import scrupal.test.{ScrupalSpecification, FakeContext}
 import spray.http.MediaTypes
 import scrupal.core.api.utf8
 

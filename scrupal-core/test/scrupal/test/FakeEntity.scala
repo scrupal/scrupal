@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.fakes
+package scrupal.test
 
 import scrupal.core.BundleType
 import scrupal.core.api.Entity

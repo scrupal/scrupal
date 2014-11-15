@@ -17,7 +17,7 @@
 
 package scrupal.config
 
-import scrupal.fakes.ScrupalSpecification
+import scrupal.test.ScrupalSpecification
 
 /** This is the test suite for the Config.Step class
   *

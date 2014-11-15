@@ -21,7 +21,7 @@ import org.specs2.mutable.Specification
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson._
 import scrupal.core._
-import scrupal.fakes.FakeModule
+import scrupal.test.FakeModule
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends Specification {

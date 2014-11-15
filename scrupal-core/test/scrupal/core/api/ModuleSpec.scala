@@ -19,7 +19,7 @@ package scrupal.core.api
 
 import org.specs2.mutable.Specification
 import scrupal.core.RangeType
-import scrupal.fakes.FakeModule
+import scrupal.test.FakeModule
 import scrupal.utils.Version
 
 import scala.collection.immutable.HashMap

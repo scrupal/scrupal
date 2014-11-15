@@ -19,7 +19,7 @@ package scrupal.core
 
 import reactivemongo.bson.BSONDocument
 import scrupal.core.api.{Entity, Instance}
-import scrupal.fakes.{FakeEntity, ScrupalSpecification, FakeModule}
+import scrupal.test.{FakeEntity, ScrupalSpecification, FakeModule}
 
 /** Top Level Test Suite for Core */
 class CoreSpec extends ScrupalSpecification("CoreSpec") {

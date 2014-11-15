@@ -19,7 +19,7 @@ package scrupal.http.controllers
 
 import scrupal.core.Scrupal
 import scrupal.core.api.Site
-import scrupal.fakes.{ScenarioGenerator, ScrupalSpecification}
+import scrupal.test.{ScenarioGenerator, ScrupalSpecification}
 import scrupal.http.directives.SiteDirectives
 import spray.http.MediaTypes
 import spray.routing.HttpService
