@@ -44,7 +44,6 @@ abstract class Node extends VariantStorable[Identifier]
                             with Describable with Modifiable with Enablable with Generator with Bootstrappable
 {
   val mediaType : MediaType
-  private[scrupal] def bootstrap = {}
 }
 
 trait Arranger extends ((Context, Map[String,Node]) => Array[Byte])

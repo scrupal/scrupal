@@ -61,13 +61,13 @@ trait ModuleOwned {
 /** Something that can be named with a String  */
 trait Nameable  {
   def name : String
-  def isNamed : Boolean = ! name.isEmpty
+  def isNamed : Boolean = name.nonEmpty
 }
 
 /** Something that has a short textual description */
 trait Describable {
   def description : String
-  def isDescribed : Boolean = ! description.isEmpty
+  def isDescribed : Boolean = description.nonEmpty
 }
 
 /** Something that has settings that can be specified and changed */
@@ -151,5 +151,5 @@ trait Facetable {
 
 /** Something that participates in runtime bootstrap at startup */
 trait Bootstrappable {
-  private[scrupal] def bootstrap() : Unit
+  protected[scrupal] def bootstrap() : Unit = {}
 }

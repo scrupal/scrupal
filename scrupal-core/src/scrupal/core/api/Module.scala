@@ -113,7 +113,7 @@ trait Module extends Registrable[Module]
   /** Load lazy instantiated objects into memory
     *   This is part of the bootstrapping mechanism
     */
-  private[scrupal] def bootstrap() = {
+  override protected[scrupal] def bootstrap() = {
 
     // Touch the various aspects of the module by by asking for it's id's length.
     // This just makes sure it gets instantiated & registered as well as not being null

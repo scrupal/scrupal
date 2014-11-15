@@ -90,7 +90,6 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
       }
     }
   }
-  private[scrupal] def bootstrap() = {}
 }
 
 case class Not_A_Type() extends Type {

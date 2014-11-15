@@ -196,8 +196,6 @@ abstract class Entity
 
   def invoke(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
     : Invoke = NoopInvoke(context, id, what, args)
-
-  private[scrupal] def bootstrap() = {}
 }
 
 trait NoopAction {

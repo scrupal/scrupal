@@ -51,9 +51,6 @@ case class Feature(
     * @return
     */
   def apply() : Boolean = isEnabled
-
-  private[scrupal] def bootstrap = {}
-
 }
 
 /** Feature Registry and companion

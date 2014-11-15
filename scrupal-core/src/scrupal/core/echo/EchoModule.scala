@@ -71,9 +71,9 @@ object EchoModule extends Module {
     */
   def handlers: Seq[HandlerFor[Event]] = Seq()
 
-  override private[scrupal] def bootstrap() = {
+  override protected[scrupal] def bootstrap() = {
     // Do what every module does
-    super.bootstrap
+    super.bootstrap()
     // Most applications are not Objects and thus are loaded from database but EchoApp, built-in, is different
     // We need to "touch" in order to get it loaded
     require(EchoApp.label.length > 0)
