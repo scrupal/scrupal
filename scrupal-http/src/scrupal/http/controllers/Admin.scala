@@ -15,12 +15,16 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web.controllers
+package scrupal.http.controllers
+
+import scrupal.core.Scrupal
+import spray.routing.Route
 
 /** The Controller for the Administration interface
-  * Further description here.
+  * TODO: Write the Admin Controller (once the Admin Application is done)
   */
-object Admin extends ScrupalController
+case class Admin(id: Symbol, priority: Int)  extends Controller
 {
+  def routes(scrupal: Scrupal) : Route = reject
 
 }

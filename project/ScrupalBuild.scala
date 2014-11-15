@@ -17,7 +17,10 @@
 
 import com.typesafe.sbt.web.SbtWeb
 import play.twirl.sbt.SbtTwirl
-
+import com.typesafe.sbt.web.Import.pipelineStages
+import com.typesafe.sbt.rjs.Import.rjs
+import com.typesafe.sbt.digest.Import.digest
+import com.typesafe.sbt.gzip.Import.gzip
 // import play.PlayScala
 import sbt._
 import sbt.Keys._
@@ -74,9 +77,9 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Tw
     .dependsOn(utils_deps, db_deps, core_deps, http_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
 
-  /* TODO: This isn't building yet
-  lazy val web = Project(BuildInfo.appName + "-web", file("./scrupal-web"))
+  lazy val web = Project(base_name + "-web", file("./scrupal-web"))
     .enablePlugins(SbtWeb)
+    .enablePlugins(SbtTwirl)
     .settings(
       buildSettings ++ Seq(
         pipelineStages := Seq(rjs, digest, gzip),
@@ -88,7 +91,6 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Tw
     )
     .dependsOn(utils_deps, db_deps, core_deps, http_deps)
   val web_deps = web % "compile->compile;test->test"
-  */
 
   lazy val root = Project(base_name, file("."))
     .settings(buildSettings ++ docSettings ++ Seq(
@@ -96,8 +98,8 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Tw
       libraryDependencies ++= root_dependencies
     ):_*)
     .settings(UnidocPlugin.unidocSettings: _*)
-    .dependsOn(config_deps)
-    .aggregate(config_proj)
+    .dependsOn(config_deps, web_deps, http_deps, core_deps, db_deps, utils_deps)
+    .aggregate(config_proj, web, http, core, db, utils)
 
   override def rootProject = Some(root)
 }

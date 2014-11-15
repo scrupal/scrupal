@@ -15,12 +15,11 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web.controllers
+package scrupal.http.controllers
 
-import play.api.libs.json.{JsString, Json}
-import play.api.mvc.{Result, Results}
 import scrupal.utils.ScrupalComponent
 
+/*
 /** A simple trait to provide some helper methods for Controllers.
   * These "Rich"Results transform the usual Results.XXX values into method calls that produce rich results based on
   * view templates that provide helpful information back to the user.
@@ -55,3 +54,4 @@ trait RichJsonResults extends RichResults {
     Results.NotFound(Json.obj( "error" -> "404: NOT_FOUND", "what" ->  what))
   }
 }
+*/

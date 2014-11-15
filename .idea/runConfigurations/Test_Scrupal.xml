@@ -2,7 +2,7 @@
   <configuration default="false" name="Test Scrupal" type="Specs2RunConfiguration" factoryName="Specs2">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
     <extension name="scalaCoverage" />
-    <module name="scrupal-config" />
+    <module name="scrupal" />
     <setting name="path" value="" />
     <setting name="package" value="scrupal" />
     <setting name="vmparams" value="" />

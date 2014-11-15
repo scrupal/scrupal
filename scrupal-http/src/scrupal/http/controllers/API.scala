@@ -15,17 +15,18 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web.controllers
+package scrupal.http.controllers
 
-import play.api.libs.json.{JsString, Json}
-import scrupal.core.api.Module
+import scrupal.core.Scrupal
+import spray.routing.Route
 
 /** The Controller For The Scrupal JSON API
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and
   * read about the various APIs supported by their Scrupal Installation.
   */
-object API extends ScrupalController  with RichJsonResults {
-
+case class API(id: Symbol, priority: Int) extends Controller {
+  def routes(scrupal: Scrupal) : Route = reject
+/*
   val feature = CoreFeatures.RESTAPIAccess
 
   def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
@@ -233,5 +234,5 @@ object API extends ScrupalController  with RichJsonResults {
   def put(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext =>
     NotImplemented(JsString("Putting " + what + " to " + kind + " " + id ))
   }
-
+*/
 }

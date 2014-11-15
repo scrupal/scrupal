@@ -15,19 +15,15 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web.controllers
+package scrupal.http.controllers
 
 import java.io.File
 
 import com.typesafe.config.ConfigValue
 import org.joda.time.Duration
-import play.api.Play.current
-import play.api.libs.json.JsString
-import play.api.mvc.Action
-import play.api.{Mode, Play, Routes}
-import scrupal.core.CoreFeatures
+import scrupal.core.{Scrupal, CoreFeatures}
 import scrupal.core.api.{Instance, Module}
-import scrupal.http.controllers.Assets
+import spray.routing._
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,8 +33,10 @@ import scala.concurrent.Future
  * A controller to provide the Introduction To Scrupal content
  * Further description here.
  */
-object Home extends ScrupalController {
+case class Home(id: Symbol, priority: Int) extends Controller {
+    def routes(scrupal: Scrupal) : Route = reject
 
+  /*
   /** The home page */
 	def index = UserAction.async { implicit context: AnyUserContext => {
       context.site.data.siteIndex map { sid: Identifier =>
@@ -298,4 +296,5 @@ object Home extends ScrupalController {
 
     Ok(html.sectionsTablePage(title, descr, info))
   }
+  */
 }

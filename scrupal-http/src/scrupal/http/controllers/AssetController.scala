@@ -1,18 +1,15 @@
-package scrupal.web.controllers
+package scrupal.http.controllers
 
-import scrupal.http.controllers.BasicController
+import scrupal.core.Scrupal
 import spray.http.Uri
-import spray.routing.Directives._
 import spray.routing._
 
 /**
  * Created by reidspencer on 10/29/14.
  */
-case class AssetsController() extends BasicController("assets") {
+case class AssetsController() extends BasicController('assets) {
 
-  def id = 'assets
-
-  def routes: Route = {
+  def routes(scrupal: Scrupal) : Route = {
     get {
       path("favicon") {
         favicon
@@ -35,9 +32,8 @@ case class AssetsController() extends BasicController("assets") {
   def images(rest_of_path: Uri.Path) = complete("images: " + rest_of_path)
 }
 
-case class WebJarsController() extends BasicController("webjars") {
-  def id = 'webjars
-  def routes: Route = {
+case class WebJarsController() extends BasicController('webjars) {
+  def routes(scrupal: Scrupal): Route = {
     path("javascripts" / RestPath) { file =>
       get {
         complete("foo")

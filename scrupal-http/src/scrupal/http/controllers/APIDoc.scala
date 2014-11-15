@@ -15,10 +15,12 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.web.controllers
+package scrupal.http.controllers
 
+import scrupal.core.Scrupal
 import scrupal.core.api.{Instance, Module}
 import scrupal.utils.Pluralizer
+import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -26,8 +28,9 @@ import scala.concurrent.Future
 /** One line sentence description here.
   * Further description here.
   */
-object APIDoc extends ScrupalController  {
-
+case class APIDoc(id: Symbol, priority: Int) extends Controller {
+  def routes(scrupal: Scrupal) : Route = reject
+/*
   val apidocs = CoreFeatures.RESTAPIDocumentation
 
   /** Provide an introduction to the API */
@@ -137,4 +140,5 @@ object APIDoc extends ScrupalController  {
   def doTo(kind: String, id: String, action: String) = UserAction { implicit context: AnyUserContext => WithFeature(apidocs) {
     NotImplemented(apidocs, Some("Doing " + action + "to " + id + " of kind " + kind + " not finished."))
   }}
+  */
 }

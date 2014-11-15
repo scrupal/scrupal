@@ -26,7 +26,7 @@ import spray.routing.Route
 /**
  * Asset controller for core assets. This one gets used by the templates
  */
-object Assets extends BasicController('Assets, "assets",-1)
+object Assets extends BasicController('Assets,-1)
 {
   def routes(scrupal: Scrupal) : Route = complete("Assets Not Implemented")
 

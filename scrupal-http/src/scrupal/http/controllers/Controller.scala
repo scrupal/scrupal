@@ -38,7 +38,7 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
     * controllers operate within that same range. Note that this just helps optimize the processing
     * of routes.
     */
-  val priority: Int
+  def priority: Int
 
   /** The routes that this controller provides
     * Note that this does not include checking of the context path. That will have already done before the
@@ -60,7 +60,7 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 }
 
-abstract class BasicController(val id : Identifier, val context_path: String, val priority: Int = 0) extends Controller
+abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller
 
 object Controller extends Registry[Controller] {
   override val registryName: String = "Controllers"
