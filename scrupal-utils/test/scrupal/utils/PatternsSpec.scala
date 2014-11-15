@@ -19,11 +19,10 @@ package scrupal.utils
 
 import org.specs2.mutable.Specification
 
-import scala.util.matching.Regex
+import scrupal.utils.Patterns._
 
 /** Test Suite For Patterns */
 class PatternsSpec extends Specification {
-import Patterns._
 
   "anchored" should {
     "force a match to limits of input" in {
@@ -41,29 +40,66 @@ import Patterns._
     }
   }
 
-  // TODO: Finish writing Patterns test cases
   "atLeastOne" should {
     "match at least one item" in {
-      pending
+      val pat = atLeastOne("[a-z]".r)
+      pat.pattern.matcher("").matches must beFalse
+      pat.pattern.matcher("a").matches must beTrue
+      pat.pattern.matcher("bcd").matches must beTrue
     }
   }
 
   "zeroOrMore" should {
-    "match empty input" in { pending }
-    "match multiples input" in { pending }
+    "match zer or more of a pattern" in {
+      val pat = zeroOrMore("[a-z]".r)
+      pat.pattern.matcher("").matches must beTrue
+      pat.pattern.matcher("a").matches must beTrue
+      pat.pattern.matcher("bcd").matches must beTrue
+    }
   }
 
   "alternate" should {
-    "form a disjunction" in { pending }
+    "form a disjunction" in {
+      val pat = alternate("[a-z]+".r,"[A-Z]+".r)
+      pat.pattern.matcher("a").matches must beTrue
+      pat.pattern.matcher("A").matches must beTrue
+      pat.pattern.matcher("bcd").matches must beTrue
+      pat.pattern.matcher("BCD").matches must beTrue
+      pat.pattern.matcher("AbCd").matches must beFalse
+    }
   }
 
   "group" should {
-    "provide extracted groups" in { pending }
+    "concatenate patterns" in {
+      val pat = group("[A]".r,"[a]".r,"[B]".r)
+      pat.pattern.matcher("AaB").matches must beTrue
+      pat.pattern.matcher("aAb").matches must beFalse
+    }
+  }
+
+  "capture" should {
+    "provide extracted capture groups" in {
+      val pat = capture("[a-z]+".r)
+      pat.pattern.matcher("A").matches must beFalse
+      val m = pat.findAllIn("a")
+      m.groupCount must beEqualTo(1)
+      m.group(0) must beEqualTo("a")
+    }
   }
 
   "between" should {
-    "limit the length of the matched text" in { pending }
+    "limit the length of the matched text" in {
+      val pat = scrupal.utils.Patterns.between(2,5,"[a-z]".r)
+      pat.pattern.matcher("a").matches must beFalse
+      pat.pattern.matcher("ab").matches must beTrue
+      pat.pattern.matcher("abcde").matches must beTrue
+      pat.pattern.matcher("abcdef").matches must beFalse
+      pat.pattern.matcher("").matches must beFalse
+    }
+
   }
+
+  // TODO: Finish writing Patterns test cases
 
   "DomainName" should {
     "match legal domain names" in { pending }

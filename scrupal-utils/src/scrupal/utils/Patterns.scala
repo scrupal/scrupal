@@ -31,10 +31,16 @@ object Patterns {
     }.toString().r
   }
 
+  private def serialize(r:Seq[Regex]) : String = r.foldLeft("") { case ((x,y)) ⇒ x + y.pattern.pattern }
   /** Make a pattern into various repeating forms of itself  */
-  def anchored(r:Regex) = ("^" + r.pattern.pattern + "$").r
-  def group(r:Regex) = ("(?:" + r.pattern.pattern + ")").r
-  def capture(r:Regex) = ("(" + r.pattern.pattern + ")").r
+  def anchored(r:Regex*) : Regex = ("^" + serialize(r) + "$").r
+  def group(r:Regex*) : Regex = ("(?:" + serialize(r) + ")").r
+  def capture(r:Regex, name: String = "") : Regex = {
+    if (name.isEmpty)
+      s"(${r.pattern.pattern })".r
+    else
+      s"(?<$name>${r.pattern.pattern })".r
+  }
   def optional(r: Regex)  = ("(?:" + r.pattern.pattern + ")?").r
   def atLeastOne(r:Regex) = ("(?:" + r.pattern.pattern + ")+").r
   def zeroOrMore(r:Regex) = ("(?:" + r.pattern.pattern + ")*").r
