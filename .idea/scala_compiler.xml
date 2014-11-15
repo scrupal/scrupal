@@ -14,10 +14,6 @@
       <parameter value="-Ywarn-adapted-args" />
       <parameter value="-J-Xss8m" />
       <parameter value="-J-Xmx1024m" />
-      <parameter value="-Xlint" />
-      <parameter value="-encoding" />
-      <parameter value="utf8" />
-      <parameter value="-Ywarn-adapted-args" />
       <parameter value="-target:jvm-1.7" />
     </parameters>
   </component>

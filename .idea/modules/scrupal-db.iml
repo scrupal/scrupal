@@ -32,9 +32,6 @@
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson-macros_2.11:0.11.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson_2.11:0.11.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo_2.11:0.11.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.2" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.2" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-stm:scala-stm_2.11:0.7" level="project" />
@@ -45,5 +42,9 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-common_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11" level="project" />
+    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.2" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4" level="project" />
   </component>
 </module>
