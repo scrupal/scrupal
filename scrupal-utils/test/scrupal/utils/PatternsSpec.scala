@@ -81,7 +81,8 @@ class PatternsSpec extends Specification {
     "provide extracted capture groups" in {
       val pat = capture("[a-z]+".r)
       pat.pattern.matcher("A").matches must beFalse
-      val m = pat.findAllIn("a")
+      val m = pat.pattern.matcher("a")
+      m.matches must beTrue
       m.groupCount must beEqualTo(1)
       m.group(0) must beEqualTo("a")
     }

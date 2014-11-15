@@ -19,15 +19,21 @@ package scrupal.utils
 
 import scala.collection.mutable
 
-/**
- * Created by reid on 11/14/14.
- */
+/** Enablement Trait For Tracking Enable/Disable Status of Enablees.
+  *
+  * This is intended to be mixed in to some container of other Enablement objects in a hierarchy that eventually
+  * contains Enablees, or has them contained at any level. Enablement objects can also bee Enablees. For example,
+  * a Module contains Features and Entities that are both Enablees so it is an Enablement object and it tracks the
+  * enablement status of its enablees.  But the Module can be enabled/disabled itself so it can also be an Enablee
+  *
+  *
+  */
 
-trait EnablementScope extends AbstractRegistry[Enablee,mutable.HashSet[EnablementScope]] {
+trait Enbalement extends AbstractRegistry[Enablee,mutable.HashSet[Enbalement]] {
   def id : Symbol
-  def children : Seq[EnablementScope] = Seq.empty[EnablementScope]
+  def children : Seq[Enbalement] = Seq.empty[Enbalement]
 
-  def isEnabled(enablee: Enablee, forScope: EnablementScope = this) : Boolean = {
+  def isEnabled(enablee: Enablee, forScope: Enbalement = this) : Boolean = {
     if (forScope != this && !children.contains(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so enablement for $enablee cannot be determined.")
     lookup(enablee) match {
@@ -36,7 +42,7 @@ trait EnablementScope extends AbstractRegistry[Enablee,mutable.HashSet[Enablemen
     }
   }
 
-  def enable(enablee: Enablee, forScope: EnablementScope = this) : Unit  = {
+  def enable(enablee: Enablee, forScope: Enbalement = this) : Unit  = {
     if (forScope != this && !children.contains(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be enabled for it.")
     val update_value = lookup(enablee) match {
@@ -46,7 +52,7 @@ trait EnablementScope extends AbstractRegistry[Enablee,mutable.HashSet[Enablemen
     _register(enablee, update_value)
   }
 
-  def disable(enablee: Enablee, forScope: EnablementScope = this) : Unit = {
+  def disable(enablee: Enablee, forScope: Enbalement = this) : Unit = {
     if (forScope != this && !children.contains(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be disabled for it.")
     lookup(enablee) match {
@@ -62,13 +68,23 @@ trait EnablementScope extends AbstractRegistry[Enablee,mutable.HashSet[Enablemen
   }
 }
 
+/** Something that can be enabled or disabled.
+  *
+  * Enablee objects have parents and the Enablee is only enabled in some Enablement scope if its parent is too. So
+  * if you disable a module in a particular scope, all of its features and entities become disabled in that scope too
+  * even without adjusting their enablement status. If the module is re-enabled, it comes back with the previous
+  * enablement status at the lower level (entities and features).
+  *
+  * Note that enablement is NOT recorded in the Enablee directly even though the convenience methods might seem to
+  * indicate that. All the enabled/disabled status is recorded in the Enablement objects.
+  */
 trait Enablee {
   def parent : Option[Enablee] = None
-  def isEnabled(scope: EnablementScope) : Boolean = {
+  def isEnabled(scope: Enbalement) : Boolean = {
     scope.isEnabled(this) && (parent match { case Some(e) ⇒ e.isEnabled(scope) ; case None ⇒ true } )
   }
-  def isEnabled(scope: EnablementScope, how: Boolean): Boolean = { scope.isEnabled(this) == how }
-  def enable(scope: EnablementScope) : this.type = { scope.enable(this); this  }
-  def disable(scope: EnablementScope) : this.type = { scope.disable(this); this }
+  def isEnabled(scope: Enbalement, how: Boolean): Boolean = { scope.isEnabled(this) == how }
+  def enable(scope: Enbalement) : this.type = { scope.enable(this); this  }
+  def disable(scope: Enbalement) : this.type = { scope.disable(this); this }
 }
 

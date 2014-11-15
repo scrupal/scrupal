@@ -21,7 +21,7 @@ import org.specs2.mutable.Specification
 import scrupal.test.ClassFixture
 
 class Scenario extends AutoCloseable {
-  case class TestScope(id: Symbol, override val children : Seq[EnablementScope] = Seq()) extends EnablementScope
+  case class TestScope(id: Symbol, override val children : Seq[Enbalement] = Seq()) extends Enbalement
   case class TestEnablee(override val parent: Option[Enablee] = None) extends Enablee
 
   val root_1_a = TestScope('root_1_a )
@@ -60,9 +60,10 @@ class EnablementSpec extends Specification {
     "allow query on arbitrary scopes" in scenario { s ⇒
       s.root.enable(s.e_root, s.root_1)
       s.e_root.isEnabled(s.root) must beFalse
-//      s.e_root.isEnabled(s.root_1) must beTrue
+      s.e_root.isEnabled(s.root_1) must beFalse
+      s.root.isEnabled(s.e_root, s.root_1) must beTrue
+      s.root_1.isEnabled(s.e_root) must beFalse
       s.root_1_a.isEnabled(s.e_root) must beFalse
-//      s.root_1.isEnabled(s.e_root) must beTrue
     }
     "allow enable on multiple scopes" in scenario { s ⇒
       pending
