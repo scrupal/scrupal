@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/scrupal-config/scrupal-config.iml" filepath="$PROJECT_DIR$/scrupal-config/scrupal-config.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
