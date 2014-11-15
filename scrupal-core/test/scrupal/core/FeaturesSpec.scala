@@ -24,4 +24,9 @@ import org.specs2.mutable.Specification
  */
 class FeaturesSpec extends Specification {
 
+  "Feature" should {
+    "have some tests" in { pending }
+  }
+
+
 }

@@ -27,6 +27,10 @@ import scala.concurrent.duration.Duration
 
 object EntityProcessor {
 
+  /** Name of the configuration key for the configuration of the dispatcher */
+  val dispatcher_config_name = "scrupal.dispatcher"
+
+
   /** Make The Dispatcher ActorRef
     *
     * This is a router behind a cadre of EntityProcessor actors. The number of actors can be huge but it should be
@@ -37,7 +41,7 @@ object EntityProcessor {
     * smart load balancing. The actors are created by the router and managed by them. The pool starts with the
     * minimum number of actors and increases as needed to the upper bound.
     */
-  def makeDispatcherRef(min_actors: Int, max_actors: Int) = {
+  def makeDispatcherRef(system: ActorSystem, min_actors: Int, max_actors: Int) = {
     /** Supervision Strategy Decider
       * This "Decider" determines what to do for a given exception type. For now, all exceptions cause restart of the
       * actor.
@@ -68,7 +72,7 @@ object EntityProcessor {
     )
   }
 
-  def makeSingletonRef = {
+  def makeSingletonRef(system: ActorSystem) = {
     system.actorOf(Props(classOf[EntityProcessor]),actorName("EntityProcessor"))
   }
 }

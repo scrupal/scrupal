@@ -80,13 +80,13 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
   private case class State(driver: MongoDriver, counter: AtomicInteger = new AtomicInteger(1))
   private var state: Option[State] = None
 
-  def fromConfiguration(conf: Option[Configuration] = None) : DBContext = {
+  def fromConfiguration(id: Symbol, conf: Option[Configuration] = None) : DBContext = {
     val topConfig = conf.getOrElse(Configuration.default)
     val helper = new ConfigHelper(topConfig)
     val config = helper.getDbConfig
     config.getConfig("db.scrupal") match {
-      case Some(cfg) => fromSpecificConfig('scrupal, cfg)
-      case None => fromURI('scrupal, "mongodb://localhost/scrupal")
+      case Some(cfg) => fromSpecificConfig(id, cfg)
+      case None => fromURI(id, "mongodb://localhost/scrupal")
     }
   }
 

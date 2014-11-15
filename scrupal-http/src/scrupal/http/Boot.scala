@@ -45,7 +45,7 @@ object Boot extends App with ScrupalComponent
   val scrupal = new Scrupal
 
   // Ask Scrupal to do its initialization .. lots of things can go wrong ;)
-  val (config,dbContext) = scrupal.beforeStart()
+  val (config,dbContext) = scrupal.open()
 
   // Check to make sure everything is ready to run.
   checkReady()
@@ -60,6 +60,8 @@ object Boot extends App with ScrupalComponent
 
   val interface = config.getString("scrupal.http.interface").getOrElse("localhost")
   val port = config.getInt("scrupal.http.port").getOrElse(8888)
+
+  log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port")
 
   // start a new HTTP server on port 8080 with our service actor as the handler
   IO(Http) ? Http.Bind(service, interface, port)

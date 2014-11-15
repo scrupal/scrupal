@@ -22,12 +22,9 @@ import play.twirl.sbt.SbtTwirl
 import sbt._
 import sbt.Keys._
 
-import com.typesafe.sbt.web.Import.pipelineStages
-import com.typesafe.sbt.rjs.Import.rjs
-import com.typesafe.sbt.gzip.Import.gzip
-import com.typesafe.sbt.digest.Import.digest
 
-object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Dependencies {
+
+object ScrupalBuild extends Build with BuildSettings with AssetsSettings with TwirlSettings with Dependencies {
 
   import sbtunidoc.{ Plugin => UnidocPlugin }
   import spray.revolver.RevolverPlugin._
@@ -52,7 +49,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
 
   lazy val core = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtTwirl)
-    .settings(buildSettings ++ twirlSettings ++ Seq(
+    .settings(buildSettings ++ twirlSettings_core ++ Seq(
       resolvers ++= all_resolvers,
       libraryDependencies ++= core_dependencies
     ):_*)
@@ -62,7 +59,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
   lazy val http = Project(base_name + "-http", file("./scrupal-http"))
     .enablePlugins(SbtTwirl)
     .settings(
-      buildSettings ++ twirlSettings ++ Revolver.settings ++ Seq(
+      buildSettings ++ twirlSettings_http ++ Revolver.settings ++ Seq(
         resolvers ++= all_resolvers,
         libraryDependencies ++= http_dependencies
     ):_*)
@@ -95,10 +92,12 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
 
   lazy val root = Project(base_name, file("."))
     .settings(buildSettings ++ docSettings ++ Seq(
+      mainClass in (Compile, run) := Some("scrupal.http.Boot"),
       libraryDependencies ++= root_dependencies
     ):_*)
     .settings(UnidocPlugin.unidocSettings: _*)
     .dependsOn(config_deps)
+    .aggregate(config_proj)
 
   override def rootProject = Some(root)
 }

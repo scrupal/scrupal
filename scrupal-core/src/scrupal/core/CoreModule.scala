@@ -44,12 +44,10 @@ object CoreModule extends Module {
   val notes_key = "Notes"
   override val settingsType =
     BundleType('CoreConfiguration, "The definition of the CoreModule's configuration parameters", Map(
-      enabled_key → TheBoolean_t,
       notes_key → Markdown_t
     ))
 
   override val settingsDefault = BSONDocument(Map(
-    enabled_key → BSONBoolean(value=true),
     notes_key → BSONString("No notes.")
   ))
 

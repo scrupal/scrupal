@@ -98,7 +98,7 @@ trait PathWalker[D,A,V] extends ScrupalComponent {
 }
 
 object MapSeqPathWalker extends PathWalker[Map[String,Any],Seq[Any],Any] {
-  protected def isDocument(v: Any): Boolean = v.isInstanceOf[Map[String,Any]] // @unchecked
+  protected def isDocument(v: Any): Boolean = v.isInstanceOf[Map[_,_]]
   protected def asDocument(v: Any): Map[String,Any] = v.asInstanceOf[Map[String,Any]]
   protected def indexDoc(key: String, d: Map[String,Any]): Option[Any] = d.get(key)
   protected def isArray(v: Any): Boolean = v.isInstanceOf[Seq[Any]]

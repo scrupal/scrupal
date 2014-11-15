@@ -80,8 +80,5 @@ object Feature extends Registry[Feature] {
 
   object NotAFeature extends Feature('NotAFeature, "This is not a feature", false) {
     override def apply() = toss(description)
-    override def enable() = toss(description)
-    override def disable() = toss(description)
-    override def enabled(how: Boolean) = toss(description)
   }
 }

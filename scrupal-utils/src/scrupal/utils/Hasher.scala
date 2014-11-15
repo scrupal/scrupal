@@ -172,13 +172,11 @@ object HasherKinds extends Enumeration {
 /**
  * A hasher based on the PBKDF2 algorithm by Nicolas Rémond
  */
-class PBKDF2Hasher extends Hasher {
+object PBKDF2Hasher extends Hasher {
 
-  // Provide the name of this hasher
-  val id = 'PBKDF2 ; register()
+  def id = 'PBKDF2
 
   def defaultIterations = if ( isFastMode ) 12500 else 25000
-
 
   override def hash(plainText: String, saltine: Option[String], complexity: Option[Long]) = {
     // Let's use a 512 bit key, just cause we can and it'll make the cracker's job harder
@@ -190,16 +188,15 @@ class PBKDF2Hasher extends Hasher {
     val encrypted = PBKDF2(plainText.getBytes, salt.getBytes, iterations.toInt, keyLengthInBytes)
     HashingResult(id, new String(encrypted), salt, iterations)
   }
-  register()
 }
 
 /**
  * A hasher based on the BCrypt algorithm
  */
-class BCryptHasher extends Hasher {
+object BCryptHasher extends Hasher {
 
   // Provide the name of this hasher
-  val id = 'BCrypt ;   register()
+  def id = 'BCrypt
 
 
   def defaultRounds = if ( isFastMode ) 4 else 10
@@ -219,9 +216,9 @@ class BCryptHasher extends Hasher {
 /**
  * A hasher based on the SCrypt algorithm
  */
-class SCryptHasher extends Hasher {
+object SCryptHasher extends Hasher {
 
-  override val id = 'SCrypt ; register()
+  def id = 'SCrypt
 
   def default_args = if (isFastMode)  (16384 << 16) | (1 << 8) | 1  else (1024 << 16) | (8 << 8) | 1
 

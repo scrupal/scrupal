@@ -17,6 +17,7 @@
 
 
 import play.twirl.sbt.Import.TwirlKeys
+import play.twirl.sbt.Import.TwirlKeys._
 import sbt._
 import sbt.Keys._
 
@@ -25,34 +26,14 @@ import sbt.Keys._
  * Only put things in here that must be identical for each sub-project. Otherwise,
  * Specialize below in the definition of each Project object.
  */
-trait BuildSettings
+trait BuildSettings extends CompilerSettings
 {
-  val buildSettings : Seq[Def.Setting[_]] = Seq (
+  val buildSettings : Seq[Def.Setting[_]] = compilerSettings ++ Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     // publishTo := Some(Resolvers.MyArtifactHost),
     organization    := "scrupal.org",
-    scalaVersion    := "2.11.2",
-    javacOptions ++= Seq(
-      "-encoding", "utf8",
-      "-g",
-      // "-J-Xmx1024m",
-	    "-Xlint"
-    ),
-    javacOptions in doc ++= Seq ("-source", "1.7"),
-    scalacOptions   ++= Seq(
-      "-J-Xss8m",
-      "-J-Xmx1024m",
-      "-feature",
-      "-Xlint",
-      "-unchecked",
-      "-deprecation",
-      "-language:implicitConversions",
-      "-language:postfixOps",
-      "-language:reflectiveCalls",
-      "-encoding", "utf8",
-      "-Ywarn-adapted-args",
-      "-target:jvm-1.7"
-    ),
+    version         := BuildInfo.projectVersion,
+
     sourceDirectories in Compile := Seq(baseDirectory.value / "src"),
     sourceDirectories in Test := Seq(baseDirectory.value / "test"),
     unmanagedSourceDirectories in Compile := Seq(baseDirectory.value / "src"),
@@ -67,13 +48,8 @@ trait BuildSettings
     parallelExecution in Test := false,
     logBuffered in Test := false,
     shellPrompt     := BuildCommands.buildShellPrompt,
-    version         := BuildInfo.projectVersion,
+    ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
     BuildCommands.printClasspath <<= BuildCommands.print_class_path
-  )
-
-  val twirlSettings : Seq[Def.Setting[_]] = Seq (
-    sourceDirectories in (Compile, TwirlKeys.compileTemplates) := (unmanagedSourceDirectories in Compile).value,
-    TwirlKeys.templateFormats += ("html" -> "play.twirl.api.HtmlFormat")
   )
 
   val docSettings : Seq[Def.Setting[_]] = Seq(

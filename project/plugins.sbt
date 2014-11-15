@@ -12,10 +12,6 @@ resolvers += "Sonatype respository" at "https://oss.sonatype.org/content/reposit
 
 resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
 
-
-// Use the Play sbt plugin for Play projects
-// addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.4")
-
 addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.0.3")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.7.6")
@@ -40,17 +36,16 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.0.2")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.6.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.5.2")
+
+// addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.6.4")
+// addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "0.7.1")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
 
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.11.2")
 
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.1")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "0.7.1")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.5.2")
 
 addSbtPlugin("com.github.mpeltonen" %% "sbt-idea" % "1.6.0")
 

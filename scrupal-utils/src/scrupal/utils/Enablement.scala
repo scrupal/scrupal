@@ -15,45 +15,17 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.http.controllers
+package scrupal.utils
 
-import scrupal.core.Scrupal
-import scrupal.core.api.Site
-import scrupal.fakes.{ScenarioGenerator, ScrupalSpecification}
-import scrupal.http.directives.SiteDirectives
-import spray.http.MediaTypes
-import spray.routing.HttpService
-import spray.testkit.Specs2RouteTest
+/** An Enablement Hierarchy For Immutable Objects
+  * We need to be able to enable and disable things but things relate to other things and so enablement is context
+  * dependent.
+  */
 
-/** Test Suite for EntityController */
-class EntityControllerSpec extends ScrupalSpecification("EntityControllerSpec")
-                           with Specs2RouteTest with HttpService with SiteDirectives
-                            {
+trait Enablee {
+  def isEnabled : Boolean
+}
 
-  def actorRefFactory = system
+object Enablement {
 
-  "EntityController" should {
-    "compute entity routes sanely" in {
-      val sc = ScenarioGenerator("test-EntityRoutes")
-      pending("Use ScenarioGenerator")
-    }
-    "forward a legitimate request" in {
-      pending("EntityController not implemented")
-    }
-    /* FIXME: This is producing false negatives while the same path WORKS when the Scrupal is run
-    "handle echo entity deftly" in {
-      val scrupal = new Scrupal("handle-echo-entity-deftly")
-      scrupal.open()
-      val sc = ScenarioGenerator("test-EntityRoutes")
-
-      val ec = new EntityController('ec,0,Site.all(0), Map())
-      Get("http://localhost/echo/echo/foo") ~> sealRoute(ec.routes(scrupal)) ~>
-      check {
-        responseAs[String].contains("Retrieve - foo") must beTrue
-        mediaType must beEqualTo(MediaTypes.`text/html`)
-      }
-      success
-    }
-    */
-  }
 }

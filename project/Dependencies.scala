@@ -97,6 +97,7 @@ trait Dependencies
   val grizzled_slf4j          = "org.clapper"         %% "grizzled-slf4j"         % "1.0.2"
   val mango                   = "org.feijoas"         %% "mango"                  % "0.11-SNAPSHOT"
   val joda_time               = "joda-time"           %  "joda-time"              % "2.5"
+  val joda_convert            = "org.joda"            % "joda-convert"            % "1.2"
   val mailer_plugin     = "com.typesafe.play.plugins" %% "play-plugins-mailer"    % "2.3.0"
   val config                  =  "com.typesafe"       %  "config"                 % "1.2.1"
 
@@ -138,7 +139,7 @@ trait Dependencies
   )
 
   val utils_dependencies : Seq[ModuleID] = Seq(
-    pbkdf2, bcrypt, scrypt, twirl_api, joda_time, config
+    pbkdf2, bcrypt, scrypt, twirl_api, joda_time, joda_convert, config
   ) ++ common_dependencies
 
   val db_dependencies : Seq[ModuleID] = Seq(

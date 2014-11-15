@@ -19,8 +19,9 @@ package scrupal.core.api
 
 import java.net.URL
 
+import akka.actor.ActorSystem
 import scrupal.core.{CoreSchema, Scrupal}
-import scrupal.db.DBContext
+import scrupal.db.{ScrupalDB, DBContext}
 import scrupal.utils.Configuration
 
 import spray.http._
@@ -68,6 +69,17 @@ trait Context {
        }
      }
   }
+
+  def withConfiguration[T](f: (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
+
+  def withDBContext[T](f: (DBContext) ⇒ T) : T = { scrupal.withDBContext(f) }
+
+  def withCoreSchema[T](f: (DBContext, ScrupalDB, CoreSchema) => T) : T = { scrupal.withCoreSchema(f) }
+
+  def withExecutionContext[T](f: (ExecutionContext) => T) : T = { scrupal.withExecutionContext(f) }
+
+  def withActorSystem[T](f : (ActorSystem) ⇒ T) : T = { scrupal.withActorSystem(f) }
+
 }
 
 /** A Basic context which just mixes the Context trait with the WrappedRequest.

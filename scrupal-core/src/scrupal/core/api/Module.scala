@@ -36,7 +36,7 @@ import scala.collection.immutable.HashMap
   * @param description A brief description of the module (purpose
   */
 trait Module extends Registrable[Module]
-                     with Authorable with Describable with Enablable
+                     with Authorable with Describable with Enablable with Settingsable
                      with Versionable with SelfValidator with Bootstrappable
 {
   /** The name of the database your module's schema wants to live in
@@ -122,11 +122,6 @@ trait Module extends Registrable[Module]
     entities foreach { entity  ⇒ require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap }
     nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.name.length > 0) ; node.bootstrap }
     // FIXME: What about handlers and schemas?
-  }
-
-  override final def enable() = {
-    // TODO: Make sure an invalid module never gets enabled
-    super.enable()
   }
 
   def validate() : ValidationResult = {

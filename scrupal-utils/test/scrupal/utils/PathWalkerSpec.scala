@@ -25,7 +25,7 @@ class PathWalkerSpec extends Specification {
 
   val test_doc = new Fixture[Map[String,Any]] {
     def apply[R : AsResult](f: Map[String,Any] => R) = {
-      val doc = Map(
+      val doc = Map[String,Any](
         "string" → "This is a string",
         "false" → false,
         "true" → true,

@@ -17,7 +17,6 @@
 
 package scrupal.utils
 
-import grizzled.slf4j.Logger
 import org.specs2.mutable.Specification
 
 import java.security.SecureRandom
@@ -26,24 +25,15 @@ import java.security.SecureRandom
  * One line sentence description here.
  * Further description here.
  */
-class HasherSpec extends Specification {
+class HasherSpec extends Specification with ScrupalComponent {
 
-  val password = new String(SecureRandom.getInstance("SHA1PRNG", "SUN").generateSeed(16))
-
-  val log = Logger("HasherSpec")
-
-  val h1 = new PBKDF2Hasher
-  val h2 = new SCryptHasher
-  val h3 = new BCryptHasher
+  sequential
 
   "Hasher" should {
-    "pick random hashers" in {
-      val list : Seq[Symbol] = for ( i <- 1 to 100 ) yield Hash.pick.id
-      list.distinct.size >= 2 must beTrue
-    }
+    val password = new String(SecureRandom.getInstance("SHA1PRNG", "SUN").generateSeed(16))
 
     "Right & Wrong Password Guesses Take the Same Time To Compute" in {
-      h1.inFastMode { hasher ⇒
+      PBKDF2Hasher.inFastMode { hasher ⇒
         val result = hasher.hash(password)
         val t1 = System.currentTimeMillis()
         val check1 = Hash.check(result, password)
@@ -60,7 +50,7 @@ class HasherSpec extends Specification {
     }
 
     "PBKDF2 works " in {
-      h1.inFastMode { hasher ⇒
+      PBKDF2Hasher.inFastMode { hasher ⇒
         val start = System.currentTimeMillis()
         val result = hasher.hash(password)
         val check = Hash.check(result, password) must beTrue
@@ -70,7 +60,7 @@ class HasherSpec extends Specification {
     }
 
     "BCrypt works" in {
-      h2.inFastMode { hasher ⇒
+      BCryptHasher.inFastMode { hasher ⇒
         val start = System.currentTimeMillis()
         val result = hasher.hash(password)
         val check = Hash.check(result, password) must beTrue
@@ -80,7 +70,7 @@ class HasherSpec extends Specification {
     }
 
     "SCrypt works" in {
-      h3.inFastMode { hasher ⇒
+      SCryptHasher.inFastMode { hasher ⇒
         val start = System.currentTimeMillis()
         val result = hasher.hash(password)
         val check = Hash.check(result, password) must beTrue
@@ -88,5 +78,11 @@ class HasherSpec extends Specification {
         check
       }
     }
+
+    "pick random hashers" in {
+      val list : Seq[Symbol] = for ( i <- 1 to 100 ) yield Hash.pick.id
+      list.distinct.size >= 2 must beTrue
+    }
+
   }
 }

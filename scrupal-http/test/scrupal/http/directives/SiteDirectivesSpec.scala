@@ -18,7 +18,6 @@
 package scrupal.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.Scrupal
 import scrupal.core.api.BasicSite
 import spray.testkit.Specs2RouteTest
 import spray.routing.{SchemeRejection, HttpService}
@@ -30,17 +29,19 @@ class SiteDirectivesSpec extends Specification with Specs2RouteTest with HttpSer
 
   def actorRefFactory = system
 
-  var s1 = BasicSite('site1, "TestSite", "Testing only", "site1", requireHttps=false).disable()
-  var s2 = BasicSite('site2, "TestSite", "Testing only", "site2", requireHttps=true).disable()
+  var s1 = BasicSite('site1, "TestSite", "Testing only", "site1", requireHttps=false)
+  var s2 = BasicSite('site2, "TestSite", "Testing only", "site2", requireHttps=true)
   var s3 = BasicSite('site3, "TestSite", "Testing only", "site3", requireHttps=false)
   var s4 = BasicSite('site4, "TestSite", "Testing only", "site4", requireHttps=true)
 
   "site" should {
+    /* FIXME: This needs to be rethought as enablement should not be done on a site directly
     "reject disabled site" in {
       Get(Uri("https://site2/")) ~> site { site => complete("works") } ~> check {
         rejection.toString must contain("is disabled")
       }
     }
+    */
     "reject http scheme for site with requireHttps" in {
       Get(Uri("http://site2/")) ~> site { site => complete("works") } ~> check {
         handled === false

@@ -15,45 +15,36 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.http.controllers
+import sbt.Def
+import sbt.Keys._
 
-import scrupal.core.Scrupal
-import scrupal.core.api.Site
-import scrupal.fakes.{ScenarioGenerator, ScrupalSpecification}
-import scrupal.http.directives.SiteDirectives
-import spray.http.MediaTypes
-import spray.routing.HttpService
-import spray.testkit.Specs2RouteTest
+trait CompilerSettings {
 
-/** Test Suite for EntityController */
-class EntityControllerSpec extends ScrupalSpecification("EntityControllerSpec")
-                           with Specs2RouteTest with HttpService with SiteDirectives
-                            {
+  lazy val compilerSettings : Seq[Def.Setting[_]] = Seq (
+    // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    // publishTo := Some(Resolvers.MyArtifactHost),
+    scalaVersion    := "2.11.4",
+    javacOptions ++= Seq(
+      "-encoding", "utf8",
+      "-g",
+      // "-J-Xmx1024m",
+      "-Xlint"
+    ),
+    javacOptions in doc ++= Seq ("-source", "1.7"),
+    scalacOptions   ++= Seq(
+      "-J-Xss8m",
+      "-J-Xmx1024m",
+      "-feature",
+      "-Xlint",
+      "-unchecked",
+      "-deprecation",
+      "-language:implicitConversions",
+      "-language:postfixOps",
+      "-language:reflectiveCalls",
+      "-encoding", "utf8",
+      "-Ywarn-adapted-args",
+      "-target:jvm-1.7"
+    )
+  )
 
-  def actorRefFactory = system
-
-  "EntityController" should {
-    "compute entity routes sanely" in {
-      val sc = ScenarioGenerator("test-EntityRoutes")
-      pending("Use ScenarioGenerator")
-    }
-    "forward a legitimate request" in {
-      pending("EntityController not implemented")
-    }
-    /* FIXME: This is producing false negatives while the same path WORKS when the Scrupal is run
-    "handle echo entity deftly" in {
-      val scrupal = new Scrupal("handle-echo-entity-deftly")
-      scrupal.open()
-      val sc = ScenarioGenerator("test-EntityRoutes")
-
-      val ec = new EntityController('ec,0,Site.all(0), Map())
-      Get("http://localhost/echo/echo/foo") ~> sealRoute(ec.routes(scrupal)) ~>
-      check {
-        responseAs[String].contains("Retrieve - foo") must beTrue
-        mediaType must beEqualTo(MediaTypes.`text/html`)
-      }
-      success
-    }
-    */
-  }
 }

@@ -72,8 +72,8 @@ trait Describable {
 
 /** Something that has settings that can be specified and changed */
 trait Settingsable extends SettingsInterface {
-  def settingsType : BundleType
-  def settingsDefault : BSONDocument
+  def settingsType : BundleType = BundleType.Empty
+  def settingsDefault : BSONDocument = BSONDocument()
   def settings : Settings = Settings(settingsType, settingsDefault, settingsDefault)
   def validate(doc: BSONDocument) : ValidationResult = settings.apply(doc)
   def validate(path: String) : ValidationResult = settings.validate(path)
@@ -92,18 +92,30 @@ trait Settingsable extends SettingsInterface {
 object enableSettings extends BundleType('enableSettings, "enableSettings", Map("enabled" → TheBoolean_t))
 
 /** Something that can be enabled or disabled */
-trait Enablable extends Settingsable {
+// FIXME: THis is ill-contrived. Enablement could be different depending on context. A feature could be
+// enabled in one application but not in another. We need a more general notion of enablement where this
+// trait merely registers the object as being a thing that can be enabled or not, and in which contexts.
+trait Enablable /* extends Settingsable */
+{
+  def isEnabled : Boolean = true
+
+
+  /*
+  protected def _enabled : Boolean
+  protected def copy_enabled(new_value: Boolean) : this.type
+
   final val enabled_key = "enabled"
   def settingsType : BundleType = enableSettings
   def settingsDefault : BSONDocument = BSONDocument(Map(enabled_key → BSONBoolean(value=true)))
   def isEnabled = getBoolean(enabled_key).get
-  def enable() : this.type = { setBoolean(enabled_key,value=true); this }
-  def disable() : this.type = { setBoolean(enabled_key,value=false); this }
+  def enable() : this.type = { copy_enabled(new_value=true) }
+  def disable() : this.type = { copy_enabled(this }
   /** Determine if the thing is enabled or not with a dynamic value
     *
     * @param how How to check for enablement: true or false
     */
   def enabled(how: Boolean): Unit = isEnabled == how
+   */
 }
 
 /** Something that contains a path component for a URL */

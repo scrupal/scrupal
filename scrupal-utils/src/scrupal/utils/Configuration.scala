@@ -771,7 +771,20 @@ object Configuration extends ScrupalComponent {
 
   def from(underlying: Config) = new Configuration(underlying)
 
-  def default = from(new File("."))
+  def default = {
+    val cwd = new File(".")
+    val conf = new File(cwd, "conf")
+    if (new File(cwd, "conf").isDirectory)
+      from(cwd)
+    else {
+      val parent = new File("..")
+
+      if (new File(parent, "conf").isDirectory)
+        from(parent)
+      else
+        from(ConfigFactory.load())
+    }
+  }
 
 
   private def configError(origin: ConfigOrigin, message: String, e: Option[Throwable] = None): ScrupalException = {

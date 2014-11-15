@@ -35,8 +35,8 @@ trait PathHelpers {
       else
         segments.map {
           case (prefix, value) ⇒
-            val provided : SegmentsResult[T] = HList(prefix,value)
-            stringExtractionPair2PathMatcher(prefix, provided)
+            val provided : SegmentsResult[T] = HList((prefix,value))
+            stringExtractionPair2PathMatcher((prefix, provided))
         }.reduceLeft(_ | _)
     }
     rawPathPrefix(matcher ~ Slash) hmap { x ⇒ x.head }

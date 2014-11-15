@@ -17,14 +17,31 @@
 
 package scrupal.fakes
 
+import org.specs2.execute.AsResult
+import org.specs2.specification.Fixture
 import scrupal.core.Scrupal
 import scrupal.core.api._
 
 /**
  * Created by reidspencer on 11/9/14.
  */
-class FakeContext extends Context {
-  val scrupal = new Scrupal(scala.concurrent.ExecutionContext.Implicits.global)
-  scrupal.beforeStart()
-  override val site = Some(BasicSite('context_site, "ContextSite", "Just For Testing", "localhost"))
+case class FakeContext(scrupalName: String) extends Context {
+  val scrupal = new Scrupal(scrupalName)
+  scrupal.open()
+  override val site = Some(BasicSite(Symbol(scrupalName+"-Site"), "ContextSite", "Just For Testing", "localhost"))
+  def close() = { scrupal.close() }
+}
+
+object FakeContext {
+  def fixture(name: String) = new Fixture[Context] {
+    def apply[R: AsResult](f: Context => R) = {
+      val ctxt = FakeContext(name)
+      try {
+        val result = f(ctxt)
+        AsResult(result)
+      } finally {
+        ctxt.close()
+      }
+    }
+  }
 }

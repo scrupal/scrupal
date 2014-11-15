@@ -19,16 +19,14 @@ package scrupal.core
 
 import java.util.concurrent.atomic.AtomicReference
 
-import akka.actor.ActorRef
+import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
-import reactivemongo.bson.BSONDocument
 import scrupal.core.actors.EntityProcessor
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
@@ -38,18 +36,39 @@ import scrupal.core.api._
 import scrupal.db.{ScrupalDB, DBContext}
 import scrupal.utils.{ScrupalComponent, Configuration}
 
-class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DBContext = null) extends ScrupalComponent
+class Scrupal(
+  name: String = "Scrupal",
+  config: Option[Configuration] = None,
+  ec: Option[ExecutionContext] = None,
+  disp: Option[ActorRef] = None,
+  dbc: Option[DBContext] = None,
+  actSys: Option[ActorSystem] = None
+)
+extends ScrupalComponent with AutoCloseable
 {
-  val Copyright = "2013, 2014 viritude llc"
+  val Copyright = "© 2013-2015 Reactific Systems, Inc. All Rights Reserved."
 
-  val _dbContext : AtomicReference[DBContext] = new AtomicReference[DBContext](dbc)
-  val _configuration : AtomicReference[Configuration] = new AtomicReference[Configuration](config)
-  val _executionContext : AtomicReference[ExecutionContext] = new AtomicReference[ExecutionContext](ec)
+  def id : Symbol = Symbol(name)// Hard coding this means it will be a singleton as registration of 2nd will fail
+
+  val _configuration  = config.getOrElse(Configuration.default)
+
+  implicit val _actorSystem = actSys.getOrElse(ActorSystem("Scrupal", _configuration.underlying))
+
+  implicit val _executionContext = ec.getOrElse(getExecutionContext(_configuration))
+
+  private[this] def getExecutionContext(config: Configuration) : ExecutionContext = {
+    // FIXME: This should be obtained from configuration instead
+    scala.concurrent.ExecutionContext.Implicits.global
+  }
+
+  lazy val _dispatcher = disp.getOrElse(EntityProcessor.makeSingletonRef(_actorSystem))
+
+
+  val _dbContext = new AtomicReference[DBContext](dbc.getOrElse(null))
+
 
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = {
-    val config = _configuration.get
-    require(config != null)
-    f(config)
+    f(_configuration)
   }
 
   def withDBContext[T](f: (DBContext) ⇒ T) : T = {
@@ -67,17 +86,22 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
   }
 
   def withExecutionContext[T](f: (ExecutionContext) => T) : T = {
-    implicit val ec = _executionContext.get()
-    require(ec != null)
-    f(ec)
+    implicit val ec = _executionContext
+    require(_executionContext != null)
+    f(_executionContext)
   }
+
+  def withActorSystem[T](f : (ActorSystem) ⇒ T) : T = {
+    f(_actorSystem)
+  }
+
 
   /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
     * Registry then we have had to found a database and loaded the sites. So that is our indicator of whether we
     * are configured yet or not.
     * @return True iff there are sites loaded
     */
-  def isReady : Boolean = _configuration.get() != null && Site.nonEmpty
+  def isReady : Boolean = _configuration.getConfig("scrupal").nonEmpty && Site.nonEmpty
 
   /**
 	 * Called before the application starts.
@@ -85,20 +109,13 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	 * Resources managed by plugins, such as database connections, are likely not available at this point.
 	 *
 	 */
-	def beforeStart() = {
-
-
+	def open() = {
     val config = onLoadConfig(Configuration.default)
-
-    _configuration.set(config)
-
-    // FIXME: This should be obtained from configuration instead
-    _executionContext.set(scala.concurrent.ExecutionContext.Implicits.global)
 
     // Get the database started up
     DBContext.startup()
 
-    val dbc = DBContext.fromConfiguration(Some(config))
+    val dbc = DBContext.fromConfiguration(Symbol(name+"-DB"), Some(config))
     _dbContext.set(dbc)
 
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
@@ -123,8 +140,13 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
     config -> dbc
   }
 
-  def afterStop(): Unit = {
+  def close() = {
     DBContext.shutdown()
+    _actorSystem.shutdown()
+  }
+
+  override def finalize = {
+    close()
   }
 
   type FlatConfig =  TreeMap[String,ConfigValue]
@@ -224,8 +246,6 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
     }
   }.toMap
 
-  // TODO: Instantiate the dispatching EntityProcessor (which requires configuration to work)
-  val THE_DISPATCHER : ActorRef = EntityProcessor.makeSingletonRef
 
   /** Handle An Action
     * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to
@@ -236,9 +256,7 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
     * @return A Future to the eventual Result[P]
     */
   def handle(action: Action) : Future[Result[_]] = {
-    withExecutionContext { implicit ec: ExecutionContext ⇒
-      THE_DISPATCHER.ask(action)(scrupal.core.actors.timeout) map { any ⇒ any.asInstanceOf[Result[_]] }
-    }
+    _dispatcher.ask(action)(scrupal.core.actors.timeout) map { any ⇒ any.asInstanceOf[Result[_]] }
   }
 
   /**
@@ -265,10 +283,12 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 
     // Make things from the configuration override defaults and database read settings
     // Features
+    // FIXME: This is illconceived. You should be able to set these on a per site/app/module level
+    /*
     config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enabled(value) }
     config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enabled(value) }
     config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enabled(value) }
-
+    */
     // return the configuration
     config
  	}
@@ -348,7 +368,6 @@ class Scrupal(ec: ExecutionContext = null, config: Configuration = null, dbc: DB
 	}
 }
 
-object Scrupal {
-
+object Scrupal{
 
 }

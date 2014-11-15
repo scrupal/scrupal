@@ -32,19 +32,6 @@ import scrupal.utils.ScrupalComponent
  */
 package object actors extends ScrupalComponent {
 
-  /** Creates, implicitly, a new ActorSystem named Scrupal-COre so that all of Scrupal's Core actors are separately
-    * managed from any other ActorSystem such as the ones Spray or ReactiveMongo uses. This is located in the package
-    * object for easy applicability in the scrupal.core.actors package.
-    */
-  implicit val system: ActorSystem = ActorSystem("Scrupal-Core")
-
-  /** Name of the configuration key for the configuration of the dispatcher */
-  val dispatcher_config_name = "scrupal.dispatcher"
-
-  /** Provides the execution context as a dispatcher defined in the configuration. This permits the number of threads
-    * and other aspects of the execution context to be controlled via configuration instead of hard coded here.
-    */
-  implicit val executionContext = system.dispatchers.lookup(dispatcher_config_name)
 
   /** Default Timeout
     * Code in this package is free to use other time out values but this is the default. We chose 8 seconds because

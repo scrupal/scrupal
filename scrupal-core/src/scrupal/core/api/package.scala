@@ -22,6 +22,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 import play.twirl.api.Html
+import scrupal.core.api.Type.BSONHandlerForRegistrable
 import spray.http.{MediaTypes, MediaType}
 import scala.concurrent.duration.{Duration}
 
@@ -57,8 +58,6 @@ import scrupal.utils._
   * At the package level we define mostly implicit BSON translaters needed throughout the core, for convenience.
   */
 package object api extends ScrupalComponent {
-
-  lazy val system = scrupal.core.actors.system
 
   lazy val utf8 = Charset.forName("UTF-8")
 
@@ -112,21 +111,15 @@ package object api extends ScrupalComponent {
     override def read(bson: BSONLong): Duration = Duration(bson.value, TimeUnit.NANOSECONDS)
   }
 
-  /** Handle reading/writing Type instances to and from BSON.
-    * Note that types are a little special. We write them as strings and restore them via lookup. Types are intended
-    * to only ever live in memory but they can be references in the database. So when a Type is a field of some
-    * class that is stored in the database, what actually gets stored is just the name of the type.
-    */
-  class BSONHandlerForRegistrable[T <: Registrable[_]] extends BSONHandler[BSONString,T] {
-    override def write(t: T): BSONString = BSONString(t.id.name)
-    override def read(bson: BSONString): T = Type.as(Symbol(bson.value))
-  }
-
   implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForRegistrable[Type]
   implicit val IndexableTypeHandler : BSONHandler[BSONString,IndexableType] = new BSONHandlerForRegistrable[IndexableType]
   implicit val StructuredTypeHandler : BSONHandler[BSONString,StructuredType] = new BSONHandlerForRegistrable[StructuredType]
   implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForRegistrable[BundleType]
-  implicit val EntityHandler : BSONHandler[BSONString,Entity] = new BSONHandlerForRegistrable[Entity]
+
+  implicit val EntityHandler : BSONHandler[BSONString,Entity] = new BSONHandler[BSONString,Entity] {
+    override def write(m: Entity): BSONString = BSONString(m.id.name)
+    override def read(bson: BSONString): Entity = Entity(Symbol(bson.value)).get
+  }
 
   implicit val ModuleHandler : BSONHandler[BSONString,Module] = new BSONHandler[BSONString,Module] {
     override def write(m: Module): BSONString = BSONString(m.id.name)
