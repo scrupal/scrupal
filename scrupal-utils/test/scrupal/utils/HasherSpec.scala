@@ -30,19 +30,21 @@ class HasherSpec extends Specification with ScrupalComponent {
   sequential
 
   "Hasher" should {
-    val password = new String(SecureRandom.getInstance("SHA1PRNG", "SUN").generateSeed(16))
+    val password = new String(SecureRandom.getInstance("SHA1PRNG", "SUN").generateSeed(128))
 
     "Right & Wrong Password Guesses Take the Same Time To Compute" in {
       PBKDF2Hasher.inFastMode { hasher ⇒
         val result = hasher.hash(password)
-        val t1 = System.currentTimeMillis()
+        val t1 = System.nanoTime()
         val check1 = Hash.check(result, password)
-        val t2 = System.currentTimeMillis()
+        val t2 = System.nanoTime()
         val check2 = Hash.check(result, "a")
-        val t3 = System.currentTimeMillis()
+        val t3 = System.nanoTime()
         log.debug("t1=" + t1 + ", t2=" + t2 + ", t3=" + t3 + ", t2-t1=" + (t2 - t1) + ", t3-t2=" + (t3 - t2))
-        val avg = ((t2 - t1) + (t3 - t2)) / 2
-        val delta = Math.abs((t2 - t1) - (t3 - t2))
+        val delta1_2 = Math.abs(t2 - t1)
+        val delta2_3 = Math.abs(t3 - t2)
+        val avg = (delta1_2 + delta2_3) / 2
+        val delta = Math.abs(delta1_2 - delta2_3)
         val ratio = delta.toDouble / avg.toDouble
         log.debug("avg=" + avg + ", delta=" + delta + ", ratio=" + ratio)
         ratio must beLessThan(0.25) // Less than 25% difference in timing
