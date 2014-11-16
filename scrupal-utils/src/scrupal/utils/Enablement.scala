@@ -100,6 +100,13 @@ trait Enablee extends Identifiable {
   def isEnabled(scope: Enablement[_]) : Boolean = { scope.isEnabled(this) }
   def isEnabled(scope: Enablement[_], how: Boolean): Boolean = { scope.isEnabled(this) == how }
   def enable(scope: Enablement[_]) : this.type = { scope.enable(this); this  }
+  def enable(scope: Enablement[_], how: Boolean) : this.type = {
+    how match {
+      case true ⇒ scope.enable(this)
+      case false ⇒ scope.disable(this)
+    }
+    this
+  }
   def disable(scope: Enablement[_]) : this.type = { scope.disable(this); this }
 }
 

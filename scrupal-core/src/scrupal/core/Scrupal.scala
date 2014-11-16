@@ -177,28 +177,22 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @param context The database context from which to load the
     */
   def load(config: Configuration, context: DBContext) : Map[String, Site] = {
-    Try {
-      val result: mutable.Map[String, Site] = mutable.Map() // FIXME: shouldn't need this, have the code below construct it
-      withCoreSchema { (dbc, db, schema) =>
-        schema.validate match {
-          case Success(true) =>
-            val sites = schema.sites.fetchAllSync(5.seconds)
-            for (s <- sites) {
-              log.debug(s"Loading site '${s._id.name}' for host ${s.host}, index=${s.siteRoot.toString}, enabled=${s
-                .isEnabled(this)}}")
-              result.put(s.host, s)
-            }
-          case Success(false) =>
-            log.warn(s"Attempt to validate schema for '${db.name}' failed.")
-          case Failure(x) =>
-            log.warn(s"Attempt to validate schema for '${db.name}' failed.", x)
-
-        }
+    withCoreSchema { (dbc, db, schema) =>
+      schema.validate match {
+        case Success(true) => {
+          for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
+            log.debug(s"Loading site '${s._id.name }' for host ${s.host}, index=${s.siteRoot.toString()}, enabled=${
+              s.isEnabled(this)}")
+            s.enable(this)
+            s.host → s
+          }
+        }.toMap
+        case Success(false) =>
+          log.warn(s"Attempt to validate schema for '${db.name}' failed.")
+          Map.empty[String,Site]
+        case Failure(e) => log.warn("Error while loading sites: ", e)
+          Map.empty[String,Site]
       }
-      Map(result.toSeq:_*)
-    } match {
-      case Success(x) => x
-      case Failure(e) => log.warn("Error while loading sites: ", e); Map[String,Site]()
     }
   }
 
@@ -274,12 +268,10 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 
     // Make things from the configuration override defaults and database read settings
     // Features
-    // FIXME: This is illconceived. You should be able to set these on a per site/app/module level
-    /*
-    config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enabled(value) }
-    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enabled(value) }
-    config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enabled(value) }
-    */
+    config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enable(this, value) }
+    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enable(this, value) }
+    config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enable(this, value) }
+
     // return the configuration
     config
  	}
