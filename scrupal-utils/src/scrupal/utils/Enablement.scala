@@ -44,7 +44,8 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
     if (forScope != this && !isChildScope(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so enablement for $enablee cannot be determined.")
     _enabled.lookup(enablee) match {
-      case Some(set) ⇒ set.contains(forScope)
+      case Some(set) ⇒
+        set.contains(forScope) && (enablee.parent match { case Some(e) ⇒ e.isEnabled(forScope) ; case None ⇒ true } )
       case None ⇒ false
     }
   }
@@ -96,9 +97,7 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
   */
 trait Enablee extends Identifiable {
   def parent : Option[Enablee] = None
-  def isEnabled(scope: Enablement[_]) : Boolean = {
-    scope.isEnabled(this) && (parent match { case Some(e) ⇒ e.isEnabled(scope) ; case None ⇒ true } )
-  }
+  def isEnabled(scope: Enablement[_]) : Boolean = { scope.isEnabled(this) }
   def isEnabled(scope: Enablement[_], how: Boolean): Boolean = { scope.isEnabled(this) == how }
   def enable(scope: Enablement[_]) : this.type = { scope.enable(this); this  }
   def disable(scope: Enablement[_]) : this.type = { scope.disable(this); this }

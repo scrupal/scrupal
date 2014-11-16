@@ -79,14 +79,12 @@ class EnablementSpec extends Specification {
       s.root_1.isEnabled(s.e_root) must beFalse
       s.root_1_a.isEnabled(s.e_root) must beFalse
     }
-    "allow enable on multiple scopes" in scenario { s ⇒
-      pending
+    "should not be enabled if parent is disabled" in scenario { s ⇒
+      s.root.disable(s.e_root)
+      s.root.enable(s.e_root_1)
+      s.root.isEnabled(s.e_root_1) must beFalse
+      s.e_root_1.isEnabled(s.root) must beFalse
     }
-    "allow disable on multiple scopes" in scenario { s ⇒
-      pending
-    }
-    "allow query on multiple scopes" in scenario { s ⇒
-      pending
-    }
+
   }
 }
