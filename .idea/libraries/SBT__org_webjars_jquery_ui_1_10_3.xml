@@ -5,10 +5,8 @@
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/jquery-ui/docs/jquery-ui-1.10.3-javadoc.jar!/" />
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/jquery-ui/docs/jquery-ui-1.10.3-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/jquery-ui/srcs/jquery-ui-1.10.3-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/jquery-ui/srcs/jquery-ui-1.10.3-sources.jar!/" />
     </SOURCES>
   </library>
