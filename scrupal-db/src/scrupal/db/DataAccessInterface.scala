@@ -23,7 +23,7 @@ import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.commands._
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONObjectID, _}
-import scrupal.utils.Registrable
+import scrupal.utils.{ScrupalComponent, Registrable}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -57,16 +57,16 @@ trait AutoStorable extends Storable[Option[BSONObjectID]] {
 /** An Abstract Interface To Data Access
  * Created by reid on 11/9/14.
  */
-trait DataAccessInterface[Model <: Storable[Id],Id] {
+trait DataAccessInterface[Model <: Storable[Id],Id] extends ScrupalComponent {
   import scrupal.db.BSONValueBuilder._
 
   type Reader <: BSONReader[BSONDocument,Model]
   type Writer <: BSONWriter[Model,BSONDocument]
   type Converter = (Id) => BSONValue
 
-  implicit val reader : Reader
-  implicit val writer : Writer
-  implicit val converter : Converter
+  implicit def reader : Reader
+  implicit def writer : Writer
+  implicit def converter : Converter
 
   def db : DefaultDB
   def collectionName: String
@@ -347,6 +347,28 @@ trait DataAccessInterface[Model <: Storable[Id],Id] {
   def ensureIndicesSync(implicit ec: ExecutionContext) : Traversable[Boolean] = {
     Await.result(ensureIndices, 5.seconds)
   }
+
+  /** Validate the schema for this DAO.
+    *
+    * This version checks two things: that the collection exists and that the indices are correct.
+    * Subclasses can do data validation if they like. This is the place to do it.
+    * @return A String message confirming the validation in a Try that on failure contains the exception
+    */
+  def validateSchema(implicit ec: ExecutionContext) : Future[String] = {
+    db.collectionNames.map { names ⇒
+      if (!names.contains(collectionName))
+        toss(s"Collection '$collectionName' is missing in database ${db.name }")
+      val actual_indices = db.indexesManager.list()
+      val expected = indices
+      actual_indices.map { actual ⇒
+        if (actual.size != expected.size)
+          toss(s"Number of indices did not match. Actual=${actual.size}, Expected=${expected.size}")
+      }
+      // TODO: Validate that the index contents match
+      s"Successfully validated $collectionName in database ${db.name}"
+    }
+  }
+
 
 }
 

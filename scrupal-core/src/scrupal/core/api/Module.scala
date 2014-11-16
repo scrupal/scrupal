@@ -25,6 +25,7 @@ import scrupal.db.{DBContext, Schema}
 import scrupal.utils._
 
 import scala.collection.immutable.HashMap
+import scala.concurrent.ExecutionContext
 
 
 /** A modular plugin to Scrupal to extend its functionality.
@@ -32,8 +33,6 @@ import scala.collection.immutable.HashMap
   * be extended to do things it was not originally invented to do. In fact, all functionality in Scrupal is implemented
   * in this way, even the core part of Scrupal. Only the meta-model to keep track of the information that modules
   * provide is fixed within Scrupal.
-  * @param id The name of the module
-  * @param description A brief description of the module (purpose
   */
 trait Module extends Registrable[Module]
                      with Authorable with Describable with Enablee with Enablement[Module] with Settingsable
@@ -191,7 +190,7 @@ object Module extends Registry[Module]  {
     None // TODO: Write ClassLoader code to load foreign modules on the classpath - maybe use OSGi ?
   }
 
-  private[scrupal] def installSchemas(implicit context: DBContext) : Unit = {
+  private[scrupal] def installSchemas(implicit context: DBContext, ec: ExecutionContext) : Unit = {
     // For each module ...
     values foreach { case mod: Module =>
       // In a database session ...
@@ -199,7 +198,7 @@ object Module extends Registry[Module]  {
         // For each schema ...
         mod.schemas.foreach { schema: Schema =>
           // Create the schema
-          schema.validate
+          schema.validateSchema
         }
       }
     }

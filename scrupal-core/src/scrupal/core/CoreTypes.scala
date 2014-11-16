@@ -289,8 +289,18 @@ case class SetType  (
   override def kind = 'Set
   def apply(value: BSONValue) : ValidationResult = {
     value match {
-      case a: BSONArray => validate(a.values, elemType) // FIXME: validate there are no duplicates
-      case x: BSONValue => wrongClass("BSONArray", x).map { s => Seq(s)}
+      case a: BSONArray =>
+        val vals = a.values // stop dealing with a stream
+        val msgs = validate(vals, elemType)
+        val distinct = vals.distinct
+        if (distinct.size != vals.size) {
+          val delta = vals.filterNot { x ⇒ distinct.contains(x) }
+          msgs.map { x ⇒ x ++ Seq(s"Set contains non-distinct values: $delta") }
+        }
+        else
+          msgs
+      case x: BSONValue =>
+        wrongClass("BSONArray", x).map { s => Seq(s)}
     }
   }
 }

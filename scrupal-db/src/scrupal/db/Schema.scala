@@ -18,8 +18,7 @@
 package scrupal.db
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Abstract Database Schema.
   * A Schema is a collection of related Entities. Each module should only define one Schema. The schema is primarily
@@ -44,11 +43,9 @@ abstract class Schema(val dbc: DBContext)
 
   def collectionNames: Seq[String] = daos map { dao => dao.collection.name }
 
-  final def validate: Try[Boolean] = Try {
-    val results : Seq[Boolean] = for (dao <- daos) yield {
-      validateDao(dao)
-    }
-    results.foldLeft(true) { (result,each) => result & each }
+  final def validateSchema(implicit ec: ExecutionContext) :  Future[Seq[String]] = {
+    val futures = for (dao <- daos) yield { dao.validateSchema }
+    Future sequence futures
   }
 
   // FIXME: protected def countCollection(name: String) = { dbc.withDatabase { db => db.command(new Count(name)) } }

@@ -24,10 +24,8 @@ import akka.pattern.ask
 import scrupal.core.actors.EntityProcessor
 
 import scala.collection.immutable.TreeMap
-import scala.collection.mutable
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{Await, Future, ExecutionContext}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
@@ -145,8 +143,15 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     // We are now ready to process the registered modules
     Module.bootstrap(configured_modules)
 
-    // Load the configuratoin
-    load(config, dbc)
+    // Load the configuration and wait at most 10 seconds for it
+    val load_result = Await.result(load(config, dbc), 10.seconds)
+    /* TODO: IMplement this so it doesn't thwart startup and test failures
+    if (load_result.isEmpty)
+      toss("Refusing to start because of load errors. Check logs for details.")
+    else {
+      log.info("Loaded Sites:\n" + load_result.map { case(x,y) ⇒ s"$x:${y.host}"})
+    }*/
+
 
     config -> dbc
   }
@@ -176,22 +181,21 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  def load(config: Configuration, context: DBContext) : Map[String, Site] = {
+  def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
     withCoreSchema { (dbc, db, schema) =>
-      schema.validate match {
-        case Success(true) => {
+      schema.validateSchema(_executionContext).map {
+        strings: Seq[String] ⇒ {
           for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
-            log.debug(s"Loading site '${s._id.name }' for host ${s.host}, index=${s.siteRoot.toString()}, enabled=${
+            log.debug(s"Loading site '${s._id.name }' for host ${s.host }, index=${s.siteRoot.toString() }, enabled=${
               s.isEnabled(this)}")
             s.enable(this)
             s.host → s
           }
         }.toMap
-        case Success(false) =>
-          log.warn(s"Attempt to validate schema for '${db.name}' failed.")
-          Map.empty[String,Site]
-        case Failure(e) => log.warn("Error while loading sites: ", e)
-          Map.empty[String,Site]
+      }.recover {
+        case x: Throwable ⇒
+          log.warn(s"Attempt to validate schema for '${db.name }' failed.", x)
+          Map.empty[String, Site]
       }
     }
   }
