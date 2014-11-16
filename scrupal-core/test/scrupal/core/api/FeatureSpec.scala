@@ -18,60 +18,63 @@
 package scrupal.core.api
 
 import org.specs2.mutable.Specification
+import scrupal.test.FakeContext
 
-/*
-object Fixture {
-  val impl_on = Feature('Enabled_Implemented, "Testing Feature: Enabled_Implemented", implemented = true)
-  val impl_off = Feature('Disabled_Implemented, "Testing Feature: Disabled_Implemented", implemented = true).disable
-  val unimpl_on = Feature('Enabled_Unimplemented, "Testing Feature: Enabled_Unimplemented", implemented = false)
-  val unimpl_off = Feature('Disabled_Unimplemented, "Testing Feature: Disabled_Unimplemented",implemented = false).disable
+
+case class Fixture(name: String) extends FakeContext[Fixture](name) {
+  val mod = new BasicModule(sym, "Description")
+  mod.enable(mod)
+  assert(mod.isEnabled(mod))
+  val omod = Some(mod)
+
+  val impl_on = Feature(sym, "Testing Feature: Enabled_Implemented", omod, implemented = true).enable(mod)
+  assert(impl_on.isEnabled(mod))
+  val impl_off = Feature(sym, "Testing Feature: Disabled_Implemented", omod, implemented = true)
+  assert(!impl_off.isEnabled(mod))
+  val unimpl_on = Feature(sym, "Testing Feature: Enabled_Unimplemented", omod, implemented = false).enable(mod)
+  assert(!unimpl_on.isEnabled(mod))
+  val unimpl_off = Feature(sym, "Testing Feature: Disabled_Unimplemented", omod, implemented = false)
+  assert(!unimpl_off.isEnabled(mod))
 }
-*/
+
 /** Test cases for the scrupal.api.Feature class
   * Further description here.
   */
 class FeatureSpec extends Specification {
 
-  /* FIXME: Testing Feature enablement should test the scoping and hierarchy when that is implemented
-
   "Feature" should {
-    "create with three arguments" in {
-      val other = Feature('other, "Other").disable()
-      other.isEnabled must beFalse
+    "create with three arguments" in Fixture("Create") { f : Fixture ⇒
+      val other = Feature('other, "Other", Some(f.mod)).disable(f.mod)
+      other.isEnabled(f.mod) must beFalse
       other.implemented must beTrue
     }
+
     "yield None for undefined Feature" in {
-      import Fixture._
       val maybe = Feature('DoesNotExist)
       maybe must beEqualTo(None)
     }
-    "access with one argument" in {
-      import Fixture._
-      val truth = Feature(impl_on.id)
+
+    "access with one argument" in Fixture("OneArg") { f : Fixture ⇒
+      val truth = Feature(f.impl_on.id)
       truth.isDefined must beTrue
-      val t = truth.get
-      t.isEnabled must beTrue
-      val truth2 = Feature(impl_off.id)
+      val t1 = truth.get
+      t1.isEnabled(f.mod) must beTrue
+      val truth2 = Feature(f.impl_off.id)
       truth2.isDefined must beTrue
       val t2 = truth2.get
-      t2.isEnabled must beFalse
+      t2.isEnabled(f.mod) must beFalse
     }
-    "enable and disable on request" in {
-      import Fixture._
-      val f = Feature('TestFeature, "Testing Feature").disable()
-      f.isEnabled must beFalse
-      f.enable()
-      f.isEnabled must beTrue
-      f.disable()
-      f.isEnabled must beFalse
+    "enable and disable on request" in Fixture("EnableDisable") { f: Fixture ⇒
+      val tf = Feature('TestFeature, "Testing Feature", f.omod).disable(f.mod)
+      tf.isEnabled(f.mod) must beFalse
+      tf.enable(f.mod)
+      tf.isEnabled(f.mod) must beTrue
+      tf.disable(f.mod)
+      tf.isEnabled(f.mod) must beFalse
     }
-    "convert to boolean implicitly" in {
-      import Fixture._
-      val impl_on = Feature('Enabled_Implemented, "Testing Feature: Enabled_Implemented", implemented=true)
-      val impl_off = Feature('Disabled_Implemented, "Testing Feature: Disabled_Implemented", implemented=true).disable
-      Feature.featureToBool(impl_on) must beTrue
-      impl_off.isEnabled must beFalse
-      if (Feature('Enabled_Implemented)) {
+    "convert to boolean implicitly" in Fixture("Convert") { f : Fixture ⇒
+      f.impl_off.isEnabled(f.mod) must beFalse
+      if (Feature(f.impl_on, f.mod)) {
         success
       }
       else
@@ -80,7 +83,7 @@ class FeatureSpec extends Specification {
       }
     }
   }
-
+/* TODO: See if this is worth reinstating
   "WithFeature" should {
     "Pass through for implemented/enabled" in new WithFakeScrupal {
       implicit val context = Context()

@@ -5,8 +5,10 @@
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/angular-ui-utils/docs/angular-ui-utils-47ff7ef35c-javadoc.jar!/" />
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/angular-ui-utils/docs/angular-ui-utils-47ff7ef35c-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/angular-ui-utils/srcs/angular-ui-utils-47ff7ef35c-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/angular-ui-utils/srcs/angular-ui-utils-47ff7ef35c-sources.jar!/" />
     </SOURCES>
   </library>

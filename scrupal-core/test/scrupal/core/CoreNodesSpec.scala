@@ -25,6 +25,17 @@ import scrupal.test.{ScrupalSpecification, FakeContext}
 import spray.http.MediaTypes
 import scrupal.core.api.utf8
 
+case class Fixture(name: String) extends FakeContext[Fixture](name) {
+
+  val message = MessageNode(sym, "Description", "text-warning", Html("This is boring."))
+  val basic = BasicNode(sym, "Description", Array[Byte]('s','c','r','u','p','a','l'))
+  val asset = AssetNode(sym, "Description", new File("fakeAsset.txt"), MediaTypes.`text/plain`)
+  val link = LinkNode(sym, "Description", new URL("http://scrupal.org/"))
+  val tags = Map[String,Symbol]("one" -> 'one, "two" -> 'two)
+  val layout = LayoutNode(sym, "Description", tags, 'no_such_layout, MediaTypes.`text/html`)
+
+}
+
 /** Test Cases For The Nodes in CoreNodes module
   * Created by reidspencer on 11/9/14.
   */
@@ -33,27 +44,24 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
   sequential
 
   "MessageNode" should {
-    "put a message in a <div> element" in FakeContext.fixture("MessageNode1") { context ⇒
-      val node = MessageNode('name, "Description", "text-warning", Html("This is boring."))
-      node(context) map { bytes =>
+    "put a message in a <div> element" in Fixture("MessageNode1") { f : Fixture ⇒
+      f.message(f) map { bytes : Array[Byte] =>
         val rendered = new String(bytes,utf8)
         rendered.startsWith("<div") must beTrue
         rendered.endsWith("</div>") must beTrue
       }
       success
     }
-    "have a text/html media format" in FakeContext.fixture("MessageNode2") { context ⇒
-      val node = MessageNode('name, "Description", "text-warning", Html("This is boring."))
-      node.mediaType must beEqualTo(MediaTypes.`text/html`)
-      node(context)
-      node.mediaType must beEqualTo(MediaTypes.`text/html`)
+    "have a text/html media format" in Fixture("MessageNode2") { f : Fixture ⇒
+      f.message.mediaType must beEqualTo(MediaTypes.`text/html`)
+      f.message(f)
+      f.message.mediaType must beEqualTo(MediaTypes.`text/html`)
     }
   }
 
   "BasicNode" should {
-    "echo its content" in FakeContext.fixture("BasicNode") { context ⇒
-      val node = BasicNode('name, "Description", Array[Byte]('s','c','r','u','p','a','l'))
-      node(context) map { bytes =>
+    "echo its content" in Fixture("BasicNode") { f : Fixture ⇒
+      f.basic(f) map { bytes : Array[Byte] =>
         val rendered = new String(bytes, utf8)
         rendered must beEqualTo("scrupal")
       }
@@ -62,9 +70,8 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
   }
 
   "AssetNode" should {
-    "load a simple file" in FakeContext.fixture("AssetNode") { context ⇒
-      val node = AssetNode('name, "Description", new File("fakeAsset.txt"), MediaTypes.`text/plain`)
-      node(context) map  { bytes =>
+    "load a simple file" in Fixture("AssetNode") { f: Fixture ⇒
+      f.asset(f) map  { bytes =>
         val rendered = new String(bytes, utf8)
         rendered.startsWith("This") must beTrue
         rendered.length must beEqualTo(80)
@@ -74,9 +81,8 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
   }
 
   "LinkNode" should {
-    "properly render a link" in FakeContext.fixture("LinkNode") { context ⇒
-      val node = LinkNode('name, "Description", new URL("http://scrupal.org/"))
-      node(context) map  { bytes =>
+    "properly render a link" in Fixture("LinkNode") { f: Fixture ⇒
+      f.link(f) map  { bytes =>
         val rendered = new String(bytes, utf8)
         rendered.startsWith("<a href=") must beTrue
         rendered.endsWith("</a>") must beTrue
@@ -88,14 +94,12 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
   }
 
   "LayoutNode" should {
-    "handle missing tags with missing layout" in FakeContext.fixture("LayoutNode") { context ⇒
-      val tags = Map[String,Symbol]("one" -> 'one, "two" -> 'two)
-      val node = LayoutNode('name, "Description", tags, 'no_such_layout, MediaTypes.`text/html`)
-      node(context) map { bytes =>
-        val resolved = tags.map { entry =>
-          entry._1 -> MessageNode('warning,"alert-warning", "", Html(s"Could not find node '${entry._1}"))
+    "handle missing tags with missing layout" in Fixture("LayoutNode") { f: Fixture ⇒
+      f.layout(f) map { bytes =>
+        val resolved = f.tags.map { entry =>
+          entry._1 -> MessageNode(f.sym,"alert-warning", "", Html(s"Could not find node '${entry._1}"))
         }
-        val expected = scrupal.core.views.html.pages.defaultLayout(context, resolved).body.getBytes(utf8)
+        val expected = scrupal.core.views.html.pages.defaultLayout(f, resolved).body.getBytes(utf8)
         bytes must beEqualTo(expected)
       }
       success

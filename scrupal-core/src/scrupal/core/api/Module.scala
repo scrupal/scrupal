@@ -91,7 +91,7 @@ trait Module extends Registrable[Module]
     */
   def handlers : Seq[HandlerFor[Event]]
 
-  def isChildScope(e: Enablement[_]) : Boolean = false
+  final def isChildScope(e: Enablement[_]) : Boolean = false
 
   /** The set of Database Schemas that this Module defines.
     * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
@@ -131,6 +131,23 @@ trait Module extends Registrable[Module]
     // TODO: Write the module validator
     None
   }
+}
+
+case class BasicModule(
+  id: Symbol,
+  description: String = "",
+  override val author: String = "",
+  override val copyright: String = "",
+  override val license: OSSLicense = OSSLicense.GPLv3,
+  version: Version = Version(0,1,0),
+  obsoletes: Version = Version(0,0,0),
+  features : Seq[Feature] = Seq(),
+  types: Seq[Type] = Seq(),
+  nodes: Seq[Node] = Seq(),
+  entities : Seq[Entity] = Seq(),
+  handlers : Seq[HandlerFor[Event]] = Seq()
+) extends Module {
+  def moreDetailsURL = new URL("http://example.com")
 }
 
 /** Amalgamated information about all registered Modules

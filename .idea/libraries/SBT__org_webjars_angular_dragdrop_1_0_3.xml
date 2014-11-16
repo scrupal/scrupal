@@ -5,6 +5,7 @@
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/angular-dragdrop/docs/angular-dragdrop-1.0.3-javadoc.jar!/" />
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/angular-dragdrop/docs/angular-dragdrop-1.0.3-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES />
   </library>

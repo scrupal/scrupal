@@ -25,7 +25,7 @@ abstract class AbstractFeature extends Registrable[Feature]
   def moduleOf = { Module.values.find(mod ⇒ mod.features.contains(this)) }
   override def parent = moduleOf
   def registry = Feature
-  override def isEnabled(scope: Enablement[_]) = implemented && isEnabled(scope)
+  override def isEnabled(scope: Enablement[_]) : Boolean = implemented && scope.isEnabled(this)
 }
 
 /** A Feature of a Module.
@@ -70,6 +70,9 @@ object Feature extends Registry[Feature] {
     val feature = super.apply(name).getOrElse(NotAFeature)
       scope.isEnabled(feature)
   }
+
+  def apply(name: Symbol, scope: Enablement[_]) : Boolean = enabled(name, scope)
+  def apply(f: Feature, scope: Enablement[_]) : Boolean = enabled(f.id, scope)
 
   lazy val NotAFeature = new Feature('NotAFeature, "This is not a feature", Some(CoreModule), false) {
     override def apply(scope: Enablement[_]) = toss(description)

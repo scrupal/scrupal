@@ -42,7 +42,7 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
 
   def isEnabled(enablee: Enablee, forScope: Enablement[_] = this) : Boolean = {
     if (forScope != this && !isChildScope(forScope))
-      toss(s"Scope ${forScope.id} is not a child of ${id} so enablement for $enablee cannot be determined.")
+      toss(s"Scope ${forScope.id} is not a child of $id so enablement for $enablee cannot be determined.")
     _enabled.lookup(enablee) match {
       case Some(set) ⇒
         set.contains(forScope) && (enablee.parent match { case Some(e) ⇒ e.isEnabled(forScope) ; case None ⇒ true } )
@@ -52,7 +52,7 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
 
   def enable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
     if (forScope != this && !isChildScope(forScope))
-      toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be enabled for it.")
+      toss(s"Scope ${forScope.id} is not a child of $id so $enablee cannot be enabled for it.")
     val update_value : mutable.HashSet[AnyRef] = _enabled.lookup(enablee) match {
       case Some(set) ⇒ set + forScope
       case None ⇒ mutable.HashSet(forScope)
@@ -62,7 +62,7 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
 
   def disable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
     if (forScope != this && !isChildScope(forScope))
-      toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be disabled for it.")
+      toss(s"Scope ${forScope.id} is not a child of $id so $enablee cannot be disabled for it.")
     _enabled.lookup(enablee) match {
       case Some(set) ⇒
         val update_value : mutable.HashSet[AnyRef] = set - forScope
@@ -76,7 +76,7 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
   }
 
   def forEachEnabled[C <: Enablee,R](f : C ⇒ R) : Seq[R] = {
-    for ( e ← _enabled.keys if e.isInstanceOf[C] && isEnabled(e,this) ) yield { f(e.asInstanceOf[C]) }
+    for ( e ← _enabled.keys if isEnabled(e,this) ) yield { f(e.asInstanceOf[C]) }
   }.toSeq
 
   def getEnablementMap : Map[Enablee,Seq[Enablement[_]]] = {

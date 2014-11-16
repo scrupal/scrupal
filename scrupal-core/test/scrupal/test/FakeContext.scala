@@ -17,6 +17,8 @@
 
 package scrupal.test
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.specs2.execute.AsResult
 import org.specs2.specification.Fixture
 import scrupal.core.Scrupal
@@ -25,23 +27,27 @@ import scrupal.core.api._
 /**
  * Created by reidspencer on 11/9/14.
  */
-case class FakeContext(scrupalName: String) extends Context {
+class FakeContext[T <: FakeContext[T]](scrupalName: String) extends Context with Fixture[T] with AutoCloseable {
   val scrupal = new Scrupal(scrupalName)
+  def nm(name: String = scrupalName) = name + FakeContext.counter.incrementAndGet()
+  def sym = Symbol(nm(scrupalName))
+
   scrupal.open()
-  override val site = Some(BasicSite(Symbol(scrupalName+"-Site"), "ContextSite", "Just For Testing", "localhost"))
+  override val site = Some(BasicSite(Symbol(scrupalName+"-Site"), "ContextSite", "Just For Testing", nm("localhost")))
   def close() = { scrupal.close() }
+  def apply[R: AsResult](f: T => R) = {
+    try {
+      val result = f(this.asInstanceOf[T])
+      AsResult(result)
+    } finally {
+      close()
+    }
+  }
 }
 
 object FakeContext {
-  def fixture(name: String) = new Fixture[Context] {
-    def apply[R: AsResult](f: Context => R) = {
-      val ctxt = FakeContext(name)
-      try {
-        val result = f(ctxt)
-        AsResult(result)
-      } finally {
-        ctxt.close()
-      }
-    }
-  }
+  def apply(name: String) = new FakeContext(name)
+  def fixture(name: String) = new FakeContext(name)
+  val counter = new AtomicInteger(0)
+
 }
