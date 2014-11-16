@@ -147,7 +147,7 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
       case Some(s) =>
         s.counter.decrementAndGet() match {
           case 0 =>
-            for (ctxt <- all) {
+            for (ctxt <- values) {
               ctxt.close()
               ctxt.unregister()
             }

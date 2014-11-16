@@ -69,7 +69,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
   def createRouter(scrupal: Scrupal) : Route = {
     Try {
       // Fold all the controller routes into one big one, sorted by priority
-      val sorted_controllers = Controller.all.sortBy { c => c.priority}
+      val sorted_controllers = Controller.values.sortBy { c => c.priority}
 
       if (sorted_controllers.isEmpty)
         toss("No controllers found")

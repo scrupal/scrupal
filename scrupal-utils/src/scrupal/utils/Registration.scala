@@ -24,6 +24,8 @@ import scala.util.Random
 trait Identifiable {
   def id : Symbol
   lazy val label = id.name
+  def registry : Registry[_]
+  def registryName : String = registry.registryName
 }
 
 /**
@@ -32,7 +34,6 @@ trait Identifiable {
 trait Registrable[T <: Registrable[T]] extends Identifiable {
   def registry : Registry[T]
   def asT : T
-  def registryName : String = registry.registryName
   def register() : Unit = registry.register(asT)
   def unregister() : Unit = registry.unregister(asT)
   def isRegistered : Boolean = registry.isRegistered(id)
@@ -67,7 +68,9 @@ trait AbstractRegistry[K, V <: AnyRef] extends ScrupalComponent {
 
   def nonEmpty : Boolean = _registry.nonEmpty
 
-  protected def _all = _registry.values.toSeq
+  protected def _values = _registry.values.toSeq
+
+  protected def _keys = _registry.keys
 
   protected def _registry: Map[K, V] = _registrants.get
 
@@ -121,11 +124,13 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] {
 
   def apply(name: Symbol) : Option[T] = lookup(name)
 
-  def all = _all
+  def values = _values
+
+  def keys = _keys
 
 
   def find(ids: Seq[Symbol]) : Seq[T] = {
-    all.filter { t ⇒ ids.contains(t.id) }
+    values.filter { t ⇒ ids.contains(t.id) }
   }
 
   def as[U <: Registrable[U]](id: Symbol) : U = {

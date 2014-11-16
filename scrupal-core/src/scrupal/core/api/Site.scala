@@ -25,7 +25,7 @@ import scrupal.core.Node
 import scrupal.core.echo.EchoApp
 
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
-import scrupal.utils.{AbstractRegistry, Registry}
+import scrupal.utils.{Enablee, Enablement, AbstractRegistry, Registry}
 
 /** Site Top Level Object
   * Scrupal manages sites.
@@ -33,15 +33,32 @@ import scrupal.utils.{AbstractRegistry, Registry}
  */
 trait Site
   extends VariantStorableRegistrable[Site]
-          with Nameable with Describable with Enablable with Modifiable
-{
+          with Nameable with Describable with Enablement[Site] with Enablee with Modifiable {
   def requireHttps: Boolean = false
+
   def host: String
-  def applications: Seq[Application]
+
   def siteRoot: Node
+
   def registry = Site
+
   def asT = this
+
   val kind = 'Site
+
+  def applications : Seq[Application] = Seq.empty[Application]
+
+  def isChildScope(e: Enablement[_]) : Boolean = applications.contains(e)
+
+  /** Mapping of application paths to Applications and their corresponding EntityMap  */
+  type ApplicationMap= Map[String,(Application,Application#EntityMap)]
+
+  def getApplicationMap : ApplicationMap = {
+    forEachEnabled { app: Application ⇒
+      app.path → (app → app.getEntityMap())
+    }
+  }.toMap
+
 }
 
 case class BasicSite (
@@ -50,11 +67,13 @@ case class BasicSite (
   description: String,
   host: String,
   siteRoot: Node = Node.Empty,
-  applications: Seq[Application] = Seq.empty[Application],
+  override val applications: Seq[Application] = Seq.empty[Application],
   override val requireHttps: Boolean = false,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-) extends Site
+) extends Site {
+  override val kind = 'BasicSite
+}
 
 object BasicSite {
   implicit val nodeReader = Node.NodeReader
@@ -88,9 +107,6 @@ object Site extends Registry[Site] {
 
   def forHost(hostName: String) = _byhost.lookup(hostName)
 
-  def forEachEnabled[T](f : Site ⇒ T) : Seq[T] = {
-    for ( s ← all if s.isEnabled ) yield { f(s) }
-  }
 
   implicit lazy val SiteReader = new VariantBSONDocumentReader[Site] {
     def read(doc: BSONDocument) : Site = {
@@ -106,10 +122,10 @@ object Site extends Registry[Site] {
   }
 
   implicit val SiteWriter = new VariantBSONDocumentWriter[Site] {
-    def write(app: Site) : BSONDocument = {
-      app.kind match {
-        case 'Basic  => BasicSite.BasicSiteHandler.write(app.asInstanceOf[BasicSite])
-        case _ ⇒ toss(s"Unknown kind of Site: ${app.kind}")
+    def write(site: Site) : BSONDocument = {
+      site.kind match {
+        case 'Basic  => BasicSite.BasicSiteHandler.write(site.asInstanceOf[BasicSite])
+        case _ ⇒ toss(s"Unknown kind of Site: ${site.kind}")
       }
     }
   }

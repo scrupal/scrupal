@@ -40,7 +40,7 @@ object EchoApp extends Application {
 
   val requiresAuthentication = false
 
-  def modules: Seq[Module] = Seq(EchoModule)
+  override def modules: Seq[Module] = Seq(EchoModule)
 
   def created: Option[DateTime] = Some(new DateTime(2014,11,11,5,53))
 

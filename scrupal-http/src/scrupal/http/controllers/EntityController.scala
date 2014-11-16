@@ -39,7 +39,7 @@ import scala.concurrent.ExecutionContext
   * start simply returning 404 instead of errors about unavailable resources.
   * Created by reid on 11/7/14.
   */
-case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntities: Scrupal#AppEntityMap)
+case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntities: Site#ApplicationMap)
   extends Controller with Directives with SiteDirectives with PathHelpers with ScrupalMarshallers
 {
 
@@ -71,7 +71,7 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
 
   def routes(scrupal: Scrupal) : Route = {
     scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-      site { aSite ⇒
+      site(scrupal) { aSite ⇒
         validate(aSite == theSite, s"Expected site ${theSite.name } but got ${aSite.name }") {
           app_entity {
             case (app: Application, entityName: String, entity: Entity) ⇒ {

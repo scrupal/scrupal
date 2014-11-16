@@ -17,7 +17,7 @@
 
 package scrupal.test
 
-import org.specs2.execute.AsResult
+import org.specs2.execute.{Result, AsResult}
 import org.specs2.specification.Fixture
 
 /** Title Of Thing.
@@ -33,4 +33,11 @@ class ClassFixture[CLASS <: AutoCloseable](create: ⇒ CLASS) extends Fixture[CL
       fixture.close()
     }
   }
+}
+
+class CaseClassFixture[T <: CaseClassFixture[T]] extends Fixture[T] {
+  def apply[R: AsResult](f: T => R)  = {
+    AsResult( f ( this.asInstanceOf[T] ) )
+  }
+
 }

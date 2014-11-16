@@ -46,7 +46,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
     */
   lazy val plural = Pluralizer.pluralize(label)
 
-  def moduleOf = { Module.all.find(mod ⇒ mod.types.contains(this)) }
+  def moduleOf = { Module.values.find(mod ⇒ mod.types.contains(this)) }
 
   /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
   def kind : Symbol = Symbol(super.getClass.getSimpleName.replace("$","_"))

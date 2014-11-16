@@ -162,4 +162,11 @@ package object api extends ScrupalComponent {
     override def write(elements: Map[String,BSONValue]): BSONDocument = BSONDocument(elements)
     override def read(doc: BSONDocument): Map[String,BSONValue] = doc.elements.toMap
   }
+
+  implicit val EnablementHandler = new BSONHandler[BSONDocument,Enablement[_]] {
+    override def write(e: Enablement[_]): BSONDocument =
+      Reference.ReferenceHandler.write(new Reference[Identifiable](e.id,e.registryName))
+    override def read(doc: BSONDocument): Enablement[_] =
+      Reference.ReferenceHandler.read(doc)().asInstanceOf[Enablement[_]]
+  }
 }

@@ -16,11 +16,17 @@
  **********************************************************************************************************************/
 package scrupal.core.api
 
-import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson._
-import scrupal.db.{StorableRegistrable, IdentifierDAO}
-import scrupal.utils.Registry
+import scrupal.core.CoreModule
+import scrupal.utils.{Registrable, Enablee, Enablement, Registry}
+
+abstract class AbstractFeature extends Registrable[Feature]
+                                       with Describable with Enablee with ModuleOwned with Bootstrappable {
+  def implemented : Boolean
+  def moduleOf = { Module.values.find(mod ⇒ mod.features.contains(this)) }
+  override def parent = moduleOf
+  def registry = Feature
+  override def isEnabled(scope: Enablement[_]) = implemented && isEnabled(scope)
+}
 
 /** A Feature of a Module.
   * Features are things that can be enabled or disabled that affect how a Module does its work. Scrupal handles the
@@ -32,12 +38,10 @@ import scrupal.utils.Registry
 case class Feature(
   id: Symbol,
   description: String,
+  override val parent: Option[Module],
   implemented: Boolean = true
-) extends StorableRegistrable[Feature] with Describable with Enablable with ModuleOwned with Bootstrappable {
-  def registry = Feature
+) extends AbstractFeature {
   def asT = this
-
-  def moduleOf = { Module.all.find(mod ⇒ mod.features.contains(this)) }
 
   /** Get the name of the feature */
   def name = id.name
@@ -50,7 +54,7 @@ case class Feature(
     * }}}
     * @return
     */
-  def apply() : Boolean = isEnabled
+  def apply(scope: Enablement[_]) : Boolean = scope.isEnabled(this)
 }
 
 /** Feature Registry and companion
@@ -59,13 +63,19 @@ case class Feature(
   */
 object Feature extends Registry[Feature] {
   override val registrantsName = "feature"
-  override def logger_identity = s"${registryName}Registry"
   override val registryName = "Features"
-  def enabled(name: Symbol) : Boolean = super.apply(name).getOrElse(NotAFeature).isEnabled
+  override def logger_identity = s"${registryName}Registry"
 
-  implicit def featureToBool(f : Feature) : Boolean = f.isEnabled
-  implicit def featureToBool(f : Option[Feature]) : Boolean = f.getOrElse(NotAFeature).isEnabled
+  def enabled(name: Symbol, scope: Enablement[_]) : Boolean = {
+    val feature = super.apply(name).getOrElse(NotAFeature)
+      scope.isEnabled(feature)
+  }
 
+  lazy val NotAFeature = new Feature('NotAFeature, "This is not a feature", Some(CoreModule), false) {
+    override def apply(scope: Enablement[_]) = toss(description)
+  }
+
+  /*
   case class FeatureDAO(db: DefaultDB) extends IdentifierDAO[Feature] {
     final def collectionName = "features"
     implicit val reader : IdentifierDAO[Feature]#Reader = Macros.reader[Feature]
@@ -74,8 +84,5 @@ object Feature extends Registry[Feature] {
       Index(key = Seq("module" -> IndexType.Ascending), name = Some("Module"))
     )
   }
-
-  object NotAFeature extends Feature('NotAFeature, "This is not a feature", false) {
-    override def apply() = toss(description)
-  }
+*/
 }

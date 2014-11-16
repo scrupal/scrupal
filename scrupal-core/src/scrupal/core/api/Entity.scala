@@ -21,7 +21,7 @@ import reactivemongo.bson._
 import scrupal.core.BundleType
 import scrupal.db.{VariantStorableRegistrable, IdentifierDAO, ScrupalDB}
 
-import scrupal.utils.{Patterns, Pluralizer}
+import scrupal.utils.{Enablee, Patterns, Pluralizer}
 
 trait EntityCommand extends Action {
   def apply : Result[_]
@@ -141,10 +141,12 @@ abstract class Invoke(val context: ApplicationContext, val id: String, val what:
   */
 abstract class Entity
   extends EntityCommandProvider with VariantStorableRegistrable[Entity] with ModuleOwned
-          with Authorable with Describable with Enablable
+          with Authorable with Describable with Enablee
           with Pathable with BSONValidator[BSONDocument] with Bootstrappable
 {
-  def moduleOf = { Module.all.find(mod ⇒ mod.entities.contains(this)) }
+  def moduleOf = { Module.values.find(mod ⇒ mod.entities.contains(this)) }
+
+  override def parent = moduleOf
 
   def instanceType: BundleType
 

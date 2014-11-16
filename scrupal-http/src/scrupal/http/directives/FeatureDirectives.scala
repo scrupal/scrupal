@@ -18,6 +18,7 @@
 package scrupal.http.directives
 
 import scrupal.core.api.Feature
+import scrupal.utils.Enablement
 import spray.routing._
 import spray.routing.Directives._
 
@@ -26,9 +27,9 @@ import spray.routing.Directives._
  */
 trait FeatureDirectives {
 
-  def feature(theFeature: Feature) : Directive0 = {
+  def feature(theFeature: Feature, scope: Enablement[_]) : Directive0 = {
     if (theFeature.implemented) {
-      if (theFeature.isEnabled) {
+      if (theFeature.isEnabled(scope)) {
         pass
       } else {
         reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not enabled."))

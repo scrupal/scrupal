@@ -75,22 +75,22 @@ object Boot extends App with ScrupalComponent
   }
 
   def checkReady() = {
-    for (s ← Site.all if s.isEnabled) {
-      val app_names = for (app ← s.applications if app.isEnabled) yield {
-        for (mod ← app.modules if mod.isEnabled) yield {
-          val paths = for (ent ← mod.entities if mod.isEnabled) yield {ent.path }
+    for (site ← Site.values if site.isEnabled(scrupal)) {
+      val app_names = for (app ← site.applications if app.isEnabled(site)) yield {
+        for (mod ← app.modules if mod.isEnabled(app)) yield {
+          val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield {ent.path }
           val distinct_paths = paths.distinct
           if (paths.size != distinct_paths.size) {
             toss(
               s"Cowardly refusing to start with duplicate entity paths in module ${mod.label } in application ${mod
-                .label } in site ${s.label }")
+                .label } in site ${site.label }")
           }
         }
         app.label
       }
       val distinct_app_names = app_names.distinct
       if (app_names.size != distinct_app_names.size) {
-        toss(s"Cowardly refusing to start with duplicate application names in site ${s.label }")
+        toss(s"Cowardly refusing to start with duplicate application names in site ${site.label }")
       }
     }
   }

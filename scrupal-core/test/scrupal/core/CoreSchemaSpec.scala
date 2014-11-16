@@ -29,7 +29,6 @@ class CoreSchemaSpec extends ScrupalSpecification("CoreSchemaSpec") {
     "Accumulate table names correctly" in {
       withCoreSchema { schema =>
         val names = schema.collectionNames
-        names.contains("features") must beTrue
         names.contains("instances") must beTrue
         names.contains("alerts") must beTrue
         names.contains("sites") must beTrue

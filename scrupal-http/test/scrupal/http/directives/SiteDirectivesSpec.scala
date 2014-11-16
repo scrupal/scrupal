@@ -18,10 +18,23 @@
 package scrupal.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.api.BasicSite
+import scrupal.core.Scrupal
+import scrupal.core.api.{Site, BasicSite}
+import scrupal.test.{CaseClassFixture}
 import spray.testkit.Specs2RouteTest
 import spray.routing.{SchemeRejection, HttpService}
 import spray.http.Uri
+
+case class Sites(name: String) extends CaseClassFixture[Sites] {
+  val scrupal = new Scrupal(name)
+  def mkName(int: Int) : Symbol = Symbol(name + int)
+  val s1 = BasicSite(mkName(1), "TestSite", "Testing only", "site1", requireHttps=false)
+  val s2 = BasicSite(mkName(2), "TestSite", "Testing only", "site2", requireHttps=true)
+  val s3 = BasicSite(mkName(3), "TestSite", "Testing only", "site3", requireHttps=false)
+  val s4 = BasicSite(mkName(4), "TestSite", "Testing only", "site4", requireHttps=true)
+  scrupal.enable(s3)
+  scrupal.enable(s4)
+}
 
 /** Test Suite For SiteDirectives
  */
@@ -29,10 +42,7 @@ class SiteDirectivesSpec extends Specification with Specs2RouteTest with HttpSer
 
   def actorRefFactory = system
 
-  var s1 = BasicSite('site1, "TestSite", "Testing only", "site1", requireHttps=false)
-  var s2 = BasicSite('site2, "TestSite", "Testing only", "site2", requireHttps=true)
-  var s3 = BasicSite('site3, "TestSite", "Testing only", "site3", requireHttps=false)
-  var s4 = BasicSite('site4, "TestSite", "Testing only", "site4", requireHttps=true)
+  /*
 
   "site" should {
     /* FIXME: This needs to be rethought as enablement should not be done on a site directly
@@ -42,30 +52,31 @@ class SiteDirectivesSpec extends Specification with Specs2RouteTest with HttpSer
       }
     }
     */
-    "reject http scheme for site with requireHttps" in {
-      Get(Uri("http://site2/")) ~> site { site => complete("works") } ~> check {
+    "reject http scheme for site with requireHttps" in { Sites("rejectHttp") { sites : Sites ⇒
+      Get(Uri("http://site2/")) ~> site(sites.scrupal) { site : Site => complete("works") } ~> check {
         handled === false
       }
-    }
-    "reject https scheme for site without requireHttps " in {
-      Get(Uri("https://site1")) ~> site { site => complete("works") } ~> check {
+    }}
+    "reject https scheme for site without requireHttps " in { Sites("rejectHttps") { sites ⇒
+      Get(Uri("https://site1")) ~> site(sites.scrupal) { site : Site => complete("works") } ~> check {
         handled === false
       }
-    }
-    "reject non-sensical scheme" in {
-      Get(Uri("ftp://site1")) ~> site { site => complete("works") } ~> check {
+    }}
+    "reject non-sensical scheme" in { Sites("rejectNonsense") { sites: Sites ⇒
+      Get(Uri("ftp://site1")) ~> site(sites.scrupal) { site : Site => complete("works") } ~> check {
         rejections === List(SchemeRejection("http"), SchemeRejection("https"))
       }
-    }
-    "accept enabled http site" in {
-      Get("http://site3") ~> site { site => complete("") } ~> check {
+    }}
+    "accept enabled http site" in { Sites("accpetHttp") { sites : Sites ⇒
+      Get("http://site3") ~> site(sites.scrupal) { site : Site => complete("") } ~> check {
         handled === true
       }
-    }
-    "accept enabled https site" in {
-      Get("https://site4") ~> site { site => complete("") } ~> check {
+    }}
+    "accept enabled https site" in { Sites("acceptHttps") { sites: Sites ⇒
+      Get("https://site4") ~> site(sites.scrupal) { site : Site => complete("") } ~> check {
         handled === true
       }
-    }
-  }
+    }}
+  } */
+
 }

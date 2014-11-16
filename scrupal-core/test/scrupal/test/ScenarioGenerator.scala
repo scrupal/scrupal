@@ -46,16 +46,16 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
     MessageNode(Symbol(name),name,"text-success", Html(s"This is node $name"))
   }
 
-  def genFeature(id: Int) : Feature = {
+  def genFeature(id: Int, mod: Module) : Feature = {
     val name = s"Feature-$id"
-    Feature(Symbol(name), name)
+    Feature(Symbol(name), name, Some(mod))
   }
 
   case class ScenarioModule(override val id: Symbol) extends AbstractFakeModule(id,dbName) {
     override val description = id.name
 
     override def features : Seq[Feature] = {
-      for (i ← 1 to ftrs) yield { genFeature(i) }
+      for (i ← 1 to ftrs) yield { genFeature(i, this) }
     }
 
     /** The core types that Scrupal provides to all modules */
@@ -82,7 +82,7 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
       genModule(i)
     }
     val name = s"Application-$id"
-    BasicApplication(Symbol(name), name, name, modules)
+    BasicApplication(Symbol(name), name, name)
   }
 
   def genSite(id: Int, apps: Int, mods: Int, ents: Int, instances: Int, nodes: Int) = {

@@ -1,6 +1,6 @@
 @()(implicit context : scrupal.core.api.Context)
 @import scrupal.core.api.Feature
-@if(Feature.enabled('DebugFooter)){
+@if(Feature.enabled('DebugFooter, context.scrupal)){
 @** NOTE: This has to be HTML because it might get mixed into a non-angular page. *@
 <div class="span10 row" style="font-size: 0.75em">
 <table class="span10 table table-striped table-bordered table-condensed">

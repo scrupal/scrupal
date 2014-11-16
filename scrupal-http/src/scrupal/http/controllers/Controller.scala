@@ -52,11 +52,11 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
 
   def spaces2underscores(what: String) = what.replaceAll(" ","_")
 
-  def modules = Module.all
-  def moduleNames : Seq[String]  = Module.all map { module: Module => module.label }
+  def modules = Module.values
+  def moduleNames : Seq[String]  = Module.values map { module: Module => module.label }
   def moduleTypeNames(mod:Module)  : Seq[String] = mod.types map { typ => typ.label }
 
-  def types       : Seq[Type]    = Module.all flatMap { module => module.types }
+  def types       : Seq[Type]    = Module.values flatMap { module => module.types }
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 }
 

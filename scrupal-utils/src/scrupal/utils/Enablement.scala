@@ -29,43 +29,59 @@ import scala.collection.mutable
   *
   */
 
-trait Enbalement extends AbstractRegistry[Enablee,mutable.HashSet[Enbalement]] {
-  def id : Symbol
-  def children : Seq[Enbalement] = Seq.empty[Enbalement]
+trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponent {
 
-  def isEnabled(enablee: Enablee, forScope: Enbalement = this) : Boolean = {
-    if (forScope != this && !children.contains(forScope))
+  private val _enabled = new  AbstractRegistry[Enablee,mutable.HashSet[AnyRef]] {
+    def register(key: Enablee, obj: mutable.HashSet[AnyRef]) = _register(key, obj)
+    def unregister(key: Enablee) = _unregister(key)
+    def keys = _keys
+    def registry = _registry
+  }
+
+  def isChildScope(scope: Enablement[_]) : Boolean
+
+  def isEnabled(enablee: Enablee, forScope: Enablement[_] = this) : Boolean = {
+    if (forScope != this && !isChildScope(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so enablement for $enablee cannot be determined.")
-    lookup(enablee) match {
+    _enabled.lookup(enablee) match {
       case Some(set) ⇒ set.contains(forScope)
       case None ⇒ false
     }
   }
 
-  def enable(enablee: Enablee, forScope: Enbalement = this) : Unit  = {
-    if (forScope != this && !children.contains(forScope))
+  def enable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
+    if (forScope != this && !isChildScope(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be enabled for it.")
-    val update_value = lookup(enablee) match {
+    val update_value : mutable.HashSet[AnyRef] = _enabled.lookup(enablee) match {
       case Some(set) ⇒ set + forScope
       case None ⇒ mutable.HashSet(forScope)
     }
-    _register(enablee, update_value)
+    _enabled.register(enablee, update_value)
   }
 
-  def disable(enablee: Enablee, forScope: Enbalement = this) : Unit = {
-    if (forScope != this && !children.contains(forScope))
+  def disable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
+    if (forScope != this && !isChildScope(forScope))
       toss(s"Scope ${forScope.id} is not a child of ${id} so $enablee cannot be disabled for it.")
-    lookup(enablee) match {
+    _enabled.lookup(enablee) match {
       case Some(set) ⇒
-        val update_value = set - forScope
+        val update_value : mutable.HashSet[AnyRef] = set - forScope
         if (update_value.isEmpty)
-          _unregister(enablee)
+          _enabled.unregister(enablee)
         else
-          _register(enablee, update_value)
+          _enabled.register(enablee, update_value)
       case None ⇒
         log.debug(s"Attempt to disable $enablee that wasn't enabled.")
     }
   }
+
+  def forEachEnabled[C <: Enablee,R](f : C ⇒ R) : Seq[R] = {
+    for ( e ← _enabled.keys if e.isInstanceOf[C] && isEnabled(e,this) ) yield { f(e.asInstanceOf[C]) }
+  }.toSeq
+
+  def getEnablementMap : Map[Enablee,Seq[Enablement[_]]] = {
+    _enabled.registry.map { case (k,v) ⇒ k -> v.toSeq.map { ar ⇒ ar.asInstanceOf[Enablement[_]] } }
+  }
+
 }
 
 /** Something that can be enabled or disabled.
@@ -78,13 +94,13 @@ trait Enbalement extends AbstractRegistry[Enablee,mutable.HashSet[Enbalement]] {
   * Note that enablement is NOT recorded in the Enablee directly even though the convenience methods might seem to
   * indicate that. All the enabled/disabled status is recorded in the Enablement objects.
   */
-trait Enablee {
+trait Enablee extends Identifiable {
   def parent : Option[Enablee] = None
-  def isEnabled(scope: Enbalement) : Boolean = {
+  def isEnabled(scope: Enablement[_]) : Boolean = {
     scope.isEnabled(this) && (parent match { case Some(e) ⇒ e.isEnabled(scope) ; case None ⇒ true } )
   }
-  def isEnabled(scope: Enbalement, how: Boolean): Boolean = { scope.isEnabled(this) == how }
-  def enable(scope: Enbalement) : this.type = { scope.enable(this); this  }
-  def disable(scope: Enbalement) : this.type = { scope.disable(this); this }
+  def isEnabled(scope: Enablement[_], how: Boolean): Boolean = { scope.isEnabled(this) == how }
+  def enable(scope: Enablement[_]) : this.type = { scope.enable(this); this  }
+  def disable(scope: Enablement[_]) : this.type = { scope.disable(this); this }
 }
 

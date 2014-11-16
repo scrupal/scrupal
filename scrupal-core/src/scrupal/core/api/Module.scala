@@ -22,7 +22,7 @@ import java.net.URL
 import scrupal.core.CoreModule
 import scrupal.core.echo.EchoModule
 import scrupal.db.{DBContext, Schema}
-import scrupal.utils.{Registrable, Registry, Version}
+import scrupal.utils._
 
 import scala.collection.immutable.HashMap
 
@@ -36,7 +36,7 @@ import scala.collection.immutable.HashMap
   * @param description A brief description of the module (purpose
   */
 trait Module extends Registrable[Module]
-                     with Authorable with Describable with Enablable with Settingsable
+                     with Authorable with Describable with Enablee with Enablement[Module] with Settingsable
                      with Versionable with SelfValidator with Bootstrappable
 {
   /** The name of the database your module's schema wants to live in
@@ -91,6 +91,8 @@ trait Module extends Registrable[Module]
     */
   def handlers : Seq[HandlerFor[Event]]
 
+  def isChildScope(e: Enablement[_]) : Boolean = false
+
   /** The set of Database Schemas that this Module defines.
     * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
     * schemas.
@@ -110,6 +112,7 @@ trait Module extends Registrable[Module]
     }
   }
 
+
   /** Load lazy instantiated objects into memory
     *   This is part of the bootstrapping mechanism
     */
@@ -117,10 +120,10 @@ trait Module extends Registrable[Module]
 
     // Touch the various aspects of the module by by asking for it's id's length.
     // This just makes sure it gets instantiated & registered as well as not being null
-    features foreach { feature ⇒ require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap }
-    types    foreach { typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap }
-    entities foreach { entity  ⇒ require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap }
-    nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.name.length > 0) ; node.bootstrap }
+    features foreach { feature ⇒ require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap() }
+    types    foreach { typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap() }
+    entities foreach { entity  ⇒ require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap() }
+    nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.name.length > 0) ; node.bootstrap() }
     // FIXME: What about handlers and schemas?
   }
 
@@ -135,7 +138,7 @@ trait Module extends Registrable[Module]
   * it will register itself with this module. Upon registration, the information it provides about the module is
   * amalgamated into this object for use by the rest of Scrupal.
   */
-object Module extends Registry[Module] {
+object Module extends Registry[Module]  {
 
   override val registryName = "Modules"
   override val registrantsName = "module"
@@ -173,7 +176,7 @@ object Module extends Registry[Module] {
 
   private[scrupal] def installSchemas(implicit context: DBContext) : Unit = {
     // For each module ...
-    all foreach { case mod: Module =>
+    values foreach { case mod: Module =>
       // In a database session ...
       context.withDatabase(mod.dbName) { implicit db =>
         // For each schema ...

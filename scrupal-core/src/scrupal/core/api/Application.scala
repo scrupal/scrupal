@@ -22,7 +22,7 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
-import scrupal.utils.{AbstractRegistry, Patterns, Registry}
+import scrupal.utils._
 
 /** A Scrupal Application
   * Applications are a fundamental unit of organization in Scrupal. A Site defines the set of applications that are to
@@ -31,7 +31,7 @@ import scrupal.utils.{AbstractRegistry, Patterns, Registry}
  */
 trait Application
   extends VariantStorableRegistrable[Application]
-          with Nameable with Describable with Modifiable with Enablable {
+          with Nameable with Describable with Modifiable with Enablement[Application] with Enablee {
   def registry: Registry[Application] = Application
   def asT : Application = this
 
@@ -44,7 +44,23 @@ trait Application
   /** Applicable Modules
     * This modules are assigned (enabled) within this application
     */
-  def modules: Seq[Module]
+  def modules = forEachEnabled[Module,Module] { e ⇒ e }
+
+  def entities = forEachEnabled[Entity,Entity] { e ⇒ e }
+
+  def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
+
+  type EntityMap = Map[String,(String,Entity)]
+
+  def getEntityMap() : EntityMap = {
+    for (
+      entity ← entities if entity.isEnabled(this) ;
+      name ← Seq(entity.path, entity.plural_path)
+    ) yield {
+      name → (name → entity)
+    }
+  }.toMap
+
 
 }
 
@@ -52,11 +68,10 @@ case class BasicApplication(
   id : Identifier,
   name: String,
   description: String,
-  modules: Seq[Module] = Seq.empty[Module],
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None
 ) extends Application {
-  final val kind = 'Basic
+  final val kind = 'BasicApplication
 }
 
 object BasicApplication {

@@ -21,8 +21,22 @@ import org.specs2.mutable.Specification
 import scrupal.test.ClassFixture
 
 class Scenario extends AutoCloseable {
-  case class TestScope(id: Symbol, override val children : Seq[Enbalement] = Seq()) extends Enbalement
-  case class TestEnablee(override val parent: Option[Enablee] = None) extends Enablee
+  object TSRegistry extends Registry[TestScope] { val registryName = "TestScopes"; val registrantsName = "test scopes" }
+  case class TestScope(id: Symbol, children : Seq[Enablement[_]] = Seq())
+    extends Enablement[TestScope] with Registrable[TestScope] {
+    def registry : Registry[TestScope] = TSRegistry
+    def asT : TestScope = this
+    def isChildScope(x: Enablement[_]) : Boolean = children.contains(x)
+  }
+  object TERegistry extends Registry[TestEnablee] {
+    val registryName = "TestEnablees"; val registrantsName = "test enablees"
+  }
+
+  case class TestEnablee(id: Symbol, override val parent: Option[Enablee] = None) extends Enablee with
+                                                                                          Registrable[TestEnablee]{
+    def asT : TestEnablee = this
+    def registry : Registry[TestEnablee] = TERegistry
+  }
 
   val root_1_a = TestScope('root_1_a )
   val root_1_b = TestScope('root_1_b)
@@ -31,9 +45,9 @@ class Scenario extends AutoCloseable {
   val root_2 = TestScope('root_2, Seq(root_2_a))
   val root = TestScope('root, Seq(root_1, root_2))
 
-  val e_root = TestEnablee()
-  val e_root_1 = TestEnablee(Some(e_root))
-  val e_root_2 = TestEnablee(Some(e_root))
+  val e_root = TestEnablee('e_root)
+  val e_root_1 = TestEnablee('e_root_1, Some(e_root))
+  val e_root_2 = TestEnablee('e_root_2, Some(e_root))
 
   def close() = {
 

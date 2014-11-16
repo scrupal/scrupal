@@ -33,8 +33,8 @@ trait SiteDirectives {
       scheme("https").hrequire { hnil => site.requireHttps }
   }
 
-  def siteEnabled(site: Site) = {
-    validate(site.isEnabled,s"Site '${site.name}' is disabled.")
+  def siteEnabled(site: Site, scrupal: Scrupal) = {
+    validate(site.isEnabled(scrupal),s"Site '${site.name}' is disabled.")
   }
 
   def scrupalIsReady(scrupal: Scrupal) = {
@@ -61,11 +61,11 @@ trait SiteDirectives {
 }
 */
 
-  def site: Directive1[Site] = {
+  def site(scrupal: Scrupal): Directive1[Site] = {
     hostName.flatMap { host:String ⇒
       Site.forHost(host) match {
         case Some(site) ⇒
-          siteScheme(site) & siteEnabled(site) & extract(ctx => site)
+          siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx => site)
         case None ⇒
           reject(ValidationRejection(s"No site defined for host '$host'."))
       }

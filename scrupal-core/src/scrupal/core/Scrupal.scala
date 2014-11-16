@@ -34,7 +34,7 @@ import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
 import scrupal.core.api._
 import scrupal.db.{ScrupalDB, DBContext}
-import scrupal.utils.{ScrupalComponent, Configuration}
+import scrupal.utils.{Registry, Enablement, ScrupalComponent, Configuration}
 
 class Scrupal(
   name: String = "Scrupal",
@@ -44,11 +44,17 @@ class Scrupal(
   dbc: Option[DBContext] = None,
   actSys: Option[ActorSystem] = None
 )
-extends ScrupalComponent with AutoCloseable
+extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 {
+  def registry = Scrupal
+  def asT = this
+
   val Copyright = "© 2013-2015 Reactific Systems, Inc. All Rights Reserved."
 
-  def id : Symbol = Symbol(name)// Hard coding this means it will be a singleton as registration of 2nd will fail
+  def id : Symbol = {
+
+    Symbol(name)
+  }
 
   val _configuration  = config.getOrElse(Configuration.default)
 
@@ -102,6 +108,11 @@ extends ScrupalComponent with AutoCloseable
     * @return True iff there are sites loaded
     */
   def isReady : Boolean = _configuration.getConfig("scrupal").nonEmpty && Site.nonEmpty
+
+  def isChildScope(e: Enablement[_]) : Boolean = e match {
+    case s: Site ⇒  Site.containsValue(s)
+    case _ ⇒ false
+  }
 
   /**
 	 * Called before the application starts.
@@ -173,14 +184,14 @@ extends ScrupalComponent with AutoCloseable
           case Success(true) =>
             val sites = schema.sites.fetchAllSync(5.seconds)
             for (s <- sites) {
-              log.debug("Loading site '" + s._id.name + "' for host " + s.host + ", index=" + s.siteRoot.toString
-                + ", " +"enabled: " + s.isEnabled)
+              log.debug(s"Loading site '${s._id.name}' for host ${s.host}, index=${s.siteRoot.toString}, enabled=${s
+                .isEnabled(this)}}")
               result.put(s.host, s)
             }
           case Success(false) =>
-            log.warn("Attempt to validate schema for '" + db.name + "' failed.")
+            log.warn(s"Attempt to validate schema for '${db.name}' failed.")
           case Failure(x) =>
-            log.warn("Attempt to validate schema for '" + db.name + "' failed.", x)
+            log.warn(s"Attempt to validate schema for '${db.name}' failed.", x)
 
         }
       }
@@ -197,11 +208,6 @@ extends ScrupalComponent with AutoCloseable
   def onStart() {
   }
 
-  /** Mapping of entity paths to Entities */
-  type EntityMap = Map[String,(String,Entity)]
-
-  /** Mapping of application paths to Applications and their corresponding EntityMap  */
-  type AppEntityMap = Map[String,(Application,EntityMap)]
 
   /** Mapping of site names to Sites and their corresponding AppEntityMap
     * This type just gives a name to a nested set of tuples that defines the top level structure in Scrupal.
@@ -211,7 +217,8 @@ extends ScrupalComponent with AutoCloseable
     * map, similarly, maps the path of the application to a pair of the Application object and the inner map. The
     * inner map maps the path(s) of an entity (type) to the Entity object.
     */
-  type SiteAppEntityMap = Map[String,(Site,AppEntityMap)]
+  type SiteAppEntityMap = Map[String,(Site,Site#ApplicationMap)]
+
 
   /** Construct Top Level Structure For Current Situation
     * This method constructs a TopLevelStructure instance that reflects the current enablement status of sites,
@@ -225,24 +232,8 @@ extends ScrupalComponent with AutoCloseable
     * @return The TopLevelStructure mapping sites to applications to entities
     */
   def getAppEntities : SiteAppEntityMap = {
-    Site.forEachEnabled { theSite ⇒
-      theSite.name → {
-        theSite → {
-          for (app ← theSite.applications if app.isEnabled) yield {
-            app.path -> {
-              app → {
-                for (
-                  mod ← app.modules if mod.isEnabled;
-                  entity ← mod.entities if entity.isEnabled;
-                  name ← Seq(entity.path, entity.plural_path)
-                ) yield {
-                  name → (name → entity)
-                }
-              }.toMap
-            }
-          }
-        }.toMap
-      }
+    forEachEnabled { theSite: Site ⇒
+      theSite.name → ( theSite → theSite.getApplicationMap )
     }
   }.toMap
 
@@ -368,6 +359,7 @@ extends ScrupalComponent with AutoCloseable
 	}
 }
 
-object Scrupal{
-
+object Scrupal extends Registry[Scrupal] {
+  def registryName = "Scrupalz"
+  def registrantsName = "scrupali"
 }
