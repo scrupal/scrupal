@@ -19,11 +19,10 @@ package scrupal.http.directives
 
 import org.specs2.mutable.Specification
 import scrupal.core.Scrupal
-import scrupal.core.api.{Site, BasicSite}
-import scrupal.test.{CaseClassFixture}
+import scrupal.core.api.BasicSite
+import scrupal.test.CaseClassFixture
 import spray.testkit.Specs2RouteTest
-import spray.routing.{SchemeRejection, HttpService}
-import spray.http.Uri
+import spray.routing.HttpService
 
 case class Sites(name: String) extends CaseClassFixture[Sites] {
   val scrupal = new Scrupal(name)
