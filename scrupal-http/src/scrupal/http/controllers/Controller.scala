@@ -58,6 +58,9 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
 
   def types       : Seq[Type]    = Module.values flatMap { module => module.types }
   def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
+
+  def request_context = extract( rc ⇒ rc )
+
 }
 
 abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller

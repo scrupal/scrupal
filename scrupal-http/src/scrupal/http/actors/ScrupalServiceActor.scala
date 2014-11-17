@@ -17,11 +17,11 @@
 
 package scrupal.http.actors
 
-import akka.actor.{Props, ActorRef, Actor}
+import akka.actor.{Props, Actor}
 import akka.util.Timeout
 import scrupal.core.Scrupal
-import scrupal.core.api.{Site, SprayContext}
-import scrupal.http.controllers.{EntityController, Controller}
+import scrupal.core.api.Context
+import scrupal.http.controllers.{WelcomeController, EntityController, Controller}
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
@@ -89,7 +89,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
             respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
               extract( x ⇒ x ) { request_context ⇒
                 complete {
-                  val scrupal_context = SprayContext(scrupal, request_context)
+                  val scrupal_context = Context(scrupal, request_context)
                   _root_.scrupal.http.views.html.RouteConstructionFailure(xcptn)(scrupal_context).toString()
                 }
               }
@@ -120,9 +120,16 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
    */
 
   def createControllers(scrupal: Scrupal) : Seq[Controller] = {
-    for ( (siteName, (site,appEntities)) ← scrupal.getAppEntities) yield {
-      new EntityController(Symbol(siteName), 0, site, appEntities)
+    val configured_controllers = {
+      for ((siteName, (site, appEntities)) ← scrupal.getAppEntities) yield {
+        new EntityController(Symbol(siteName), 0, site, appEntities)
+      }
+    }.toSeq
+    if (configured_controllers.isEmpty) {
+      Seq( WelcomeController() )
+    } else {
+      configured_controllers
     }
-  }.toSeq
+  }
 }
 

@@ -88,8 +88,10 @@ trait Context {
   * @param scrupal The Scrupal object
   * @param rqst The request upon which the context is based
   */
-case class SprayContext(scrupal: Scrupal, rqst: RequestContext) extends Context {
-  override val request = Some(rqst)
+class SprayContext(val scrupal: Scrupal, rqst: RequestContext) extends Context {
+  require(scrupal != null)
+  require(rqst != null)
+  override val request : Option[RequestContext] = Some(rqst)
   override val uri = rqst.request.uri
   override val method = rqst.request.method
   override val protocol = rqst.request.protocol
@@ -102,7 +104,8 @@ case class SprayContext(scrupal: Scrupal, rqst: RequestContext) extends Context 
   * @param theSite The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class SiteContext(scrupal: Scrupal, theSite: Site, request: RequestContext) extends SprayContext(scrupal, request) {
+class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) extends SprayContext(scrupal, request) {
+  require(theSite != null)
   override val site : Option[Site] = Some(theSite)
   override val siteName : String = theSite.label
   override val description : String = theSite.description
@@ -111,18 +114,12 @@ class SiteContext(scrupal: Scrupal, theSite: Site, request: RequestContext) exte
   val modules: Seq[Module] = Module.values //FIXME: Should be just the ones for the site
 }
 
-object SiteContext {
-  lazy val Empty = new SiteContext(null, null, null)
-}
-
-class ApplicationContext(scrupal: Scrupal, theSite: Site, request: RequestContext, app: Application)
-  extends SiteContext(scrupal, theSite, request) {
-  override val application = Some(app)
+class ApplicationContext(scrupal: Scrupal, request: RequestContext, theSite: Site, app: Application)
+  extends SiteContext(scrupal, request, theSite) {
+  require(app != null)
+  override val application : Option[Application] = Some(app)
   override val appName = app.name
   override val appPath = app.path
-}
-object ApplicationContext {
-  lazy val Empty = new ApplicationContext(null, null, null, null)
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -131,8 +128,8 @@ object ApplicationContext {
   * @param site The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class UserContext(scrupal: Scrupal, override val user: String, site: Site, request: RequestContext)
-    extends SiteContext(scrupal, site, request) {
+class UserContext(scrupal: Scrupal, request: RequestContext, site: Site, override val user: String)
+    extends SiteContext(scrupal, request, site) {
   val principal  = Nil // TODO: Finish UserContext implementation
 }
 
@@ -140,14 +137,13 @@ class UserContext(scrupal: Scrupal, override val user: String, site: Site, reque
 object Context {
   def apply(scrupal: Scrupal, request: RequestContext) = new SprayContext(scrupal, request)
 
-  def apply(scrupal: Scrupal, site: Site, request: RequestContext) = new SiteContext(scrupal, site, request)
+  def apply(scrupal: Scrupal, request: RequestContext, site: Site) = new SiteContext(scrupal, request, site)
 
-  def apply(scrupal: Scrupal, site: Site, request: RequestContext, app: Application) =
-    new ApplicationContext(scrupal, site, request, app)
-
+  def apply(scrupal: Scrupal, request: RequestContext, site: Site, app: Application) =
+    new ApplicationContext(scrupal, request, site, app)
 
   def apply(scrupal: Scrupal, user: String, site: Site, request: RequestContext) =
-    new UserContext(scrupal, user, site, request)
+    new UserContext(scrupal, request, site, user)
 
 }
 

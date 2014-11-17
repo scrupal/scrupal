@@ -1,0 +1,10 @@
+@(msg: String)(implicit context: scrupal.core.api.SprayContext)
+@import scrupal.core.views.html.pages
+@pages.basicPage("Welcome To Scrupal!") {
+} {
+   <h1>Welcome To Scrupal!</h1>
+  <p>This is your welcome page.
+      You requested: @msg
+  </p>
+} {
+}

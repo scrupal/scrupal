@@ -17,12 +17,13 @@
 
 package scrupal.http.controllers
 
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONString, BSONDocument}
 import scrupal.core.Scrupal
 import scrupal.core.api._
 import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.{PathHelpers, SiteDirectives}
 import shapeless.HNil
+import spray.http.HttpHeader
 import spray.routing.{Directives, Route}
 import spray.routing._
 
@@ -62,11 +63,16 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
     }
   }
 
-  def request_context = extract( rc ⇒ rc )
 
   def make_args(ctxt: ApplicationContext) : BSONDocument = {
-    // TODO: make arguments from BODY and HEADERS of HttpRequest
-    BSONDocument()
+    ctxt.request match {
+      case Some(context) ⇒
+        val headers = context.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
+        val params = context.request.uri.query.map { case(k,v) ⇒ k -> BSONString(v) }
+        BSONDocument(headers ++ params)
+      case None ⇒
+        BSONDocument()
+    }
   }
 
   def routes(scrupal: Scrupal) : Route = {
@@ -79,7 +85,7 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
                 rawPathPrefix(Slash ~ Segments ~ PathEnd) { id: List[String] ⇒
                   validate(id.size > 0, "Empty identifier not permitted") {
                     request_context { rc: RequestContext ⇒
-                      val ctxt = Context(scrupal, aSite, rc, app)
+                      val ctxt = Context(scrupal, rc, aSite, app)
                       val id_path = id.mkString("/")
                       post    { complete(scrupal.handle(entity.create(ctxt, id_path, make_args(ctxt)))) } ~
                         get     { complete(scrupal.handle(entity.retrieve(ctxt, id_path))) } ~
@@ -95,7 +101,7 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
                 rawPathPrefix(Slash ~ Segment / Segments ~ PathEnd) { (id: String, what: List[String]) ⇒
                   validate(id.length > 0, "Empty identifier not permitted") {
                     request_context { rc: RequestContext ⇒
-                      val ctxt = Context(scrupal, aSite, rc, app)
+                      val ctxt = Context(scrupal, rc, aSite, app)
                       post    { complete(scrupal.handle(entity.createFacet(ctxt, id, what, make_args(ctxt)))) } ~
                         get     { complete(scrupal.handle(entity.retrieveFacet(ctxt, id, what))) } ~
                         put     { complete(scrupal.handle(entity.updateFacet(ctxt, id, what, make_args(ctxt)))) } ~
