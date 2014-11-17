@@ -83,6 +83,8 @@ case class Alert (
 
 object Alert {
 
+  import BSONHandlers._
+
   implicit val AlertHandler = handler[Alert]
 
   case class AlertDAO(db: DefaultDB) extends IdentifierDAO[Alert] {

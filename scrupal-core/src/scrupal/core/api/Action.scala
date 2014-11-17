@@ -18,12 +18,12 @@ package scrupal.core.api
 
 import play.twirl.api.Html
 import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
+import spray.http.{MediaTypes, MediaType}
 
 /** Encapsulation Of An
   *
   * Requests are generated from a request receiver such as scrupal-http. They encapsulate an entity, an instance of
   * that entity, and the invocation arguments. This request information is passed to an Action when it is invoked.
-  * @tparam E The type of entity to which the request is addressed.
   */
 trait Request {
   def context : Context
@@ -37,14 +37,64 @@ trait Request {
   * @tparam P The type of the resulting payload
   */
 trait Result[P] {
+  /** Disposition of a Result
+    *
+    * This provides a basic summary of the result usign the Disposition enumeration. There are several ways to be
+    * successful in responding to a request and several ways to fail. Each of these basic ways of responding are
+    * encoded into the disposition as a simple enumeration value. This allows the receiver of the Result[P] to
+    * quickly asses what should be done with the result.
+    * @return The Disposition of the result
+    */
   def disposition : Disposition
+
+  /** Payload Content of The Result
+    * The is the actual result. It can be an Scala type but should correspond to the MediaType
+    * @return
+    */
   def payload: P
+
+  /** Type Of Media Returned.
+    *
+    * This is a MIME media type value from Spray. It indicates what kind of media is being returned by the payload.
+    * @return
+    */
+  def mediaType : MediaType
 }
 
-case class TextResult(payload: String, disposition: Disposition = Successful) extends Result[String]
-case class HTMLResult(payload: Html, disposition: Disposition = Successful) extends Result[Html]
-case class BSONResult(payload: BSONDocument, disposition: Disposition = Successful) extends Result[BSONDocument]
-case class ExceptionResult(error: Throwable, disposition: Disposition = Exception) extends Result[BSONDocument] {
+case class OctetsResult(
+  payload: Array[Byte],
+  mediaType: MediaType,
+  disposition: Disposition = Successful
+) extends Result[Array[Byte]]
+
+case class TextResult(
+  payload: String,
+  disposition: Disposition = Successful
+) extends Result[String] {
+  val mediaType = MediaTypes.`text/plain`
+}
+
+case class HtmlResult(
+  payload: Html,
+  disposition: Disposition = Successful
+) extends Result[Html] {
+  val mediaType = MediaTypes.`text/html`
+}
+
+case class BSONResult(
+  payload: BSONDocument,
+  disposition: Disposition = Successful
+) extends Result[BSONDocument] {
+  val mediaType = MediaType.custom("application", "vnd.bson", compressible=true, binary=true, fileExtensions=Seq
+    ("bson"))
+}
+
+case class ExceptionResult(
+  error: Throwable,
+  disposition: Disposition = Exception
+) extends Result[BSONDocument] {
+  val mediaType = MediaTypes.`text/plain`
+
   val payload = {
     val stack = error.getStackTrace.map { elem ⇒ BSONString(elem.toString) }
     BSONDocument(
@@ -55,7 +105,7 @@ case class ExceptionResult(error: Throwable, disposition: Disposition = Exceptio
 }
 // case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
 
-/** An Action Invokable On An Entity
+/** An Invokable Action
   *
   * Actions bring behavior to entities. Each entity can declare a set of actions that its users can invoke from the
   * REST api. Unlike the methods provided by the [[Entity]] class, these Actions operate on the Instances of the

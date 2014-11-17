@@ -20,6 +20,8 @@ package scrupal.core.api
 import reactivemongo.bson._
 import scrupal.utils.Identifiable
 
+import BSONHandlers._
+
 /** Reference A Memory Object From The Database
   *
   * Many of the objects used in Scrupal are not stored in the database. Essentially those things coming from a Module

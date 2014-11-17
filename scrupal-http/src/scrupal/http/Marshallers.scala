@@ -17,7 +17,7 @@
 
 package scrupal.http
 
-import scrupal.core.api.{ExceptionResult, Result, TextResult, HTMLResult}
+import scrupal.core.api.{ExceptionResult, Result, TextResult, HtmlResult}
 import spray.http.{HttpCharsets, MediaTypes, ContentType}
 import spray.httpx.marshalling.{ToResponseMarshaller, BasicMarshallers}
 
@@ -26,8 +26,8 @@ trait ScrupalMarshallers extends BasicMarshallers{
   val html_ct = ContentType(MediaTypes.`text/html`,HttpCharsets.`UTF-8`)
   val text_ct = ContentType(MediaTypes.`text/plain`,HttpCharsets.`UTF-8`)
 
-  def html_marshaller : ToResponseMarshaller[HTMLResult] = {
-    ToResponseMarshaller.delegate[HTMLResult,String](html_ct) { h ⇒ h.payload.body }
+  def html_marshaller : ToResponseMarshaller[HtmlResult] = {
+    ToResponseMarshaller.delegate[HtmlResult,String](html_ct) { h ⇒ h.payload.body }
   }
 
   def text_marshaller : ToResponseMarshaller[TextResult] = {
@@ -37,7 +37,7 @@ trait ScrupalMarshallers extends BasicMarshallers{
   implicit val mystery_marshaller: ToResponseMarshaller[Result[_]] = {
     ToResponseMarshaller.delegate[Result[_], String](text_ct, html_ct) { (r : Result[_], ct) ⇒
       r match {
-        case h: HTMLResult ⇒ h.payload.body
+        case h: HtmlResult ⇒ h.payload.body
         case t: TextResult ⇒ t.payload
         case x: ExceptionResult ⇒ x.payload.toString
       }

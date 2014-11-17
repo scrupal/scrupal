@@ -21,8 +21,7 @@ import java.util.Date
 
 import reactivemongo.bson._
 import scrupal.core.api._
-import scrupal.utils.Patterns
-import Patterns._
+import scrupal.utils.Patterns._
 import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.duration.Duration
@@ -369,7 +368,6 @@ object BundleType {
   * node types fields. Because a Type is also a validator
   * @param id
   * @param description
-  * @param module
   * @param fields
   * @param mediaType
   */

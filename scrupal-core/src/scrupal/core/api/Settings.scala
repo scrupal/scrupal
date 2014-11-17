@@ -83,6 +83,7 @@ object TypePathWalker extends PathWalker[DocumentType, IndexableType, Type] {
 
 
 object Settings {
+  import BSONHandlers._
 
   implicit val ConfigurationHandler = Macros.handler[Settings]
 

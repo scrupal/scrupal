@@ -76,6 +76,8 @@ case class BasicSite (
 }
 
 object BasicSite {
+  import BSONHandlers._
+
   implicit val nodeReader = Node.NodeReader
   implicit val nodeWriter = Node.NodeWriter
   implicit val BasicSiteHandler = Macros.handler[BasicSite]
@@ -86,6 +88,7 @@ object DefaultSite
                     requireHttps = false, modified=Some(DateTime.now()), created=Some(DateTime.now()))
 
 object Site extends Registry[Site] {
+
   val registrantsName: String = "site"
   val registryName: String = "Sites"
 
@@ -106,6 +109,9 @@ object Site extends Registry[Site] {
   }
 
   def forHost(hostName: String) = _byhost.lookup(hostName)
+
+
+  import BSONHandlers._
 
 
   implicit lazy val SiteReader = new VariantBSONDocumentReader[Site] {

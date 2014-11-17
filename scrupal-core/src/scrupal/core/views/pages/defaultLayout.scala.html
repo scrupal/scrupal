@@ -1,19 +1,20 @@
-@(implicit ctxt: scrupal.core.api.Context, args: Map[String,scrupal.core.api.Node])
+@(args: Map[String,(scrupal.core.api.Node,scrupal.core.api.Result[_])])(implicit ctxt: scrupal.core.api.Context)
 @import scrupal.core.views.html._
-@import spray.http.MediaTypes
-
+@import scrupal.core.api._
 @pages.plainPage("Default Layout") {
   <p>
     A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout
-    which just lists the contents down the page. This probably isn't what you want, but it's what you've got until
+    which just lists the tag content down the page. This probably isn't what you want, but it's what you've got until
     you create a defaultLayout for your pages.
   </p>
-  @for((key, n) <- args) {
-    <h1>@n._id : @n.kind - @n.description</h1>
+  @for((key, (n,r)) <- args) {
+    <h1>@{n.kind.name} - @{n.description}</h1>
+    <p>Result Disposition: @r.disposition.id.name - @r.disposition.msg</p>
     <div>
-    @{n.mediaType match {
-      case MediaTypes.`text/html` => n(ctxt)
-      case MediaTypes.`text/plain` => n(ctxt)
+    @{r match {
+      case h: HtmlResult ⇒ h.payload.body
+      case t: TextResult ⇒ t.payload
+      case t: OctetsResult ⇒ new String(t.payload,scrupal.core.api.utf8)
       case _ => <span>Media Type: {n.mediaType}</span>
     }}
     </div>

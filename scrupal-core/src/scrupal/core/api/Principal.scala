@@ -44,6 +44,8 @@ case class Principal(
 ) extends Storable[Identifier] with Creatable
 
 object Principal {
+  import BSONHandlers._
+
   case class PrincipalDAO(db: ScrupalDB) extends IdentifierDAO[Principal] {
     final def collectionName = "principals"
     implicit val reader : IdentifierDAO[Principal]#Reader = Macros.reader[Principal]

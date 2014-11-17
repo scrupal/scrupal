@@ -265,6 +265,9 @@ object Entity extends scrupal.utils.Registry[Entity] {
   val registrantsName: String = "entity"
   val registryName: String = "Entities"
 
+  import BSONHandlers._
+
+
   case class EntityDao(db: ScrupalDB) extends IdentifierDAO[Entity] {
     implicit val reader: Reader = EntityHandler.asInstanceOf[Reader]
     implicit val writer: Writer = EntityHandler.asInstanceOf[Writer]

@@ -122,7 +122,7 @@ trait Module extends Registrable[Module]
     features foreach { feature ⇒ require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap() }
     types    foreach { typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap() }
     entities foreach { entity  ⇒ require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap() }
-    nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.name.length > 0) ; node.bootstrap() }
+    nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.code == 0x07) ; node.bootstrap() }
     // FIXME: What about handlers and schemas?
   }
 

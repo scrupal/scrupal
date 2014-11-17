@@ -45,6 +45,8 @@ object Instance {
     * that collection as well as conversion to and from BSON format.
     * @param db A parameterless function returning a [[reactivemongo.api.DefaultDB]] instance.
     */
+  import BSONHandlers._
+
 
   case class InstanceDAO(db: DefaultDB) extends IdentifierDAO[Instance] {
     final def collectionName = "instances"

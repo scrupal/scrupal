@@ -19,12 +19,12 @@ package scrupal.core
 
 import java.net.URL
 
-import reactivemongo.bson.{BSONBoolean, BSONDocument, BSONString, BSONValue}
+import reactivemongo.bson.{BSONDocument, BSONString}
 import scrupal.db.{Schema,DBContext}
 import scrupal.core.api._
 import scrupal.utils.{OSSLicense, Version}
 
-import CoreFeatures._
+import scrupal.core.CoreFeatures._
 
 /** Scrupal's Core Module.
   * This is the base module of all modules. It provides the various abstractions that permit other modules to extend
@@ -38,7 +38,7 @@ object CoreModule extends Module {
   val obsoletes = Version(0,0,0)
   val moreDetailsURL = new URL("http://modules.scrupal.org/doc/" + label)
   val author : String = "Reid Spencer"
-  val copyright : String = "(C) 2014 Reactific Systems, Inc. All Rights Reserved"
+  val copyright : String = "(C) 2014 Reactific Software LLC. All Rights Reserved"
   val license = OSSLicense.GPLv3
 
   val notes_key = "Notes"

@@ -75,6 +75,8 @@ case class BasicApplication(
 }
 
 object BasicApplication {
+  import BSONHandlers._
+
   implicit val BasicApplicationHandler = Macros.handler[BasicApplication]
 }
 
@@ -98,6 +100,9 @@ object Application extends Registry[Application] {
   }
 
   def forPath(path: String) = _bypath.lookup(path)
+
+  import BSONHandlers._
+
 
   implicit lazy val ApplicationReader = new VariantBSONDocumentReader[Application] {
     def read(doc: BSONDocument) : Application = {

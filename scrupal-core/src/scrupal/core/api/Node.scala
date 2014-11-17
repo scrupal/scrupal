@@ -17,10 +17,9 @@
 
 package scrupal.core.api
 
-
+import reactivemongo.bson.BSONObjectID
 import scrupal.db.VariantStorable
-import scrupal.utils.{Registrable, Registry}
-import spray.http.{MediaTypes, MediaType}
+import spray.http.MediaType
 
 import scala.concurrent.Future
 
@@ -30,7 +29,7 @@ import scala.concurrent.Future
   * and produces content as a Byte array. The Context provides the setting in which it is
   * generating the content. All dynamic content in Scrupal is generated through a Generator.
   */
-trait Generator extends ((Context) => Future[Array[Byte]])
+trait Generator extends ((Context) => Future[Result[_]])
 
 /** Content Generating Node
   *
@@ -40,31 +39,10 @@ trait Generator extends ((Context) => Future[Array[Byte]])
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-abstract class Node extends VariantStorable[Identifier]
+abstract class Node extends VariantStorable[BSONObjectID]
                             with Describable with Modifiable with Enablable with Generator with Bootstrappable
 {
-  val mediaType : MediaType
+  val _id = BSONObjectID.generate
+  def mediaType : MediaType
 }
 
-trait Arranger extends ((Context, Map[String,Node]) => Array[Byte])
-
-trait Layout extends Registrable[Layout] with Describable with Arranger {
-  val mediaType : MediaType
-  def registry = Layout
-  def asT = this
-}
-
-object Layout extends Registry[Layout] {
-  def registryName = "Layouts"
-  def registrantsName = "layout"
-
-  object default extends Layout {
-    def id = 'default
-    val description = "Default Layout"
-    val mediaType = MediaTypes.`text/html`
-    def apply(ctxt: Context, args: Map[String,Node]) : Array[Byte] = {
-      scrupal.core.views.html.pages.defaultLayout(ctxt, args).body.getBytes(utf8)
-    }
-  }
-
-}

@@ -20,6 +20,7 @@ package scrupal.test
 import play.twirl.api.Html
 import scrupal.core._
 import scrupal.core.api._
+import scrupal.core.HtmlHelpers._
 
 /**
  * Created by reidspencer on 11/10/14.
@@ -43,7 +44,7 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
 
   def genNode(id: Int) : Node = {
     val name = s"Node-$id"
-    MessageNode(Symbol(name),name,"text-success", Html(s"This is node $name"))
+    MessageNode(name,"text-success", s"This is node $name".toHtml)
   }
 
   def genFeature(id: Int, mod: Module) : Feature = {
