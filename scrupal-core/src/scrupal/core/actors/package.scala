@@ -20,7 +20,6 @@ package scrupal.core
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.ActorSystem
 import akka.util.Timeout
 import scrupal.utils.ScrupalComponent
 

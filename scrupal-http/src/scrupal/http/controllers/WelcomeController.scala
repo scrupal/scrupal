@@ -35,6 +35,12 @@ case class WelcomeController() extends Controller {
   def routes(scrupal: Scrupal): Route = {
     scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
       get {
+        path("install_echo") {
+          complete("Not Implemented Yet")
+        } ~
+        path("config") {
+          complete("Not Implemented Yet")
+        } ~
         path(RestPath ) { the_path ⇒
           respondWithMediaType(`text/html`) {
             request_context { rc: RequestContext ⇒
