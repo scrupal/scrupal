@@ -15,6 +15,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: ch.qos.logback:logback-classic:1.1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: ch.qos.logback:logback-core:1.1.2" level="project" />
     <orderEntry type="library" name="SBT: com.lambdaworks:scrypt:1.4.0" level="project" />
@@ -24,7 +25,9 @@
     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5" level="project" />
     <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.1" level="project" />
     <orderEntry type="library" name="SBT: org.clapper:grizzled-slf4j_2.11:1.0.2" level="project" />
+    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.2" level="project" />
     <orderEntry type="library" name="SBT: org.mindrot:jbcrypt:0.3m" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang:scala-reflect:2.11.4" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.scalaz:scalaz-concurrent_2.11:7.0.6" level="project" />
@@ -34,8 +37,5 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-common_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11" level="project" />
-    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.2" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang:scala-reflect:2.11.4" level="project" />
   </component>
 </module>

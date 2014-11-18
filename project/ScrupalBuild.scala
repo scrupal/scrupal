@@ -27,7 +27,8 @@ import sbt.Keys._
 
 
 
-object ScrupalBuild extends Build with BuildSettings with AssetsSettings with TwirlSettings with Dependencies {
+object ScrupalBuild extends Build
+  with BuildSettings with AssetsSettings with TwirlSettings with SbtWebSettings with Dependencies {
 
   import sbtunidoc.{ Plugin => UnidocPlugin }
   import spray.revolver.RevolverPlugin._
@@ -60,9 +61,14 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Tw
   lazy val core_deps = core % "compile->compile;test->test"
 
   lazy val http = Project(base_name + "-http", file("./scrupal-http"))
+    .enablePlugins(SbtWeb)
     .enablePlugins(SbtTwirl)
-    .settings(
-      buildSettings ++ twirlSettings_http ++ Revolver.settings ++ Seq(
+    .settings(buildSettings:_*)
+    .settings(twirlSettings_http:_*)
+    .settings(Revolver.settings:_*)
+    .settings(sbt_web_settings:_*)
+    .settings(pipeline_settings:_*)
+    .settings(Seq(
         resolvers ++= all_resolvers,
         libraryDependencies ++= http_dependencies
     ):_*)
@@ -78,11 +84,9 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with Tw
   lazy val config_deps = config_proj % "compile->compile;test->test"
 
   lazy val web = Project(base_name + "-web", file("./scrupal-web"))
-    .enablePlugins(SbtWeb)
     .enablePlugins(SbtTwirl)
-    .settings(
-      buildSettings ++ Seq(
-        pipelineStages := Seq(rjs, digest, gzip),
+    .settings(buildSettings:_*)
+    .settings(Seq(
         //requireJs += "scrupal.js",
         //requireJsShim += "scrupal.js",
         resolvers ++= all_resolvers,

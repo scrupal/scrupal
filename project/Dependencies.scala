@@ -72,9 +72,8 @@ trait Dependencies
   val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.5"
 
   // WebJars based UI components
-  val webjars_play            = "org.webjars"         %% "webjars-play"           % "2.3.0"
-  val requirejs               = "org.webjars"         % "requirejs"               % "2.1.14-3"
-  val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1"
+  val requirejs               = "org.webjars"         % "requirejs"               % "2.1.15"
+  val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1-2"
   val angularjs               = "org.webjars"         % "angularjs"               % "1.3.0"
   val angular_drag_drop       = "org.webjars"         % "angular-dragdrop"        % "1.0.3"
   val angular_multi_select    = "org.webjars"         % "angular-multi-select"    % "2.0.1"
@@ -152,16 +151,13 @@ trait Dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(
     spray_can, spray_routing, spray_httpx, spray_caching, livestream_scredis,
-    akka_actor, twirl_api,
+    akka_actor, twirl_api, marked, fontawesome, requirejs, requirejs_domready,
     Test.spray_testkit, Test.akka_testkit
   ) ++ common_dependencies
 
   val web_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
-    webjars_play,
-    requirejs, requirejs_domready,
     angularjs, angular_drag_drop, angular_multi_select,
-    angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar,
-    marked, fontawesome
+    angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
   ) ++ common_dependencies
 
 }

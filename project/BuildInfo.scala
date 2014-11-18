@@ -27,11 +27,12 @@ import sbt._
 object BuildInfo {
   val project_conf = new File("project/project.conf")
   val conf = ConfigFactory.parseFile(project_conf).resolve()
-  val projectName = conf.getString("project.name")
-  val projectVersion = conf.getString("project.version")
-  val buildNumber = conf.getString("build.number")
+  val buildNumber = conf.getInt("build.number")
   val buildIdentifier = conf.getString("build.id")
   val buildUrl = conf.getString("build.url")
+  val projectName = conf.getString("project.name")
+  val projectBaseVersion = conf.getString("project.version")
+  val projectVersion = if (buildNumber==0) projectBaseVersion + "-SNAPSHOT" else projectBaseVersion
 
   object devnull extends ProcessLogger {
     def info (s: => String) {}
