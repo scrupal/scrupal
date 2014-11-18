@@ -18,7 +18,7 @@
 package scrupal.core.api
 
 import scrupal.utils.{Registry, Registrable}
-import spray.http.MediaType
+import spray.http.ContentType
 
 /** Disposition Of An Action Result
   * Every Result produced by an Action contains a Disposition which indicates to the requester of the action in a
@@ -34,9 +34,9 @@ case class Disposition(
 ) extends Registrable[Disposition] {
   def registry = Disposition
   def asT = this
-  def apply[T]( result: T, mt: MediaType) : Result[T] = {
+  def apply[T]( result: T, ct: ContentType) : Result[T] = {
     val disp = this
-    new Result[T] { val disposition = disp; val payload = result; val mediaType = mt }
+    new Result[T] { val disposition = disp; val payload = result; val contentType = ct }
   }
   def isSuccessful : Boolean = code > 0
   def isFailure : Boolean = code < 0

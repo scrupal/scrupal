@@ -72,7 +72,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
     implicit arf: ActorRefFactory, ec: ExecutionContext, timeout: Timeout): ToResponseMarshaller[StreamResult] =
     ToResponseMarshaller.delegate[StreamResult, EnumeratorResult](ct) { s: StreamResult ⇒
       val e = Enumerator.fromStream(s.payload)
-      EnumeratorResult(e, s.mediaType, s.disposition)
+      EnumeratorResult(e, s.contentType, s.disposition)
     }(enumerator_marshaller(arf, ec, timeout))
 
   implicit def mystery_marshaller(
@@ -84,7 +84,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
           case t: TextResult ⇒ text_marshaller(t, trmc)
           case x: ExceptionResult ⇒ exception_marshaller(x, trmc)
           case s: StreamResult ⇒
-            val m = stream_marshaller(s.mediaType)
+            val m = stream_marshaller(s.contentType)
             m(s, trmc)
           case e: EnumeratorResult ⇒
             val m = enumerator_marshaller
@@ -134,14 +134,14 @@ class StreamingResponseActor(value: EnumeratorResult, trmc: ToResponseMarshallin
       context.become(
         waitingForResponder(
           trmc.startChunkedMessage(
-            HttpResponse(entity = HttpEntity(value.mediaType, data)),
+            HttpResponse(entity = HttpEntity(value.contentType, data)),
             ack = Some(ChunkSent)
           ),
           sender()
         )
       )
     case Input.EOF => {
-      trmc.marshalTo(HttpResponse(entity = HttpEntity(value.mediaType, HttpData.Empty)))
+      trmc.marshalTo(HttpResponse(entity = HttpEntity(value.contentType, HttpData.Empty)))
       context.stop(self)
     }
     case error: Throwable => {
@@ -153,7 +153,7 @@ class StreamingResponseActor(value: EnumeratorResult, trmc: ToResponseMarshallin
   def waitingForData(responder: ActorRef): Actor.Receive = {
     case data: Array[Byte] => {
       responder ! MessageChunk(data).withAck(ChunkSent)
-      context.become(waitingForResponder(responder, sender))
+      context.become(waitingForResponder(responder, sender()))
     }
     case Input.EOF => {
       responder ! ChunkedMessageEnd

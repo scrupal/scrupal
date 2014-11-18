@@ -21,7 +21,7 @@ import java.io.InputStream
 import play.api.libs.iteratee.Enumerator
 import play.twirl.api.Html
 import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
-import spray.http.{MediaTypes, MediaType}
+import spray.http.{ContentTypes, ContentType, MediaTypes, MediaType}
 
 /** Encapsulation Of An
   *
@@ -61,54 +61,53 @@ trait Result[P] {
     * This is a MIME media type value from Spray. It indicates what kind of media is being returned by the payload.
     * @return
     */
-  def mediaType : MediaType
+  def contentType : ContentType
 }
 
 case class EnumeratorResult(
   payload: Enumerator[Array[Byte]],
-  mediaType: MediaType,
+  contentType: ContentType,
   disposition: Disposition = Successful
 ) extends Result[Enumerator[Array[Byte]]]
 
 case class StreamResult(
   payload: InputStream,
-  mediaType: MediaType,
+  contentType: ContentType,
   disposition: Disposition = Successful
 ) extends Result[InputStream]
 
 case class OctetsResult(
   payload: Array[Byte],
-  mediaType: MediaType,
+  contentType: ContentType,
   disposition: Disposition = Successful
 ) extends Result[Array[Byte]]
 
 case class TextResult(
   payload: String,
-  disposition: Disposition = Successful
+  disposition: Disposition = Successful,
+  contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
 ) extends Result[String] {
-  val mediaType = MediaTypes.`text/plain`
 }
 
 case class HtmlResult(
   payload: Html,
-  disposition: Disposition = Successful
+  disposition: Disposition = Successful,
+  contentType: ContentType = MediaTypes.`text/html`
 ) extends Result[Html] {
-  val mediaType = MediaTypes.`text/html`
 }
 
 case class BSONResult(
   payload: BSONDocument,
   disposition: Disposition = Successful
 ) extends Result[BSONDocument] {
-  val mediaType = MediaType.custom("application", "vnd.bson", compressible=true, binary=true, fileExtensions=Seq
-    ("bson"))
+  val contentType : ContentType = Result.BSONMediaType
 }
 
 case class ExceptionResult(
   error: Throwable,
   disposition: Disposition = Exception
 ) extends Result[BSONDocument] {
-  val mediaType = MediaTypes.`text/plain`
+  val contentType = ContentTypes.`text/plain(UTF-8)`
 
   val payload = {
     val stack = error.getStackTrace.map { elem ⇒ BSONString(elem.toString) }
@@ -123,7 +122,7 @@ case class ErrorResult(
   payload: String,
   disposition : Disposition
 ) extends Result[String] {
-  val mediaType = MediaTypes.`text/plain`
+  val contentType = ContentTypes.`text/plain(UTF-8)`
 }
 
 // case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
@@ -141,4 +140,9 @@ abstract class Action extends (() => Result[_]) with Request {
     * @return The Play Action that results in a JsObject to send to the client
     */
   def apply() : Result[_]
+}
+
+object Result {
+  val BSONMediaType = MediaType.custom("application", "vnd.bson", compressible=true, binary=true,
+                                        fileExtensions=Seq("bson"))
 }

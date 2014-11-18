@@ -84,7 +84,7 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
   "AssetNode" should {
     "load a simple file" in Fixture("AssetNode") { f: Fixture ⇒
       val future = f.file(f) map  { result: Result[_] ⇒
-        result.mediaType must beEqualTo(MediaTypes.`text/plain`)
+        result.contentType.mediaType must beEqualTo(MediaTypes.`text/plain`)
         val rendered : String  = result match {
           case t: TextResult ⇒ t.payload
           case o: OctetsResult ⇒ new String(o.payload, utf8)

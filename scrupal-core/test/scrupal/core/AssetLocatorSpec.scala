@@ -20,7 +20,7 @@ package scrupal.core
 import org.specs2.mutable.Specification
 import scrupal.core.api.StreamResult
 import scrupal.test.FakeContext
-import spray.http.MediaTypes
+import spray.http.{ContentType, MediaTypes}
 
 class TestAssetLocator extends AssetLocator {
   def asset_dirs = Seq("test/resources")
@@ -62,7 +62,7 @@ class AssetLocatorSpec extends Specification {
 
     "obtain correct media type from file extension" in Assets("mediaType") { a: Assets ⇒
       val stream = a.locator.fetch("fake.js")
-      Some(stream.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
+      Some(stream.contentType.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
       stream match {
         case s: StreamResult ⇒
           s.payload.available() === 0

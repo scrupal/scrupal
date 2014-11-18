@@ -65,6 +65,7 @@
     <inspection_tool class="NonFinalGuard" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="PointcutMethodStyleInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="PostfixMethodCall" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="RedundantBlock" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="RelativeImport" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ReplaceAssignmentWithOperatorAssignment" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreLazyOperators" value="true" />
