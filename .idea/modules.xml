@@ -16,7 +16,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-web.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-web.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-web-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-web-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../twirl-bug/.idea/modules/twirl-bug-build.iml" filepath="$PROJECT_DIR$/../../twirl-bug/.idea/modules/twirl-bug-build.iml" />
     </modules>
   </component>
 </project>
