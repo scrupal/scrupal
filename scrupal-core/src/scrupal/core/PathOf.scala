@@ -15,34 +15,32 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.http
+package scrupal.core
 
-import scrupal.core.api.{ExceptionResult, Result, TextResult, HtmlResult}
-import spray.http.{HttpCharsets, MediaTypes, ContentType}
-import spray.httpx.marshalling.{ToResponseMarshaller, BasicMarshallers}
+import scrupal.core.api.Context
 
-trait ScrupalMarshallers extends BasicMarshallers{
+/** Simple Reverse Routing For Scrupal.
+  *
+  * Reverse Routing is the process of generating a URI path for a certain resource. In Scrupal, paths are not arbitrary
+  * but highly structured and regular. Because of this regularity, the corresponding path can be constructed quite
+  * easily especially from a given context. Every operation in Scrupal has a context in which that operation occurs.
+  * The context provides the site, application, request context, and other details of the operation that is
+  * requesting a path. Because the context is present, the path can be generated easily by simply substituting context
+  * and requested elements. Some level of validation can occur too.
+  *
+ */
+object PathOf {
+  // TODO: Add validation and context awareness, customization by applications, entities, etc.
 
-  val html_ct = ContentType(MediaTypes.`text/html`,HttpCharsets.`UTF-8`)
-  val text_ct = ContentType(MediaTypes.`text/plain`,HttpCharsets.`UTF-8`)
+  def favicon()(implicit context: Context) = "/assets/favicon"
 
-  def html_marshaller : ToResponseMarshaller[HtmlResult] = {
-    ToResponseMarshaller.delegate[HtmlResult,String](html_ct) { h ⇒ h.payload.body }
-  }
+  def theme(provider: String, name: String)(implicit context: Context) = s"/assets/stylesheets/$provider/$name.css"
 
-  def text_marshaller : ToResponseMarshaller[TextResult] = {
-    ToResponseMarshaller.delegate[TextResult,String](text_ct) { h ⇒ h.payload }
-  }
+  def css(name: String)(implicit context: Context) = s"/assets/stylesheets/$name.css"
 
-  implicit val mystery_marshaller: ToResponseMarshaller[Result[_]] = {
-    ToResponseMarshaller.delegate[Result[_], String](text_ct, html_ct) { (r : Result[_], ct) ⇒
-      r match {
-        case h: HtmlResult ⇒ h.payload.body
-        case t: TextResult ⇒ t.payload
-        case x: ExceptionResult ⇒ x.payload.toString
-      }
-    }
-  }
+  def js(lib: String, file: String)(implicit context: Context) = s"/assets/javascripts/$lib/$file.js"
 
+
+  def entity(kind: String, id: String)(implicit context: Context) = s"/${context.appName}/kind/id"
 
 }

@@ -21,7 +21,7 @@ import akka.actor.{Props, Actor}
 import akka.util.Timeout
 import scrupal.core.Scrupal
 import scrupal.core.api.Context
-import scrupal.http.controllers.{WelcomeController, EntityController, Controller}
+import scrupal.http.controllers.{AssetsController, WelcomeController, EntityController, Controller}
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
@@ -77,8 +77,11 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
       // Very first thing we want to always do is make sure Scrupal Is Ready
       val base_routing = scrupalIsReady(scrupal)
 
+      // scrupal-http provides the AssetController. Instantiate it now and provide it as the root controller
+      val assets = new AssetsController
+
       // Now construct the routes from the prioritized set of controllers we found
-      sorted_controllers.foldLeft[Route](reject) { (route, ctrlr) =>
+      sorted_controllers.foldLeft[Route](assets.routes(scrupal)) { (route, ctrlr) =>
         route ~ ctrlr.routes(scrupal)
       }
     } match {

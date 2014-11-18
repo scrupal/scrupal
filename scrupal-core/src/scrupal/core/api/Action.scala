@@ -16,6 +16,7 @@
  **********************************************************************************************************************/
 package scrupal.core.api
 
+import play.api.libs.iteratee.Enumerator
 import play.twirl.api.Html
 import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
 import spray.http.{MediaTypes, MediaType}
@@ -61,6 +62,12 @@ trait Result[P] {
   def mediaType : MediaType
 }
 
+case class EnumeratorResult(
+  payload: Enumerator[Array[Byte]],
+  mediaType: MediaType,
+  disposition: Disposition = Successful
+) extends Result[Enumerator[Array[Byte]]]
+
 case class OctetsResult(
   payload: Array[Byte],
   mediaType: MediaType,
@@ -103,6 +110,14 @@ case class ExceptionResult(
     )
   }
 }
+
+case class ErrorResult(
+  payload: String,
+  disposition : Disposition
+) extends Result[String] {
+  val mediaType = MediaTypes.`text/plain`
+}
+
 // case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
 
 /** An Invokable Action

@@ -38,6 +38,8 @@ case class Disposition(
     val disp = this
     new Result[T] { val disposition = disp; val payload = result; val mediaType = mt }
   }
+  def isSuccessful : Boolean = code > 0
+  def isFailure : Boolean = code < 0
 }
 
 // Indeterminate Dispositions have value 0 and should only be used rarely to indicate null or impossibility.
