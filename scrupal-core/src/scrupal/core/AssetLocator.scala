@@ -20,11 +20,8 @@ package scrupal.core
 import java.io.File
 import java.net.URL
 
-import play.api.libs.iteratee.Enumerator
 import scrupal.core.api._
 import spray.http.{MediaTypes, MediaType}
-
-import scala.concurrent.ExecutionContext
 
 trait AssetLocator {
 
@@ -79,10 +76,9 @@ trait AssetLocator {
     * contents of the file. If the resource is not found, an ErrorResult of Disposition=NotFound is returned.
     * @param path The path to look up
     * @param mediaType The MediaType to associate with the Result
-    * @param ec The ExecutionContext in which to perform things
     * @return ErrorResult if the resource could not be located, EnumeratorResult if it could
     */
-  def fetch(path: String, mediaType: MediaType)(implicit ec: ExecutionContext) : Result[_] = {
+  def fetch(path: String, mediaType: MediaType) : Result[_] = {
     minifiedResource(path) match {
       case Some(url) =>
         val stream = url.openStream()
@@ -93,7 +89,7 @@ trait AssetLocator {
     }
   }
 
-  def fetch(path: String)(implicit ec: ExecutionContext) : Result[_] = {
+  def fetch(path: String) : Result[_] = {
     val mediaType = MediaTypes.forExtension(extensionOf(path)).getOrElse(MediaTypes.`application/octet-stream`)
     fetch(path, mediaType)
   }

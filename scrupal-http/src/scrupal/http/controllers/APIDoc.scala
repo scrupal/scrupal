@@ -29,7 +29,7 @@ import scala.concurrent.Future
   * Further description here.
   */
 case class APIDoc(id: Symbol, priority: Int) extends Controller {
-  def routes(scrupal: Scrupal) : Route = reject
+  def routes(implicit scrupal: Scrupal) : Route = reject
 /*
   val apidocs = CoreFeatures.RESTAPIDocumentation
 

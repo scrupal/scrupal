@@ -32,7 +32,7 @@ case class WelcomeController() extends Controller {
   def id = 'Welcome
   val priority = 0
 
-  def routes(scrupal: Scrupal): Route = {
+  def routes(implicit scrupal: Scrupal): Route = {
     scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
       get {
         path("install_echo") {

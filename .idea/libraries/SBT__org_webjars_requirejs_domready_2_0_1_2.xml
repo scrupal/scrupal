@@ -2,14 +2,11 @@
   <library name="SBT: org.webjars:requirejs-domready:2.0.1-2">
     <CLASSES>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/requirejs-domready/jars/requirejs-domready-2.0.1-2.jar!/" />
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/requirejs-domready/jars/requirejs-domready-2.0.1-2.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/requirejs-domready/docs/requirejs-domready-2.0.1-2-javadoc.jar!/" />
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/requirejs-domready/docs/requirejs-domready-2.0.1-2-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/requirejs-domready/srcs/requirejs-domready-2.0.1-2-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/requirejs-domready/srcs/requirejs-domready-2.0.1-2-sources.jar!/" />
     </SOURCES>
   </library>

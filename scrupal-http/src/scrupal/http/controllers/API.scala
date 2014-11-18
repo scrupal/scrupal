@@ -25,7 +25,7 @@ import spray.routing.Route
   * read about the various APIs supported by their Scrupal Installation.
   */
 case class API(id: Symbol, priority: Int) extends Controller {
-  def routes(scrupal: Scrupal) : Route = reject
+  def routes(implicit scrupal: Scrupal) : Route = reject
 /*
   val feature = CoreFeatures.RESTAPIAccess
 

@@ -25,6 +25,6 @@ import spray.routing.Route
   */
 case class Admin(id: Symbol, priority: Int)  extends Controller
 {
-  def routes(scrupal: Scrupal) : Route = reject
+  def routes(implicit scrupal: Scrupal) : Route = reject
 
 }
