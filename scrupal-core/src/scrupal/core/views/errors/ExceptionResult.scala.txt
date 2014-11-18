@@ -1,0 +1,20 @@
+@(x: scrupal.core.api.ExceptionResult)
+@import java.io.StringWriter
+@import java.io.PrintWriter
+@import org.apache.commons.lang3.exception.ExceptionUtils
+Exception: @{x.payload.getClass.getCanonicalName}
+Message:@{x.payload.getLocalizedMessage}
+Root Cause:
+@{
+  var sw: StringWriter = null
+  var pw: PrintWriter = null
+  try {
+    sw = new StringWriter()
+    pw = new PrintWriter(sw)
+    ExceptionUtils.printRootCauseStackTrace(x.payload, pw)
+    sw.toString
+  } finally {
+    if(pw != null)  pw.close()
+    if(sw != null)  sw.close()
+  }
+}

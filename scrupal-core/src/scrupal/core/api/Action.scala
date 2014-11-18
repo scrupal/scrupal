@@ -16,21 +16,7 @@
  **********************************************************************************************************************/
 package scrupal.core.api
 
-import java.io.InputStream
-
-import play.api.libs.iteratee.Enumerator
-import play.twirl.api.Html
-import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
-import spray.http.{ContentTypes, ContentType, MediaTypes, MediaType}
-
-/** Encapsulation Of An
-  *
-  * Requests are generated from a request receiver such as scrupal-http. They encapsulate an entity, an instance of
-  * that entity, and the invocation arguments. This request information is passed to an Action when it is invoked.
-  */
-trait Request {
-  def context : Context
-}
+import spray.http.ContentType
 
 /** Encapsulation of an Action's Result
   *
@@ -42,7 +28,7 @@ trait Request {
 trait Result[P] {
   /** Disposition of a Result
     *
-    * This provides a basic summary of the result usign the Disposition enumeration. There are several ways to be
+    * This provides a basic summary of the result using the Disposition enumeration. There are several ways to be
     * successful in responding to a request and several ways to fail. Each of these basic ways of responding are
     * encoded into the disposition as a simple enumeration value. This allows the receiver of the Result[P] to
     * quickly asses what should be done with the result.
@@ -50,99 +36,56 @@ trait Result[P] {
     */
   def disposition : Disposition
 
-  /** Payload Content of The Result
-    * The is the actual result. It can be an Scala type but should correspond to the MediaType
+  /** Payload Content of The Result.
+    *
+    * This is the actual result. It can be any Scala type but should correspond to the ContentType
     * @return
     */
   def payload: P
 
   /** Type Of Media Returned.
     *
-    * This is a MIME media type value from Spray. It indicates what kind of media is being returned by the payload.
-    * @return
+    * This is a ContentType value from Spray. It indicates what kind of media and character encoding is being
+    * returned by the payload.
+    * @return A ContentType corresponding to the content type of `payload`
     */
   def contentType : ContentType
 }
 
-case class EnumeratorResult(
-  payload: Enumerator[Array[Byte]],
-  contentType: ContentType,
-  disposition: Disposition = Successful
-) extends Result[Enumerator[Array[Byte]]]
-
-case class StreamResult(
-  payload: InputStream,
-  contentType: ContentType,
-  disposition: Disposition = Successful
-) extends Result[InputStream]
-
-case class OctetsResult(
-  payload: Array[Byte],
-  contentType: ContentType,
-  disposition: Disposition = Successful
-) extends Result[Array[Byte]]
-
-case class TextResult(
-  payload: String,
-  disposition: Disposition = Successful,
-  contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
-) extends Result[String] {
-}
-
-case class HtmlResult(
-  payload: Html,
-  disposition: Disposition = Successful,
-  contentType: ContentType = MediaTypes.`text/html`
-) extends Result[Html] {
-}
-
-case class BSONResult(
-  payload: BSONDocument,
-  disposition: Disposition = Successful
-) extends Result[BSONDocument] {
-  val contentType : ContentType = Result.BSONMediaType
-}
-
-case class ExceptionResult(
-  error: Throwable,
-  disposition: Disposition = Exception
-) extends Result[BSONDocument] {
-  val contentType = ContentTypes.`text/plain(UTF-8)`
-
-  val payload = {
-    val stack = error.getStackTrace.map { elem ⇒ BSONString(elem.toString) }
-    BSONDocument(
-      "$error" →BSONString(s"${error.getClass.getName}: ${error.getMessage}"),
-      "$stack" → BSONArray(stack)
-    )
-  }
-}
-
-case class ErrorResult(
-  payload: String,
-  disposition : Disposition
-) extends Result[String] {
-  val contentType = ContentTypes.`text/plain(UTF-8)`
-}
-
-// case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
-
 /** An Invokable Action
   *
-  * Actions bring behavior to entities. Each entity can declare a set of actions that its users can invoke from the
-  * REST api. Unlike the methods provided by the [[Entity]] class, these Actions operate on the Instances of the
-  * entity themselves. The Entity methods are more like operations on the collection of Entities.
+  * Actions bring extensible behavior to Scrupal. An action object should be considered as a request to perform some
+  * action in some context. To that end, you will note that an Action:
+  *
+  * - is a function that takes no arguments and returns a generic result (Result[_])
+  *
+  * - has a context that provides the invocation circumstances of the action
+  *
+  * - can be extended to include other information or behavior peculiar to a given type of action
+  *
+  * Action objects are how Scrupal represents an action taken from an external application. Actions are processed by
+  * the ActionProcessor actor. Extensions of Action represent actual requests by adding parametric data to the Action
+  * and implementing the `apply` function.
+
   */
-abstract class Action extends (() => Result[_]) with Request {
-  /** Objects mixing in this trait will define apply to implement the Action.
-    * Note that the result type is fixed to return a BSONDocument because Methods are only invokable from the REST api
-    * which requires results to be in the form of a BSONDocument
-    * @return The Play Action that results in a JsObject to send to the client
+trait Action extends (() => Result[_]) {
+  /** The action part of an Action object.
+    *
+    * Objects mixing in this trait will define apply to implement the Action. Note that the result type is a generic
+    * Result[_]. The only things you have to return are a Disposition, a ContentType and some sort of payload of
+    * arbitrary type. Clients of the action should understand the actual type of result.
+    * @return The Result[_] yielded from executing the action.
     */
   def apply() : Result[_]
+
+  /** The context in which the Action is invoked.
+    *
+    * Every action executes within some context. The abstract Context class has many variants but a consistent interface
+    * to allow actions to comprehend and manipulate the context in which they are executing.
+    * @see [[Context]]
+    * @return
+    */
+  def context : Context
+
 }
 
-object Result {
-  val BSONMediaType = MediaType.custom("application", "vnd.bson", compressible=true, binary=true,
-                                        fileExtensions=Seq("bson"))
-}

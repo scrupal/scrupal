@@ -86,7 +86,7 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
       val future = f.file(f) map  { result: Result[_] ⇒
         result.contentType.mediaType must beEqualTo(MediaTypes.`text/plain`)
         val rendered : String  = result match {
-          case t: TextResult ⇒ t.payload
+          case t: StringResult ⇒ t.payload
           case o: OctetsResult ⇒ new String(o.payload, utf8)
           case _ ⇒ throw new Exception("Unexpected result type")
         }

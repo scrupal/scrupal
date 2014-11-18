@@ -109,7 +109,7 @@ case class TextNode (
 ) extends Node {
   final val mediaType: MediaType = MediaTypes.`text/html`
   final val kind : Symbol = 'Text
-  def apply(ctxt: Context): Future[Result[_]] = Future.successful(TextResult(payload,Successful))
+  def apply(ctxt: Context): Future[Result[_]] = Future.successful(StringResult(payload,Successful))
 }
 
 object TextNode {

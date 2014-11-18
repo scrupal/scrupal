@@ -15,17 +15,31 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core.actors
+package scrupal.core.api
+
+import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.SupervisorStrategy.Decider
 import akka.actor._
 import akka.routing.{DefaultResizer, SmallestMailboxPool}
-import scrupal.core.api.{EntityCommand, ExceptionResult, Entity}
-import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.duration.Duration
 
-object EntityProcessor {
+object ActionProcessor {
+
+  /** A counter for the number of actors. This is to ensure we make unique names */
+  val actorCounter = new AtomicLong(0)
+
+  /** A method to generate a unique name for each actor that meets Akka's naming requirements.
+    *
+    * @param name The name of the type of the actor
+    * @return The unique name generated for the actor instance
+    */
+  def actorName(name: String) : String = {
+    val result = name.replace(" ", "-")+ "-" + actorCounter.incrementAndGet()
+    log.debug("Created new actor: " + name)
+    result
+  }
 
   /** Name of the configuration key for the configuration of the dispatcher */
   val dispatcher_config_name = "scrupal.dispatcher"
@@ -41,7 +55,7 @@ object EntityProcessor {
     * smart load balancing. The actors are created by the router and managed by them. The pool starts with the
     * minimum number of actors and increases as needed to the upper bound.
     */
-  def makeDispatcherRef(system: ActorSystem, min_actors: Int, max_actors: Int) = {
+  def makeDispatcherRef(system: ActorSystem, min_actors: Int, max_actors: Int) : ActorRef = {
     /** Supervision Strategy Decider
       * This "Decider" determines what to do for a given exception type. For now, all exceptions cause restart of the
       * actor.
@@ -60,7 +74,7 @@ object EntityProcessor {
     val resizer = Some(DefaultResizer(min_actors, max_actors))
 
     system.actorOf(
-      Props(classOf[EntityProcessor]).withRouter(
+      Props(classOf[ActionProcessor]).withRouter(
         SmallestMailboxPool(
           nrOfInstances = min_actors,
           routerDispatcher = dispatcher_config_name,
@@ -73,26 +87,25 @@ object EntityProcessor {
   }
 
   def makeSingletonRef(system: ActorSystem) = {
-    system.actorOf(Props(classOf[EntityProcessor]),actorName("EntityProcessor"))
+    system.actorOf(Props(classOf[ActionProcessor]), actorName("EntityProcessor"))
   }
+
+
 }
 
 /** The base trait for Scrupal Actors
   * This allows us to put the common things for all Scrupal Actors in one place
   */
-class EntityProcessor extends Actor with ActorLogging {
+class ActionProcessor extends Actor with ActorLogging {
 
   def receive : Receive = {
-    case ecc: EntityCommand ⇒
+    case action: Action ⇒
       try {
-        val result = ecc()
-        sender ! result
+        sender ! action()
       } catch {
         case xcptn: Throwable ⇒
-          log.warning(s"The EntityCommand, $ecc, threw an exception: ", xcptn) // FIXME: doesn't print the exception
+          log.warning(s"The EntityCommand, $action, threw an exception: ", xcptn) // FIXME: doesn't print the exception
           sender ! ExceptionResult(xcptn)
       }
   }
-
-
 }

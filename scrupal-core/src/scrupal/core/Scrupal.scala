@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicReference
 import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
-import scrupal.core.actors.EntityProcessor
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.{Await, Future, ExecutionContext}
@@ -71,7 +70,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     scala.concurrent.ExecutionContext.Implicits.global
   }
 
-  lazy val _dispatcher = disp.getOrElse(EntityProcessor.makeSingletonRef(_actorSystem))
+  lazy val _dispatcher = disp.getOrElse(ActionProcessor.makeSingletonRef(_actorSystem))
 
 
   val _dbContext = new AtomicReference[DBContext](dbc.getOrElse(null))
@@ -252,7 +251,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @return A Future to the eventual Result[P]
     */
   def handle(action: Action) : Future[Result[_]] = {
-    _dispatcher.ask(action)(scrupal.core.actors.timeout) map { any ⇒ any.asInstanceOf[Result[_]] }
+    _dispatcher.ask(action)(_timeout) map { any ⇒ any.asInstanceOf[Result[_]] }
   }
 
   /**
@@ -305,7 +304,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 	 * @param ex The exception
 	 * @return The result to send to the client
 	 */
-	def onError(request: Request, ex: Throwable) = {
+	def onError(action: Action, ex: Throwable) = {
 
 	/*
 		try {
@@ -335,7 +334,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-  def onHandlerNotFound(request: Request)  = {
+  def onHandlerNotFound(request: Action)  = {
 		/*
 		NotFound(Play.maybeApplication.map {
 			case app if app.mode != Mode.Prod => views.html.defaultpages.devNotFound.f
@@ -352,13 +351,13 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 	 * @param request the HTTP request header
 	 * @return the result to send to the client
 	 */
-	def onBadRequest(request: Request, error: String)  = {
+	def onBadRequest(request: Action, error: String)  = {
 		/*
 		BadRequest(views.html.defaultpages.badRequest(request, error))
 		*/
 	}
 
-	def onRequestCompletion(request: Request) {
+	def onActionCompletion(request: Action) = {
 	}
 }
 

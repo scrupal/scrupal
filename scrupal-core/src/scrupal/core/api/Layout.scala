@@ -58,7 +58,7 @@ case class TwirlTextLayout(
 ) extends Layout[String] {
   val mediaType = MediaTypes.`text/plain`
   def apply(args: Map[String,(Node,Result[_])], context: Context) : Result[String] = {
-    TextResult(template(args)(context).body)
+    StringResult(template(args)(context).body)
   }
 }
 

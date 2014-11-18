@@ -13,8 +13,10 @@
     <div>
     @{r match {
       case h: HtmlResult ⇒ h.payload.body
-      case t: TextResult ⇒ t.payload
-      case t: OctetsResult ⇒ new String(t.payload,scrupal.core.api.utf8)
+      case s: StringResult ⇒ s.payload
+      case t: TxtResult ⇒ t.payload.body
+      case x: ExceptionResult ⇒ x.toHtmlResult.payload.body
+      case e: ErrorResult ⇒ e.formatted
       case _ => <span>Media Type: {n.mediaType}</span>
     }}
     </div>
