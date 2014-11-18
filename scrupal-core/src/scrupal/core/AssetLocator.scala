@@ -17,10 +17,11 @@
 
 package scrupal.core
 
+import java.io.File
 import java.net.URL
 
 import play.api.libs.iteratee.Enumerator
-import scrupal.core.api.{NotFound, ErrorResult, EnumeratorResult, Result}
+import scrupal.core.api._
 import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.ExecutionContext
@@ -30,6 +31,7 @@ trait AssetLocator {
   final val extension_delimiter : Char = '.'
   final val path_delimiter : String = "/"
   final val minified_extension : String = "min"
+  def asset_dirs : Seq[String]
 
   /** Find A Resource In The Classpath
     *
@@ -42,7 +44,16 @@ trait AssetLocator {
   def resourceOf(name: String) : Option[URL] = {
     val cl = this.getClass.getClassLoader
     val path = if (name.startsWith(path_delimiter)) name.drop(1) else name
-    Option(cl.getResource(path))
+    Option(cl.getResource(path)) match {
+      case Some(url) => Some(url)
+      case None =>
+        for (p <- asset_dirs) {
+          val f = new File(p, name)
+          if (f.isFile && f.canRead)
+            return Some(new URL("file","localhost",f.getCanonicalPath))
+        }
+        None
+    }
   }
 
   def extensionOf(path: String) : String = {
@@ -76,8 +87,7 @@ trait AssetLocator {
       case Some(url) =>
         val stream = url.openStream()
         val length = stream.available
-        Enumerator.fromStream(stream)
-        EnumeratorResult(Enumerator.fromStream(stream), mediaType)
+        StreamResult(stream, mediaType)
       case None =>
         ErrorResult(s"Asset '$path' could not be found", NotFound)
     }

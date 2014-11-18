@@ -4,6 +4,11 @@
     <option name="PER_PROJECT_SETTINGS">
       <value>
         <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="true" />
+        <ScalaCodeStyleSettings>
+          <option name="REPLACE_CASE_ARROW_WITH_UNICODE_CHAR" value="true" />
+          <option name="REPLACE_MAP_ARROW_WITH_UNICODE_CHAR" value="true" />
+          <option name="REPLACE_FOR_GENERATOR_ARROW_WITH_UNICODE_CHAR" value="true" />
+        </ScalaCodeStyleSettings>
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>

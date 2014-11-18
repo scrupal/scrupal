@@ -17,10 +17,12 @@
 
 package scrupal.core
 
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
+import akka.util.Timeout
 import scrupal.core.actors.EntityProcessor
 
 import scala.collection.immutable.TreeMap
@@ -60,6 +62,10 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 
   implicit val _executionContext = ec.getOrElse(getExecutionContext(_configuration))
 
+  implicit val _timeout = Timeout(
+    _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
+  )
+
   private[this] def getExecutionContext(config: Configuration) : ExecutionContext = {
     // FIXME: This should be obtained from configuration instead
     scala.concurrent.ExecutionContext.Implicits.global
@@ -90,8 +96,6 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
   }
 
   def withExecutionContext[T](f: (ExecutionContext) => T) : T = {
-    implicit val ec = _executionContext
-    require(_executionContext != null)
     f(_executionContext)
   }
 
@@ -99,6 +103,9 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     f(_actorSystem)
   }
 
+  def withActorExec[T](f: (ActorSystem, ExecutionContext, Timeout) ⇒ T) : T = {
+    f(_actorSystem, _executionContext, _timeout)
+  }
 
   /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
     * Registry then we have had to found a database and loaded the sites. So that is our indicator of whether we

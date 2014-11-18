@@ -44,7 +44,7 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
     * Note that this does not include checking of the context path. That will have already done before the
     * routes here are invoked. So, this should only check within that 'context"
     */
-  def routes(scrupal: Scrupal): Route
+  def routes(implicit scrupal: Scrupal): Route
 
   /** Required method for registration */
   def registry: Registry[Controller] = Controller

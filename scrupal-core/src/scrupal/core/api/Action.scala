@@ -16,6 +16,8 @@
  **********************************************************************************************************************/
 package scrupal.core.api
 
+import java.io.InputStream
+
 import play.api.libs.iteratee.Enumerator
 import play.twirl.api.Html
 import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
@@ -67,6 +69,12 @@ case class EnumeratorResult(
   mediaType: MediaType,
   disposition: Disposition = Successful
 ) extends Result[Enumerator[Array[Byte]]]
+
+case class StreamResult(
+  payload: InputStream,
+  mediaType: MediaType,
+  disposition: Disposition = Successful
+) extends Result[InputStream]
 
 case class OctetsResult(
   payload: Array[Byte],

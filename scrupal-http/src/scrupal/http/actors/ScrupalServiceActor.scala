@@ -52,7 +52,7 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   val the_router = createRouter(scrupal)
 
 
-  log.warn("Router: " + the_router) // FIXME: turn down to trace when we're sure routing works
+  log.warn("Router: " + the_router) // TODO: turn down to trace when we're sure routing works
 
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
@@ -78,7 +78,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
       val base_routing = scrupalIsReady(scrupal)
 
       // scrupal-http provides the AssetController. Instantiate it now and provide it as the root controller
-      val assets = new AssetsController
+      val assets = new AssetsController(scrupal)
 
       // Now construct the routes from the prioritized set of controllers we found
       sorted_controllers.foldLeft[Route](assets.routes(scrupal)) { (route, ctrlr) =>

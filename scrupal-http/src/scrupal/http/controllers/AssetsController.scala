@@ -9,46 +9,47 @@ import spray.http.Uri
 import spray.routing._
 
 import scala.concurrent.ExecutionContext
+import scala.collection.JavaConverters._
+
 
 
 /** Controller that provides assets
   *
   * This controller provides the assets that are "baked" in to a Scrupal applications.
  */
-class AssetsController extends BasicController('assets) with AssetLocator with SiteDirectives with ScrupalMarshallers {
+class AssetsController(scrupal: Scrupal) extends BasicController('assets)
+  with AssetLocator with SiteDirectives with ScrupalMarshallers {
 
-  def routes(scrupal: Scrupal) : Route = {
-    scrupal.withExecutionContext { implicit ec: ExecutionContext =>
-      // site(scrupal) { theSite : Site =>
-        get {
-          pathPrefix("assets") {
-            path("favicon") {
-              favicon(/*theSite*/)
-            } ~
-              path("javascripts" / RestPath) { rest_path =>
-                javascripts(rest_path)
-              } ~
-              path("stylesheets" / RestPath) { rest_path =>
-                stylesheets(rest_path)
-              } ~
-              path("images" / Segment / RestPath ) { case (library, rest_path) =>
-                images(scrupal, library, rest_path)
-              }
-          }
-        }
-      //}
+  val asset_dirs : List[String] = scrupal.withConfiguration[List[String]] { config =>
+    config.getStringList("scrupal.asset_paths") match {
+      case Some(x) => x.asScala.toList
+      case None => List.empty[String]
     }
   }
 
-  def returnResult(result: Result[_]) : Route = {
-    if (result.disposition.isSuccessful) {
-      respondWithMediaType(result.mediaType) {
-        result match {
-          case e: EnumeratorResult =>
-            complete(e)
-          case b: BSONResult =>
-            reject // TODO: Need a marshaller: complete(b)
+  def routes(implicit scrupal: Scrupal) : Route = {
+    get {
+      pathPrefix("assets") {
+        path("favicon") {
+          favicon(/*theSite*/)
+        } ~
+        path("javascripts" / RestPath) { rest_path =>
+          javascripts(rest_path)
+        } ~
+        path("stylesheets" / RestPath) { rest_path =>
+          stylesheets(rest_path)
+        } ~
+        path("images" / Segment / RestPath) { case (library, rest_path) =>
+          images(scrupal, library, rest_path)
         }
+      }
+    }
+  }
+
+  def resultAsRoute(result: ⇒ Result[_])(implicit scrupal: Scrupal) : Route = {
+    if (result.disposition.isSuccessful) {
+      complete {
+        makeMarshallable(result)
       }
     } else {
       result match {
@@ -62,11 +63,14 @@ class AssetsController extends BasicController('assets) with AssetLocator with S
     }
   }
 
-  def favicon(/*aSite: Site*/)(implicit ec: ExecutionContext) : Route = {
+  def favicon(/*aSite: Site*/)(implicit scrupal: Scrupal) : Route = {
     // FIXME: This should only be the default, look up the Site's favicon and use that
-    val path = "/assets/images/scrupal.ico"
-    val result = fetch(path)
-    returnResult(result)
+    resultAsRoute {
+      val path = "images/scrupal.ico"
+      scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+        fetch(path)
+      }
+    }
   }
 
   def images(scrupal: Scrupal, library: String, rest_of_path: Uri.Path) : Route = {
@@ -226,7 +230,7 @@ class AssetsBuilder(errorHandler: HttpErrorHandler) extends Controller {
 }
 
 case class WebJarsController() extends BasicController('webjars) {
-  def routes(scrupal: Scrupal): Route = {
+  def routes(implicit scrupal: Scrupal): Route = {
     path("javascripts" / RestPath) { file =>
       get {
         complete("foo")

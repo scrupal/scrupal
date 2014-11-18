@@ -5,8 +5,10 @@
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/bootstrap/docs/bootstrap-2.3.2-javadoc.jar!/" />
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/bootstrap/docs/bootstrap-2.3.2-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/bootstrap/srcs/bootstrap-2.3.2-sources.jar!/" />
       <root url="jar://$USER_HOME$/.ivy2/cache/org.webjars/bootstrap/srcs/bootstrap-2.3.2-sources.jar!/" />
     </SOURCES>
   </library>

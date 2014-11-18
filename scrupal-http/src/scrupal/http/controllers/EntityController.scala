@@ -27,8 +27,6 @@ import spray.http.HttpHeader
 import spray.routing.{Directives, Route}
 import spray.routing._
 
-import scala.concurrent.ExecutionContext
-
 /** A Controller For Entities
   * This controller handles entity requests for an site. It caches the set of entities it is responsible for by traversing
   * the site it is provided with and locating all the entities that are enabled for the site. It then builds a route
@@ -75,8 +73,9 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
     }
   }
 
-  def routes(scrupal: Scrupal) : Route = {
-    scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+  def routes(implicit scrupal: Scrupal) : Route = {
+    // scrupal.withActorExec { (as,ec,to) ⇒
+     // implicit val marshaller = mystery_marshaller(as, ec, to)
       site(scrupal) { aSite ⇒
         validate(aSite == theSite, s"Expected site ${theSite.name } but got ${aSite.name }") {
           app_entity {
@@ -87,12 +86,32 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
                     request_context { rc: RequestContext ⇒
                       val ctxt = Context(scrupal, rc, aSite, app)
                       val id_path = id.mkString("/")
-                      post    { complete(scrupal.handle(entity.create(ctxt, id_path, make_args(ctxt)))) } ~
-                        get     { complete(scrupal.handle(entity.retrieve(ctxt, id_path))) } ~
-                        put     { complete(scrupal.handle(entity.update(ctxt, id_path, make_args(ctxt)))) } ~
-                        delete  { complete(scrupal.handle(entity.delete(ctxt, id_path))) } ~
-                        options { complete(scrupal.handle(entity.query(ctxt, id_path, make_args(ctxt)))) } ~
-                        reject(ValidationRejection(s"Not a good match for method"))
+                      post {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.create(ctxt, id_path, make_args(ctxt))))
+                        }
+                      } ~
+                      get {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.retrieve(ctxt, id_path)))
+                        }
+                      } ~
+                      put {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.update(ctxt, id_path, make_args(ctxt))))
+                        }
+                      } ~
+                      delete {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.delete(ctxt, id_path)))
+                        }
+                      } ~
+                      options {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.query(ctxt, id_path, make_args(ctxt))))
+                        }
+                      } ~
+                      reject(ValidationRejection(s"Not a good match for method"))
                     }
                   }
                 } ~ reject(ValidationRejection(s"Request path is missing the entity identifier portion"))
@@ -102,12 +121,32 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
                   validate(id.length > 0, "Empty identifier not permitted") {
                     request_context { rc: RequestContext ⇒
                       val ctxt = Context(scrupal, rc, aSite, app)
-                      post    { complete(scrupal.handle(entity.createFacet(ctxt, id, what, make_args(ctxt)))) } ~
-                        get     { complete(scrupal.handle(entity.retrieveFacet(ctxt, id, what))) } ~
-                        put     { complete(scrupal.handle(entity.updateFacet(ctxt, id, what, make_args(ctxt)))) } ~
-                        delete  { complete(scrupal.handle(entity.deleteFacet(ctxt, id, what))) } ~
-                        options { complete(scrupal.handle(entity.queryFacet(ctxt, id, what, make_args(ctxt)))) } ~
-                        reject(ValidationRejection(s"Not a good match for method"))
+                      post {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.createFacet(ctxt, id, what, make_args(ctxt))))
+                        }
+                      } ~
+                      get {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.retrieveFacet(ctxt, id, what)))
+                        }
+                      } ~
+                      put {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.updateFacet(ctxt, id, what, make_args(ctxt))))
+                        }
+                      } ~
+                      delete {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.deleteFacet(ctxt, id, what)))
+                        }
+                      } ~
+                      options {
+                        complete {
+                          makeMarshallable(scrupal.handle(entity.queryFacet(ctxt, id, what, make_args(ctxt))))
+                        }
+                      } ~
+                      reject(ValidationRejection(s"Not a good match for method"))
                     }
                   }
                 } ~ reject(ValidationRejection(s"Request path is missing entity id and what portions"))
@@ -120,5 +159,5 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
         }
       }
     }
-  }
+  // }
 }
