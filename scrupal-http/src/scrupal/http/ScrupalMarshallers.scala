@@ -21,7 +21,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import play.api.libs.iteratee.{Cont, Done, Iteratee, Input, Enumerator}
-import reactivemongo.bson.BSONValue
+import reactivemongo.bson.{BSONNull, BSONValue}
 import scrupal.core.Scrupal
 import scrupal.core.api._
 import spray.can.Http
@@ -60,12 +60,6 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
 
   implicit val string_marshaller: ToResponseMarshaller[StringResult] =
     ToResponseMarshaller.delegate[StringResult, String](text_ct) { h ⇒ h.payload }
-
-  implicit val error_marshaller: ToResponseMarshaller[ErrorResult] =
-    ToResponseMarshaller.delegate[ErrorResult, String](text_ct) { e ⇒ e.formatted }
-
-  implicit val exception_marshaller: ToResponseMarshaller[ExceptionResult] =
-    ToResponseMarshaller.delegate[ExceptionResult, String](html_ct) { e ⇒ e.toHtmlResult.payload.body }
 
   implicit val octets_marshaller: ToResponseMarshaller[OctetsResult] =
     ToResponseMarshaller.delegate[OctetsResult, Array[Byte]](MediaTypes.`application/octet-stream`) { o ⇒ o.payload }
@@ -107,7 +101,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
     }
   }
 
-  type BSONStreamType = Try[(String,BSONValue)]
+  type BSONStreamType = (String,BSONValue)
 
   implicit def bson_marshaller(implicit arf: ActorRefFactory, ec: ExecutionContext, timeout: Timeout):
   ToResponseMarshaller[BSONResult] = ToResponseMarshaller[BSONResult] { (value, trmc) ⇒
@@ -123,11 +117,67 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
     }
 
     val streamingResponseActor: ActorRef = arf.actorOf(Props(classOf[StreamingResponseActor], value.contentType, trmc))
-    val enumerator = Enumerator.enumerate(value.payload.stream)
+    val enumerator = Enumerator.enumerate(value.payload.stream).map {
+      case Success(pair) ⇒ pair
+      case Failure(xcptn) ⇒ ("",BSONNull)
+    }
     enumerator |>>> consumePayload(streamingResponseActor) onFailure {
       case NonFatal(error) => streamingResponseActor ! error
     }
   }
+
+  def handle_disposition(result: Result[_]) : Option[HttpResponse] = {
+    result.disposition match {
+      case Successful     => //"Action was successfully processed synchronously.")
+        None
+      case Received       => //"Action is processing asynchronously without response.")
+        None
+      case Pending        => //"Action is pending asynchronous processing without response.")
+        None
+      case Promise        => //"Action is pending asynchronous processing with a promise of future result.")
+        None
+      case Unspecified    => //"Action processing yielded An error of unspecified nature.")
+        Some(HttpResponse(StatusCodes.InternalServerError))
+      case TimedOut       => //"Action processing attempted but it timed out.")
+        Some(HttpResponse(StatusCodes.GatewayTimeout))
+      case Unintelligible => //"Action rejected because it could not be understood.")
+        Some(HttpResponse(StatusCodes.BadRequest))
+      case Unimplemented  => //"Action rejected because its has not been implemented yet.")
+        Some(HttpResponse(StatusCodes.NotImplemented))
+      case Unsupported    => //"Action rejected because its resource is no longer supported.")
+        Some(HttpResponse(StatusCodes.NotImplemented))
+      case Unauthorized   => //"Action rejected because requester is not authorized for it.")
+        Some(HttpResponse(StatusCodes.Unauthorized))
+      case Unavailable    => //"Action rejected because the resource is not currently available.")
+        Some(HttpResponse(StatusCodes.ServiceUnavailable))
+      case NotFound       => //"Action rejected because the resource was not found.")
+        Some(HttpResponse(StatusCodes.NotFound))
+      case Ambiguous      => //"Action rejected because of ambiguity on the resource requested.")
+        Some(HttpResponse(StatusCodes.Conflict))
+      case Conflict       => //"Action rejected because it would cause a conflict between resources.")
+        Some(HttpResponse(StatusCodes.Conflict))
+      case TooComplex     => //"Action rejected because it implies processing that is too complex.")
+        Some(HttpResponse(StatusCodes.Forbidden))
+      case Exhausted      => //"Action processing started but a computing resource became exhausted")
+        Some(HttpResponse(StatusCodes.ServiceUnavailable))
+      case Exception      => //"An exception occurred during the processing of the action")
+        None
+    }
+  }
+
+  implicit val error_marshaller: ToResponseMarshaller[ErrorResult] =
+    ToResponseMarshaller[ErrorResult] { (value,ctxt) ⇒
+      handle_disposition(value) match {
+        case Some(hr) ⇒ ctxt.marshalTo(hr)
+        case None ⇒ ctxt.marshalTo(HttpResponse(StatusCodes.OK,HttpEntity(value.contentType,value.formatted)))
+      }
+    }
+
+  implicit val exception_marshaller: ToResponseMarshaller[ExceptionResult] =
+    ToResponseMarshaller[ExceptionResult] { (value, ctxt)  ⇒
+      ctxt.handleError(value.payload)
+    }
+
 
   implicit def mystery_marshaller(
     implicit arf: ActorRefFactory, ec: ExecutionContext, timeout: Timeout): ToResponseMarshaller[Result[_]] = {
@@ -161,24 +211,20 @@ class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext
                                                                                                   ActorLogging  {
   object ChunkSent
 
-  def bsonStreamToData(s: ScrupalMarshallers#BSONStreamType) : Array[Byte] = {
-      s match {
-        case Success(pair) ⇒
-          // TODO: Implement this conversion
-          // See reactivemongo.core.iteratees and reactivemongo.bson.buffers
-          val data = new Array[Byte](1)
-          data.update(0, pair._2.code)
-          data
-        case Failure(xcptn) ⇒ Array[Byte]() // Failed elements are not included so just push empty
-      }
+  def bsonStreamToData(key: String, value: BSONValue) : Array[Byte] = {
+    // TODO: Implement this conversion
+    // See reactivemongo.core.iteratees and reactivemongo.bson.buffers
+    val data = new Array[Byte](1)
+    data.update(0, value.code)
+    data
   }
 
   def receive = {
-    case try_pair: ScrupalMarshallers#BSONStreamType ⇒
+    case (key:String,value:BSONValue)  ⇒
       context.become(
         waitingForResponder(
           trmc.startChunkedMessage(
-            HttpResponse(entity=HttpEntity(ct, bsonStreamToData(try_pair))),
+            HttpResponse(entity=HttpEntity(ct, bsonStreamToData(key, value))),
             ack=Some(ChunkSent)
           ),
           sender()
@@ -203,8 +249,8 @@ class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext
   }
 
   def waitingForData(responder: ActorRef): Actor.Receive = {
-    case try_pair: ScrupalMarshallers#BSONStreamType ⇒
-      responder ! MessageChunk(bsonStreamToData(try_pair)).withAck(ChunkSent)
+    case (key:String,value:BSONValue)  ⇒
+      responder ! MessageChunk(bsonStreamToData(key, value)).withAck(ChunkSent)
       context.become(waitingForResponder(responder, sender()))
 
     case data: Array[Byte] =>

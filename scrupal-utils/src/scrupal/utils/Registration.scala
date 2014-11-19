@@ -146,7 +146,8 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] {
       toss(s"There is already a $registrantsName named $theName registered with $registryName")
     }
     _register(thing.id,thing)
-    log.debug(s"Registered ${thing.getClass.getName} as $theName with $size other ${Pluralizer.pluralize(registrantsName)}")
+    log.trace(
+      s"Registered ${thing.getClass.getName} as $theName with $size other ${Pluralizer.pluralize(registrantsName)}")
   }
 
   def unregister(thing: T) : Unit = {
@@ -154,7 +155,8 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] {
     if (!contains(thing.id))
         toss(s"There is no $registrantsName named $theName registered with $registryName")
     _unregister(thing.id)
-    log.debug(s"Unregistered ${thing.getClass.getName} as $theName with $size other ${Pluralizer.pluralize(registrantsName)}")
+    log.trace(
+      s"Unregistered ${thing.getClass.getName} as $theName with $size other ${Pluralizer.pluralize(registrantsName)}")
   }
 
   val rand = new Random(System.currentTimeMillis())

@@ -28,31 +28,31 @@ import scala.concurrent.ExecutionContext
  * A controller to provide the Introduction To Scrupal content
  * Further description here.
  */
-case class WelcomeController() extends Controller {
-  def id = 'Welcome
-  val priority = 0
+case class WelcomeController() extends BasicController('Welcome, 0) {
 
   def routes(implicit scrupal: Scrupal): Route = {
     scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-      get {
-        path("install_echo") {
-          complete("Not Implemented Yet")
-        } ~
-        path("config") {
-          complete("Not Implemented Yet")
-        } ~
-        path(RestPath ) { the_path ⇒
-          respondWithMediaType(`text/html`) {
-            request_context { rc: RequestContext ⇒
-              implicit val context = Context(scrupal, rc)
-              complete(_root_.scrupal.http.views.html.Welcome(the_path.toString()).toString())
+      logRequestResponse(showAllResponses _) {
+        get {
+          path("install_echo") {
+            complete("Not Implemented Yet")
+          } ~
+          path("config") {
+            complete("Not Implemented Yet")
+          } ~
+          path(RestPath) { the_path ⇒
+            respondWithMediaType(`text/html`) {
+              request_context { rc: RequestContext ⇒
+                implicit val context = Context(scrupal, rc)
+                complete(_root_.scrupal.http.views.html.Welcome(the_path.toString()).toString())
+              }
             }
           }
         }
       }
     }
   }
-}
+ }
   /*
   /** The home page */
 	def index = UserAction.async { implicit context: AnyUserContext => {

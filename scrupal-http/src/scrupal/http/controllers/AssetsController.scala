@@ -1,23 +1,19 @@
 package scrupal.http.controllers
 
-
 import scrupal.core.{AssetLocator, Scrupal}
 import scrupal.core.api._
 import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.SiteDirectives
-import spray.http.Uri
+import spray.http.{StatusCodes, Uri}
 import spray.routing._
 
-import scala.concurrent.ExecutionContext
 import scala.collection.JavaConverters._
-
-
 
 /** Controller that provides assets
   *
   * This controller provides the assets that are "baked" in to a Scrupal applications.
  */
-class AssetsController(scrupal: Scrupal) extends BasicController('assets)
+class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.MinValue /*Make Assets first*/)
   with AssetLocator with SiteDirectives with ScrupalMarshallers {
 
   val asset_dirs : List[String] = scrupal.withConfiguration[List[String]] { config =>
@@ -28,19 +24,31 @@ class AssetsController(scrupal: Scrupal) extends BasicController('assets)
   }
 
   def routes(implicit scrupal: Scrupal) : Route = {
-    get {
-      pathPrefix("assets") {
-        path("favicon") {
-          favicon(/*theSite*/)
-        } ~
-        path("javascripts" / RestPath) { rest_path =>
-          javascripts(rest_path)
-        } ~
-        path("stylesheets" / RestPath) { rest_path =>
-          stylesheets(rest_path)
-        } ~
-        path("images" / Segment / RestPath) { case (library, rest_path) =>
-          images(scrupal, library, rest_path)
+    logRequestResponse(showAllResponses _) {
+      get {
+        pathPrefix("assets") {
+          path("favicon") {
+            favicon(/*theSite*/)
+          } ~
+          path("lib" / Segment / RestPath) { case (library,rest_of_path) ⇒
+            lib(library, rest_of_path)
+          }
+          path("themes" / RestPath) { rest_of_path : Uri.Path ⇒
+            theme(rest_of_path)
+          }
+          path("stylesheets" / RestPath) { rest_of_path : Uri.Path ⇒
+            stylesheets(rest_of_path)
+          } ~
+          path("javascripts" / RestPath) { rest_of_path : Uri.Path ⇒
+            javascripts(rest_of_path)
+          } ~
+          path("images" / RestPath) { rest_of_path: Uri.Path ⇒
+            images(rest_of_path)
+          } ~
+          path(RestPath) { rest_of_path: Uri.Path ⇒
+            val r = (StatusCodes.NotFound, s"Asset '$rest_of_path' was not found.")
+            complete(r)
+          }
         }
       }
     }
@@ -48,9 +56,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('assets)
 
   def resultAsRoute(result: ⇒ Result[_])(implicit scrupal: Scrupal) : Route = {
     if (result.disposition.isSuccessful) {
-      complete {
-        makeMarshallable(result)
-      }
+        complete { makeMarshallable(result) }
     } else {
       result match {
         case er: ErrorResult =>
@@ -63,22 +69,53 @@ class AssetsController(scrupal: Scrupal) extends BasicController('assets)
     }
   }
 
-  def favicon(/*aSite: Site*/)(implicit scrupal: Scrupal) : Route = {
-    // FIXME: This should only be the default, look up the Site's favicon and use that
-    resultAsRoute {
+  def favicon(/*aSite: Site*/)(implicit scrupal: Scrupal) : StandardRoute = {
+    complete {
       val path = "images/scrupal.ico"
-      scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-        fetch(path)
-      }
+      val result = fetch(path)
+      makeMarshallable(result)
     }
   }
 
-  def images(scrupal: Scrupal, library: String, rest_of_path: Uri.Path) : Route = {
-    complete("images: " + rest_of_path)
+  def lib(library: String, rest_of_path: Uri.Path)(implicit scrupal: Scrupal) : Route = {
+    complete {
+      val thePath = s"lib/$library/${rest_of_path}"
+      val result = fetch(thePath)
+      makeMarshallable(result)
+    }
   }
 
-  def javascripts(rest_of_path: Uri.Path) : Route = complete("javascripts: " + rest_of_path)
-  def stylesheets(rest_of_path: Uri.Path) : Route = complete("stylesheets: " + rest_of_path)
+  def theme(rest_of_path: Uri.Path)(implicit scrupal: Scrupal) : Route = {
+    complete {
+      val thePath = s"themes/$rest_of_path"
+      val result = fetch(thePath)
+      makeMarshallable(result)
+    }
+  }
+
+  def images(rest_of_path: Uri.Path)(implicit scrupal: Scrupal) : Route = {
+    complete {
+      val thePath = s"images/$rest_of_path"
+      val result = fetch(thePath)
+      makeMarshallable(result)
+    }
+  }
+
+  def javascripts(rest_of_path: Uri.Path)(implicit scrupal: Scrupal) : Route = {
+    complete {
+      val thePath = s"javascripts/$rest_of_path"
+      val result = fetch(thePath)
+      makeMarshallable(result)
+    }
+  }
+
+  def stylesheets(rest_of_path: Uri.Path)(implicit scrupal: Scrupal) : Route = {
+    complete {
+      val thePath = s"stylesheets/$rest_of_path"
+      val result = fetch(thePath)
+      makeMarshallable(result)
+    }
+  }
 
 /*
 class AssetsBuilder(errorHandler: HttpErrorHandler) extends Controller {

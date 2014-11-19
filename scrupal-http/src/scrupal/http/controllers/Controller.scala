@@ -20,7 +20,13 @@ package scrupal.http.controllers
 import scrupal.core.Scrupal
 import scrupal.core.api.{Identifier, Type, Module}
 import scrupal.utils.{Registrable, Registry}
-import spray.routing.{Route, Directives}
+import spray.http.{HttpResponse, HttpRequest}
+import spray.routing.{Rejected, Route, Directives}
+import spray.routing.directives.LogEntry
+import spray.http._
+import StatusCodes._
+
+import akka.event.Logging._
 
 /** Abstract Controller
   *
@@ -63,11 +69,51 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
 
 }
 
-abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller
+abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller with RequestLoggers
+
+
+trait RequestLoggers {
+  def showRequest(request: HttpRequest) = LogEntry(request.uri, InfoLevel)
+
+  def showAllResponses(request: HttpRequest) : Any ⇒ Option[LogEntry] = {
+    case x: HttpResponse => {
+      println (s"Normal: $request")
+      createLogEntry(request,   x.status + " " + x.toString())
+    }
+    case Rejected(rejections) => {
+      println (s"Rejection: $request")
+      createLogEntry(request,   " Rejection " + rejections.toString())
+    }
+    case x => {
+      println (s"other: $request")
+      createLogEntry(request,   x.toString())
+    }
+  }
+
+  def createLogEntry(request: HttpRequest, text: String): Some[LogEntry] = {
+    Some(LogEntry("#### Request " + request + " => " + text, DebugLevel))
+  }
+
+  def showErrorResponses(request: HttpRequest): Any ⇒ Option[LogEntry] = {
+    case HttpResponse(OK | NotModified | PartialContent, _, _, _) ⇒ None
+    case HttpResponse(NotFound, _, _, _)                          ⇒ Some(LogEntry("404: " + request.uri, WarningLevel))
+    case r @ HttpResponse(Found | MovedPermanently, _, _, _) ⇒
+      Some(LogEntry(s"${r.status.intValue}: ${request.uri} -> ${r.header[HttpHeaders.Location].map(_.uri.toString).getOrElse("")}", WarningLevel))
+    case response ⇒ Some(
+      LogEntry("Non-200 response for\n  Request : " + request + "\n  Response: " + response, WarningLevel))
+  }
+
+  def showRepoResponses(repo: String)(request: HttpRequest): HttpResponsePart ⇒ Option[LogEntry] = {
+    case HttpResponse(s @ (OK | NotModified), _, _, _) ⇒ Some(LogEntry(s"$repo  ${s.intValue}: ${request.uri}", InfoLevel))
+    case ChunkedResponseStart(HttpResponse(OK, _, _, _)) ⇒ Some(LogEntry(repo + " 200 (chunked): " + request.uri, InfoLevel))
+    case HttpResponse(NotFound, _, _, _) ⇒ Some(LogEntry(repo + " 404: " + request.uri))
+    case _ ⇒ None
+  }
+}
+
 
 object Controller extends Registry[Controller] {
   override val registryName: String = "Controllers"
   override val registrantsName: String = "Controller"
-
 
 }

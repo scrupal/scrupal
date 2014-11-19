@@ -21,7 +21,7 @@ import akka.actor.{Props, Actor}
 import akka.util.Timeout
 import scrupal.core.Scrupal
 import scrupal.core.api.Context
-import scrupal.http.controllers.{AssetsController, WelcomeController, EntityController, Controller}
+import scrupal.http.controllers._
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
@@ -49,7 +49,7 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   // First, create all the controllers because routing depends on having controllers to make the routes.
   val the_controllers = createControllers(scrupal)
 
-  val the_router = createRouter(scrupal)
+  val the_router = createRouter(scrupal, the_controllers)
 
 
   log.warn("Router: " + the_router) // TODO: turn down to trace when we're sure routing works
@@ -64,24 +64,23 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
 /** The top level Service For Scrupal
   * This trait is mixed in to the ScrupalServiceActor and provides the means by which all the controller's routes are
   */
-trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives {
+trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives with RequestLoggers {
 
-  def createRouter(scrupal: Scrupal) : Route = {
+  def head_route(scrupal: Scrupal) : Route = {
+    scrupalIsReady(scrupal) {
+      logRequestResponse(showAllResponses _) {
+        reject
+      }
+    }
+  }
+
+  def createRouter(scrupal: Scrupal, controllers: Seq[Controller]) : Route = {
     Try {
       // Fold all the controller routes into one big one, sorted by priority
-      val sorted_controllers = Controller.values.sortBy { c => c.priority}
-
-      if (sorted_controllers.isEmpty)
-        toss("No controllers found")
-
-      // Very first thing we want to always do is make sure Scrupal Is Ready
-      val base_routing = scrupalIsReady(scrupal)
-
-      // scrupal-http provides the AssetController. Instantiate it now and provide it as the root controller
-      val assets = new AssetsController(scrupal)
+      val sorted_controllers = controllers.sortBy { c => c.priority }
 
       // Now construct the routes from the prioritized set of controllers we found
-      sorted_controllers.foldLeft[Route](assets.routes(scrupal)) { (route, ctrlr) =>
+      sorted_controllers.foldLeft[Route](head_route(scrupal)) { (route, ctrlr) =>
         route ~ ctrlr.routes(scrupal)
       }
     } match {
@@ -128,10 +127,11 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
         new EntityController(Symbol(siteName), 0, site, appEntities)
       }
     }.toSeq
+    val assets = new AssetsController(scrupal)
     if (configured_controllers.isEmpty) {
-      Seq( WelcomeController() )
+      Seq( assets, WelcomeController() )
     } else {
-      configured_controllers
+      Seq(assets) ++ configured_controllers
     }
   }
 }

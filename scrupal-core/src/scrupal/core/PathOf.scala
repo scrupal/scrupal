@@ -38,8 +38,9 @@ object PathOf {
 
   def css(name: String)(implicit context: Context) = s"/assets/stylesheets/$name.css"
 
-  def js(lib: String, file: String)(implicit context: Context) = s"/assets/javascripts/$lib/$file.js"
+  def js(name: String)(implicit context: Context) = s"/assets/javascripts/$name.js"
 
+  def lib(library: String, path: String)(implicit context: Context) = s"/assets/lib/$library/$path"
 
   def entity(kind: String, id: String)(implicit context: Context) = s"/${context.appName}/kind/id"
 
