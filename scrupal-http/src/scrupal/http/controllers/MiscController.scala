@@ -14,40 +14,42 @@
  * You should have received a copy of the GNU General Public License along with Scrupal.                              *
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
-import java.io.File
 
-import scala.language.postfixOps
+package scrupal.http.controllers
 
-import com.typesafe.config.ConfigFactory
-import sbt._
+class MiscController {
 
-/** Build Information
- * Capture basic information about the build that is configured in the project/build_info.conf file
+  // TODO: Convert the implied functionality from old Play routes
+/*
+# Home page for Scrupal which provides setup instructions, etc.
+GET            /                                      scrupal.controllers.Home.index
+
+# One-Page-Apps are the primary way to access things
+GET            /app/:name                             scrupal.controllers.Home.onePageApp(name)
+
+# Configuration main page for first-time or any-time configuration wizard
+GET            /configure                             scrupal.controllers.ConfigWizard.configure
+POST           /configure                             scrupal.controllers.ConfigWizard.configAction
+GET            /reconfigure                           scrupal.controllers.ConfigWizard.reconfigure
+
+# Special handling for AngularJS modules that have partial HTML files that need to be served.
+GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
+
+
+# Scrupal UI Applications routing
+GET            /admin                                 scrupal.controllers.Home.admin
+GET            /dump                                  scrupal.controllers.Home.dump
+
+
+
+
+# Routes that provide the Scrupal Documentation
+GET            /doc$path<.*>                          scrupal.controllers.Home.docPage(path)
+GET            /scaladoc$path<.*>                     scrupal.controllers.Home.scalaDoc(path)
+
+
+
+
+
  */
-object BuildInfo {
-  val project_conf = new File("project/project.conf")
-  val conf = ConfigFactory.parseFile(project_conf).resolve()
-  val buildNumber = conf.getInt("build.number")
-  val buildIdentifier = conf.getString("build.id")
-  val buildUrl = conf.getString("build.url")
-  val projectName = conf.getString("project.name")
-  val projectBaseVersion = conf.getString("project.version")
-  val projectVersion = if (buildNumber==0) projectBaseVersion + "-SNAPSHOT" else projectBaseVersion
-
-  object devnull extends ProcessLogger {
-    def info (s: => String) {}
-    def error (s: => String) { }
-    def buffer[T] (f: => T): T = f
-  }
-
-  val currentBranchPattern = """\*\s+([^\s]+)""".r
-
-  def gitBranches = "git branch --no-color" lines_! devnull mkString
-
-  def currBranch = ("git status -sb" lines_! devnull headOption) getOrElse "-" stripPrefix "## "
-
-  def currentGitBranch = currentBranchPattern findFirstMatchIn gitBranches map (_ group 1) getOrElse "-"
-
-  def currentProject(state: State) = Project.extract (state).currentProject.id
-
 }

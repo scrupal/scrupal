@@ -1,11 +1,19 @@
 <component name="CopyrightManager">
   <settings default="Scrupal">
+    <module2copyright>
+      <element module="Project Files" copyright="Scrupal" />
+    </module2copyright>
     <LanguageOptions name="Scala">
       <option name="fileTypeOverride" value="3" />
       <option name="separateBefore" value="true" />
       <option name="separateAfter" value="true" />
       <option name="lenBefore" value="120" />
       <option name="lenAfter" value="120" />
+      <option name="box" value="true" />
+    </LanguageOptions>
+    <LanguageOptions name="__TEMPLATE__">
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
       <option name="box" value="true" />
     </LanguageOptions>
   </settings>

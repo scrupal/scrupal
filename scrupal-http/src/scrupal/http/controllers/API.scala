@@ -26,6 +26,7 @@ import spray.routing.Route
   */
 case class API(id: Symbol, priority: Int) extends Controller {
   def routes(implicit scrupal: Scrupal) : Route = reject
+
 /*
   val feature = CoreFeatures.RESTAPIAccess
 
