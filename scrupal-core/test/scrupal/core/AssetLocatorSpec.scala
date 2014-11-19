@@ -40,7 +40,7 @@ class AssetLocatorSpec extends Specification {
     }
 
     "locate a minified resource" in Assets("minified") {a : Assets ⇒
-      val result = a.locator.minifiedResource("fake.js")
+      val result = a.locator.minifiedResourceOf("fake.js")
       result.isDefined must beTrue
       val url = result.get
       url.getPath.endsWith("/fake.min.js") must beTrue
@@ -54,7 +54,7 @@ class AssetLocatorSpec extends Specification {
     }
 
     "find unminified resource when minified one is not present" in Assets("unminified2") { a: Assets ⇒
-      val result = a.locator.minifiedResource("fake2.js")
+      val result = a.locator.minifiedResourceOf("fake2.js")
       result.isDefined must beTrue
       val url = result.get
       url.getPath.endsWith("fake2.js") must beTrue

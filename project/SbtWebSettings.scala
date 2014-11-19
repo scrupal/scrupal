@@ -31,10 +31,17 @@ trait SbtWebSettings {
     moduleName in Assets := "scrupal"
   )
 
-  lazy val pipeline_settings = Seq[Setting[_]](
-    pipelineStages := Seq(rjs, digest, gzip),
+  lazy val general_pipeline_settings = Seq[Setting[_]](
     RjsKeys.appDir := (resourceManaged in rjs).value,
     RjsKeys.mainModule := "scrupal",
     DigestKeys.algorithms := Seq("md5")
+  )
+
+  lazy val core_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
+    pipelineStages := Seq(digest, gzip)
+  )
+
+  lazy val web_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
+    pipelineStages := Seq(rjs, digest, gzip)
   )
 }

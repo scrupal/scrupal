@@ -52,8 +52,8 @@ trait Context {
   def appName : String = "<NoApplication>"
   def appPath : String = "<NoPath>"
 
-  val themeProvider : String = "scrupal"
-  val themeName : String = "amelia"
+  val themeProvider : String = "bootswatch"
+  val themeName : String = "cyborg"
   val user : String = "guest"
   val description : String = ""
 

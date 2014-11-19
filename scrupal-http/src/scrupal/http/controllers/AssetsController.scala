@@ -21,7 +21,7 @@ import scrupal.core.{AssetLocator, Scrupal}
 import scrupal.core.api._
 import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.SiteDirectives
-import spray.http.{StatusCodes, Uri}
+import spray.http.{MediaTypes, StatusCodes, Uri}
 import spray.routing._
 
 import scala.collection.JavaConverters._
@@ -51,8 +51,8 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
           path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
             lib(library, rest_of_path)
           } ~
-          path("themes" / RestPath) { rest_of_path: Uri.Path ⇒
-            theme(rest_of_path)
+          path("themes" / Segment / RestPath) { case (provider, rest_of_path ) ⇒
+            theme(provider, rest_of_path)
           } ~
           path("stylesheets" / RestPath) { rest_of_path: Uri.Path ⇒
             stylesheets(rest_of_path)
@@ -90,7 +90,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
   def favicon(/*aSite: Site*/)(implicit scrupal: Scrupal): StandardRoute = {
     complete {
       val path = "images/scrupal.ico"
-      val result = fetch(path)
+      val result = fetch(path, MediaTypes.`image/x-icon`, minified=false)
       makeMarshallable(result)
     }
   }
@@ -103,9 +103,9 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
     }
   }
 
-  def theme(rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
+  def theme(provider: String, rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
     complete {
-      val thePath = s"themes/$rest_of_path"
+      val thePath = s"themes/$provider/$rest_of_path"
       val result = fetch(thePath)
       makeMarshallable(result)
     }

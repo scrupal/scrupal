@@ -34,11 +34,13 @@ object PathOf {
 
   def favicon()(implicit context: Context) = "/assets/favicon"
 
-  def theme(provider: String, name: String)(implicit context: Context) = s"/assets/stylesheets/$provider/$name.css"
+  def theme(provider: String, name: String)(implicit context: Context) = s"/assets/themes/$provider/$name.css"
 
   def css(name: String)(implicit context: Context) = s"/assets/stylesheets/$name.css"
 
   def js(name: String)(implicit context: Context) = s"/assets/javascripts/$name.js"
+
+  def font(provider: String, name: String)(implicit context: Context) = s"/assets/fonts/$provider/$name.css"
 
   def lib(library: String, path: String)(implicit context: Context) = s"/assets/lib/$library/$path"
 

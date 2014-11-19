@@ -21,11 +21,10 @@ import sbt._
 import sbt.Keys._
 
 object ScrupalBuild extends Build
-  with BuildSettings with AssetsSettings with TwirlSettings with SbtWebSettings with Dependencies {
+  with BuildSettings with AssetsSettings with TwirlSettings with SbtWebSettings with LessSettings with Dependencies {
 
   import sbtunidoc.{ Plugin => UnidocPlugin }
   import spray.revolver.RevolverPlugin._
-
 
   val base_name = BuildInfo.projectName
 
@@ -51,7 +50,8 @@ object ScrupalBuild extends Build
     .settings(twirlSettings_core:_*)
     .settings(Revolver.settings:_*)
     .settings(sbt_web_settings:_*)
-    .settings(pipeline_settings:_*)
+    .settings(core_pipeline_settings:_*)
+    .settings(less_settings:_*)
     .settings(libraryDependencies ++= core_dependencies)
     .dependsOn(utils_deps, db_deps)
   lazy val core_deps = core % "compile->compile;test->test"
@@ -75,8 +75,13 @@ object ScrupalBuild extends Build
 
   lazy val web = Project(base_name + "-web", file("./scrupal-web"))
     .enablePlugins(SbtTwirl)
+    .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
+    .settings(twirlSettings_web:_*)
+    .settings(Revolver.settings:_*)
+    .settings(sbt_web_settings:_*)
+    .settings(web_pipeline_settings:_*)
     .settings(libraryDependencies ++= web_dependencies)
     .dependsOn(utils_deps, db_deps, core_deps, http_deps)
   val web_deps = web % "compile->compile;test->test"

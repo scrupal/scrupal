@@ -153,18 +153,18 @@ trait Dependencies
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
-    twirl_api, reactivemongo, spray_http, spray_routing, scala_arm
+    reactivemongo, spray_http, spray_routing, scala_arm, twirl_api, marked, fontawesome
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(
     spray_can, spray_routing, spray_httpx, spray_caching, livestream_scredis,
-    akka_actor, twirl_api, marked, fontawesome, requirejs, requirejs_domready,
-    Test.spray_testkit, Test.akka_testkit
+    akka_actor, Test.spray_testkit, Test.akka_testkit
   ) ++ common_dependencies
 
   val web_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
-    angularjs, angular_drag_drop, angular_multi_select,
-    angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
+    // requirejs, requirejs_domready
+    // angularjs, angular_drag_drop, angular_multi_select,
+    // angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
   ) ++ common_dependencies
 
 }

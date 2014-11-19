@@ -61,5 +61,9 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-common_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:font-awesome:4.2.0" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1" level="project" />
   </component>
 </module>

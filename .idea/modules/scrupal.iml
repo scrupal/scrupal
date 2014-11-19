@@ -100,25 +100,13 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2_2.11:2.3.13" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-dragdrop:1.0.3" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-multi-select:2.0.1" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-ui:0.4.0-3" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-ui-bootstrap:0.11.2" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-ui-calendar:0.9.0-beta.1" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-ui-router:0.2.11-1" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angular-ui-utils:47ff7ef35c" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:angularjs:1.3.0" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:bootstrap:3.1.1-1" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:font-awesome:4.2.0" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:fullcalendar:1.6.4" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:jquery:1.10.2-1" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:jquery-ui:1.10.3" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1" level="project" />
     <orderEntry type="library" name="SBT: xerces:xercesImpl:2.11.0" level="project" />
     <orderEntry type="library" name="SBT: xml-apis:xml-apis:1.4.01" level="project" />
     <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2" level="project" />
     <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:requirejs:2.1.15" level="project" />
-    <orderEntry type="library" name="SBT: org.webjars:requirejs-domready:2.0.1-2" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2" level="project" />
+    <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
   </component>
 </module>

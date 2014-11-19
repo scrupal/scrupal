@@ -63,7 +63,7 @@ trait AssetLocator {
     * @param path The path of the resource to find
     * @return None if the resource couldn't be found, otherwise Some(URL) to either the minified or plain version
     */
-  def minifiedResource(path: String): Option[URL] = {
+  def minifiedResourceOf(path: String): Option[URL] = {
     val extension = extensionOf(path)
     val extensionless = path.dropRight(extension.size + 1)
     val minifiedPath = extensionless + extension_delimiter + minified_extension + extension_delimiter + extension
@@ -78,8 +78,8 @@ trait AssetLocator {
     * @param mediaType The MediaType to associate with the Result
     * @return ErrorResult if the resource could not be located, EnumeratorResult if it could
     */
-  def fetch(path: String, mediaType: MediaType) : Result[_] = {
-    minifiedResource(path) match {
+  def fetch(path: String, mediaType: MediaType, minified : Boolean = true) : Result[_] = {
+    (if (minified) minifiedResourceOf(path) else resourceOf(path)) match {
       case Some(url) =>
         val stream = url.openStream()
         val length = stream.available
