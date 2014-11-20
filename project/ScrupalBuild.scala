@@ -42,6 +42,12 @@ object ScrupalBuild extends Build
     .dependsOn(utils_deps)
   lazy val db_deps = db % "compile->compile;test->test"
 
+  lazy val api = Project(base_name + "-api", file("./scrupal-api"))
+    .settings(buildSettings:_*)
+    .settings(libraryDependencies ++= api_dependencies)
+    .dependsOn(utils_deps, db_deps)
+  lazy val api_deps = api % "compile->compile;test->test"
+
   lazy val core = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtTwirl)
     .enablePlugins(SbtWeb)
@@ -53,7 +59,7 @@ object ScrupalBuild extends Build
     .settings(core_pipeline_settings:_*)
     .settings(less_settings:_*)
     .settings(libraryDependencies ++= core_dependencies)
-    .dependsOn(utils_deps, db_deps)
+    .dependsOn(utils_deps, db_deps, api_deps)
   lazy val core_deps = core % "compile->compile;test->test"
 
   lazy val http = Project(base_name + "-http", file("./scrupal-http"))

@@ -9,6 +9,8 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/scrupal-api" />
+            <option value="$PROJECT_DIR$/scrupal-api/project" />
             <option value="$PROJECT_DIR$/scrupal-config" />
             <option value="$PROJECT_DIR$/scrupal-config/project" />
             <option value="$PROJECT_DIR$/scrupal-core" />

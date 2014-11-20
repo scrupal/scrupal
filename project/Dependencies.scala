@@ -152,8 +152,12 @@ trait Dependencies
     reactivemongo, play_iteratees
   ) ++ common_dependencies
 
+  val api_dependencies : Seq[ModuleID] = Seq(
+    spray_http, spray_routing
+  ) ++ common_dependencies
+
   val core_dependencies : Seq[ModuleID] = Seq(
-    reactivemongo, spray_http, spray_routing, scala_arm, twirl_api, marked, fontawesome
+    spray_http, spray_routing, scala_arm, twirl_api, marked, fontawesome
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(

@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-api.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-api-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" />
