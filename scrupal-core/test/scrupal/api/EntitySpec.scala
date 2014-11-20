@@ -55,11 +55,11 @@ object TestEntity {
   }
 }
 
-class TestSchema(dbc: DBContext) extends scrupal.db.Schema(dbc) {
+class TestSchema(dbc: DBContext) extends scrupal.db.Schema(dbc, "TestSchema") {
 
   import TestEntity._
 
-  val test_entities = dbc.withDatabase("TestSchema") { db => new TestEntityDao(db) }
+  val test_entities = withDB { db => new TestEntityDao(db) }
 
   def daos : Seq[DataAccessInterface[_,_]] = {
     Seq( test_entities )

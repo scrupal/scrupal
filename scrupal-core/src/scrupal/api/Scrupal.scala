@@ -87,7 +87,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 
   def withSchema[T](f: (DBContext, Schema) => T) : T = {
     withDBContext { dbc =>
-      f(dbc, new Schema(dbc))
+      f(dbc, new Schema(dbc, name))
     }
   }
 
@@ -122,14 +122,6 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 	 *
 	 */
 	def open() = {
-    val config = onLoadConfig(Configuration.default)
-
-    // Get the database started up
-    DBContext.startup()
-
-    val dbc = DBContext.fromConfiguration(Symbol(name+"-DB"), Some(config))
-    _dbContext.set(dbc)
-
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
     require(Type.registryName == "Types")
@@ -138,11 +130,24 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     require(Entity.registryName == "Entities")
     require(Template.registryName == "Templates")
 
+    val config = onLoadConfig(Configuration.default)
+
+    // Get the database started up
+    DBContext.startup()
+
+    val dbc = DBContext.fromConfiguration(Symbol(name+"-DB"), Some(config))
+    _dbContext.set(dbc)
+
     // TODO: scan classpath for additional modules
     val configured_modules = Seq.empty[String]
 
-    // We are now ready to process the registered modules
-    Module.bootstrap(configured_modules)
+    // Now we go through the configured modules and bootstrap them
+    for (class_name ← configured_modules) {
+      Scrupal.findModuleOnClasspath(class_name) match {
+        case Some(module) ⇒ module.bootstrap(config)
+        case None ⇒ log.warn("Could not locate module with class name: " + class_name)
+      }
+    }
 
     // Load the configuration and wait at most 10 seconds for it
     val load_result = Await.result(load(config, dbc), 10.seconds)
@@ -182,7 +187,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
+  private def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
     withSchema { (dbc, schema) =>
       schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
@@ -352,4 +357,9 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 object Scrupal extends Registry[Scrupal] {
   def registryName = "Scrupalz"
   def registrantsName = "scrupali"
+
+  private[scrupal] def findModuleOnClasspath(name: String) : Option[Module] = {
+    None // TODO: Write ClassLoader code to load foreign modules on the classpath - maybe use OSGi ?
+  }
+
 }

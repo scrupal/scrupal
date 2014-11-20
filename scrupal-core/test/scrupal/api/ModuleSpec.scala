@@ -78,7 +78,6 @@ class ModuleSpec extends Specification {
 
   "Modules" should {
     "register three modules" in {
-      Module.bootstrap(Seq.empty[String])
       Module('Module1) must beEqualTo(Some(Module1))
       Module('Module2) must beEqualTo(Some(Module2))
       Module('Module3) must beEqualTo(Some(Module3))

@@ -26,8 +26,11 @@ import scala.concurrent.{ExecutionContext, Future}
   * indexed, and etc. Each Schema should extend this Schema class to define the various DataAccessObjects used by
   * the Schema.
   */
-abstract class Schema(val dbc: DBContext)
-{
+abstract class Schema(val dbc: DBContext, val dbName: String) {
+
+  def withDB[T](f: ScrupalDB ⇒ T ) : T = {
+    dbc.withDatabase[T](dbName) { db: ScrupalDB ⇒ f(db) }
+  }
 
   def daos : Seq[DataAccessInterface[_,_]]
 
@@ -41,9 +44,9 @@ abstract class Schema(val dbc: DBContext)
 
   def validateDao(dao: DataAccessInterface[_,_]) : Boolean
 
-  def collectionNames: Seq[String] = daos map { dao => dao.collection.name }
+  def collectionNames: Seq[String] = { daos.map { dao => dao.collection.name } }
 
-  final def validateSchema(implicit ec: ExecutionContext) :  Future[Seq[String]] = {
+  final def validateSchema(implicit ec: ExecutionContext) : Future[Seq[String]] = {
     val futures = for (dao <- daos) yield { dao.validateSchema }
     Future sequence futures
   }

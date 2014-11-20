@@ -26,7 +26,7 @@ import scala.concurrent.Future
 /**
  * The basic schema for Scrupal. This is composed by merging together the various Components.
  */
-class CoreSchema(dbc: DBContext) extends scrupal.api.Schema(dbc) {
+class CoreSchema(dbc: DBContext, dbName: String) extends scrupal.api.Schema(dbc, dbName) {
 
   // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
   // case class TokenDao(db: DB) extends JsonDao[String,BSONObjectID](db,"tokens") with DataAccessObject[String]

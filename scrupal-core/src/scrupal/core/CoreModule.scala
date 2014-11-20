@@ -81,5 +81,5 @@ object CoreModule extends Module {
 
   override def handlers = Seq()
 
-  override def schemas(implicit dbc: DBContext) : Seq[CoreSchema] = Seq( new CoreSchema(dbc) )
+  override def schemas(implicit dbc: DBContext) : Seq[CoreSchema] = Seq( new CoreSchema(dbc, "Scrupal") )
 }

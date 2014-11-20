@@ -19,9 +19,7 @@ package scrupal.api
 
 import java.net.URL
 
-import scrupal.core.CoreModule
-import scrupal.core.echo.EchoModule
-import scrupal.db.{DBContext, Schema}
+import scrupal.db.DBContext
 import scrupal.utils._
 
 import scala.collection.immutable.HashMap
@@ -115,14 +113,22 @@ trait Module extends Registrable[Module]
   /** Load lazy instantiated objects into memory
     *   This is part of the bootstrapping mechanism
     */
-  override protected[scrupal] def bootstrap() = {
+  override protected[scrupal] def bootstrap(config: Configuration) = {
 
     // Touch the various aspects of the module by by asking for it's id's length.
     // This just makes sure it gets instantiated & registered as well as not being null
-    features foreach { feature ⇒ require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap() }
-    types    foreach { typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap() }
-    entities foreach { entity  ⇒ require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap() }
-    nodes    foreach { node    ⇒ require(node != null)    ; require(node._id.code == 0x07) ; node.bootstrap() }
+    features foreach { feature ⇒
+      require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap(config)
+    }
+    types    foreach {
+      typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap(config)
+    }
+    entities foreach { entity  ⇒
+      require(entity != null)  ; require(entity.label.length > 0)  ; entity.bootstrap(config)
+    }
+    nodes    foreach { node    ⇒
+      require(node != null)    ; require(node._id.code == 0x07) ; node.bootstrap(config)
+    }
     // FIXME: What about handlers and schemas?
   }
 
@@ -159,32 +165,6 @@ object Module extends Registry[Module]  {
   val registryName = "Modules"
   val registrantsName = "module"
 
-  /** Process Module Initialization
-    * Modules are always defined as singleton objects. As such, they are not instantiated until referenced. Instantiation
-    * causes them to be registered. So, we need to reference the modules to get them registered. And, in turn, they need
-    * to reference all the objects they use so they can be registered. This logic is handled in this function which is
-    * only called by Scrupal.beforeStart after the configuration has been obtained.
-    */
-  private[scrupal] def bootstrap(modules_to_bootstrap: Seq[String] ) : Unit = {
-    // First of all, nothing happens without the CoreModule. Bootstrap it first so we have CoreSchema and other
-    // things available
-    CoreModule.bootstrap
-
-    // Now that core is done, let's do the standard modules that come with the Core
-    EchoModule.bootstrap
-
-    // Now we go through the configured modules
-    for (class_name ← modules_to_bootstrap) {
-      findModuleOnClasspath(class_name) match {
-        case Some(module) ⇒
-        case None ⇒ log.warn("Could not locate module with class name: " + class_name)
-      }
-    }
-  }
-
-  private[scrupal] def findModuleOnClasspath(name: String) : Option[Module] = {
-    None // TODO: Write ClassLoader code to load foreign modules on the classpath - maybe use OSGi ?
-  }
 
   private[scrupal] def installSchemas(implicit context: DBContext, ec: ExecutionContext) : Unit = {
     // For each module ...

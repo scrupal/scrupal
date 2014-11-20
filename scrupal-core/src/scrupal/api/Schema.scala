@@ -17,17 +17,16 @@
 
 package scrupal.api
 
-import scrupal.core.CoreModule
-import scrupal.db.{DataAccessInterface, DBContext}
+import scrupal.db.{ScrupalDB, DataAccessInterface, DBContext}
 
 /** Database Schema For API
   *
   * This is the Database Schema for the scrupal.api module. It defines the kinds of collections that are found in
   * the schema and provides the means for validating them.
   */
-class Schema(dbc: DBContext) extends scrupal.db.Schema(dbc) {
-  
-  val (sites,nodes,instances,alerts, principals) = dbc.withDatabase(CoreModule.dbName) { db ⇒
+class Schema(dbc: DBContext, dbName: String) extends scrupal.db.Schema(dbc, dbName) {
+
+  val (sites,nodes,instances,alerts, principals) = withDB { db : ScrupalDB ⇒
     (
       Site.SiteDAO(db),
       Node.NodeDAO(db),

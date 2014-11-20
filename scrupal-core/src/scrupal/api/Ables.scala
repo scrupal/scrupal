@@ -19,7 +19,7 @@ package scrupal.api
 
 import org.joda.time.DateTime
 import reactivemongo.bson.BSONDocument
-import scrupal.utils.{OSSLicense, Patterns, Version}
+import scrupal.utils.{Configuration, OSSLicense, Patterns, Version}
 
 import scala.concurrent.duration.Duration
 
@@ -148,5 +148,5 @@ trait Facetable {
 
 /** Something that participates in runtime bootstrap at startup */
 trait Bootstrappable {
-  protected[scrupal] def bootstrap() : Unit = {}
+  protected[scrupal] def bootstrap(config: Configuration) : Unit = {}
 }
