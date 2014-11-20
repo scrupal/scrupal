@@ -108,5 +108,6 @@
     <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
+    <orderEntry type="module" module-name="scrupal-api" exported="" />
   </component>
 </module>

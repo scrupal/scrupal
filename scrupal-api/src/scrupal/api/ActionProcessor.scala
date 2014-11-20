@@ -49,7 +49,7 @@ object ActionProcessor {
     *
     * This is a router behind a cadre of EntityProcessor actors. The number of actors can be huge but it should be
     * bounded and suitable for the workload. One actor per thread is not a bad choice. EntityProcessor actors take in
-    * requests from outside scrupal-core (e.g. scrupal-http turns HTTP requests into Entity Actions)
+    * requests from outside scrupal-api (e.g. scrupal-http turns HTTP requests into Entity Actions)
     * This is the router that dispatches metric/event/topology requests to BSMC's Web Service SOAP interface for
     * handling. The router will select the actor with the smallest number of messages in its mailbox thus providing
     * smart load balancing. The actors are created by the router and managed by them. The pool starts with the

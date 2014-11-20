@@ -72,7 +72,7 @@ object ScrupalBuild extends Build
     .settings(twirlSettings_http:_*)
     .settings(Revolver.settings:_*)
     .settings(libraryDependencies ++= http_dependencies)
-    .dependsOn(utils_deps, db_deps, core_deps)
+    .dependsOn(utils_deps, db_deps, api_deps, core_deps)
   lazy val http_deps = http % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
@@ -92,7 +92,7 @@ object ScrupalBuild extends Build
     .settings(sbt_web_settings:_*)
     .settings(web_pipeline_settings:_*)
     .settings(libraryDependencies ++= web_dependencies)
-    .dependsOn(utils_deps, db_deps, core_deps, http_deps)
+    .dependsOn(utils_deps, db_deps, api_deps, core_deps, http_deps)
   val web_deps = web % "compile->compile;test->test"
 
   lazy val root = Project(base_name, file("."))
@@ -104,8 +104,8 @@ object ScrupalBuild extends Build
       libraryDependencies ++= root_dependencies
     )
     .settings(UnidocPlugin.unidocSettings: _*)
-    .dependsOn(config_deps, web_deps, http_deps, core_deps, db_deps, utils_deps)
-    .aggregate(config_proj, web, http, core, db, utils)
+    .dependsOn(config_deps, web_deps, http_deps, core_deps, api_deps, db_deps, utils_deps)
+    .aggregate(config_proj, web, http, core, api, db, utils)
 
   override def rootProject = Some(root)
 }

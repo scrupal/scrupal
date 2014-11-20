@@ -20,11 +20,10 @@ package scrupal
 import java.nio.charset.Charset
 import scrupal.utils._
 
-/** Scrupal Core API Library.
-  * This package provides all the abstract type definitions that Scrupal provides. These are the core abstractions
-  * needed to write an application with Scrupal. We use the Acronym *MANIFEST* to remember what the key types of
-  * objects
-  * Scrupal defines:
+/** Scrupal API Library.
+  * This package provides all the abstract type definitions that Scrupal provides. These are the main abstractions
+  * needed to write an application with Scrupal. We use the Acronym *MANIFEST*(O) to remember the key types of
+  * objects Scrupal defines:
   *
   * - M - Module: A container of functionality that defines Applications, Nodes, Entities, and Types
   *
@@ -46,7 +45,6 @@ import scrupal.utils._
   *
   * If you can grok these few concepts then you have understood the core concepts of Scrupal.
   *
-  * At the package level we define mostly implicit BSON translaters needed throughout the core, for convenience.
   */
 package object api extends ScrupalComponent {
 

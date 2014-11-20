@@ -28,18 +28,18 @@ import scala.concurrent.ExecutionContext
 
 /** A modular plugin to Scrupal to extend its functionality.
   * A module is an object that provides information (data) and functionality (behavior) to Scrupal so that Scrupal can
-  * be extended to do things it was not originally invented to do. In fact, all functionality in Scrupal is implemented
-  * in this way, even the core part of Scrupal. Only the meta-model to keep track of the information that modules
-  * provide is fixed within Scrupal.
+  * be extended to do things it was not originally invented to do. The scrupal-api module provides the abstractions,
+  * such as Module, to make this possible. Everything else Scrupal provides is done as a module that extends the
+  * functionality of the API.
   */
 trait Module extends Registrable[Module]
                      with Authorable with Describable with Enablee with Enablement[Module] with Settingsable
                      with Versionable with SelfValidator with Bootstrappable
 {
-  /** The name of the database your module's schema wants to live in
+  /** The name of the database your module's schema is stored to
     *
-    * Generally most modules want to live in the "scrupal" database along with Core and most everything else. However,
-    * if you override this, your module's own content will be
+    * Generally most modules want to live in the "scrupal" database and most everything else. However,
+    * if you override this, your module's own content will be stored in the correspondingly named database.
     */
   val dbName: String = "scrupal"
   def registry = Module
@@ -49,7 +49,7 @@ trait Module extends Registrable[Module]
 
   /** A mapping of the Module's dependencies.
     * The dependencies map provides the version for each named module this module depends on. The default value lists
-    * the primary dependency upon the most recent version of the `Core` module ([[scrupal.core.CoreModule]]. New
+    * the primary dependency upon the most recent version of the `Core` module. New
     * modules should always depend on the latest version of Scrupal available at the time of their writing to ensure
     * the longest future lifespan before they become obsoleted.
     */

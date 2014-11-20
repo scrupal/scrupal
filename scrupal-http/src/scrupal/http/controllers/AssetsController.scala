@@ -17,8 +17,6 @@
 
 package scrupal.http.controllers
 
-import scrupal.api.{ErrorResult, NotFound, Result}
-import scrupal.core.AssetLocator
 import scrupal.api._
 import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.SiteDirectives

@@ -88,5 +88,6 @@
     <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
+    <orderEntry type="module" module-name="scrupal-api" exported="" />
   </component>
 </module>

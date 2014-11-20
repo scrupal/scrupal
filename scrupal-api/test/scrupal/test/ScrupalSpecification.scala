@@ -17,7 +17,10 @@
 
 package scrupal.test
 
-import scrupal.api.Schema
+import java.util.concurrent.atomic.AtomicInteger
+
+import org.specs2.specification.{Step, Fragments}
+import scrupal.api.{Scrupal, Schema}
 import scrupal.db.{DBContext, DBContextSpecification}
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -32,6 +35,15 @@ abstract class ScrupalSpecification(specName: String, timeout: FiniteDuration = 
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
+  implicit lazy val scrupal = new Scrupal(ScrupalSpecification.next(specName))
+
+  // Handle one time startup and teardown of the DBContext
+  private object Actions {
+    lazy val open = { scrupal.open() }
+    lazy val close= { scrupal.close() }
+  }
+
+  override def map(fs: => Fragments) = Step(Actions.open) ^ super.map(fs) ^ Step(Actions.close)
 
   def withSchema[T]( f: Schema => T ) : T = {
     withDBContext { dbContext: DBContext =>
@@ -40,4 +52,11 @@ abstract class ScrupalSpecification(specName: String, timeout: FiniteDuration = 
       f(schema)
     }
   }
+}
+
+object ScrupalSpecification {
+
+  def next(name: String) : String = name + "-" + counter.incrementAndGet()
+  val counter = new AtomicInteger(0)
+
 }

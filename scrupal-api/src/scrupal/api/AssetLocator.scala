@@ -15,13 +15,12 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.api
 
 import java.io.File
 import java.net.URL
 
-import scrupal.api.{ErrorResult, StreamResult, NotFound, Result}
-import spray.http.{MediaTypes, MediaType}
+import spray.http.{MediaType, MediaTypes}
 
 trait AssetLocator {
 

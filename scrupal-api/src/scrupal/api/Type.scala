@@ -19,6 +19,7 @@ package scrupal.api
 import java.util.Date
 
 import reactivemongo.bson._
+import scrupal.utils.Patterns._
 import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.duration.Duration
@@ -535,6 +536,38 @@ case class NodeType (
   def asT : NodeType = this
   override def kind = 'Node
 }
+
+
+object AnyType_t extends AnyType('Any, "A type that accepts any value")
+
+object AnyString_t extends StringType('AnyString, "A type that accepts any string input", ".*".r, 1024*1024)
+
+object AnyInteger_t
+  extends RangeType('AnyInteger, "A type that accepts any integer value", Int.MinValue, Int.MaxValue)
+
+object AnyReal_t
+  extends RealType('AnyReal, "A type that accepts any double floating point value", Double.MinValue, Double.MaxValue)
+
+object AnyTimestamp_t
+  extends TimestampType('AnyTimestamp, "A type that accepts any timestamp value")
+
+object Boolean_t extends BooleanType('TheBoolean, "A type that accepts true/false values")
+
+object NonEmptyString_t
+  extends StringType('NonEmptyString, "A type that accepts any string input except empty", ".+".r, 1024*1024)
+
+/** The Scrupal Type for the identifier of things */
+object Identifier_t
+  extends StringType('Identifier, "Scrupal Identifier", anchored(Identifier), 64)
+
+object Password_t extends
+StringType('Password, "A type for human written passwords", anchored(Password), 64)
+
+object Description_t
+  extends StringType('Description, "Scrupal Description", anchored(Markdown), 1024)
+
+object Markdown_t
+  extends StringType('Markdown, "Markdown document type", anchored(Markdown))
 
 /** Type Registry and companion */
 object Type extends Registry[Type] {

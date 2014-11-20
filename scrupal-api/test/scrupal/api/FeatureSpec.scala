@@ -17,30 +17,30 @@
 
 package scrupal.api
 
-import org.specs2.mutable.Specification
-import scrupal.test.FakeContext
+import scrupal.test.{ScrupalSpecification, FakeContext}
 
-
-case class Fixture(name: String) extends FakeContext[Fixture](name) {
-  val mod = new BasicModule(sym, "Description")
-  mod.enable(mod)
-  assert(mod.isEnabled(mod))
-  val omod = Some(mod)
-
-  val impl_on = Feature(sym, "Testing Feature: Enabled_Implemented", omod, implemented = true).enable(mod)
-  assert(impl_on.isEnabled(mod))
-  val impl_off = Feature(sym, "Testing Feature: Disabled_Implemented", omod, implemented = true)
-  assert(!impl_off.isEnabled(mod))
-  val unimpl_on = Feature(sym, "Testing Feature: Enabled_Unimplemented", omod, implemented = false).enable(mod)
-  assert(!unimpl_on.isEnabled(mod))
-  val unimpl_off = Feature(sym, "Testing Feature: Disabled_Unimplemented", omod, implemented = false)
-  assert(!unimpl_off.isEnabled(mod))
-}
 
 /** Test cases for the scrupal.api.Feature class
   * Further description here.
   */
-class FeatureSpec extends Specification {
+class FeatureSpec extends ScrupalSpecification("FeatureSpec") {
+
+  case class Fixture(name: String) extends FakeContext[Fixture](name) {
+    val mod = new BasicModule(sym, "Description")
+    mod.enable(mod)
+    assert(mod.isEnabled(mod))
+    val omod = Some(mod)
+
+    val impl_on = Feature(sym, "Testing Feature: Enabled_Implemented", omod, implemented = true).enable(mod)
+    assert(impl_on.isEnabled(mod))
+    val impl_off = Feature(sym, "Testing Feature: Disabled_Implemented", omod, implemented = true)
+    assert(!impl_off.isEnabled(mod))
+    val unimpl_on = Feature(sym, "Testing Feature: Enabled_Unimplemented", omod, implemented = false).enable(mod)
+    assert(!unimpl_on.isEnabled(mod))
+    val unimpl_off = Feature(sym, "Testing Feature: Disabled_Unimplemented", omod, implemented = false)
+    assert(!unimpl_off.isEnabled(mod))
+  }
+
 
   "Feature" should {
     "create with three arguments" in Fixture("Create") { f : Fixture ⇒

@@ -15,24 +15,22 @@
   * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
   * *********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.api
 
-import org.specs2.mutable.Specification
-import scrupal.api.StreamResult
-import scrupal.test.FakeContext
-import spray.http.{ContentType, MediaTypes}
+import scrupal.test.{FakeContext, ScrupalSpecification}
+import spray.http.MediaTypes
 
 class TestAssetLocator extends AssetLocator {
   def asset_dirs = Seq("test/resources")
 }
 
-case class Assets(name: String) extends FakeContext[Assets](name) {
+class AssetLocatorSpec extends ScrupalSpecification("AssetLocatorSpec") {
 
-  val locator = new TestAssetLocator
+  case class Assets(name: String) extends FakeContext[Assets](name) {
 
-}
+    val locator = new TestAssetLocator
 
-class AssetLocatorSpec extends Specification {
+  }
 
   "AssetLocator" should {
     "find extension correctly" in Assets("extensions") { a : Assets ⇒

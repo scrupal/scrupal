@@ -23,7 +23,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import scrupal.core._
 import scrupal.api.Forms.{Input, Section, Page, Form}
-import scrupal.api.{Site, Module}
+import scrupal.api._
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{ScrupalComponent, ConfigHelper, Configuration}
 

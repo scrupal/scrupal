@@ -6,12 +6,16 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../scrupal-api">
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/target/scala-2.11/twirl/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/target/scala-2.11/twirl/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/src/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/target/scala-2.11/resource_managed/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/test/resources" type="java-test-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/resolution-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/test-reports" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

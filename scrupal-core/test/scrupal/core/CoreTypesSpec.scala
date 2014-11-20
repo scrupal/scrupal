@@ -35,15 +35,6 @@ class CoreTypesSpec extends Specification {
     }
   }
 
-  "Identifier_t" should {
-    "accept ***My-Funky.1d3nt1f13r###" in {
-      Identifier_t.validate(BSONString("***My-Funky.1d3nt1f13r###")).isDefined must beFalse
-    }
-    "reject 'Not An Identifier'" in {
-      Identifier_t.validate(BSONString("Not An Identifier ")).isDefined must beTrue
-    }
-  }
-
   "URI_t" should {
     "accept http://user:pw@scrupal.org/path?q=where#extra" in {
       URL_t.validate(BSONString("http://user:pw@scrupal.org/path?q=where#extra")).isDefined must beFalse
