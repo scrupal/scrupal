@@ -44,7 +44,7 @@ object EchoEntity extends Entity {
   override def create(context: ApplicationContext, id: String, instance: BSONDocument) : Create = {
     new Create(context, id, instance) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.create(id, instance)(context))
+        HtmlResult(scrupal.core.views.html.echo.create(id, instance)(context))
       }
     }
   }
@@ -52,7 +52,7 @@ object EchoEntity extends Entity {
   override def retrieve(context: ApplicationContext, id: String) : Retrieve = {
     new Retrieve(context, id) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.retrieve(id)(context))
+        HtmlResult(scrupal.core.views.html.echo.retrieve(id)(context))
       }
     }
   }
@@ -60,7 +60,7 @@ object EchoEntity extends Entity {
   override def update(context: ApplicationContext, id: String, fields: BSONDocument) : Update = {
     new Update(context, id, fields) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.update(id, fields)(context))
+        HtmlResult(scrupal.core.views.html.echo.update(id, fields)(context))
       }
     }
   }
@@ -68,7 +68,7 @@ object EchoEntity extends Entity {
   override  def delete(context: ApplicationContext, id: String) : Delete = {
     new Delete(context, id) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.delete(id)(context))
+        HtmlResult(scrupal.core.views.html.echo.delete(id)(context))
       }
     }
   }
@@ -77,7 +77,7 @@ object EchoEntity extends Entity {
   override def query(context: ApplicationContext, id: String, fields: BSONDocument) : Query = {
     new Query(context, id, fields) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.query(id, fields)(context))
+        HtmlResult(scrupal.core.views.html.echo.query(id, fields)(context))
       }
     }
   }
@@ -86,7 +86,7 @@ object EchoEntity extends Entity {
                            what: List[String], instance: BSONDocument) : CreateFacet = {
     new CreateFacet(context, id, what, instance) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.createFacet(id, what, instance)(context))
+        HtmlResult(scrupal.core.views.html.echo.createFacet(id, what, instance)(context))
       }
     }
   }
@@ -95,7 +95,7 @@ object EchoEntity extends Entity {
   override def retrieveFacet(context: ApplicationContext, id: String, what: List[String]) : RetrieveFacet = {
     new RetrieveFacet(context, id, what) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.retrieveFacet(id, what)(context))
+        HtmlResult(scrupal.core.views.html.echo.retrieveFacet(id, what)(context))
       }
     }
   }
@@ -104,7 +104,7 @@ object EchoEntity extends Entity {
                            what: List[String], fields: BSONDocument) : UpdateFacet = {
     new UpdateFacet(context, id, what, fields) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.updateFacet(id, what, fields)(context))
+        HtmlResult(scrupal.core.views.html.echo.updateFacet(id, what, fields)(context))
       }
     }
   }
@@ -112,7 +112,7 @@ object EchoEntity extends Entity {
   override def deleteFacet(context: ApplicationContext, id: String, what: List[String]) : DeleteFacet = {
     new DeleteFacet(context, id, what) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.deleteFacet(id, what)(context))
+        HtmlResult(scrupal.core.views.html.echo.deleteFacet(id, what)(context))
       }
     }
   }
@@ -121,7 +121,7 @@ object EchoEntity extends Entity {
                           what: List[String], args: BSONDocument) : QueryFacet = {
     new QueryFacet(context, id, what, args) {
       override def apply : HtmlResult = {
-        HtmlResult(scrupal.core.echo.html.queryFacet(id, what, args)(context))
+        HtmlResult(scrupal.core.views.html.echo.queryFacet(id, what, args)(context))
       }
     }
   }

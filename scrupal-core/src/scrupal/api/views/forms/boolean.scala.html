@@ -11,7 +11,7 @@
 *@
 @(inp: scrupal.api.Forms.Input)(implicit wrapper: scrupal.api.Forms.InputWrapper)
 @import scrupal.api.Forms._
-@import scrupal.core.views.html.forms._
+@import scrupal.api.views.html.forms._
 
 @thevalue = {
   @inp.opts.getOrElse('value,"true")

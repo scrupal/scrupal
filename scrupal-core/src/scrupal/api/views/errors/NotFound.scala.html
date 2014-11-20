@@ -1,7 +1,7 @@
 @(what: String, causes: Seq[String] = Seq(), suggestions: Seq[String] =Seq())(
     implicit context : scrupal.api.Context)
 
-@import scrupal.core.views.html.pages
+@import scrupal.api.views.html.pages
 
 @pages.markedPage("Not Found - " + what) {
 # There's A Hole In The Fabric Of The InterWebz!

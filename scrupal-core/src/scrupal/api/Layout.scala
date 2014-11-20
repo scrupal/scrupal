@@ -69,7 +69,7 @@ object Layout extends Registry[Layout[_]] {
   type TwirlHtmlLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Html }
   type TwirlTxtLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Txt }
 
-  lazy val default = TwirlHtmlLayout('default, "Default Layout", scrupal.api.views.html.defaultLayout)
+  lazy val default = TwirlHtmlLayout('default, "Default Layout", scrupal.api.views.html.defaults.defaultLayout)
 }
 
 

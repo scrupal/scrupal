@@ -15,9 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core
-
-import scrupal.api.Context
+package scrupal.api
 
 /** Simple Reverse Routing For Scrupal.
   *

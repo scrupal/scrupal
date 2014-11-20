@@ -45,5 +45,5 @@ class WelcomeSite extends Site {
 
 object WelcomeSite {
   lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.core.welcome.html.WelcomePage)
+    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.core.views.html.WelcomePage)
 }

@@ -98,7 +98,7 @@ trait Module extends Registrable[Module]
     */
   def schemas(implicit dbc: DBContext) : Seq[Schema] = Seq( )
 
-  /** Determine compatibility between `this` [[scrupal.core.api.Module]] and `that`.
+  /** Determine compatibility between `this` [[scrupal.api.Module]] and `that`.
     * This module is compatible with `that` if either `that` does not depend on `this` or the version `that` requires
     * comes after the `obsoletes` version of `this`
     * @param that The module that purports to depend on `this` for which compatibility is being checked

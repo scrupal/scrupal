@@ -1,6 +1,6 @@
 @(id: String)(implicit ctxt: scrupal.api.Context)
-@import scrupal.core.views.html._
+@import scrupal.api.views.html._
 @pages.plainPage("Retrieve - " + id) {
 <h1>Delete - @id</h1>
-@display_context(ctxt)
+@utils.display_context(ctxt)
 }

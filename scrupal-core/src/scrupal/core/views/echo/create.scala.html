@@ -1,6 +1,6 @@
 @(id: String, instance: reactivemongo.bson.BSONDocument)(implicit ctxt: scrupal.api.Context)
-@import scrupal.core.views.html._
-@import scrupal.core.views.html.utils._
+@import scrupal.api.views.html._
+@import scrupal.api.views.html.utils._
 @pages.plainPage("Retrieve - " + id) {
 <h1>Create - @id</h1>
 @bson_document_panel("Instance Document", instance)

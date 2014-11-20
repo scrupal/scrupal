@@ -136,7 +136,7 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
           val iter_of_F = futures.toSeq.map { case(k,v) ⇒ v._2.map { r ⇒ k → (v._1,r) }  }
           val x2 = (Future.sequence { iter_of_F }).map { seq ⇒ Map(seq:_*)  }
           val resolved = Await.result(x2,Duration(1,TimeUnit.SECONDS))
-          val expected = scrupal.api.views.html.defaultLayout(resolved)(f).body
+          val expected = scrupal.api.views.html.defaults.defaultLayout(resolved)(f).body
           h.payload.body must beEqualTo(expected)
           success
         case _ ⇒ failure("Incorrect result type")

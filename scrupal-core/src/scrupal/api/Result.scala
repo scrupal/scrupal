@@ -151,15 +151,15 @@ case class ExceptionResult(
   }
 
   def toHtmlResult : HtmlResult = {
-    HtmlResult(scrupal.api.views.html.ExceptionResult(this), disposition)
+    HtmlResult(scrupal.api.views.html.errors.ExceptionResult(this), disposition)
  }
 
   def toTxtResult : TxtResult = {
-    TxtResult(scrupal.api.views.txt.ExceptionResult(this), disposition)
+    TxtResult(scrupal.api.views.txt.errors.ExceptionResult(this), disposition)
   }
 
   def toStringResult : StringResult = {
-    StringResult(scrupal.api.views.txt.ExceptionResult(this).body, disposition)
+    StringResult(scrupal.api.views.txt.errors.ExceptionResult(this).body, disposition)
   }
 }
 
