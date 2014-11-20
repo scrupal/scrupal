@@ -15,7 +15,7 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.api
 
 import scrupal.test.ScrupalSpecification
 
@@ -23,11 +23,11 @@ import scrupal.test.ScrupalSpecification
 /** One line sentence description here.
   * Further description here.
   */
-class CoreSchemaSpec extends ScrupalSpecification("CoreSchemaSpec") {
+class SchemaSpec extends ScrupalSpecification("CoreSchemaSpec") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {
-      withCoreSchema { schema =>
+      withSchema { schema =>
         val names = schema.collectionNames
         names.contains("instances") must beTrue
         names.contains("alerts") must beTrue

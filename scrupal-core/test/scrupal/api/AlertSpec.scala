@@ -19,8 +19,6 @@ package scrupal.api
 import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
-import scrupal.api.Alert
-import scrupal.core.{CoreModule, CoreSchema}
 import scrupal.test.ScrupalSpecification
 import scrupal.utils.Icons
 import scrupal.utils.AlertKind
@@ -85,8 +83,8 @@ class AlertSpec extends ScrupalSpecification("AlertSpec") {
 		}
 
     "save to and fetch from the DB" in  {
-      withCoreSchema { schema: CoreSchema =>
-				withEmptyDB(CoreModule.dbName) { db =>
+      withSchema { schema: Schema =>
+				withEmptyDB(schema.nodes.db.name) { db =>
 					val future = db.dropCollection("alerts") flatMap { result =>
 						val a1 = new Alert('foo, "Alert", "Description", "Message", AlertKind.Warning )
 						schema.alerts.insert(a1) flatMap { wr =>

@@ -32,7 +32,7 @@ class PrincipalSpec extends ScrupalSpecification("PrincipalSpec")
 
 	"Principal" should {
 		"save, load and delete from DB" in {
-      withCoreSchema { schema: CoreSchema =>
+      withSchema { schema: Schema =>
         val p = new Principal('id, "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString(), "", 0L, None)
         p._id must beEqualTo('id)
 /* FIXME:       val p2 : Identifier = Principals.insert(p)
@@ -49,7 +49,7 @@ class PrincipalSpec extends ScrupalSpecification("PrincipalSpec")
 
   "Handle" should {
     "save, load and delete from DB" in {
-      withCoreSchema { schema: CoreSchema =>
+      withSchema { schema: Schema =>
         val p = new Principal('id, "nobody@nowhere.ex", "openpw",  HasherKinds.SCrypt.toString(), "", 0L, None )
         p._id must beEqualTo('id)
 
@@ -65,7 +65,7 @@ class PrincipalSpec extends ScrupalSpecification("PrincipalSpec")
     }
 
     "allow many-to-many relations with Principal" in {
-      withCoreSchema { schema: CoreSchema =>
+      withSchema { schema: Schema =>
 /* FIXME:        import schema._
         val p1 = new Principal( "nobody@nowhere.ex", "openpw", HasherKinds.SCrypt.toString() )
         val p2 = new Principal("exempli@gratis.org", "openpw", HasherKinds.SCrypt.toString() )

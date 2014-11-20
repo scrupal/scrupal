@@ -17,7 +17,6 @@
 
 package scrupal.http.controllers
 
-import scrupal.core.Scrupal
 import scrupal.api._
 import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.{PathHelpers, SiteDirectives}

@@ -19,7 +19,6 @@ package scrupal.core
 
 import org.specs2.mutable.Specification
 import reactivemongo.bson.{BSONInteger, BSONString}
-import scrupal.api._
 
 /**
  * One line sentence description here.

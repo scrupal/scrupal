@@ -17,7 +17,7 @@
 
 package scrupal.http.controllers
 
-import scrupal.core.Scrupal
+import scrupal.api.Scrupal
 import spray.routing.Route
 
 /** The Controller for the Administration interface

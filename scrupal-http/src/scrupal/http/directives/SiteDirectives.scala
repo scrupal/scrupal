@@ -17,8 +17,7 @@
 
 package scrupal.http.directives
 
-import scrupal.api.Site
-import scrupal.core.Scrupal
+import scrupal.api.{Scrupal, Site}
 import spray.routing._
 import spray.routing.Directives._
 
@@ -63,11 +62,13 @@ trait SiteDirectives {
 
   def site(scrupal: Scrupal): Directive1[Site] = {
     hostName.flatMap { host:String ⇒
-      val site = Site.forHost(host).head
-      if (site == null)
+      val sites = Site.forHost(host)
+      if (sites.isEmpty)
         reject(ValidationRejection(s"No site defined for host '$host'."))
-      else
+      else {
+        val site = sites.head
         siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx => site)
+      }
     }
   }
 }

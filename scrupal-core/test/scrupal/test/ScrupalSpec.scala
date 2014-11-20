@@ -33,12 +33,11 @@ abstract class ScrupalSpecification(specName: String, timeout: FiniteDuration = 
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
 
-  def withCoreSchema[T]( f: CoreSchema => T ) : T = {
+  def withSchema[T]( f: CoreSchema => T ) : T = {
     withDBContext { dbContext: DBContext =>
       val schema: CoreSchema = new CoreSchema(dbContext)
       schema.create(dbContext)
       f(schema)
     }
   }
-
 }

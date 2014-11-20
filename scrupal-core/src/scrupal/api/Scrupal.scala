@@ -15,26 +15,24 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.api
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 
-import scala.collection.immutable.TreeMap
-import scala.concurrent.{Await, Future, ExecutionContext}
-import scala.concurrent.duration._
-import scala.util.matching.Regex
-
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
-import scrupal.api._
-import scrupal.core.welcome.WelcomeSite
-import scrupal.db.{ScrupalDB, DBContext}
-import scrupal.utils.{Registry, Enablement, ScrupalComponent, Configuration}
+import scrupal.db.DBContext
+import scrupal.utils.{Configuration, Enablement, Registry, ScrupalComponent}
+
+import scala.collection.immutable.TreeMap
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.matching.Regex
 
 class Scrupal(
   name: String = "Scrupal",
@@ -87,11 +85,9 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     f(dbc)
   }
 
-  def withCoreSchema[T](f: (DBContext, ScrupalDB, CoreSchema) => T) : T = {
+  def withSchema[T](f: (DBContext, Schema) => T) : T = {
     withDBContext { dbc =>
-      dbc.withDatabase(CoreModule.dbName) { db =>
-        f(dbc, db, new CoreSchema(dbc))
-      }
+      f(dbc, new Schema(dbc))
     }
   }
 
@@ -140,9 +136,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     require(Module.registryName == "Modules")
     require(Site.registryName == "Sites")
     require(Entity.registryName == "Entities")
-
-    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
-    require(CoreModule.id == 'Core)
+    require(Template.registryName == "Templates")
 
     // TODO: scan classpath for additional modules
     val configured_modules = Seq.empty[String]
@@ -189,7 +183,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @param context The database context from which to load the
     */
   def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
-    withCoreSchema { (dbc, db, schema) =>
+    withSchema { (dbc, schema) =>
       schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
           for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
@@ -201,7 +195,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
         }.toMap
       }.recover {
         case x: Throwable ⇒
-          log.warn(s"Attempt to validate schema for '${db.name }' failed.", x)
+          log.warn(s"Attempt to validate API Schema failed.", x)
           Map.empty[String, Site]
       }
     }
@@ -237,17 +231,10 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @return The TopLevelStructure mapping sites to applications to entities
     */
   def getAppEntities : SiteAppEntityMap = {
-    val fromDB = forEach { e ⇒ e.isInstanceOf[Application] && isEnabled(e,this) } { theSite: Site ⇒
+    forEach { e ⇒ e.isInstanceOf[Application] && isEnabled(e,this) } { theSite: Site ⇒
       theSite.name → ( theSite → theSite.getApplicationMap )
     }
-    if (fromDB.isEmpty){
-      val site = new WelcomeSite
-      site.enable(this)
-      Map ( site.name → ( site → site.getApplicationMap ) )
-    }
-    else
-      fromDB.toMap
-  }
+  }.toMap
 
 
   /** Handle An Action
@@ -283,12 +270,6 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     interestingConfig(config) foreach { case (key: String, value: ConfigValue) =>
       log.trace ( "    " + key + " = " + value.render(ConfigRenderOptions.defaults))
     }
-
-    // Make things from the configuration override defaults and database read settings
-    // Features
-    config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enable(this, value) }
-    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enable(this, value) }
-    config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enable(this, value) }
 
     // return the configuration
     config

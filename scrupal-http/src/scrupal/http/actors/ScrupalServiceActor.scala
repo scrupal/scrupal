@@ -19,8 +19,7 @@ package scrupal.http.actors
 
 import akka.actor.{Props, Actor}
 import akka.util.Timeout
-import scrupal.core.Scrupal
-import scrupal.api.Context
+import scrupal.api.{Scrupal, Context}
 import scrupal.http.controllers._
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent

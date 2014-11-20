@@ -17,12 +17,12 @@
 
 package scrupal.core
 
-import org.specs2.mutable.Specification
+import scrupal.test.ScrupalSpecification
 
 /**
  * Created by reid on 11/11/14.
  */
-class ScrupalSpec extends Specification {
+class ScrupalSpec extends ScrupalSpecification("ScrupalSpec") {
 
   "Scrupal" should {
     "perform some tests" in {

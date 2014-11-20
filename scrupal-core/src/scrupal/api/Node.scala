@@ -26,10 +26,10 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.api.BSONHandlers._
-import scrupal.db.{VariantDataAccessObject, VariantStorable}
+import scrupal.db.{DBContext, VariantDataAccessObject, VariantStorable}
 import spray.http.{MediaType, MediaTypes}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Elem, NodeSeq}
 
 /** A function that generates content
@@ -234,23 +234,26 @@ case class LayoutNode (
   created: Option[DateTime] = None
   ) extends Node {
   final val kind : Symbol = 'Layout
-  def apply(ctxt: Context): Future[Result[_]] = ctxt.withScrupalStuff { (_,_,schema, ec) =>
-    implicit val execCtxt = ec
-    val layout = Layout(layoutId).getOrElse(Layout.default)
-    val pairsF = for ( (tag,id) <- tags ) yield {
-      schema.nodes.fetch(id) map {
-        case Some(node) => tag -> (node(ctxt) map { r ⇒ node → r } )
-        case None => tag -> {
-          val node = MessageNode("Missing Node", "alert-warning", s"Could not find node '$tag".toHtml)
-          node(ctxt) map { r ⇒ node → r }
+  def apply(ctxt: Context): Future[Result[_]] = {
+    ctxt.withSchema { case (dbc: DBContext, schema: Schema) =>
+      ctxt.withExecutionContext { implicit ececCtxt: ExecutionContext ⇒
+        val layout = Layout(layoutId).getOrElse(Layout.default)
+        val pairsF = for ((tag, id) <- tags) yield {
+          schema.nodes.fetch(id) map {
+            case Some(node) => tag -> (node(ctxt) map { r ⇒ node → r})
+            case None => tag -> {
+              val node = MessageNode("Missing Node", "alert-warning", s"Could not find node '$tag".toHtml)
+              node(ctxt) map { r ⇒ node → r}
+            }
+          }
+        }
+        (Future sequence pairsF) flatMap { x =>
+          val x2 = Future.sequence {x.map { entry ⇒ entry._2.map(i ⇒ entry._1 → i)}}
+          x2
+        } map { args ⇒
+          layout(args.toMap, ctxt)
         }
       }
-    }
-    (Future sequence pairsF) flatMap { x =>
-      val x2 = Future.sequence { x.map { entry ⇒ entry._2.map(i ⇒ entry._1 → i) } }
-      x2
-    } map { args ⇒
-      layout(args.toMap,ctxt)
     }
   }
 }

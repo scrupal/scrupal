@@ -20,8 +20,7 @@ package scrupal.api
 import java.net.URL
 
 import akka.actor.ActorSystem
-import scrupal.core.{CoreSchema, Scrupal}
-import scrupal.db.{ScrupalDB, DBContext}
+import scrupal.db.DBContext
 import scrupal.utils.Configuration
 
 import spray.http._
@@ -60,21 +59,11 @@ trait Context {
   def alerts : Seq[Alert] = Seq()
   def suggestURL : URL = new URL("/")
 
-  def withScrupalStuff[T]( f: (Configuration, DBContext, CoreSchema, ExecutionContext) => T) : T = {
-     scrupal.withConfiguration { config =>
-       scrupal.withCoreSchema { (dbc, db, cs) =>
-         scrupal.withExecutionContext { ec =>
-           f(config, dbc, cs, ec)
-         }
-       }
-     }
-  }
-
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
 
   def withDBContext[T](f: (DBContext) ⇒ T) : T = { scrupal.withDBContext(f) }
 
-  def withCoreSchema[T](f: (DBContext, ScrupalDB, CoreSchema) => T) : T = { scrupal.withCoreSchema(f) }
+  def withSchema[T](f: (DBContext, Schema) => T) : T = { scrupal.withSchema(f) }
 
   def withExecutionContext[T](f: (ExecutionContext) => T) : T = { scrupal.withExecutionContext(f) }
 

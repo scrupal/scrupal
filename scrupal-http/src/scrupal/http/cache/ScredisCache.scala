@@ -18,7 +18,7 @@
 package scrupal.http.cache
 
 import akka.actor.ActorSystem
-import scrupal.core.Scrupal
+import scrupal.api.Scrupal
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration

@@ -23,8 +23,8 @@ import akka.actor.{ActorSystem, Props}
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
-import scrupal.core.Scrupal
 import scrupal.api.Site
+import scrupal.core.CoreScrupal
 import scrupal.http.actors.ScrupalServiceActor
 import scrupal.utils.{ScrupalComponent, DateTimeHelpers}
 import spray.can.Http
@@ -42,7 +42,7 @@ object Boot extends App with ScrupalComponent
 {
 
   // Instantiate the Scrupal object
-  val scrupal = new Scrupal
+  val scrupal = new CoreScrupal
 
   // Ask Scrupal to do its initialization .. lots of things can go wrong ;)
   val (config,dbContext) = scrupal.open()

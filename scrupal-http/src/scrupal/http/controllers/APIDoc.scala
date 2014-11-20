@@ -17,8 +17,7 @@
 
 package scrupal.http.controllers
 
-import scrupal.core.Scrupal
-import scrupal.api.Module
+import scrupal.api.{Scrupal, Module}
 import scrupal.utils.Pluralizer
 import spray.routing._
 

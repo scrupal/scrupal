@@ -26,7 +26,6 @@ import play.api.libs.iteratee.{Cont, Done, Iteratee, Input, Enumerator}
 import reactivemongo.bson.{BSONNull, BSONValue}
 
 import scrupal.api._
-import scrupal.core.Scrupal
 
 import spray.can.Http
 import spray.http._

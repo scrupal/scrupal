@@ -55,7 +55,7 @@ object TestEntity {
   }
 }
 
-class TestSchema(dbc: DBContext) extends Schema(dbc) {
+class TestSchema(dbc: DBContext) extends scrupal.db.Schema(dbc) {
 
   import TestEntity._
 

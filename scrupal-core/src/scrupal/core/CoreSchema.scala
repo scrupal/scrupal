@@ -17,9 +17,7 @@
 
 package scrupal.core
 
-import scrupal.api.{Instance, Node, Alert}
-import scrupal.db._
-import scrupal.api._
+import scrupal.db.{DataAccessInterface, DBContext}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -28,17 +26,7 @@ import scala.concurrent.Future
 /**
  * The basic schema for Scrupal. This is composed by merging together the various Components.
  */
-class CoreSchema(dbc: DBContext) extends Schema(dbc) {
-
-  val (sites,nodes,instances,alerts, principals) = dbc.withDatabase(CoreModule.dbName) { db ⇒
-    (
-      Site.SiteDAO(db),
-      Node.NodeDAO(db),
-      Instance.InstanceDAO(db),
-      Alert.AlertDAO(db),
-      Principal.PrincipalDAO(db)
-    )
-  }
+class CoreSchema(dbc: DBContext) extends scrupal.api.Schema(dbc) {
 
   // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
   // case class TokenDao(db: DB) extends JsonDao[String,BSONObjectID](db,"tokens") with DataAccessObject[String]
@@ -46,22 +34,10 @@ class CoreSchema(dbc: DBContext) extends Schema(dbc) {
   // val tokens = dbc.withDatabase { db => new TokenDao(db) }
 
 
-  def daos : Seq[DataAccessInterface[_,_]] = {
-    Seq( sites, nodes, instances,/* aliases, tokens, */ alerts, principals )
-  }
+  override def daos : Seq[DataAccessInterface[_,_]] = super.daos
 
-  def validateDao(dao: DataAccessInterface[_,_]) : Boolean = {
-    // FIXME: this needs to be written properly
-    dao.collection.name match {
-      case "sites" => true
-      case "instances" => true
-      case "principals" => true
-      case "aliases" => true
-      case "tokens" => true
-      case "alerts" => true
-      case _ => false
-    }
-  }
+  override def validateDao(dao: DataAccessInterface[_,_]) : Boolean = { super.validateDao(dao) }
+
 
   override def create(implicit context: DBContext): Future[Seq[(String,Boolean)]] = {
     // FIXME: This needs to be written again.
