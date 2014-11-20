@@ -18,7 +18,6 @@
 package scrupal.api
 
 import reactivemongo.bson._
-import scrupal.core.BundleType
 import scrupal.db.{VariantStorableRegistrable, IdentifierDAO, ScrupalDB}
 
 import scrupal.utils.{Enablee, Patterns, Pluralizer}

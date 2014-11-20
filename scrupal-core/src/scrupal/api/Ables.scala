@@ -19,7 +19,6 @@ package scrupal.api
 
 import org.joda.time.DateTime
 import reactivemongo.bson.BSONDocument
-import scrupal.core.{BundleType, TheBoolean_t}
 import scrupal.utils.{OSSLicense, Patterns, Version}
 
 import scala.concurrent.duration.Duration
@@ -88,8 +87,6 @@ trait Settingsable extends SettingsInterface {
   def getNanoseconds(path: String) : Option[Long] = settings.getNanoseconds(path)
   def setBoolean(path: String, value: Boolean) : Unit = settings.setBoolean(path, value)
 }
-
-object enableSettings extends BundleType('enableSettings, "enableSettings", Map("enabled" → TheBoolean_t))
 
 /** Something that can be enabled or disabled */
 // FIXME: THis is ill-contrived. Enablement could be different depending on context. A feature could be

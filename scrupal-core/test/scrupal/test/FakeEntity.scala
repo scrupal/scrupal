@@ -17,8 +17,7 @@
 
 package scrupal.test
 
-import scrupal.core.BundleType
-import scrupal.api.Entity
+import scrupal.api.{Entity,BundleType}
 import scrupal.utils.OSSLicense
 
 /**

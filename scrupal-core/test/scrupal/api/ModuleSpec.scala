@@ -18,7 +18,6 @@
 package scrupal.api
 
 import org.specs2.mutable.Specification
-import scrupal.core.RangeType
 import scrupal.test.FakeModule
 import scrupal.utils.Version
 

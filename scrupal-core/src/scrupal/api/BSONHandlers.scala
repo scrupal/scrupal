@@ -27,7 +27,6 @@ import reactivemongo.bson._
 import scrupal.api.Template.BSONHandlerForTemplate
 import scrupal.api.Type.BSONHandlerForType
 
-import scrupal.core.{BundleType, StructuredType}
 import scrupal.utils.{AlertKind, Enablement, Icons, Identifiable}
 import spray.http.{MediaType, MediaTypes}
 

@@ -18,8 +18,6 @@
 package scrupal.core.echo
 
 import reactivemongo.bson.BSONDocument
-import scrupal.api.HtmlResult
-import scrupal.core.BundleType
 import scrupal.api._
 import scrupal.utils.OSSLicense
 

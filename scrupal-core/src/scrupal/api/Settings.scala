@@ -20,7 +20,6 @@ package scrupal.api
 import reactivemongo.bson._
 
 import scrupal.db.{BSONSettingsInterface, BSONSettings, BSONPathWalker}
-import scrupal.core._
 import scrupal.utils.PathWalker
 
 /** Interface To Settings
