@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference
 import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
+import scrupal.core.welcome.WelcomeSite
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.{Await, Future, ExecutionContext}
@@ -236,10 +237,17 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @return The TopLevelStructure mapping sites to applications to entities
     */
   def getAppEntities : SiteAppEntityMap = {
-    forEachEnabled { theSite: Site ⇒
+    val fromDB = forEach { e ⇒ e.isInstanceOf[Application] && isEnabled(e,this) } { theSite: Site ⇒
       theSite.name → ( theSite → theSite.getApplicationMap )
     }
-  }.toMap
+    if (fromDB.isEmpty){
+      val site = new WelcomeSite
+      site.enable(this)
+      Map ( site.name → ( site → site.getApplicationMap ) )
+    }
+    else
+      fromDB.toMap
+  }
 
 
   /** Handle An Action

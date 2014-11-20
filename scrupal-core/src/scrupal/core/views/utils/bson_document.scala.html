@@ -1,0 +1,8 @@
+@(doc: reactivemongo.bson.BSONDocument)
+@import scrupal.core.views.html.utils.bson_value
+<dl class="dl-horizontal">
+@for((k,v) ← doc.elements) {
+  <dt>@k</dt>
+  <dd>@bson_value(v)</dd>
+}
+</dl>

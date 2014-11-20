@@ -45,7 +45,13 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
       toss(s"Scope ${forScope.id} is not a child of $id so enablement for $enablee cannot be determined.")
     _enabled.lookup(enablee) match {
       case Some(set) ⇒
-        set.contains(forScope) && (enablee.parent match { case Some(e) ⇒ e.isEnabled(forScope) ; case None ⇒ true } )
+        set.contains(forScope) && (
+          enablee.parent match {
+            case Some(e) ⇒
+              e.isEnabled(forScope)
+            case None ⇒ true
+          }
+        )
       case None ⇒ false
     }
   }
@@ -71,13 +77,15 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
         else
           _enabled.register(enablee, update_value)
       case None ⇒
-        log.debug(s"Attempt to disable $enablee that wasn't enabled.")
+        log.debug(s"Attempt to disable $enablee that isn't enabled.")
     }
   }
 
-  def forEachEnabled[C <: Enablee,R](f : C ⇒ R) : Seq[R] = {
-    for ( e ← _enabled.keys if isEnabled(e,this) ) yield { f(e.asInstanceOf[C]) }
+  def forEach[C <: Enablee,R](p: Enablee ⇒ Boolean)(f : C ⇒ R) : Seq[R] = {
+    for (e ← _enabled.keys if p(e)) yield { f(e.asInstanceOf[C]) }
   }.toSeq
+
+  def forEachEnabled[R](f : Enablee ⇒ R) : Seq[R] = forEach( e ⇒ isEnabled(e))(f)
 
   def getEnablementMap : Map[Enablee,Seq[Enablement[_]]] = {
     _enabled.registry.map { case (k,v) ⇒ k -> v.toSeq.map { ar ⇒ ar.asInstanceOf[Enablement[_]] } }

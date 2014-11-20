@@ -63,12 +63,11 @@ trait SiteDirectives {
 
   def site(scrupal: Scrupal): Directive1[Site] = {
     hostName.flatMap { host:String ⇒
-      Site.forHost(host) match {
-        case Some(site) ⇒
-          siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx => site)
-        case None ⇒
-          reject(ValidationRejection(s"No site defined for host '$host'."))
-      }
+      val site = Site.forHost(host).head
+      if (site == null)
+        reject(ValidationRejection(s"No site defined for host '$host'."))
+      else
+        siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx => site)
     }
   }
 }

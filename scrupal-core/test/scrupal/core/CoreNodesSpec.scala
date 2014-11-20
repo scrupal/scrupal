@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit
 
 import play.twirl.api.Html
 import reactivemongo.bson.BSONObjectID
+import scrupal.core.api.Template.TwirlHtmlTemplateFunction
 import scrupal.test.{ScrupalSpecification, FakeContext}
 import spray.http.MediaTypes
 import scrupal.core.api._
@@ -34,8 +35,14 @@ import scala.language.existentials
 
 case class Fixture(name: String) extends FakeContext[Fixture](name) {
 
+  val templateF : TwirlHtmlTemplateFunction = new {
+    def apply(args: Map[String, Html])(implicit txt: Context) = Html("scrupal")
+  }
+
+  val template = TwirlHtmlTemplate(Symbol(name), "Describe me", templateF)
+
   val message = MessageNode("Description", "text-warning", Html("This is boring."))
-  val html = HtmlNode("Description", Html("scrupal"))
+  val html = HtmlNode("Description", template, args=Map.empty[String,Html])
   val file = FileNode("Description", new File("scrupal-core/test/resources/fakeAsset.txt"), MediaTypes
     .`text/plain`)
   val link = LinkNode("Description", new URL("http://scrupal.org/"))
@@ -129,7 +136,7 @@ class CoreNodesSpec extends ScrupalSpecification("CoreNodeSpec") {
           val iter_of_F = futures.toSeq.map { case(k,v) ⇒ v._2.map { r ⇒ k → (v._1,r) }  }
           val x2 = (Future.sequence { iter_of_F }).map { seq ⇒ Map(seq:_*)  }
           val resolved = Await.result(x2,Duration(1,TimeUnit.SECONDS))
-          val expected = scrupal.core.views.html.pages.defaultLayout(resolved)(f).body
+          val expected = scrupal.core.views.html.layout.defaultLayout(resolved)(f).body
           h.payload.body must beEqualTo(expected)
           success
         case _ ⇒ failure("Incorrect result type")

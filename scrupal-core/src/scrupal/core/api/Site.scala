@@ -21,11 +21,11 @@ import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import scrupal.core.Node
-import scrupal.core.echo.EchoApp
 
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
 import scrupal.utils.{Enablee, Enablement, AbstractRegistry, Registry}
+
+import scala.util.matching.Regex
 
 /** Site Top Level Object
   * Scrupal manages sites.
@@ -54,7 +54,7 @@ trait Site
   type ApplicationMap= Map[String,(Application,Application#EntityMap)]
 
   def getApplicationMap : ApplicationMap = {
-    forEachEnabled { app: Application ⇒
+    forEach { e ⇒ e.isInstanceOf[Application] && isEnabled(e,this) } { app: Application ⇒
       app.path → (app → app.getEntityMap())
     }
   }.toMap
@@ -83,10 +83,6 @@ object BasicSite {
   implicit val BasicSiteHandler = Macros.handler[BasicSite]
 }
 
-object DefaultSite
-  extends BasicSite('Default, "Default", "The Default Scrupal Site", "localhost", Node.Empty, Seq(EchoApp),
-                    requireHttps = false, modified=Some(DateTime.now()), created=Some(DateTime.now()))
-
 object Site extends Registry[Site] {
 
   val registrantsName: String = "site"
@@ -96,6 +92,7 @@ object Site extends Registry[Site] {
   private[this] val _byhost = new AbstractRegistry[String, Site] {
     def reg(site:Site) = _register(site.host,site)
     def unreg(site:Site) = _unregister(site.host)
+    def registry = _registry
   }
 
   override def register(site: Site) : Unit = {
@@ -108,11 +105,16 @@ object Site extends Registry[Site] {
     super.unregister(site)
   }
 
-  def forHost(hostName: String) = _byhost.lookup(hostName)
-
+  def forHost(hostName: String) : Iterable[Site] = {
+    for (
+      (host, site) <- _byhost.registry ;
+      regex = new Regex(host) if regex.pattern.matcher(hostName).matches()
+    ) yield {
+      site
+    }
+  }
 
   import BSONHandlers._
-
 
   implicit lazy val SiteReader = new VariantBSONDocumentReader[Site] {
     def read(doc: BSONDocument) : Site = {

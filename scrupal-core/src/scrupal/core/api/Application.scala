@@ -44,11 +44,12 @@ trait Application
   /** Applicable Modules
     * This modules are assigned (enabled) within this application
     */
-  def modules = forEachEnabled[Module,Module] { e ⇒ e }
+  def modules = forEach[Module,Module] { e ⇒ e.isInstanceOf[Module] && isEnabled(e, this) } { e ⇒ e }
 
-  def entities = forEachEnabled[Entity,Entity] { e ⇒ e }
+  def entities = forEach[Entity,Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e,this) } { e ⇒ e }
 
-  def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
+
+    def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
   type EntityMap = Map[String,(String,Entity)]
 

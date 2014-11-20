@@ -1,0 +1,10 @@
+@(title:String, doc: reactivemongo.bson.BSONDocument)
+@import scrupal.core.views.html.utils.bson_document
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">@{title}</h3>
+  </div>
+  <div class="panel-body">
+    @bson_document(doc)
+  </div>
+</div>

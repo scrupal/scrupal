@@ -15,61 +15,33 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.api
+package scrupal.core.welcome
 
-import play.twirl.api._
-import scrupal.utils.{Registry, Registrable}
-import spray.http.{MediaTypes, MediaType}
+import org.joda.time.DateTime
+import play.twirl.api.Html
+import scrupal.core.api.{HtmlNode,TwirlHtmlTemplate, Node, Site}
+import scrupal.core.echo.EchoApp
 
-/** Arranger Function.
-  *
-  * An arranger is a function that does the essential layout arrangement for a Layout. It takes in a Context and a
-  * tag mapping and produces an `Array[Byte]` result. The Layout trait extends this function so that its apply method
-  * can be used to perform the arranging.
-  *
-  */
-trait Arranger[P] extends ( (Map[String,(Node,Result[_])], Context) => Result[P] )
-
-/** Abstract Layout
-  *
-  * A layout is a memory only function object. It
-  */
-trait Layout[P] extends Registrable[Layout[_]] with Describable with Arranger[P] {
-  def mediaType : MediaType
-  def registry = Layout
-  def asT : this.type = this
-}
-case class TwirlHtmlLayout(
-  id : Symbol,
-  description : String = "",
-  template: Layout.TwirlHtmlLayoutFunction
-) extends Layout[Html] {
-  val mediaType = MediaTypes.`text/html`
-  def apply(args: Map[String,(Node,Result[_])], context: Context) : Result[Html] = {
-    HtmlResult(template(args)(context), Successful)
-  }
+class WelcomeSite extends Site {
+  def id: Symbol = 'WelcomeToScrupal
+  def name: String = "Welcome To Scrupal"
+  def description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
+  def modified: Option[DateTime] = Some(DateTime.now)
+  def created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
+  def host: String = ".*"
+  def siteRoot: Node =
+    HtmlNode (
+      "Main index page for Welcome To Scrupal Site",
+      WelcomeSite.WelcomePageTemplate,
+      args = Map.empty[String,Html],
+      enabled=true,
+      modified=Some(DateTime.now),
+      created=Some(new DateTime(2014, 11, 18, 18, 0))
+  )
+   EchoApp.enable(this)
 }
 
-case class TwirlTxtLayout(
-  id : Symbol,
-  description : String = "",
-  template: Layout.TwirlTxtLayoutFunction
-) extends Layout[String] {
-  val mediaType = MediaTypes.`text/plain`
-  def apply(args: Map[String,(Node,Result[_])], context: Context) : Result[String] = {
-    StringResult(template(args)(context).body)
-  }
+object WelcomeSite {
+  lazy val WelcomePageTemplate =
+    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.core.welcome.html.WelcomePage)
 }
-
-object Layout extends Registry[Layout[_]] {
-  def registryName = "Layouts"
-  def registrantsName = "layout"
-
-
-  type TwirlHtmlLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Html }
-  type TwirlTxtLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Txt }
-
-  lazy val default = TwirlHtmlLayout('default, "Default Layout", scrupal.core.views.html.layout.defaultLayout)
-}
-
-

@@ -1,0 +1,39 @@
+@(implicit context: scrupal.core.api.Context)
+<div>
+  <dl class="dl-horizontal">
+    <dt>uri</dt><dd>@context.uri</dd>
+    <dt>method</dt><dd>@context.method<dd>
+    <dt>protocol</dt><dd>@context.protocol</dd>
+    <dt>headers</dt><dd>@context.headers</dd>
+    <dt>scrupal</dt><dd>@context.scrupal</dd>
+    <dt>site</dt><dd>@context.site</dd>
+    <dt>appName</dt><dd>@context.appName</dd>
+    <dt>siteName</dt><dd>@context.siteName</dd>
+    <dt>user</dt><dd>@context.user</dd>
+    <dt>description</dt><dd>@context.user</dd>
+  </dl>
+</div>
+<!--
+<div class="span10 row" style="font-size: 0.75em">
+  <table class="span10 table table-striped table-bordered table-condensed">
+    <caption style="font-size: 1.2em; font-weight: bold;">Context Details</caption>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><th>Site</th><td>@context.siteName</td></tr>
+      <tr><th>Application</th><td>@context.appName<td></tr>
+      <tr><th>User</th><td>@context.user</td></tr>
+      <tr><th>Theme Provider</th><td>@context.themeProvider</td></tr>
+      <tr><th>Theme Name</th><td>@context.themeName</td></tr>
+    </tbody>
+  </table>
+  <table class="span10 table table-striped table-bordered table-condensed">
+    <caption style="font-size: 1.2em; font-weight: bold;">Request Header Details</caption>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><th>Request</th><td>@context.method: @context.uri</td></tr>
+      <tr><th>Protocol</th><td>@context.protocol</td></tr>
+      <tr><th>Headers</th><td>@context.headers></tr>
+    </tbody>
+  </table>
+</div>
+-->

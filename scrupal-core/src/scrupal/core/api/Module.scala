@@ -173,10 +173,6 @@ object Module extends Registry[Module]  {
     // Now that core is done, let's do the standard modules that come with the Core
     EchoModule.bootstrap
 
-    // In case this is a brand new installation with no sites in the database,
-    // create the default site by poking it
-    require(DefaultSite.label.size > 0)
-
     // Now we go through the configured modules
     for (class_name ← modules_to_bootstrap) {
       findModuleOnClasspath(class_name) match {

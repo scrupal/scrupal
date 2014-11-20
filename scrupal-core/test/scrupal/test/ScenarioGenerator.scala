@@ -17,10 +17,9 @@
 
 package scrupal.test
 
-import play.twirl.api.Html
 import scrupal.core._
 import scrupal.core.api._
-import scrupal.core.HtmlHelpers._
+import scrupal.core.api.HtmlHelpers._
 
 /**
  * Created by reidspencer on 11/10/14.

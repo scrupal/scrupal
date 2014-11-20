@@ -22,10 +22,11 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
-import play.twirl.api.Html
+import play.twirl.api.{Txt, Html}
 import reactivemongo.bson._
+import scrupal.core.api.Template.BSONHandlerForTemplate
 import scrupal.core.{BundleType, StructuredType}
-import scrupal.core.api.Type.BSONHandlerForRegistrable
+import scrupal.core.api.Type.BSONHandlerForType
 import scrupal.utils.{Identifiable, Enablement, Icons, AlertKind}
 import spray.http.{MediaTypes, MediaType}
 
@@ -77,10 +78,16 @@ object BSONHandlers {
     override def read(bson: BSONLong): Duration = Duration(bson.value, TimeUnit.NANOSECONDS)
   }
 
-  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForRegistrable[Type]
-  implicit val IndexableTypeHandler : BSONHandler[BSONString,IndexableType] = new BSONHandlerForRegistrable[IndexableType]
-  implicit val StructuredTypeHandler : BSONHandler[BSONString,StructuredType] = new BSONHandlerForRegistrable[StructuredType]
-  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForRegistrable[BundleType]
+  implicit val TypeHandler : BSONHandler[BSONString,Type] = new BSONHandlerForType[Type]
+  implicit val IndexableTypeHandler : BSONHandler[BSONString,IndexableType] = new BSONHandlerForType[IndexableType]
+  implicit val StructuredTypeHandler : BSONHandler[BSONString,StructuredType] = new BSONHandlerForType[StructuredType]
+  implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForType[BundleType]
+
+  implicit val TemplateHandler : BSONHandler[BSONString,Template[_]] = new BSONHandlerForTemplate[Template[_]]
+  implicit val TwirlTxtTemplateHandler : BSONHandler[BSONString,TwirlTxtTemplate] =
+    new BSONHandlerForTemplate[TwirlTxtTemplate]
+  implicit val TwirlHtmlTemplateHandler : BSONHandler[BSONString,TwirlHtmlTemplate] =
+    new BSONHandlerForTemplate[TwirlHtmlTemplate]
 
   implicit val EntityHandler : BSONHandler[BSONString,Entity] = new BSONHandler[BSONString,Entity] {
     override def write(m: Entity): BSONString = BSONString(m.id.name)
@@ -119,10 +126,36 @@ object BSONHandlers {
     override def read(bson: BSONBinary) : Html = Html(new String(bson.value.readArray(bson.value.size)))
   }
 
+  implicit val TxtHandler : BSONHandler[BSONString,Txt] = new BSONHandler[BSONString,Txt] {
+    override def write(txt: Txt) : BSONString = BSONString(txt.body)
+    override def read(bson: BSONString) : Txt = Txt(bson.value)
+  }
+
+
   implicit val FileHandler : BSONHandler[BSONString,File] = new BSONHandler[BSONString,File] {
     override def write(f: File): BSONString = BSONString(f.getPath)
     override def read(bson: BSONString): File = new File(bson.value)
   }
+
+  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html]] =
+    new BSONHandler[BSONDocument,Map[String,Html]] {
+      override def write(elements: Map[String,Html]): BSONDocument = {
+        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlHandler.write(html) } )
+      }
+      override def read(doc: BSONDocument): Map[String,Html] = {
+        doc.elements.map { case(name, value) ⇒ name -> HtmlHandler.read(value.asInstanceOf[BSONBinary]) }
+      }.toMap
+    }
+
+  implicit val MapOfNamedTxt : BSONHandler[BSONDocument,Map[String,Txt]] =
+    new BSONHandler[BSONDocument,Map[String,Txt]] {
+      override def write(elements: Map[String,Txt]): BSONDocument = {
+        BSONDocument( elements.map { case (name,html) ⇒ name → TxtHandler.write(html) } )
+      }
+      override def read(doc: BSONDocument): Map[String,Txt] = {
+        doc.elements.map { case(name, value) ⇒ name -> TxtHandler.read(value.asInstanceOf[BSONString]) }
+      }.toMap
+    }
 
   implicit val MapOfNamedDocumentsHandler = new BSONHandler[BSONDocument,Map[String,BSONValue]] {
     override def write(elements: Map[String,BSONValue]): BSONDocument = BSONDocument(elements)

@@ -17,6 +17,7 @@
 
 package scrupal.core.echo
 
+import reactivemongo.bson.BSONDocument
 import scrupal.core.BundleType
 import scrupal.core.api._
 import scrupal.utils.OSSLicense
@@ -41,10 +42,87 @@ object EchoEntity extends Entity {
 
   def description: String = "An entity that stores nothing and merely echos its requests"
 
-  override def retrieve(context: ApplicationContext, id: String) = {
+  override def create(context: ApplicationContext, id: String, instance: BSONDocument) : Create = {
+    new Create(context, id, instance) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.create(id, instance)(context))
+      }
+    }
+  }
+
+  override def retrieve(context: ApplicationContext, id: String) : Retrieve = {
     new Retrieve(context, id) {
       override def apply : HtmlResult = {
         HtmlResult(scrupal.core.echo.html.retrieve(id)(context))
+      }
+    }
+  }
+
+  override def update(context: ApplicationContext, id: String, fields: BSONDocument) : Update = {
+    new Update(context, id, fields) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.update(id, fields)(context))
+      }
+    }
+  }
+
+  override  def delete(context: ApplicationContext, id: String) : Delete = {
+    new Delete(context, id) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.delete(id)(context))
+      }
+    }
+  }
+
+
+  override def query(context: ApplicationContext, id: String, fields: BSONDocument) : Query = {
+    new Query(context, id, fields) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.query(id, fields)(context))
+      }
+    }
+  }
+
+  override def createFacet(context: ApplicationContext, id: String,
+                           what: List[String], instance: BSONDocument) : CreateFacet = {
+    new CreateFacet(context, id, what, instance) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.createFacet(id, what, instance)(context))
+      }
+    }
+  }
+
+
+  override def retrieveFacet(context: ApplicationContext, id: String, what: List[String]) : RetrieveFacet = {
+    new RetrieveFacet(context, id, what) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.retrieveFacet(id, what)(context))
+      }
+    }
+  }
+
+  override def updateFacet(context: ApplicationContext, id: String,
+                           what: List[String], fields: BSONDocument) : UpdateFacet = {
+    new UpdateFacet(context, id, what, fields) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.updateFacet(id, what, fields)(context))
+      }
+    }
+  }
+
+  override def deleteFacet(context: ApplicationContext, id: String, what: List[String]) : DeleteFacet = {
+    new DeleteFacet(context, id, what) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.deleteFacet(id, what)(context))
+      }
+    }
+  }
+
+  override def queryFacet(context: ApplicationContext, id: String,
+                          what: List[String], args: BSONDocument) : QueryFacet = {
+    new QueryFacet(context, id, what, args) {
+      override def apply : HtmlResult = {
+        HtmlResult(scrupal.core.echo.html.queryFacet(id, what, args)(context))
       }
     }
   }

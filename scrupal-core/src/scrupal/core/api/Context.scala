@@ -53,7 +53,7 @@ trait Context {
   def appPath : String = "<NoPath>"
 
   val themeProvider : String = "bootswatch"
-  val themeName : String = "cyborg"
+  val themeName : String = "default"
   val user : String = "guest"
   val description : String = ""
 
@@ -109,7 +109,7 @@ class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) exte
   override val site : Option[Site] = Some(theSite)
   override val siteName : String = theSite.label
   override val description : String = theSite.description
-  override val themeProvider : String = "scrupal" // FIXME: Should be default theme provider for site
+  override val themeProvider : String = "bootswatch" // FIXME: Should be default theme provider for site
   override val themeName: String = "cyborg" // FIXME: Should be default theme for site
   val modules: Seq[Module] = Module.values //FIXME: Should be just the ones for the site
 }

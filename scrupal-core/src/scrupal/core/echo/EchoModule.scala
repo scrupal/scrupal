@@ -78,5 +78,8 @@ object EchoModule extends Module {
     // We need to "touch" in order to get it loaded
     require(EchoApp.label.length > 0)
   }
+
+  EchoModule.enable(this)
+  EchoEntity.enable(this)
 }
 

@@ -68,8 +68,6 @@ trait EntityCommandProvider {
     */
   def update(context: ApplicationContext, id: String, fields: BSONDocument) : Update
 
-  // TODO: Finish documenting EntityCommandProvider methods
-
   /** Delete Command (DELETE/plural) */
   /** Delete an entity
     * @param id
@@ -94,9 +92,6 @@ trait EntityCommandProvider {
 
   /** XXX Command (OPTIONS/singular) */
   def queryFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument) : QueryFacet
-
-  /** XXX Command (POST/singular) */
-  def invoke(context: ApplicationContext, id: String, what: List[String], args: BSONDocument) : Invoke
 }
 
 abstract class Create(val context: ApplicationContext, val id: String, val instance: BSONDocument)
@@ -129,8 +124,6 @@ abstract class DeleteFacet(val context: ApplicationContext, val id: String, val 
 abstract class QueryFacet(val context: ApplicationContext, val id: String, val what: List[String], val args: BSONDocument)
   extends EntityInstanceCommand
 
-abstract class Invoke(val context: ApplicationContext, val id: String, val what: List[String], val args: BSONDocument)
-  extends EntityInstanceCommand
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal.
   *
@@ -160,11 +153,6 @@ abstract class Entity
   final val plural_path = Pluralizer.pluralize(path)
 
   require(path != plural_path)
-
-  /** The set of additional operations that can be invoked for this Entity in addition to the standard fetch,
-    * create, update, relete,
-    */
-  val actions: Map[Symbol, Action] = Map()
 
   def create(context: ApplicationContext, id: String, instance: BSONDocument)
     : Create = NoopCreate(context, id, instance)
@@ -196,8 +184,6 @@ abstract class Entity
   def queryFacet(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
     : QueryFacet = NoopQueryFacet(context, id, what, args)
 
-  def invoke(context: ApplicationContext, id: String, what: List[String], args: BSONDocument)
-    : Invoke = NoopInvoke(context, id, what, args)
 }
 
 trait NoopAction {
@@ -253,12 +239,6 @@ case class NoopQueryFacet(
   override val id: String,
   override val what: List[String],
   override val args: BSONDocument) extends QueryFacet(context, id, what, args) with NoopAction
-
-case class NoopInvoke(
-  override val context: ApplicationContext,
-  override val id: String,
-  override val what: List[String],
-  override val args: BSONDocument) extends Invoke(context, id, what, args) with NoopAction
 
 
 object Entity extends scrupal.utils.Registry[Entity] {

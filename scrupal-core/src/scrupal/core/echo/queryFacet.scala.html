@@ -1,0 +1,9 @@
+@(id: String, what: List[String], args: reactivemongo.bson.BSONDocument)(implicit ctxt: scrupal.core.api.Context)
+@import scrupal.core.views.html._
+@import scrupal.core.views.html.utils._
+@pages.plainPage("Retrieve - " + id) {
+<h1>Query - @id</h1>
+<h3>Facet ID: @{what.mkString("/")}</h3>
+@bson_document_panel("Query Arguments", args)
+@display_context(ctxt)
+}

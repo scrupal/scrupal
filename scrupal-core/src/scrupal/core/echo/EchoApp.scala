@@ -18,7 +18,7 @@
 package scrupal.core.echo
 
 import org.joda.time.DateTime
-import scrupal.core.api.{BasicApplication, Module, Application}
+import scrupal.core.api.{Module, Application}
 
 /** An Echoing Application
   * Almost the simplest of applications to construct this is mostly a test of the fundamentals but may have some
@@ -45,4 +45,8 @@ object EchoApp extends Application {
   def created: Option[DateTime] = Some(new DateTime(2014,11,11,5,53))
 
   def modified: Option[DateTime] = None
+
+  EchoEntity.enable(this)
+  EchoModule.enable(this)
+
 }

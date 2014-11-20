@@ -127,12 +127,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
         new EntityController(Symbol(siteName), 0, site, appEntities)
       }
     }.toSeq
-    val assets = new AssetsController(scrupal)
-    if (configured_controllers.isEmpty) {
-      Seq( assets, WelcomeController() )
-    } else {
-      Seq(assets) ++ configured_controllers
-    }
+    new AssetsController(scrupal) +: configured_controllers :+ new WelcomeController()
   }
 }
 

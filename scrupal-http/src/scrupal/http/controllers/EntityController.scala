@@ -80,8 +80,8 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
         validate(aSite == theSite, s"Expected site ${theSite.name } but got ${aSite.name }") {
           app_entity {
             case (app: Application, entityName: String, entity: Entity) ⇒ {
-              if (entityName == entity.path) {
-                rawPathPrefix(Slash ~ Segments ~ PathEnd) { id: List[String] ⇒
+              if (entityName == entity.plural_path) {
+                path(Segments) { id: List[String] ⇒
                   validate(id.size > 0, "Empty identifier not permitted") {
                     request_context { rc: RequestContext ⇒
                       val ctxt = Context(scrupal, rc, aSite, app)
@@ -116,8 +116,8 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
                   }
                 } ~ reject(ValidationRejection(s"Request path is missing the entity identifier portion"))
 
-              } else if (entityName == entity.plural_path) {
-                rawPathPrefix(Slash ~ Segment / Segments ~ PathEnd) { (id: String, what: List[String]) ⇒
+              } else if (entityName == entity.path) {
+                path(Segment / Segments) { (id: String, what: List[String]) ⇒
                   validate(id.length > 0, "Empty identifier not permitted") {
                     request_context { rc: RequestContext ⇒
                       val ctxt = Context(scrupal, rc, aSite, app)

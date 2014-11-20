@@ -16,20 +16,8 @@
   **********************************************************************************************************************/
 package scrupal.core
 
-import java.io.File
-import java.net.URL
+
 import java.nio.charset.Charset
-import java.util.concurrent.TimeUnit
-
-import play.twirl.api.Html
-import scrupal.core.api.Type.BSONHandlerForRegistrable
-import spray.http.{MediaTypes, MediaType}
-import scala.concurrent.duration.{Duration}
-
-import scala.util.matching.Regex
-
-import org.joda.time.DateTime
-import reactivemongo.bson._
 import scrupal.utils._
 
 /** Scrupal Core API Library.
