@@ -150,7 +150,7 @@ case class BasicModule(
 }
 
 /** Amalgamated information about all registered Modules
-  * This object is the Registry of modules. When a [[scrupal.core.api.Module]] is instantiated,
+  * This object is the Registry of modules. When a [[scrupal.api.Module]] is instantiated,
   * it will register itself with this module. Upon registration, the information it provides about the module is
   * amalgamated into this object for use by the rest of Scrupal.
   */

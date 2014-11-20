@@ -329,7 +329,7 @@ object CommandNode {
 /** Generate Content with TwirlScript Template
   * This allows users to create template type content in their browser. It looks a bit like twirl in that it is simply
   * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
-  * You can substitute a node (@{node('mynode}), values from the [[scrupal.core.api.Context]] (@{context.`var_name`}),
+  * You can substitute a node (@{node('mynode}), values from the [[scrupal.api.Context]] (@{context.`var_name`}),
   * predefined variables/functions (@{datetime}), etc.
   */
 case class TwirlScriptNode (

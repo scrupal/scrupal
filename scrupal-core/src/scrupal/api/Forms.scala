@@ -19,7 +19,6 @@ package scrupal.api
 
 import play.twirl.api.Html
 import reactivemongo.bson._
-import scrupal.core.Boolean_t
 import scrupal.db.Storable
 
 /** Scrupal Forms
@@ -52,7 +51,7 @@ object Forms {
       val s = new StringBuilder()
       def add(k:String,v:String) = s.append(k).append('"').append(v).append('"').append(' ')
       input.typ match {
-        case b: Boolean_t.type ⇒
+        case b: BooleanType ⇒
           add("type","checkbox")
           add("id",input._id)
           add("name", input._id)

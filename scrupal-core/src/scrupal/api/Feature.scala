@@ -16,7 +16,6 @@
  **********************************************************************************************************************/
 package scrupal.api
 
-import scrupal.core.CoreModule
 import scrupal.utils.{Enablee, Enablement, Registrable, Registry}
 
 abstract class AbstractFeature extends Registrable[Feature]

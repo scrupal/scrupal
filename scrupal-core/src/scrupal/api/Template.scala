@@ -35,7 +35,7 @@ object Template extends Registry[Template[_]] {
   type TwirlHtmlTemplateFunction = { def apply(args: Map[String,Html])(implicit ctxt: Context):Html }
   type TwirlTxtTemplateFunction  = { def apply(args: Map[String,Txt])(implicit ctxt: Context):Txt }
 
-  lazy val default = TwirlHtmlTemplate('default, "Default Template", scrupal.core.views.html.layout.defaultTemplate)
+  lazy val default = TwirlHtmlTemplate('default, "Default Template", scrupal.api.views.html.defaultTemplate)
 
   /** Handle reading/writing Template instances to and from BSON.
     * Note that templates are a little special. We write them as strings and restore them via lookup. Templates are
