@@ -1,4 +1,4 @@
-@(x: scrupal.core.api.ExceptionResult)
+@(x: scrupal.api.ExceptionResult)
 @import java.io.StringWriter
 @import java.io.PrintWriter
 @import org.apache.commons.lang3.exception.ExceptionUtils

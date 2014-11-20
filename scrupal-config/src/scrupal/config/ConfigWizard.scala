@@ -22,9 +22,8 @@ import java.io.File
 import com.typesafe.config.{Config, ConfigFactory}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import scrupal.core._
-import scrupal.core.api.Forms.{Input, Section, Page, Form}
-
-import scrupal.core.api.{Site, Instance, Module}
+import scrupal.api.Forms.{Input, Section, Page, Form}
+import scrupal.api.{Site, Module}
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{ScrupalComponent, ConfigHelper, Configuration}
 

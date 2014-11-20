@@ -17,9 +17,9 @@
 
 package scrupal.test
 
+import scrupal.api._
 import scrupal.core._
-import scrupal.core.api._
-import scrupal.core.api.HtmlHelpers._
+import HtmlHelpers._
 
 /**
  * Created by reidspencer on 11/10/14.

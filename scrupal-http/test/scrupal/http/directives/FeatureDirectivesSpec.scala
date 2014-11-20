@@ -18,7 +18,7 @@
 package scrupal.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.api.Feature
+import scrupal.api.Feature
 import spray.testkit.Specs2RouteTest
 import spray.routing.{ValidationRejection, HttpService}
 

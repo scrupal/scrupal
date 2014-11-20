@@ -17,7 +17,7 @@
 
 package scrupal.http.directives
 
-import scrupal.core.api.Feature
+import scrupal.api.Feature
 import scrupal.utils.Enablement
 import spray.routing._
 import spray.routing.Directives._

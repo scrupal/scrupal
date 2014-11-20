@@ -17,7 +17,7 @@
 
 package scrupal.core
 
-import scrupal.core.api.Feature
+import scrupal.api.Feature
 
 /** One line sentence description here.
   * Further description here.

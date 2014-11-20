@@ -17,8 +17,9 @@
 
 package scrupal.core
 
+import scrupal.api.{Instance, Node, Alert}
 import scrupal.db._
-import scrupal.core.api._
+import scrupal.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

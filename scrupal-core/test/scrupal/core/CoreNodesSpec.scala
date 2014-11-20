@@ -23,10 +23,10 @@ import java.util.concurrent.TimeUnit
 
 import play.twirl.api.Html
 import reactivemongo.bson.BSONObjectID
-import scrupal.core.api.Template.TwirlHtmlTemplateFunction
+import scrupal.api.Template.TwirlHtmlTemplateFunction
+import scrupal.api._
 import scrupal.test.{ScrupalSpecification, FakeContext}
 import spray.http.MediaTypes
-import scrupal.core.api._
 
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration

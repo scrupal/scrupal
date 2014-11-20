@@ -18,8 +18,9 @@
 package scrupal.http.controllers
 
 import reactivemongo.bson.{BSONString, BSONDocument}
+import scrupal.api.Application
 import scrupal.core.Scrupal
-import scrupal.core.api._
+import scrupal.api._
 import shapeless.HNil
 import spray.http.HttpHeader
 import spray.routing.Route

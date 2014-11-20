@@ -18,7 +18,8 @@
 package scrupal.core.echo
 
 import org.joda.time.DateTime
-import scrupal.core.api.{Module, Application}
+import scrupal.api.Application
+import scrupal.api.Module
 
 /** An Echoing Application
   * Almost the simplest of applications to construct this is mostly a test of the fundamentals but may have some

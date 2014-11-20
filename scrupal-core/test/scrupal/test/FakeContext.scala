@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.specs2.execute.AsResult
 import org.specs2.specification.Fixture
 import scrupal.core.Scrupal
-import scrupal.core.api._
+import scrupal.api._
 
 /**
  * Created by reidspencer on 11/9/14.

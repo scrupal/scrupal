@@ -24,7 +24,7 @@ import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
 import scrupal.core.Scrupal
-import scrupal.core.api.Site
+import scrupal.api.Site
 import scrupal.http.actors.ScrupalServiceActor
 import scrupal.utils.{ScrupalComponent, DateTimeHelpers}
 import spray.can.Http

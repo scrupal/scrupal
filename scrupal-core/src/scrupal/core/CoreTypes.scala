@@ -20,7 +20,7 @@ package scrupal.core
 import java.util.Date
 
 import reactivemongo.bson._
-import scrupal.core.api._
+import scrupal.api._
 import scrupal.utils.Patterns._
 import spray.http.{MediaTypes, MediaType}
 

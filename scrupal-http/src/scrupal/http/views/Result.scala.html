@@ -1,5 +1,5 @@
-@(result: scrupal.core.api.Result[_])(implicit context: scrupal.core.api.Context)
-@import scrupal.core.api._
+@(result: scrupal.api.Result[_])(implicit context: scrupal.api.Context)
+@import scrupal.api._
 @{result.disposition match {
   case Successful => // "Request was successfully processed synchronously."
     result.payload

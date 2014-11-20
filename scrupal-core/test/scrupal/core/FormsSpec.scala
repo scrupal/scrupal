@@ -19,8 +19,8 @@ package scrupal.core
 
 import org.specs2.mutable.Specification
 import reactivemongo.bson._
-import scrupal.core.api.Forms._
-import scrupal.core.api._
+import scrupal.api.Forms._
+import scrupal.api._
 
 /** Test Suite for Forms */
 class FormsSpec extends Specification {

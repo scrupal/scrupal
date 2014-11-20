@@ -20,8 +20,9 @@ package scrupal.core
 import java.net.URL
 
 import reactivemongo.bson.{BSONDocument, BSONString}
+import scrupal.api.Node
 import scrupal.db.{Schema,DBContext}
-import scrupal.core.api._
+import scrupal.api._
 import scrupal.utils.{OSSLicense, Version}
 
 import scrupal.core.CoreFeatures._

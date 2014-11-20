@@ -19,7 +19,8 @@ package scrupal.core.welcome
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
-import scrupal.core.api.{HtmlNode,TwirlHtmlTemplate, Node, Site}
+import scrupal.api.{HtmlNode, Node}
+import scrupal.api.{TwirlHtmlTemplate, Site}
 import scrupal.core.echo.EchoApp
 
 class WelcomeSite extends Site {

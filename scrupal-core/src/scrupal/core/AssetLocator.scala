@@ -20,7 +20,7 @@ package scrupal.core
 import java.io.File
 import java.net.URL
 
-import scrupal.core.api._
+import scrupal.api.{ErrorResult, StreamResult, NotFound, Result}
 import spray.http.{MediaTypes, MediaType}
 
 trait AssetLocator {

@@ -19,7 +19,7 @@ package scrupal.http.directives
 
 import org.specs2.mutable.Specification
 import scrupal.core.Scrupal
-import scrupal.core.api.BasicSite
+import scrupal.api.BasicSite
 import scrupal.test.CaseClassFixture
 import spray.testkit.Specs2RouteTest
 import spray.routing.HttpService

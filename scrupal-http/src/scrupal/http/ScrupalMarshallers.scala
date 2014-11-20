@@ -20,16 +20,20 @@ package scrupal.http
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
+
 import play.api.libs.iteratee.{Cont, Done, Iteratee, Input, Enumerator}
+
 import reactivemongo.bson.{BSONNull, BSONValue}
+
+import scrupal.api._
 import scrupal.core.Scrupal
-import scrupal.core.api._
+
 import spray.can.Http
 import spray.http._
 import spray.httpx.marshalling._
 
 import scala.concurrent.{Future, ExecutionContext}
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {

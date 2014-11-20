@@ -1,4 +1,4 @@
-@(id: String, what: List[String], instance: reactivemongo.bson.BSONDocument)(implicit ctxt: scrupal.core.api.Context)
+@(id: String, what: List[String], instance: reactivemongo.bson.BSONDocument)(implicit ctxt: scrupal.api.Context)
 @import scrupal.core.views.html._
 @import scrupal.core.views.html.utils._
 @pages.plainPage("Retrieve - " + id) {

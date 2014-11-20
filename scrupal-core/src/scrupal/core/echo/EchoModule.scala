@@ -19,7 +19,7 @@ package scrupal.core.echo
 
 import java.net.URL
 
-import scrupal.core.api._
+import scrupal.api._
 import scrupal.utils.{OSSLicense, Version}
 
 /** The Echo Module
@@ -53,7 +53,7 @@ object EchoModule extends Module {
 
   /** The set of Features that this Module provides.
     * These features can be enabled and disabled through the admin interface and the module can provide its own
-    * functionality for when those events occur. See [[scrupal.core.api.Feature]]
+    * functionality for when those events occur. See [[Feature]]
     */
   def features: Seq[Feature] = Seq()
 

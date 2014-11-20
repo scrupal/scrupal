@@ -18,11 +18,8 @@
 package scrupal.http.controllers
 
 import scrupal.core.Scrupal
-import scrupal.core.api._
-import spray.http.MediaTypes._
+import scrupal.api._
 import spray.routing._
-
-import scala.concurrent.ExecutionContext
 
 /**
  * A controller to provide the Introduction To Scrupal content

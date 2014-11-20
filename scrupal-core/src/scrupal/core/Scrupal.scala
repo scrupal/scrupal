@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicReference
 import akka.actor.{ActorSystem, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
-import scrupal.core.welcome.WelcomeSite
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.{Await, Future, ExecutionContext}
@@ -32,7 +31,8 @@ import scala.util.matching.Regex
 
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
-import scrupal.core.api._
+import scrupal.api._
+import scrupal.core.welcome.WelcomeSite
 import scrupal.db.{ScrupalDB, DBContext}
 import scrupal.utils.{Registry, Enablement, ScrupalComponent, Configuration}
 
@@ -308,7 +308,6 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 	 *
 	 * The default is to send the default error page.
 	 *
-	 * @param request The HTTP request header
 	 * @param ex The exception
 	 * @return The result to send to the client
 	 */

@@ -18,7 +18,7 @@
 package scrupal.core
 
 import org.specs2.mutable.Specification
-import scrupal.core.api.StreamResult
+import scrupal.api.StreamResult
 import scrupal.test.FakeContext
 import spray.http.{ContentType, MediaTypes}
 

@@ -19,7 +19,7 @@ package scrupal.test
 
 import java.net.URL
 
-import scrupal.core.api._
+import scrupal.api._
 import scrupal.utils.{OSSLicense, Version}
 
 /** Make Module Creation More Light weight
