@@ -31,7 +31,7 @@ import scrupal.utils._
  */
 trait Application
   extends VariantStorableRegistrable[Application]
-          with Nameable with Describable with Modifiable with Enablement[Application] with Enablee {
+          with Nameable with Describable with Modifiable with Pathable with Enablement[Application] with Enablee {
   def registry: Registry[Application] = Application
   def asT : Application = this
 
@@ -61,8 +61,6 @@ trait Application
       name → (name → entity)
     }
   }.toMap
-
-
 }
 
 case class BasicApplication(

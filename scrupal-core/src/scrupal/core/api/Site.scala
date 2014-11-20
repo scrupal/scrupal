@@ -34,17 +34,22 @@ import scala.util.matching.Regex
 trait Site
   extends VariantStorableRegistrable[Site]
           with Nameable with Describable with Enablement[Site] with Enablee with Modifiable {
+
+  val kind = 'Site
+
   def requireHttps: Boolean = false
 
   def host: String
 
   def siteRoot: Node
 
+  def themeProvider : String = "bootswatch"
+
+  def themeName : String = "default"
+
   def registry = Site
 
   def asT = this
-
-  val kind = 'Site
 
   def applications : Seq[Application] = Seq.empty[Application]
 
@@ -72,7 +77,7 @@ case class BasicSite (
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
 ) extends Site {
-  override val kind = 'BasicSite
+  final override val kind = 'BasicSite
 }
 
 object BasicSite {

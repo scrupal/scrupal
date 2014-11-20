@@ -24,12 +24,13 @@ import scrupal.core.echo.EchoApp
 
 class WelcomeSite extends Site {
   def id: Symbol = 'WelcomeToScrupal
-  def name: String = "Welcome To Scrupal"
-  def description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  def modified: Option[DateTime] = Some(DateTime.now)
-  def created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
+  val name: String = "Welcome To Scrupal"
+  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
+  val modified: Option[DateTime] = Some(DateTime.now)
+  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
+  override val themeName = "cyborg"
   def host: String = ".*"
-  def siteRoot: Node =
+  val siteRoot: Node =
     HtmlNode (
       "Main index page for Welcome To Scrupal Site",
       WelcomeSite.WelcomePageTemplate,

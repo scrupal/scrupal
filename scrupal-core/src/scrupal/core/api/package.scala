@@ -22,7 +22,8 @@ import scrupal.utils._
 
 /** Scrupal Core API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the core abstractions
-  * needed to write an application with Scrupal. We use the Acronym *MANIFEST* to remember what the key types of objects
+  * needed to write an application with Scrupal. We use the Acronym *MANIFEST* to remember what the key types of
+  * objects
   * Scrupal defines:
   *
   * - M - Module: A container of functionality that defines Applications, Nodes, Entities, and Types
@@ -40,6 +41,8 @@ import scrupal.utils._
   * - S - Site: Site management data and a set of applications enabled for it.
   *
   * - T - Type: A fundamental data type used for validating BSONValue structured information (Instances and Node results)
+  *
+  * - O - ???
   *
   * If you can grok these few concepts then you have understood the core concepts of Scrupal.
   *

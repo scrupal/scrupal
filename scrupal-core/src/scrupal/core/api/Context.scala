@@ -109,9 +109,8 @@ class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) exte
   override val site : Option[Site] = Some(theSite)
   override val siteName : String = theSite.label
   override val description : String = theSite.description
-  override val themeProvider : String = "bootswatch" // FIXME: Should be default theme provider for site
-  override val themeName: String = "cyborg" // FIXME: Should be default theme for site
-  val modules: Seq[Module] = Module.values //FIXME: Should be just the ones for the site
+  override val themeProvider : String = theSite.themeProvider
+  override val themeName: String = theSite.themeName
 }
 
 class ApplicationContext(scrupal: Scrupal, request: RequestContext, theSite: Site, app: Application)

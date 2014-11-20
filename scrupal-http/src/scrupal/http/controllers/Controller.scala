@@ -18,10 +18,13 @@
 package scrupal.http.controllers
 
 import scrupal.core.Scrupal
-import scrupal.core.api.{Identifier, Type, Module}
+import scrupal.core.api._
+import scrupal.http.ScrupalMarshallers
+import scrupal.http.directives.{PathHelpers, SiteDirectives}
 import scrupal.utils.{Registrable, Registry}
+import spray.http.StatusCodes.NotFound
 import spray.http.{HttpResponse, HttpRequest}
-import spray.routing.{Rejected, Route, Directives}
+import spray.routing._
 import spray.routing.directives.LogEntry
 import spray.http._
 import StatusCodes._
@@ -67,6 +70,43 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
 
   def request_context = extract( rc ⇒ rc )
 
+}
+
+
+/** Controller That Requires A Site.
+  *
+  * This is the controller superclass
+  */
+abstract class SiteController
+  extends Controller with Directives with SiteDirectives with PathHelpers with ScrupalMarshallers with RequestLoggers {
+
+  def rootPage(aSite: Site)(implicit scrupal: Scrupal)  : Route =
+  {
+    request_context { rc: RequestContext ⇒
+      complete {
+        implicit val context = Context(scrupal, rc)
+        val node = aSite.siteRoot
+        val result = node(context)
+        makeMarshallable(result)
+      }
+    }
+  }
+
+  def routes(implicit scrupal: Scrupal): Route = {
+    logRequestResponse(showAllResponses _) {
+      site(scrupal) { aSite: Site ⇒
+        get {
+          pathEndOrSingleSlash {
+            rootPage(aSite)
+          } ~ {
+            routes(aSite)
+          }
+        }
+      }
+    }
+  }
+
+  def routes(aSite: Site)(implicit scrupal: Scrupal) : Route
 }
 
 abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller with RequestLoggers

@@ -20,11 +20,9 @@ package scrupal.http.controllers
 import reactivemongo.bson.{BSONString, BSONDocument}
 import scrupal.core.Scrupal
 import scrupal.core.api._
-import scrupal.http.ScrupalMarshallers
-import scrupal.http.directives.{PathHelpers, SiteDirectives}
 import shapeless.HNil
 import spray.http.HttpHeader
-import spray.routing.{Directives, Route}
+import spray.routing.Route
 import spray.routing._
 
 /** A Controller For Entities
@@ -39,11 +37,10 @@ import spray.routing._
   * Created by reid on 11/7/14.
   */
 case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntities: Site#ApplicationMap)
-  extends Controller with Directives with SiteDirectives with PathHelpers with ScrupalMarshallers
+  extends SiteController
 {
 
   type AppEntityList = shapeless.::[Application,shapeless.::[String,shapeless.::[Entity,HNil]]]
-
 
   def app_entity : Directive[AppEntityList] = new Directive[AppEntityList] {
     def happly(f: AppEntityList ⇒ Route) = {
@@ -61,7 +58,6 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
     }
   }
 
-
   def make_args(ctxt: ApplicationContext) : BSONDocument = {
     ctxt.request match {
       case Some(context) ⇒
@@ -73,91 +69,86 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
     }
   }
 
-  def routes(implicit scrupal: Scrupal) : Route = {
-    // scrupal.withActorExec { (as,ec,to) ⇒
-     // implicit val marshaller = mystery_marshaller(as, ec, to)
-      site(scrupal) { aSite ⇒
-        validate(aSite == theSite, s"Expected site ${theSite.name } but got ${aSite.name }") {
-          app_entity {
-            case (app: Application, entityName: String, entity: Entity) ⇒ {
-              if (entityName == entity.plural_path) {
-                path(Segments) { id: List[String] ⇒
-                  validate(id.size > 0, "Empty identifier not permitted") {
-                    request_context { rc: RequestContext ⇒
-                      val ctxt = Context(scrupal, rc, aSite, app)
-                      val id_path = id.mkString("/")
-                      post {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.create(ctxt, id_path, make_args(ctxt))))
-                        }
-                      } ~
-                      get {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.retrieve(ctxt, id_path)))
-                        }
-                      } ~
-                      put {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.update(ctxt, id_path, make_args(ctxt))))
-                        }
-                      } ~
-                      delete {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.delete(ctxt, id_path)))
-                        }
-                      } ~
-                      options {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.query(ctxt, id_path, make_args(ctxt))))
-                        }
-                      } ~
-                      reject(ValidationRejection(s"Not a good match for method"))
+  def routes(aSite: Site)(implicit scrupal: Scrupal) : Route = {
+    validate(aSite == theSite, s"Expected site ${theSite.name } but got ${aSite.name }") {
+      app_entity {
+        case (app: Application, entityName: String, entity: Entity) ⇒ {
+          if (entityName == entity.plural_path) {
+            path(Segments) { id: List[String] ⇒
+              validate(id.size > 0, "Empty identifier not permitted") {
+                request_context { rc: RequestContext ⇒
+                  val ctxt = Context(scrupal, rc, aSite, app)
+                  val id_path = id.mkString("/")
+                  post {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.create(ctxt, id_path, make_args(ctxt))))
                     }
-                  }
-                } ~ reject(ValidationRejection(s"Request path is missing the entity identifier portion"))
-
-              } else if (entityName == entity.path) {
-                path(Segment / Segments) { (id: String, what: List[String]) ⇒
-                  validate(id.length > 0, "Empty identifier not permitted") {
-                    request_context { rc: RequestContext ⇒
-                      val ctxt = Context(scrupal, rc, aSite, app)
-                      post {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.createFacet(ctxt, id, what, make_args(ctxt))))
-                        }
-                      } ~
-                      get {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.retrieveFacet(ctxt, id, what)))
-                        }
-                      } ~
-                      put {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.updateFacet(ctxt, id, what, make_args(ctxt))))
-                        }
-                      } ~
-                      delete {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.deleteFacet(ctxt, id, what)))
-                        }
-                      } ~
-                      options {
-                        complete {
-                          makeMarshallable(scrupal.handle(entity.queryFacet(ctxt, id, what, make_args(ctxt))))
-                        }
-                      } ~
-                      reject(ValidationRejection(s"Not a good match for method"))
+                  } ~
+                  get {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.retrieve(ctxt, id_path)))
                     }
-                  }
-                } ~ reject(ValidationRejection(s"Request path is missing entity id and what portions"))
-
-              } else {
-                reject(ValidationRejection(s"Request path is poorly formed."))
+                  } ~
+                  put {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.update(ctxt, id_path, make_args(ctxt))))
+                    }
+                  } ~
+                  delete {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.delete(ctxt, id_path)))
+                    }
+                  } ~
+                  options {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.query(ctxt, id_path, make_args(ctxt))))
+                    }
+                  } ~
+                  reject(ValidationRejection(s"Not a good match for method"))
+                }
               }
-            }
+            } ~ reject(ValidationRejection(s"Request path is missing the entity identifier portion"))
+
+          } else if (entityName == entity.path) {
+            path(Segment / Segments) { (id: String, what: List[String]) ⇒
+              validate(id.length > 0, "Empty identifier not permitted") {
+                request_context { rc: RequestContext ⇒
+                  val ctxt = Context(scrupal, rc, aSite, app)
+                  post {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.createFacet(ctxt, id, what, make_args(ctxt))))
+                    }
+                  } ~
+                  get {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.retrieveFacet(ctxt, id, what)))
+                    }
+                  } ~
+                  put {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.updateFacet(ctxt, id, what, make_args(ctxt))))
+                    }
+                  } ~
+                  delete {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.deleteFacet(ctxt, id, what)))
+                    }
+                  } ~
+                  options {
+                    complete {
+                      makeMarshallable(scrupal.handle(entity.queryFacet(ctxt, id, what, make_args(ctxt))))
+                    }
+                  } ~
+                  reject(ValidationRejection(s"Not a good match for method"))
+                }
+              }
+            } ~ reject(ValidationRejection(s"Request path is missing entity id and what portions"))
+
+          } else {
+            reject(ValidationRejection(s"Request path is poorly formed."))
           }
         }
       }
     }
-  // }
+  }
 }

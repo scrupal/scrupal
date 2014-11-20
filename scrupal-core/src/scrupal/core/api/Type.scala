@@ -178,8 +178,8 @@ trait DocumentType extends Type {
 /** Type Registry and companion */
 object Type extends Registry[Type] {
 
-  override val registryName = "Types"
-  override val registrantsName = "type"
+  val registryName = "Types"
+  val registrantsName = "type"
 
   /** Determine if a type is a certain kind
     * While Scrupal defines a useful set of types that will suffice for many needs,

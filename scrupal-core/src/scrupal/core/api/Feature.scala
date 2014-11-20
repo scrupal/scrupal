@@ -62,9 +62,8 @@ case class Feature(
   * to boolean.
   */
 object Feature extends Registry[Feature] {
-  override val registrantsName = "feature"
-  override val registryName = "Features"
-  override def logger_identity = s"${registryName}Registry"
+  val registrantsName = "feature"
+  val registryName = "Features"
 
   def enabled(name: Symbol, scope: Enablement[_]) : Boolean = {
     val feature = super.apply(name).getOrElse(NotAFeature)

@@ -156,8 +156,8 @@ case class BasicModule(
   */
 object Module extends Registry[Module]  {
 
-  override val registryName = "Modules"
-  override val registrantsName = "module"
+  val registryName = "Modules"
+  val registrantsName = "module"
 
   /** Process Module Initialization
     * Modules are always defined as singleton objects. As such, they are not instantiated until referenced. Instantiation

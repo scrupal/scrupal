@@ -41,6 +41,7 @@ class Reference[+T <: Identifiable ](val id: Symbol, val registry: String) exten
       case Feature.registryName ⇒ Some(Feature.lookup(id).asInstanceOf[T])
       case Entity.registryName  ⇒ Some(Entity.lookup(id).asInstanceOf[T])
       case Module.registryName  ⇒ Some(Module.lookup(id).asInstanceOf[T])
+      case Template.registryName ⇒ Some(Template.lookup(id).asInstanceOf[T])
       case _ ⇒ None
     }
   }

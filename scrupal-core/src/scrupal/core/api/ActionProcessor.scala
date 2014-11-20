@@ -93,8 +93,12 @@ object ActionProcessor {
 
 }
 
-/** The base trait for Scrupal Actors
-  * This allows us to put the common things for all Scrupal Actors in one place
+/** The super simple ActionProcessor
+  *
+  * An action is just a non-blocking function that produces a result. This Actor runs those functions in an Actor and
+  * sends the Result[_] back to the sender.
+  *
+  *
   */
 class ActionProcessor extends Actor with ActorLogging {
 

@@ -118,6 +118,7 @@ trait AbstractRegistry[K, V <: AnyRef] extends ScrupalComponent {
 trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] {
   def registryName : String
   def registrantsName : String
+  override def logger_identity = s"${registryName}Registry"
 
   def isRegistered(name: Symbol) : Boolean = contains(name)
   def getRegistrant(name: Symbol) : Option[T]  = lookup(name)

@@ -1,0 +1,25 @@
+@(result: scrupal.core.api.Result[_])(implicit context: scrupal.core.api.Context)
+@import scrupal.core.api._
+@{result.disposition match {
+  case Successful => // "Request was successfully processed synchronously."
+    result.payload
+  case Indeterminate ⇒ // "Disposition of the request is unknown."
+    "Results were indeterminate"
+  case Received => // "Request received and is processing asynchronously without response.
+
+  case Pending => // "Request received and is pending asynchronous processing without response.
+  case Promise => // "Request received and an asynchronous response is promised in the future.
+  case TimedOut => // "Request processing attempted but it timed out.")
+  case Unintelligible => // "Request rejected because it could not be understood.")
+  case Unimplemented => // "Request rejected because its has not been implemented yet.")
+  case Unsupported => // "Request rejected because its resource is no longer supported.")
+  case Unauthorized => // "Request rejected because requester is not authorized for it.")
+  case Unavailable => // "Request rejected because the resource is not currently available.")
+  case NotFound => // "Request rejected because the resource was not found.")
+  case Ambiguous => // "Request rejected because of ambiguity on the resource requested.")
+  case Conflict => // "Request rejected because it would cause a conflict between resources.")
+  case TooComplex => // "Request rejected because it implies processing ")
+  case Exhausted => // "Request processing started but a computing resource became exhausted")
+  case Exception => // "An exception occurred during the processing of the request")
+}
+}

@@ -22,15 +22,15 @@ import reactivemongo.bson.{BSONString, BSONHandler}
 import scrupal.utils.{Registry, Registrable}
 import spray.http.{MediaTypes, ContentTypes, ContentType}
 
-trait Template[T] extends Registrable[Template[_]] with ( (Map[String,T], Context) => T ) {
+trait Template[T] extends Registrable[Template[_]] with Describable with ( (Map[String,T], Context) => T ) {
   def contentType : ContentType
   def registry = Template
   def asT : this.type = this
 }
 
 object Template extends Registry[Template[_]] {
-  def registryName = "Templates"
-  def registrantsName = "template"
+  val registryName = "Templates"
+  val registrantsName = "template"
 
   type TwirlHtmlTemplateFunction = { def apply(args: Map[String,Html])(implicit ctxt: Context):Html }
   type TwirlTxtTemplateFunction  = { def apply(args: Map[String,Txt])(implicit ctxt: Context):Txt }
