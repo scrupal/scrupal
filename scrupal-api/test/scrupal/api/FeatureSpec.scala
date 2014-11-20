@@ -18,7 +18,6 @@
 package scrupal.api
 
 import org.specs2.mutable.Specification
-import scrupal.api.Feature
 import scrupal.test.FakeContext
 
 

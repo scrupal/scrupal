@@ -20,7 +20,6 @@ package scrupal.api
 import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.bson.Macros
-import scrupal.api.{BSONHandlers, Describable, Nameable, Modifiable}
 import scrupal.db._
 import scrupal.test.ScrupalSpecification
 

@@ -30,12 +30,13 @@ trait TwirlSettings {
     sourceDirectories in (Compile, TwirlKeys.compileTemplates) := (unmanagedSourceDirectories in Compile).value
   )
 
-  lazy val api_imports = Seq ( TwirlKeys.templateImports += "scrupal.api.views.%format%._" )
-  lazy val core_imports = api_imports ++ Seq( TwirlKeys.templateImports += "scrupal.core.views.%format%._"  )
+  lazy val api_imports =                  Seq( TwirlKeys.templateImports += "scrupal.api.views.%format%._" )
+  lazy val core_imports = api_imports ++  Seq( TwirlKeys.templateImports += "scrupal.core.views.%format%._"  )
   lazy val http_imports = core_imports ++ Seq( TwirlKeys.templateImports += "scrupal.http.views.%format%._" )
   lazy val web_imports  = http_imports ++ Seq( TwirlKeys.templateImports += "scrupal.web.views.%format%._" )
-  lazy val top_imports = web_imports ++ Seq( TwirlKeys.templateImports += "scrupal.views.%format%._" )
+  lazy val top_imports = web_imports ++   Seq( TwirlKeys.templateImports += "scrupal.views.%format%._" )
 
+  lazy val twirlSettings_api  = twirlSettings ++ api_imports
   lazy val twirlSettings_core = twirlSettings ++ core_imports
   lazy val twirlSettings_http = twirlSettings ++ http_imports
   lazy val twirlSettings_web = twirlSettings ++ web_imports

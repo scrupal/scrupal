@@ -17,7 +17,6 @@
 
 package scrupal.api
 
-import scrupal.core.CoreSchema
 import scrupal.test.ScrupalSpecification
 import scrupal.utils.HasherKinds
 

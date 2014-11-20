@@ -20,7 +20,6 @@ package scrupal.api
 import org.specs2.mutable.Specification
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson._
-import scrupal.core._
 import scrupal.test.FakeModule
 
 /** Test specifications for the abstract Type system portion of the API.  */
@@ -204,7 +203,7 @@ class TypeSpec extends Specification {
   object trait1 extends BundleType('trait1, "Trait example 1",
     fields = Map (
       "even" -> MiddlePeriod,
-      "email" -> EmailAddress_t,
+      "email" -> mapTy,
       "range" -> rangeTy,
       "real" -> realTy,
       "enum" -> enumTy

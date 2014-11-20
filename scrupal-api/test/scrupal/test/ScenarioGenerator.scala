@@ -17,9 +17,8 @@
 
 package scrupal.test
 
+import scrupal.api.HtmlHelpers._
 import scrupal.api._
-import scrupal.core._
-import HtmlHelpers._
 
 /**
  * Created by reidspencer on 11/10/14.
@@ -32,9 +31,11 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
     StringType(Symbol(name),name,".*".r, 128)
   }
 
+  val AnyString = StringType('AnyStr, "Any Str", ".*".r, 1024)
+
   def genEntity(id: Int) : Entity = {
     val fields = for (i ← 1 to flds ) yield {
-      s"Field-$i" → AnyString_t
+      s"Field-$i" → AnyString
     }
     val ty_name = s"FieldsForEntity-$id"
     val ty = BundleType(Symbol(ty_name),ty_name,fields.toMap)

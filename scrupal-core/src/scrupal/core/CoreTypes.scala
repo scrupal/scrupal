@@ -17,15 +17,9 @@
 
 package scrupal.core
 
-import java.util.Date
-
-import reactivemongo.bson._
 import scrupal.api._
 import scrupal.utils.Patterns._
-import spray.http.{MediaTypes, MediaType}
 
-import scala.concurrent.duration.Duration
-import scala.util.matching.Regex
 import scala.language.existentials
 
 object AnyType_t extends AnyType('Any, "A type that accepts any value")

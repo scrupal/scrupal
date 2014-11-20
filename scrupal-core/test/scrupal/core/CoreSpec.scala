@@ -36,9 +36,9 @@ class CoreSpec extends ScrupalSpecification("CoreSpec") {
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in {
-        withEmptyDB(CoreModule.dbName) { db =>
-          withSchema { schema : CoreSchema =>
-            val foo = new TestModule(CoreModule.dbName)
+        withEmptyDB("CoreSpec") { db =>
+          withSchema { schema : Schema =>
+            val foo = new TestModule("CoreSpec")
 
             foo.id must beEqualTo('foo)
 
