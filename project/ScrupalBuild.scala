@@ -44,9 +44,12 @@ object ScrupalBuild extends Build
 
   lazy val api = Project(base_name + "-api", file("./scrupal-api"))
     .enablePlugins(SbtTwirl)
+    .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(twirlSettings_api:_*)
+    .settings(sbt_web_settings:_*)
+    .settings(api_pipeline_settings:_*)
     .settings(libraryDependencies ++= api_dependencies)
     .dependsOn(utils_deps, db_deps)
   lazy val api_deps = api % "compile->compile;test->test"

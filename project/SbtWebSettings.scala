@@ -37,6 +37,11 @@ trait SbtWebSettings {
     DigestKeys.algorithms := Seq("md5")
   )
 
+  lazy val api_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
+    pipelineStages := Seq(digest, gzip)
+  )
+
+
   lazy val core_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
     pipelineStages := Seq(digest, gzip)
   )
