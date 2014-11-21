@@ -17,15 +17,17 @@
 
 package scrupal.api
 
+import java.io.File
+
 import scrupal.test.{FakeContext, ScrupalSpecification}
 import spray.http.MediaTypes
 
 class TestAssetLocator extends AssetLocator {
-  def asset_dirs = Seq("test/resources")
+  def assets_path = Seq("test/resources")
 }
 
 class AssetLocatorSpec extends ScrupalSpecification("AssetLocatorSpec") {
-
+sequential
   case class Assets(name: String) extends FakeContext[Assets](name) {
 
     val locator = new TestAssetLocator
@@ -70,5 +72,74 @@ class AssetLocatorSpec extends ScrupalSpecification("AssetLocatorSpec") {
     }
   }
 
+  "isFile" should {
+    val locator = new TestAssetLocator
+    "return false for null" in {
+      locator.isFile(null) must beFalse
+    }
+    "return true for a file" in {
+      val isFile = locator.resourceOf("fake.js") map { url ⇒ locator.isFile(url) }
+      isFile.isDefined must beTrue
+      isFile.get must beTrue
+    }
+    "return false for a class known to be in a jar" in {
+      val isFile = locator.resourceOf("java/lang/Integer.class") map { url ⇒ locator.isFile(url) }
+      isFile.isDefined must beTrue
+      isFile.get must beFalse
+    }
+  }
+  "isJar" should {
+    val locator = new TestAssetLocator
+    "return false for null" in {
+      locator.isJar(null) must beFalse
+    }
+    "return false for a file" in {
+      val isJar = locator.resourceOf("fake.js") map { url ⇒ locator.isJar(url) }
+      isJar.isDefined must beTrue
+      isJar.get must beFalse
+    }
+    "return true for a class known to be in a jar" in {
+      val isJar = locator.resourceOf("java/lang/Integer.class") map { url ⇒ locator.isJar(url) }
+      isJar.isDefined must beTrue
+      isJar.get must beTrue
+    }
+  }
 
+  "everythingUnder" should {
+    val locator = new TestAssetLocator
+    "give us a list of the files under resources"
+  }
+
+  "isNonRecursiveDirectory" should {
+    val locator = new TestAssetLocator
+    "return false for null" in {
+      locator.isNonRecursiveDirectory(null.asInstanceOf[File]) must beFalse
+    }
+    "return false for ." in {
+      val isNRD = locator.resourceOf(".") map { url ⇒ locator.isNonRecursiveDirectory(url) }
+      isNRD.isDefined must beTrue
+    }
+    "return false for .." in {
+      val isNRD = locator.resourceOf("..") map { url ⇒ locator.isNonRecursiveDirectory(url) }
+      isNRD.isDefined must beFalse
+    }
+    "return false for root/up (symlink back to root)" in {
+      val isNRD = locator.resourceOf("root/up") map { url ⇒ locator.isNonRecursiveDirectory(url) }
+      isNRD.isDefined must beFalse
+    }
+    "return false for root/up/flat (symlink back to root)" in {
+      val isNRD = locator.resourceOf("root/up/flat") map { url ⇒ locator.isNonRecursiveDirectory(url) }
+      isNRD.isDefined must beFalse
+    }
+    "return false for a file in a directory" in {
+      val isNRD = locator.resourceOf("root/foo.txt") map { url ⇒ locator.isNonRecursiveDirectory(url) }
+      isNRD.isDefined must beFalse
+    }
+    "return true for 'root/.'" in {
+      val url = locator.resourceOf("root/.")
+      url.isDefined must beTrue
+      val isNRD = locator.isNonRecursiveDirectory(url.get)
+      isNRD.isDefined must beTrue
+    }
+  }
 }

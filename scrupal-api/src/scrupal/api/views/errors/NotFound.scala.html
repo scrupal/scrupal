@@ -4,6 +4,7 @@
 @import scrupal.api.views.html.pages
 
 @pages.markedPage("Not Found - " + what) {
+} {
 # There's A Hole In The Fabric Of The InterWebz!
 **Oops!** We couldn't find @what. That might be because:
 @for(c <- causes) {+ @c
@@ -18,4 +19,5 @@ We suggest you try one of these options:
 }
 + Type in another URL, or
 + try to get lucky with [this suggestion](@context.suggestURL).
+} {
 }

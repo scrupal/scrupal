@@ -1,7 +1,28 @@
-@(title: String)(content: Html)(implicit context : scrupal.api.Context)
+@(title: String)(prefix: Html=Html(""))(content: Html)(suffix:Html = Html(""))(implicit context : scrupal.api.Context)
 @import scrupal.api.views.html.pages
-@pages.plainPage(title) {
-<div data-marked="marked">
+@import scrupal.api.PathOf
+@pages.basicPage(title) {
+<script src=@{PathOf.lib("marked","marked.js")}></script>
+<script>
+var marked = require('marked');
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  gfm: true,
+  tables: true,
+  breaks: false,
+  pedantic: false,
+  sanitize: true,
+  smartLists: true,
+  smartypants: false
+});
+</script>
+} {
+<div id="marked" data-marked="marked">
 @content
 </div>
+} {
+<script>
+  var elem = document.getElementById('content');
+  elem.innerHTML = marked(elem.innerText);
+</script>
 }

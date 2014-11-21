@@ -18,16 +18,28 @@
 package scrupal.api
 
 import java.io.File
-import java.net.URL
+import java.net.{URLClassLoader, URL}
 
 import spray.http.{MediaType, MediaTypes}
+
+import scala.reflect.internal.util.ScalaClassLoader
 
 trait AssetLocator {
 
   final val extension_delimiter : Char = '.'
   final val path_delimiter : String = "/"
   final val minified_extension : String = "min"
-  def asset_dirs : Seq[String]
+
+  def assets_path : Seq[String]
+
+  lazy val cl = {
+    val cwd = new File(".")
+    val uris = for (
+      path ← assets_path ;
+      dir = new File(cwd,path) if dir.isDirectory
+    ) yield { dir.toURI.toURL }
+    ScalaClassLoader(new URLClassLoader(uris.toArray[URL], this.getClass.getClassLoader))
+  }
 
   /** Find A Resource In The Classpath
     *
@@ -38,18 +50,17 @@ trait AssetLocator {
     * @return None if it wasn't found, Some(URL) if it was
     */
   def resourceOf(name: String) : Option[URL] = {
-    val cl = this.getClass.getClassLoader
     val path = if (name.startsWith(path_delimiter)) name.drop(1) else name
-    Option(cl.getResource(path)) match {
+    Option(cl.getResource(path)) /*match {
       case Some(url) => Some(url)
       case None =>
-        for (p <- asset_dirs) {
+        for (p <- dev_mode_asset_dirs) {
           val f = new File(p, name)
           if (f.isFile && f.canRead)
             return Some(new URL("file","localhost",f.getCanonicalPath))
         }
         None
-    }
+    }*/
   }
 
   def extensionOf(path: String) : String = {
@@ -92,5 +103,88 @@ trait AssetLocator {
     val mediaType = MediaTypes.forExtension(extensionOf(path)).getOrElse(MediaTypes.`application/octet-stream`)
     fetch(path, mediaType)
   }
+
+  def everythingUnder(rootDir: String) : Seq[(String,Boolean)] = {
+     cl.getResource(rootDir) match {
+       case url: URL if isFile(url) ⇒
+         val file = new File(url.toURI)
+         for ( item <- file.listFiles() ) yield {
+           item.getName → item.isDirectory
+         }
+       case url: URL if isJar(url) ⇒
+         Seq.empty[(String,Boolean)]
+     }
+  }
+
+  def isNonRecursiveDirectory(file: File) : Boolean = {
+    if (file != null && file.isDirectory) {
+      val file_path = file.getCanonicalPath
+      if (file_path != null) {
+        val child = new File(file, "child")
+        val child_path = child.getCanonicalPath
+        if (child_path != null) {
+          return child_path.startsWith(file_path) && (child_path.length > file_path.length)
+        }
+      }
+    }
+    false
+  }
+
+  def isNonRecursiveDirectory(url: URL) : Boolean = {
+    if (isFile(url)) {
+      val file = new File(url.toURI)
+      return isNonRecursiveDirectory(file)
+    }
+    false
+  }
+
+  def isFile(url: URL) = { url != null && url.getProtocol == "file" }
+  def isJar(url: URL) =  { url != null && url.getProtocol == "jar" }
+
+  /**
+   * List directory contents for a resource folder. Not recursive.
+   * This is basically a brute-force implementation.
+   * Works for regular files and also JARs.
+   *
+  String[] getResourceListing(Class clazz, String path)  {
+    URL dirURL = clazz.getClassLoader().getResource(path);
+    if (dirURL != null && dirURL.getProtocol().equals("file")) {
+      /* A file path: easy enough */
+      return new File(dirURL.toURI()).list();
+    }
+
+    if (dirURL == null) {
+      /*
+       * In case of a jar file, we can't actually find a directory.
+       * Have to assume the same jar as clazz.
+       */
+      String me = clazz.getName().replace(".", "/")+".class";
+      dirURL = clazz.getClassLoader().getResource(me);
+    }
+
+    if (dirURL.getProtocol().equals("jar")) {
+      /* A JAR path */
+      String jarPath = dirURL.getPath().substring(5, dirURL.getPath().indexOf("!")); //strip out only the JAR file
+      JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+      Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+      Set<String> result = new HashSet<String>(); //avoid duplicates in case it is a subdirectory
+      while(entries.hasMoreElements()) {
+        String name = entries.nextElement().getName();
+        if (name.startsWith(path)) { //filter according to the path
+          String entry = name.substring(path.length());
+          int checkSubdir = entry.indexOf("/");
+          if (checkSubdir >= 0) {
+            // if it is a subdirectory, we just return the directory name
+            entry = entry.substring(0, checkSubdir);
+          }
+          result.add(entry);
+        }
+      }
+      return result.toArray(new String[result.size()]);
+    }
+
+    throw new UnsupportedOperationException("Cannot list files for URL "+dirURL);
+  }
+   */
 
 }

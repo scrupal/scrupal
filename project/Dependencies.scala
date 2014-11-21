@@ -153,7 +153,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(
-    spray_http, spray_routing
+    spray_http, spray_routing, marked, fontawesome
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(

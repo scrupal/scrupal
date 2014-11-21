@@ -1,6 +1,7 @@
 @(what: String, why: String)(implicit context : scrupal.api.Context)
 @import scrupal.api.views.html.pages
 @pages.markedPage("Not Found - " + what) {
+} {
 # Nuh Uh! I Can't Do That!
 **Drat!** Because @why, you can't @what. That's just the way it is.
 
@@ -9,4 +10,5 @@ I suggest you try one of these options:
 + Type in another URL, or
 + try to get lucky with [this suggestion](@context.suggestURL).
 
+} {
 }

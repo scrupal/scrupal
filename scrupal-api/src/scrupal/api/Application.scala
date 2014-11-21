@@ -33,13 +33,13 @@ trait Application
   extends VariantStorableRegistrable[Application]
           with Nameable with Describable with Modifiable with Pathable with Enablement[Application] with Enablee {
   def registry: Registry[Application] = Application
-  def asT : Application = this
+  def asT  : Application = this
 
   /** Application Context Path
     * This is the path at the start of the Site's URL that this application uses.
     * @return
     */
-  def path: String = id.name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
+  lazy val path : String = id.name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
 
   /** Applicable Modules
     * This modules are assigned (enabled) within this application
@@ -48,8 +48,7 @@ trait Application
 
   def entities = forEach[Entity,Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e,this) } { e ⇒ e }
 
-
-    def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
+  def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
   type EntityMap = Map[String,(String,Entity)]
 

@@ -33,8 +33,8 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
   with AssetLocator with SiteDirectives with ScrupalMarshallers {
 
 
-  val asset_dirs: List[String] = scrupal.withConfiguration[List[String]] { config =>
-    config.getStringList("scrupal.asset_paths") match {
+  val assets_path: List[String] = scrupal.withConfiguration[List[String]] { config =>
+    config.getStringList("scrupal.assets_path") match {
       case Some(x) => x.asScala.toList
       case None => List.empty[String]
     }
