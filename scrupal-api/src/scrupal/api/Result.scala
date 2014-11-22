@@ -21,8 +21,53 @@ import java.io.InputStream
 
 import play.api.libs.iteratee.Enumerator
 import play.twirl.api.{Html, Txt}
-import reactivemongo.bson.{BSONArray, BSONDocument, BSONString}
+import reactivemongo.api.BSONSerializationPack
+import reactivemongo.bson.lowlevel.LowLevelBsonDocWriter
+import reactivemongo.bson.{BSONNull, BSONArray, BSONDocument, BSONString}
 import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
+
+import scala.util.{Failure, Success}
+
+trait Resolvable extends ( () ⇒ EnumeratorResult)
+
+/** Encapsulation of an Action's Result
+  *
+  * Results are generated from an action processing a request. They encapsulate a payload and a disposition. The
+  * disposition provides a quick summary of the result while the payload provides access to the actual resulting
+  * information.
+  * @tparam P The type of the resulting payload
+  */
+trait Result[P] extends Resolvable {
+  /** Disposition of a Result
+    *
+    * This provides a basic summary of the result using the Disposition enumeration. There are several ways to be
+    * successful in responding to a request and several ways to fail. Each of these basic ways of responding are
+    * encoded into the disposition as a simple enumeration value. This allows the receiver of the Result[P] to
+    * quickly asses what should be done with the result.
+    * @return The Disposition of the result
+    */
+  def disposition : Disposition
+
+  /** Payload Content of The Result.
+    *
+    * This is the actual result. It can be any Scala type but should correspond to the ContentType
+    * @return
+    */
+  def payload: P
+
+  /** Type Of Media Returned.
+    *
+    * This is a ContentType value from Spray. It indicates what kind of media and character encoding is being
+    * returned by the payload.
+    * @return A ContentType corresponding to the content type of `payload`
+    */
+  def contentType : ContentType
+}
+
+trait ContainedResult[P] extends Result[P] {
+  def body : Array[Byte]
+  def apply() : EnumeratorResult = EnumeratorResult(Enumerator(body), contentType, disposition)
+}
 
 /** Result with a data Enumerator.
   *
@@ -32,11 +77,13 @@ import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
   * @param contentType The ContentType of the `payload`
   * @param disposition The disposition of the result
   */
-case class EnumeratorResult(
+case class EnumeratorResult (
   payload: Enumerator[Array[Byte]],
   contentType: ContentType,
   disposition: Disposition = Successful
-) extends Result[Enumerator[Array[Byte]]]
+) extends Result[Enumerator[Array[Byte]]] {
+  def apply() : EnumeratorResult = this
+}
 
 /** Result with an InputStream.
   *
@@ -47,11 +94,19 @@ case class EnumeratorResult(
   * @param contentType The ContentType of the InputStream
   * @param disposition The disposition of the result.
   */
-case class StreamResult(
+case class StreamResult (
   payload: InputStream,
   contentType: ContentType,
   disposition: Disposition = Successful
-) extends Result[InputStream]
+) extends Result[InputStream] {
+  def apply() : EnumeratorResult = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val enum = Enumerator.fromStream(payload, 64 * 1024) // ISSUE: What's the right size for the chunks?
+    EnumeratorResult(enum, contentType, disposition)
+  }
+}
+
+
 
 /** Result with an Array of Bytes.
   *
@@ -61,11 +116,13 @@ case class StreamResult(
   * @param contentType The ContentType of the data
   * @param disposition The disposition of the result.
   */
-case class OctetsResult(
+case class OctetsResult (
   payload: Array[Byte],
   contentType: ContentType,
   disposition: Disposition = Successful
-) extends Result[Array[Byte]]
+) extends ContainedResult[Array[Byte]] {
+  def body = payload
+}
 
 /** Result with a simple text string.
   *
@@ -76,11 +133,12 @@ case class OctetsResult(
   * @param payload The data of the result
   * @param disposition The disposition of the result.
   */
-case class StringResult(
+case class StringResult (
   payload: String,
   disposition: Disposition = Successful
-) extends Result[String] {
+) extends ContainedResult[String] {
   val contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
+  def body = payload.getBytes(utf8)
 }
 
 /** Result with a Twirl TxtFormat paylaod.
@@ -90,11 +148,12 @@ case class StringResult(
   * @param payload The data of the result
   * @param disposition The disposition of the result.
   */
-case class TxtResult(
+case class TxtResult (
   payload: Txt,
   disposition: Disposition = Successful
-) extends Result[Txt] {
+) extends ContainedResult[Txt] {
   val contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
+  def body = payload.body.getBytes(utf8)
 }
 
 /** Result with an HTMLFormat payload.
@@ -107,8 +166,9 @@ case class TxtResult(
 case class HtmlResult(
   payload: Html,
   disposition: Disposition = Successful
-) extends Result[Html] {
+) extends ContainedResult[Html] {
   val contentType: ContentType = MediaTypes.`text/html`
+  def body = payload.body.getBytes(utf8)
 }
 
 /** Result with a BSONDocument payload.
@@ -124,6 +184,11 @@ case class BSONResult(
   disposition: Disposition = Successful
 ) extends Result[BSONDocument] {
   val contentType : ContentType = ScrupalMediaTypes.bson
+  def apply() : EnumeratorResult = {
+    val buffer = new reactivemongo.bson.buffer.ArrayBSONBuffer
+    BSONSerializationPack.writeToBuffer(buffer,payload)
+    EnumeratorResult(Enumerator(buffer.array), contentType, disposition)
+  }
 }
 
 /** Result with an Throwable payload.
@@ -135,7 +200,7 @@ case class BSONResult(
  */
 case class ExceptionResult(
   payload: Throwable
-) extends Result[Throwable] {
+) extends ContainedResult[Throwable] {
   val disposition: Disposition = Exception
   val contentType = ContentTypes.`text/plain(UTF-8)`
 
@@ -161,6 +226,8 @@ case class ExceptionResult(
   def toStringResult : StringResult = {
     StringResult(scrupal.api.views.txt.errors.ExceptionResult(this).body, disposition)
   }
+
+  def body = scrupal.api.views.txt.errors.ExceptionResult(this).body.getBytes(utf8)
 }
 
 /** Result with a simple error payload.
@@ -174,11 +241,12 @@ case class ExceptionResult(
 case class ErrorResult(
   payload: String,
   disposition : Disposition = Unspecified
-) extends Result[String] {
+) extends ContainedResult[String] {
   val contentType = ContentTypes.`text/plain(UTF-8)`
 
   def formatted = s"Error: ${disposition.id.name}: ${payload}"
 
+  def body = formatted.getBytes(utf8)
 }
 
 // TODO: Support more Result types: JSON

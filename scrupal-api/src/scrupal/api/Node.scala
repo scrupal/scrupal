@@ -21,12 +21,13 @@ import java.io.{FileInputStream, File}
 import java.net.URL
 
 import org.joda.time.DateTime
+import play.api.libs.iteratee.Enumerator
 import play.twirl.api.{Html, Txt}
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.api.BSONHandlers._
-import scrupal.db.{DBContext, VariantDataAccessObject, VariantStorable}
+import scrupal.db.{DBRef, DBContext, VariantDataAccessObject, VariantStorable}
 import spray.http.{MediaType, MediaTypes}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,6 +41,12 @@ import scala.xml.{Elem, NodeSeq}
   */
 trait Generator extends ((Context) => Future[Result[_]])
 
+case class NodeRef(kind: String, ref: DBRef)
+
+object NodeRef {
+  lazy val nodeRefHandler : BSONHandler[BSONDocument, NodeRef] = Macros.handler[NodeRef]
+}
+
 /** Content Generating Node
   *
   * This is the fundamental type of a node. It has some housekeeping information and can generate
@@ -48,11 +55,14 @@ trait Generator extends ((Context) => Future[Result[_]])
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-abstract class Node extends VariantStorable[BSONObjectID]
-                            with Describable with Modifiable with Enablable with Generator with Bootstrappable
+trait Node extends VariantStorable[BSONObjectID]
+           with Describable with Modifiable with Enablable with Generator with Bootstrappable
 {
   val _id = BSONObjectID.generate
   def mediaType : MediaType
+  def reference(collection: String, db: Option[String] = None) : NodeRef = {
+    NodeRef(kind.name, DBRef(collection, _id, db))
+  }
 }
 
 
@@ -66,6 +76,21 @@ object HtmlHelpers {
 
   implicit class StringToHtml(str: String) { def toHtml: Html = { Html(str) }}
 
+}
+
+trait CompoundNode extends Node {
+  def subordinates : Map[String, NodeRef]
+  def resolve(ctxt: Context, tagged_data: Map[String, (Node,EnumeratorResult)]) : EnumeratorResult
+  def apply(ctxt: Context) : Future[Result[_]] = {
+    ctxt.withExecutionContext { implicit ec: ExecutionContext ⇒
+      val futures_nested = for ((name: String, node: Node) ← subordinates) yield {
+        name → node(ctxt).map { r ⇒ node → r()}
+      }
+      val futures_lifted = futures_nested.map { case (key, value) ⇒ value.map { er ⇒ key → er}}
+      val futures_mapped = (Future sequence futures_lifted).map { pairs ⇒ pairs.toMap}
+      futures_mapped.map { x ⇒ resolve(ctxt, x) }
+    }
+  }
 }
 
 import scrupal.api.HtmlHelpers._
@@ -122,7 +147,7 @@ case class HtmlNode (
 
 
 object HtmlNode {
-  implicit val HtmlNodeHandler = Macros.handler[HtmlNode]
+  implicit val HtmlNodeHandler : BSONHandler[BSONDocument, HtmlNode] = Macros.handler[HtmlNode]
 }
 
 case class TxtNode (
@@ -142,7 +167,7 @@ case class TxtNode (
 }
 
 object TxtNode {
-  implicit val TxtNodeHandler = Macros.handler[TxtNode]
+  implicit val TxtNodeHandler : BSONHandler[BSONDocument, TxtNode] = Macros.handler[TxtNode]
 }
 
 /** Asset Node
@@ -181,7 +206,7 @@ case class FileNode (
 }
 
 object FileNode {
-  implicit val FileNodeHandler = Macros.handler[FileNode]
+  implicit val FileNodeHandler : BSONHandler[BSONDocument, FileNode] = Macros.handler[FileNode]
 }
 
 /** Link Node
@@ -212,7 +237,7 @@ object LinkNode {
   * and substituted wherever the tag's name appears in the layout. The layout used by this node is also a reference
   * to a memory object. Scrupal defines a core set of layouts but other modules can define more.
   * @param description
-  * @param tags
+  * @param subordinates
   * @param layoutId
   * @param mediaType
   * @param enabled
@@ -221,35 +246,18 @@ object LinkNode {
   */
 case class LayoutNode (
   description: String,
-  tags: Map[String, BSONObjectID],
+  subordinates: Map[String, NodeRef],
   layoutId: Identifier,
   override val mediaType: MediaType,
   var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-) extends Node {
+) extends CompoundNode {
   final val kind : Symbol = 'Layout
-  def apply(ctxt: Context): Future[Result[_]] = {
-    ctxt.withSchema { case (dbc: DBContext, schema: Schema) =>
-      ctxt.withExecutionContext { implicit ec: ExecutionContext ⇒
-        val layout = Layout(layoutId).getOrElse(Layout.default)
-        val pairsF = for ((tag, id) <- tags) yield {
-          schema.nodes.fetch(id) map {
-            case Some(node) => tag -> (node(ctxt) map { r ⇒ node → r})
-            case None => tag -> {
-              val node = MessageNode("Missing Node", "alert-warning", s"Could not find node '$tag".toHtml)
-              node(ctxt) map { r ⇒ node → r}
-            }
-          }
-        }
-        (Future sequence pairsF) flatMap { x =>
-          val x2 = Future.sequence {x.map { entry ⇒ entry._2.map(i ⇒ entry._1 → i)}}
-          x2
-        } map { args ⇒
-          layout(args.toMap, ctxt)
-        }
-      }
-    }
+  def resolve(ctxt: Context, tags: Map[String,(Node,EnumeratorResult)]) : EnumeratorResult = {
+    val layout = Layout(layoutId).getOrElse(Layout.default)
+    val master_chunk: Array[Byte] = layout(tags, ctxt)
+    EnumeratorResult(Enumerator(master_chunk), mediaType, Successful)
   }
 }
 

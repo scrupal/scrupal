@@ -168,6 +168,17 @@ object BSONHandlers {
       MapOfNamedDocumentsHandler.read(doc).map { case (k,v) ⇒ k -> v.asInstanceOf[BSONObjectID] }
   }
 
+
+  implicit val MapOfNamedNodeRef = new BSONHandler[BSONDocument,Map[String,NodeRef]]{
+    override def write(elements: Map[String,NodeRef]): BSONDocument = {
+      BSONDocument( elements.map { case (key,nodeRef) ⇒ key → NodeRef.nodeRefHandler.write(nodeRef) }  )
+    }
+    override def read(doc: BSONDocument): Map[String,NodeRef] = {
+      val elems = doc.elements.map { case (key,d) ⇒ key → NodeRef.nodeRefHandler.read(d.asInstanceOf[BSONDocument]) }
+      elems.toMap
+    }
+  }
+
   implicit val EnablementHandler = new BSONHandler[BSONDocument,Enablement[_]] {
     override def write(e: Enablement[_]): BSONDocument =
       Reference.ReferenceHandler.write(new Reference[Identifiable](e.id,e.registryName))

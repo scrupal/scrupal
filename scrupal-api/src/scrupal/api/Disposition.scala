@@ -34,10 +34,6 @@ case class Disposition(
 ) extends Registrable[Disposition] {
   def registry = Disposition
   def asT = this
-  def apply[T]( result: T, ct: ContentType) : Result[T] = {
-    val disp = this
-    new Result[T] { val disposition = disp; val payload = result; val contentType = ct }
-  }
   def isSuccessful : Boolean = code > 0
   def isFailure : Boolean = code < 0
 }

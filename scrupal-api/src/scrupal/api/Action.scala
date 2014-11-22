@@ -18,39 +18,6 @@ package scrupal.api
 
 import spray.http.ContentType
 
-/** Encapsulation of an Action's Result
-  *
-  * Results are generated from an action processing a request. They encapsulate a payload and a disposition. The
-  * disposition provides a quick summary of the result while the payload provides access to the actual resulting
-  * information.
-  * @tparam P The type of the resulting payload
-  */
-trait Result[P] {
-  /** Disposition of a Result
-    *
-    * This provides a basic summary of the result using the Disposition enumeration. There are several ways to be
-    * successful in responding to a request and several ways to fail. Each of these basic ways of responding are
-    * encoded into the disposition as a simple enumeration value. This allows the receiver of the Result[P] to
-    * quickly asses what should be done with the result.
-    * @return The Disposition of the result
-    */
-  def disposition : Disposition
-
-  /** Payload Content of The Result.
-    *
-    * This is the actual result. It can be any Scala type but should correspond to the ContentType
-    * @return
-    */
-  def payload: P
-
-  /** Type Of Media Returned.
-    *
-    * This is a ContentType value from Spray. It indicates what kind of media and character encoding is being
-    * returned by the payload.
-    * @return A ContentType corresponding to the content type of `payload`
-    */
-  def contentType : ContentType
-}
 
 /** An Invokable Action
   *

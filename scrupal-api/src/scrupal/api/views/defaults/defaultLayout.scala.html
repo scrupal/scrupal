@@ -11,14 +11,7 @@
     <h1>@{n.kind.name} - @{n.description}</h1>
     <p>Result Disposition: @r.disposition.id.name - @r.disposition.msg</p>
     <div>
-    @{r match {
-      case h: HtmlResult ⇒ h.payload.body
-      case s: StringResult ⇒ s.payload
-      case t: TxtResult ⇒ t.payload.body
-      case x: ExceptionResult ⇒ x.toHtmlResult.payload.body
-      case e: ErrorResult ⇒ e.formatted
-      case _ => <span>Media Type: {n.mediaType}</span>
-    }}
+      @@@@@{key}@@@@
     </div>
   }
 }

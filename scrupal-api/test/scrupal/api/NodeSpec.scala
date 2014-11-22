@@ -53,7 +53,8 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
     val file = FileNode("Description",
                         new File("scrupal-api/test/resources/fakeAsset.txt"), MediaTypes.`text/plain`)
     val link = LinkNode("Description", new URL("http://scrupal.org/"))
-    val tags = Map[String,BSONObjectID]("one" -> BSONObjectID.generate, "two" -> BSONObjectID.generate)
+    val tags = Map[String,NodeRef]("one" -> message.reference("nodes"), "two" -> html.reference("nodes"))
+
     val layout = LayoutNode("Description", tags, 'no_such_layout, MediaTypes.`text/html`)
 
   }

@@ -40,14 +40,4 @@ class DispositionSpec extends Specification {
       Indeterminate.isFailure must beFalse
     }
   }
-
-  "Disposition" should {
-    "convert to Result easily" in {
-      val result = Unspecified(42,ContentTypes.NoContentType)
-      result.disposition must beEqualTo(Unspecified)
-      result.payload.isInstanceOf[Int] must beTrue
-      result.payload must beEqualTo(42)
-      result.contentType must beEqualTo(ContentTypes.NoContentType)
-    }
-  }
 }

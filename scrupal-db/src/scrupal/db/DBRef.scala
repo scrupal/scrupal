@@ -15,62 +15,37 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.db
 
-import play.twirl.api._
-import scrupal.utils.{Registry, Registrable}
-import spray.http.{MediaTypes, MediaType}
+import reactivemongo.bson._
 
-/** Arranger Function.
+/** Database Reference
   *
-  * An arranger is a function that does the essential layout arrangement for a Layout. It takes in a Context and a
-  * tag mapping and produces an `Array[Byte]` result. The Layout trait extends this function so that its apply method
-  * can be used to perform the arranging.
-  *
+  * A little thing that Stephane Godbillion wrote about on the reactivemongo google group. It allows us to
+  * store references to other documents in a database system, even across databases. For some reason this didn't
+  * seem to make it into reactivemongo itself.
   */
-trait Arranger extends ( (Map[String,(Node,Result[_])], Context) => Array[Byte] )
+case class DBRef (
+  collection: String,
+  id: BSONObjectID,
+  db: Option[String] = None
+)
 
-/** Abstract Layout
-  *
-  * A layout is a memory only function object. It
-  */
-trait Layout[P] extends Registrable[Layout[_]] with Describable with Arranger {
-  def mediaType : MediaType
-  def registry = Layout
-  def asT : this.type = this
-}
+object DBRef {
 
-case class TwirlHtmlLayout(
-  id : Symbol,
-  description : String = "",
-  template: Layout.TwirlHtmlLayoutFunction
-) extends Layout[Html] {
-  val mediaType = MediaTypes.`text/html`
-  def apply(args: Map[String,(Node,Result[_])], context: Context) : Array[Byte] = {
-    template(args)(context).body.getBytes(utf8)
+  implicit object DBRefReader extends BSONDocumentReader[DBRef] {
+    def read(bson: BSONDocument) =
+      DBRef(
+        bson.getAs[String]("$ref").get,
+        bson.getAs[BSONObjectID]("$id").get,
+        bson.getAs[String]("$db"))
+  }
+
+  implicit object DBRefWriter extends BSONDocumentWriter[DBRef] {
+    def write(ref: DBRef) =
+      BSONDocument(
+        "$ref" -> ref.collection,
+        "$id" -> ref.id,
+        "$db" -> ref.db)
   }
 }
-
-case class TwirlTxtLayout(
-  id : Symbol,
-  description : String = "",
-  template: Layout.TwirlTxtLayoutFunction
-) extends Layout[String] {
-  val mediaType = MediaTypes.`text/plain`
-  def apply(args: Map[String,(Node,Result[_])], context: Context) : Array[Byte] = {
-    template(args)(context).body.getBytes(utf8)
-  }
-}
-
-object Layout extends Registry[Layout[_]] {
-  def registryName = "Layouts"
-  def registrantsName = "layout"
-
-
-  type TwirlHtmlLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Html }
-  type TwirlTxtLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Txt }
-
-  lazy val default = TwirlHtmlLayout('default, "Default Layout", scrupal.api.views.html.defaults.defaultLayout)
-}
-
-
