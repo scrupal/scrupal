@@ -20,7 +20,7 @@ package scrupal.api
 import java.io.File
 import java.net.{URLClassLoader, URL}
 
-import com.typesafe.config.{ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory}
 import scrupal.utils.{OSSLicense, Configuration}
 import spray.http.{MediaType, MediaTypes}
 
@@ -32,6 +32,13 @@ trait AssetLocator {
   final val extension_delimiter : Char = '.'
   final val path_delimiter : String = "/"
   final val minified_extension : String = "min"
+
+  def asset_path_from_config(config: Configuration) : Seq[String] = {
+    config.getStringList("scrupal.assets_path") match {
+      case Some(x) => x.asScala.toList
+      case None => Seq.empty[String]
+    }
+  }
 
   def assets_path : Seq[String]
 
@@ -115,12 +122,16 @@ trait AssetLocator {
     license : Option[OSSLicense] = None,
     title : Option[String] = None,
     description: Option[String] = None,
+    index : Option[String] = None,
     files : Map[String, Option[URL]],
-    dirs : Option[List[String]]
+    dirs : Map[String, Option[Directory]]
   )
 
-  def fetchDirectory(path: String) : Directory = {
-    val config : Configuration = Configuration(ConfigFactory.load(cl, path + "/" + directoryAssetName ))
+  def fetchDirectory(path: String, recurse: Boolean = false) : Option[Directory] = {
+    val cfg: Config = ConfigFactory.parseResourcesAnySyntax(cl, path + "/" + directoryAssetName)
+    if (cfg.isEmpty)
+      return None
+    val config : Configuration = Configuration(cfg)
     val license = config.getString("license").flatMap { l ⇒ OSSLicense.lookup(Symbol(l)) }
     val files = config.getConfig("files").fold(Map.empty[String, Option[URL]])(c ⇒
       (c.entrySet.filter { case (k, v) ⇒
@@ -128,11 +139,24 @@ trait AssetLocator {
       } map {
         case (k, v) ⇒
           val kSlashed = if (k.startsWith("/")) k else "/" + k
-          v.unwrapped.asInstanceOf[String] -> minifiedResourceOf(path + kSlashed)
+          val title = v.unwrapped.asInstanceOf[String]
+          val resource = minifiedResourceOf(path + kSlashed)
+          title -> resource
       }).toMap)
-    val dirs = config.getStringList("dirs").map { l ⇒ l.asScala.toList }
-    Directory(config.getString("author"), config.getString("copyright"), license, config.getString("title"),
-              config.getString("description"), files, dirs)
+
+    val dirs : Map[String, Option[Directory]] = recurse match {
+      case false ⇒ Map.empty[String, Option[Directory]]
+      case true ⇒
+        config.getStringList("dirs").fold(Map.empty[String, Option[Directory]]) { case list: java.util.List[String] ⇒
+          val dirs = for (d ← list.asScala) yield {
+            val dSlashed = if (d.startsWith("/")) d else "/" + d
+            d → fetchDirectory(path + dSlashed, recurse=true)
+          }
+          dirs.toMap
+        }
+    }
+    Some(Directory(config.getString("author"), config.getString("copyright"), license, config.getString("title"),
+              config.getString("description"), config.getString("index"), files, dirs))
   }
 
   def isFile(url: URL) = { url != null && url.getProtocol == "file" }
@@ -185,3 +209,8 @@ trait AssetLocator {
    */
 
 }
+
+class ConfiguredAssetsLocator(config: Configuration) extends AssetLocator {
+  def assets_path = asset_path_from_config(config)
+}
+

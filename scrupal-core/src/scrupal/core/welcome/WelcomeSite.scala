@@ -21,7 +21,7 @@ import org.joda.time.DateTime
 import play.twirl.api.Html
 import scrupal.api.{HtmlNode, Node}
 import scrupal.api.{TwirlHtmlTemplate, Site}
-import scrupal.core.echo.EchoApp
+import scrupal.core.EchoApp
 
 class WelcomeSite extends Site {
   def id: Symbol = 'WelcomeToScrupal

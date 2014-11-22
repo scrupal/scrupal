@@ -20,10 +20,10 @@ package scrupal.http.controllers
 import scrupal.api._
 import scrupal.http.ScrupalMarshallers
 import scrupal.http.directives.SiteDirectives
+import scrupal.utils.Configuration
 import spray.http.{MediaTypes, StatusCodes, Uri}
 import spray.routing._
 
-import scala.collection.JavaConverters._
 
 /** Controller that provides assets
   *
@@ -32,12 +32,8 @@ import scala.collection.JavaConverters._
 class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.MinValue /*Make Assets first*/)
   with AssetLocator with SiteDirectives with ScrupalMarshallers {
 
-
-  val assets_path: List[String] = scrupal.withConfiguration[List[String]] { config =>
-    config.getStringList("scrupal.assets_path") match {
-      case Some(x) => x.asScala.toList
-      case None => List.empty[String]
-    }
+  val assets_path: Seq[String] = {
+    scrupal.withConfiguration[Seq[String]] { config => super.asset_path_from_config(config)}
   }
 
   def routes(implicit scrupal: Scrupal): Route = {
@@ -47,25 +43,25 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
           path("favicon") {
             favicon(/*theSite*/)
           } ~
-          path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
-            lib(library, rest_of_path)
-          } ~
-          path("themes" / Segment / RestPath) { case (provider, rest_of_path ) ⇒
-            theme(provider, rest_of_path)
-          } ~
-          path("stylesheets" / RestPath) { rest_of_path: Uri.Path ⇒
-            stylesheets(rest_of_path)
-          } ~
-          path("javascripts" / RestPath) { rest_of_path: Uri.Path ⇒
-            javascripts(rest_of_path)
-          } ~
-          path("images" / RestPath) { rest_of_path: Uri.Path ⇒
-            images(rest_of_path)
-          } ~
-          path(RestPath) { rest_of_path: Uri.Path ⇒
-            val r = (StatusCodes.NotFound, s"Asset '$rest_of_path' was not found.")
-            complete(r)
-          }
+            path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
+              lib(library, rest_of_path)
+            } ~
+            path("themes" / Segment / RestPath) { case (provider, rest_of_path) ⇒
+              theme(provider, rest_of_path)
+            } ~
+            path("stylesheets" / RestPath) { rest_of_path: Uri.Path ⇒
+              stylesheets(rest_of_path)
+            } ~
+            path("javascripts" / RestPath) { rest_of_path: Uri.Path ⇒
+              javascripts(rest_of_path)
+            } ~
+            path("images" / RestPath) { rest_of_path: Uri.Path ⇒
+              images(rest_of_path)
+            } ~
+            path(RestPath) { rest_of_path: Uri.Path ⇒
+              val r = (StatusCodes.NotFound, s"Asset '$rest_of_path' was not found.")
+              complete(r)
+            }
         }
       }
     }
@@ -89,7 +85,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
   def favicon(/*aSite: Site*/)(implicit scrupal: Scrupal): StandardRoute = {
     complete {
       val path = "images/scrupal.ico"
-      val result = fetch(path, MediaTypes.`image/x-icon`, minified=false)
+      val result = fetch(path, MediaTypes.`image/x-icon`, minified = false)
       makeMarshallable(result)
     }
   }
@@ -133,6 +129,18 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
       makeMarshallable(result)
     }
   }
+
+}
+case class WebJarsController() extends BasicController('webjars) {
+  def routes(implicit scrupal: Scrupal): Route = {
+    path("javascripts" / RestPath) { file =>
+      get {
+        complete("foo")
+      }
+    }
+  }
+}
+
 
 /*
 class AssetsBuilder(errorHandler: HttpErrorHandler) extends Controller {
@@ -279,19 +287,9 @@ private[controllers] def resourceNameAt(path: String, file: String): Option[Stri
   }
 }
 
-private val dblSlashPattern = """//+""".r */
+private val dblSlashPattern = """//+""".r
+*/
 
-}
-
-case class WebJarsController() extends BasicController('webjars) {
-def routes(implicit scrupal: Scrupal): Route = {
-  path("javascripts" / RestPath) { file =>
-    get {
-      complete("foo")
-    }
-  }
-}
-}
 
 /* FIXME: Implement Assets controller
 // Save the Play AssetBuilder object under a new name so we can refer to it without referring to ourself!

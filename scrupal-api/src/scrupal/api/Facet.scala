@@ -23,6 +23,6 @@ package scrupal.api
   * Their presence is entirely optional for the Instance which only requires the main payload.
   * Created by reidspencer on 11/7/14.
   */
-class Facet {
+trait Facet {
 
 }

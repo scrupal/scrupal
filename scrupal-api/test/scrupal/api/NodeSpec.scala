@@ -17,7 +17,7 @@
 
 package scrupal.api
 
-import java.io.File
+import java.io.{StringWriter, File}
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
@@ -27,6 +27,7 @@ import scrupal.api.Template.TwirlHtmlTemplateFunction
 import scrupal.api.HtmlHelpers._
 import scrupal.test.{FakeContext, ScrupalSpecification}
 import spray.http.MediaTypes
+import org.apache.commons.io.IOUtils
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -87,18 +88,21 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
     }
   }
 
-  "AssetNode" should {
+  "FileNode" should {
     "load a simple file" in Fixture("AssetNode") { f: Fixture ⇒
       val future = f.file(f) map  { result: Result[_] ⇒
         result.contentType.mediaType must beEqualTo(MediaTypes.`text/plain`)
         val rendered : String  = result match {
-          case t: StringResult ⇒ t.payload
-          case o: OctetsResult ⇒ new String(o.payload, utf8)
+          case s: StreamResult ⇒
+            val writer = new StringWriter()
+            IOUtils.copy(s.payload, writer, utf8)
+            writer.toString
+          case e: ErrorResult ⇒ "Error: " + e.formatted
           case _ ⇒ throw new Exception("Unexpected result type")
         }
         rendered.startsWith("This") must beTrue
         rendered.contains("works or not.") must beTrue
-        rendered.length must beEqualTo(79)
+        rendered.length must beEqualTo(80)
       }
       Await.result(future, Duration(1, TimeUnit.SECONDS))
     }

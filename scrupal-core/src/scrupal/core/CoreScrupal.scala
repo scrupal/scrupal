@@ -17,10 +17,7 @@
 
 package scrupal.core
 
-import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
-import scrupal.api.Module._
-import scrupal.api.{Site, Application, Scrupal}
-import scrupal.core.echo.EchoModule
+import scrupal.api.Scrupal
 import scrupal.core.welcome.WelcomeSite
 import scrupal.utils.Configuration
 
@@ -48,9 +45,6 @@ class CoreScrupal extends Scrupal {
     val new_config = super.onLoadConfig(config)
 
       CoreModule.bootstrap(config)
-
-      // Now that core is done, let's do the standard modules that come with the Core
-      EchoModule.bootstrap(config)
 
     // Make things from the configuration override defaults and database read settings
     // Features

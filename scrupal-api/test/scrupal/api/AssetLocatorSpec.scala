@@ -24,15 +24,15 @@ import scrupal.test.{FakeContext, ScrupalSpecification}
 import scrupal.utils.{OSSLicense, Configuration}
 import spray.http.MediaTypes
 
-class TestAssetLocator extends AssetLocator {
-  def assets_path = Seq("test/resources")
+class TestAssetLocator(config: Configuration) extends ConfiguredAssetsLocator(config) {
+  override def assets_path = super.assets_path ++ Seq("scrupal-api/test/resources")
 }
 
 class AssetLocatorSpec extends ScrupalSpecification("AssetLocatorSpec") {
 sequential
   case class Assets(name: String) extends FakeContext[Assets](name) {
 
-    val locator = new TestAssetLocator
+    val locator = new TestAssetLocator(scrupal._configuration)
 
   }
 
@@ -75,8 +75,9 @@ sequential
   }
 
   "isFile" should {
-    val locator = new TestAssetLocator
-    "return false for null" in {
+    val assets = new Assets("isFile")
+    val locator = assets.locator
+    "return false for null" in  {
       locator.isFile(null) must beFalse
     }
     "return true for a file" in {
@@ -91,7 +92,8 @@ sequential
     }
   }
   "isJar" should {
-    val locator = new TestAssetLocator
+    val assets = new Assets("isJar")
+    val locator = assets.locator
     "return false for null" in {
       locator.isJar(null) must beFalse
     }
@@ -108,19 +110,45 @@ sequential
   }
 
   "fetchDirectory" should {
-    val locator = new TestAssetLocator
+    val assets = new Assets("fetchDirectory")
+    val locator = assets.locator
     "grok the test directory" in {
-      val dir = locator.fetchDirectory("root")
+      val dirOpt = locator.fetchDirectory("root")
+      dirOpt.isDefined must beTrue
+      val dir = dirOpt.get
       val cfg = Configuration(ConfigFactory.parseFile(new File("scrupal-api/test/resources/root/__dir.conf")))
       dir.author must beEqualTo(cfg.getString("author"))
       dir.title must beEqualTo(cfg.getString("title"))
       dir.copyright must beEqualTo(cfg.getString("copyright"))
       dir.license must beEqualTo(OSSLicense.lookup(Symbol(cfg.getString("license").getOrElse(""))))
       dir.description must beEqualTo(cfg.getString("description"))
+      val direct = locator.resourceOf("root/foo.txt")
+      direct.isDefined must beTrue
       val optB = dir.files.get("Foo File").map { x ⇒ x.isDefined }
       optB.isDefined must beTrue
       optB.get must beTrue
+     }
 
+    "grok recursing directories" in {
+      val dirOpt = locator.fetchDirectory("root", recurse=true)
+      dirOpt.isDefined must beTrue
+      val dir : AssetLocator#Directory = dirOpt.get
+      val dirs = dir.dirs
+      val empty = dirs.get("empty")
+      empty.isDefined must beTrue
+      empty.get.isDefined must beFalse
+      val nothere = dirs.get("nothere")
+      nothere.isDefined must beTrue
+      nothere.get.isDefined must beFalse
+      val subrootOptOpt = dirs.get("subroot")
+      subrootOptOpt.isDefined must beTrue
+      val subrootOpt = subrootOptOpt.get
+      subrootOpt.isDefined must beTrue
+      val subroot = subrootOpt.get
+      subroot.title.isDefined must beFalse
+      subroot.author.isDefined must beFalse
+      subroot.files.isEmpty must beTrue
+      subroot.dirs.isEmpty must beTrue
     }
   }
 

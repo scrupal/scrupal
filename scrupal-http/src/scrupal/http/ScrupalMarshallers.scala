@@ -206,8 +206,6 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
       }
     }
   }
-
-
 }
 
 class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext) extends Actor with

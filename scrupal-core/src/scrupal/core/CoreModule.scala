@@ -21,7 +21,7 @@ import java.net.URL
 
 import reactivemongo.bson.{BSONDocument, BSONString}
 import scrupal.api.Node
-import scrupal.db.{Schema,DBContext}
+import scrupal.db.DBContext
 import scrupal.api._
 import scrupal.utils.{OSSLicense, Version}
 
@@ -52,12 +52,12 @@ object CoreModule extends Module {
     notes_key → BSONString("No notes.")
   ))
 
-  override def features = Seq(
+  def features = Seq(
     DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
   )
 
   /** The core types that Scrupal provides to all modules */
-  override def types = Seq[Type](
+  def types = Seq[Type](
     AnyType_t, AnyString_t, NonEmptyString_t, Password_t, AnyInteger_t, AnyReal_t, AnyTimestamp_t, Boolean_t,
     Identifier_t, Description_t, Markdown_t, DomainName_t, TcpPort_t, URL_t, IPv4Address_t, EmailAddress_t,
     LegalName_t, SiteInfo_t, PageBundle_t, settingsType
@@ -73,13 +73,13 @@ object CoreModule extends Module {
     val instanceType = PageBundle_t
   }
 
-  override def entities = Seq[Entity](
+  def entities = Seq[Entity](
     PageEntity
   )
 
-  override def nodes = Seq[Node]()
+  def nodes = Seq[Node]()
 
-  override def handlers = Seq()
+  def handlers = Seq()
 
   override def schemas(implicit dbc: DBContext) : Seq[CoreSchema] = Seq( new CoreSchema(dbc, "Scrupal") )
 }

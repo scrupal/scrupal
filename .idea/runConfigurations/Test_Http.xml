@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Test Http" type="Specs2RunConfiguration" factoryName="Specs2">
+  <configuration default="false" name="Test Http" type="Specs2RunConfiguration" factoryName="Specs2" singleton="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
     <extension name="scalaCoverage" />
     <module name="scrupal-http" />

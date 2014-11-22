@@ -17,12 +17,11 @@ marked.setOptions({
 });
 </script>
 } {
-<div id="marked" data-marked="marked">
-@content
-</div>
+<div id="marked" data-marked="marked"></div>
 } {
 <script>
-  var elem = document.getElementById('content');
-  elem.innerHTML = marked(elem.innerText);
+  var elem = document.getElementById('marked');
+  var content = "@{content}";
+  elem.innerHTML = marked(content);
 </script>
 }

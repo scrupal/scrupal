@@ -15,11 +15,47 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core.echo
+package scrupal.core
 
+import java.net.URL
+
+import org.joda.time.DateTime
 import reactivemongo.bson.BSONDocument
 import scrupal.api._
-import scrupal.utils.OSSLicense
+import scrupal.utils.{Configuration, OSSLicense, Version}
+
+
+
+/** An Echoing Application
+  * Almost the simplest of applications to construct this is mostly a test of the fundamentals but may have some
+  * utility as heartbeat between servers. This application servers one entity, an echo entity, which takes in
+  * requests, formats them into HTML and responds with the content. When you go to the app you see the GET
+  * request for the page you requested as the response. It has one special page which allows you to submit a
+  * form. Query args are returned if you provide them on the web page. This could also be used for benchmarking.
+  * Created by reid on 11/11/14.
+  */
+object EchoApp extends Application {
+
+  lazy val id: Symbol = 'Echo
+
+  val name: String = "Echo Application"
+
+  val description: String = "An Application For echoing web requests back to your browser"
+
+  val kind: Symbol = 'Echo
+
+  val requiresAuthentication = false
+
+  override def modules: Seq[Module] = Seq(CoreModule)
+
+  def created: Option[DateTime] = Some(new DateTime(2014,11,11,5,53))
+
+  def modified: Option[DateTime] = None
+
+  EchoEntity.enable(this)
+  CoreModule.enable(this)
+
+}
 
 /** The Echo Entity
   * This is really the heart of the EchoApp. All the requests that get echoed go through here.
@@ -83,7 +119,7 @@ object EchoEntity extends Entity {
   }
 
   override def createFacet(context: ApplicationContext, id: String,
-                           what: List[String], instance: BSONDocument) : CreateFacet = {
+                           what: Seq[String], instance: BSONDocument) : CreateFacet = {
     new CreateFacet(context, id, what, instance) {
       override def apply : HtmlResult = {
         HtmlResult(scrupal.core.views.html.echo.createFacet(id, what, instance)(context))
@@ -91,8 +127,7 @@ object EchoEntity extends Entity {
     }
   }
 
-
-  override def retrieveFacet(context: ApplicationContext, id: String, what: List[String]) : RetrieveFacet = {
+  override def retrieveFacet(context: ApplicationContext, id: String, what: Seq[String]) : RetrieveFacet = {
     new RetrieveFacet(context, id, what) {
       override def apply : HtmlResult = {
         HtmlResult(scrupal.core.views.html.echo.retrieveFacet(id, what)(context))
@@ -101,7 +136,7 @@ object EchoEntity extends Entity {
   }
 
   override def updateFacet(context: ApplicationContext, id: String,
-                           what: List[String], fields: BSONDocument) : UpdateFacet = {
+                           what: Seq[String], fields: BSONDocument) : UpdateFacet = {
     new UpdateFacet(context, id, what, fields) {
       override def apply : HtmlResult = {
         HtmlResult(scrupal.core.views.html.echo.updateFacet(id, what, fields)(context))
@@ -109,7 +144,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def deleteFacet(context: ApplicationContext, id: String, what: List[String]) : DeleteFacet = {
+  override def deleteFacet(context: ApplicationContext, id: String, what: Seq[String]) : DeleteFacet = {
     new DeleteFacet(context, id, what) {
       override def apply : HtmlResult = {
         HtmlResult(scrupal.core.views.html.echo.deleteFacet(id, what)(context))
@@ -118,7 +153,7 @@ object EchoEntity extends Entity {
   }
 
   override def queryFacet(context: ApplicationContext, id: String,
-                          what: List[String], args: BSONDocument) : QueryFacet = {
+                          what: Seq[String], args: BSONDocument) : QueryFacet = {
     new QueryFacet(context, id, what, args) {
       override def apply : HtmlResult = {
         HtmlResult(scrupal.core.views.html.echo.queryFacet(id, what, args)(context))

@@ -132,6 +132,7 @@ trait Dependencies
     val akka_testkit         = "com.typesafe.akka"   %% "akka-testkit"          % akkaV        % "test"
     val logback_classic      = "ch.qos.logback"      %  "logback-classic"       % "1.1.2"      % "test"
     val specs2               = "org.specs2"          %% "specs2-core"           % "2.3.11"     % "test"
+    val commons_io           = "commons-io"          %  "commons-io"            % "2.4"        % "test"
   }
 
   val root_dependencies : Seq[ModuleID] = Seq(
@@ -153,7 +154,8 @@ trait Dependencies
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(
-    spray_http, spray_routing, marked, fontawesome
+    spray_http, spray_routing, marked, fontawesome,
+    Test.commons_io
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(

@@ -55,18 +55,10 @@ trait Module extends Registrable[Module]
     */
   def dependencies : Map[Identifier,Version] = HashMap('Core -> Version(0,1,0))
 
-  /** The set of Features that this Module provides.
-    * These features can be enabled and disabled through the admin interface and the module can provide its own
-    * functionality for when those events occur. See [[api.Feature]]
-    */
-  def features : Seq[Feature]
+  // TODO: Can modules provide modules? def modules : Seq[Module]
 
-  /** The set of data types this module defines.
-    * There should be no duplicate types as there is overhead in managing them. Always prefer to depend on the module
-    * that defines the type rather than respecify it here. This sequence includes all the Trait and Entity types that
-    * the module defines.
-    */
-  def types: Seq[Type]
+  // TODO: Can modules provide applications? def applications : Seq[Application]
+
 
   /** The set of nodes this module defines.
     * A node is simply a dynamic content generator. It is a Function0 (no arguments, returns a result) and can be
@@ -75,11 +67,29 @@ trait Module extends Registrable[Module]
     */
   def nodes: Seq[Node]
 
+  // TODO: Can modules provide instances ?
+
+  /** The set of Features that this Module provides.
+    * These features can be enabled and disabled through the admin interface and the module can provide its own
+    * functionality for when those events occur. See [[api.Feature]]
+    */
+  def features : Seq[Feature]
+
+
   /** The entities that this module supports.
     * An entity combines together a BundleType for storage, a set of REST API handlers,
     * additional operations that can be requested, and
     */
   def entities : Seq[Entity]
+
+  // TODO: Can modules provide sites ?
+
+  /** The set of data types this module defines.
+    * There should be no duplicate types as there is overhead in managing them. Always prefer to depend on the module
+    * that defines the type rather than respecify it here. This sequence includes all the Trait and Entity types that
+    * the module defines.
+    */
+  def types: Seq[Type]
 
   /** The set of handlers for the events this module is interested in.
     * Interest is expressed by providing a handler for each event the module wishes to intercept. When the event occurs
@@ -141,15 +151,16 @@ trait Module extends Registrable[Module]
 case class BasicModule(
   id: Symbol,
   description: String = "",
-  override val author: String = "",
-  override val copyright: String = "",
-  override val license: OSSLicense = OSSLicense.GPLv3,
+  author: String = "",
+  copyright: String = "",
+  license: OSSLicense = OSSLicense.GPLv3,
   version: Version = Version(0,1,0),
   obsoletes: Version = Version(0,0,0),
-  features : Seq[Feature] = Seq(),
-  types: Seq[Type] = Seq(),
+  applications : Seq[Application] = Seq(),
   nodes: Seq[Node] = Seq(),
+  features : Seq[Feature] = Seq(),
   entities : Seq[Entity] = Seq(),
+  types: Seq[Type] = Seq(),
   handlers : Seq[HandlerFor[Event]] = Seq()
 ) extends Module {
   def moreDetailsURL = new URL("http://example.com")

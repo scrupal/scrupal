@@ -86,5 +86,6 @@
     <orderEntry type="library" name="SBT: org.webjars:font-awesome:4.2.0" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4" level="project" />
   </component>
 </module>

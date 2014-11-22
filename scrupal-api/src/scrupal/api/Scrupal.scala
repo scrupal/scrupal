@@ -74,6 +74,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 
   val _dbContext = new AtomicReference[DBContext](dbc.getOrElse(null))
 
+  val assetsLocator = new ConfiguredAssetsLocator(_configuration)
 
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = {
     f(_configuration)

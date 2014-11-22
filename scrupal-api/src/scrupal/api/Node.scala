@@ -17,7 +17,7 @@
 
 package scrupal.api
 
-import java.io.File
+import java.io.{FileInputStream, File}
 import java.net.URL
 
 import org.joda.time.DateTime
@@ -164,23 +164,19 @@ case class FileNode (
   created: Option[DateTime] = None
 ) extends Node {
   final val kind : Symbol = 'File
-  def apply(ctxt: Context): Future[Result[_]] = ctxt.scrupal.withExecutionContext { implicit ec =>
-    Future {
-      // FIXME: make this file I/O non-blocking and resource managed !
-      val source = scala.io.Source.fromFile(file)
-      val content = source.getLines() mkString "\n"
-      val extension = {
-        val name = file.getName
-        name.lastIndexOf(".") match {
-          case i: Int if i >= 0 ⇒ file.getName.substring(i + 1)
-          case _ ⇒ ""
-        }
-      }
-      MediaTypes.forExtension(extension) match {
-        case Some(mt) ⇒ OctetsResult(content.getBytes(utf8), mt)
-        case _ ⇒ toss(s"Unsupported file type, $extension, for FileNode, ${file.getPath}")
+  def apply(ctxt: Context): Future[Result[_]] = {
+    val extension = {
+      val name = file.getName
+      name.lastIndexOf(".") match {
+        case i: Int if i >= 0 ⇒ file.getName.substring(i + 1)
+        case _ ⇒ ""
       }
     }
+    val mediaType = MediaTypes.forExtension(extension) match {
+      case Some(mt) ⇒ mt
+      case None ⇒ MediaTypes.`application/octet-stream`
+    }
+    Future.successful( StreamResult(new FileInputStream(file), mediaType) )
   }
 }
 
@@ -208,8 +204,6 @@ case class LinkNode (
 object LinkNode {
   implicit val LinkNodeHandler : BSONHandler[BSONDocument,LinkNode] = Macros.handler[LinkNode]
 }
-
-trait HtmlSubstituter extends ((Map[String, Node], Context) => Html)
 
 /** A Node That Is A Layout.
   *

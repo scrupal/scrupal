@@ -14,6 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/test-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/web" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -65,5 +66,6 @@
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1" level="project" />
     <orderEntry type="module" module-name="scrupal-api" exported="" />
+    <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4" level="project" />
   </component>
 </module>

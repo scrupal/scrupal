@@ -23,6 +23,25 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.db.{IdentifierDAO, Storable}
 
+/* TODO: Generalize Instance to carry any kind of payload, using VariantDataAccessObject like Node[_]
+trait Instance[P] extends Storable[Identifier] with Nameable with Describable with Modifiable with Facetable {
+  def payload : P
+}
+
+case class BasicInstance(
+  _id : Identifier,
+  name: String,
+  description: String,
+  entityId: Identifier,
+  payload: BSONDocument,
+  facets: Map[String,Facet] = Map.empty[String,Facet],
+  modified : Option[DateTime] = None,
+  created : Option[DateTime] = None
+) {
+
+}
+*/
+
 /** The basic unit of storage and operation in Scrupal
   * Further description needed here.
   */
