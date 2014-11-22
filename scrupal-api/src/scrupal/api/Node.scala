@@ -120,6 +120,7 @@ case class HtmlNode (
   }
 }
 
+
 object HtmlNode {
   implicit val HtmlNodeHandler = Macros.handler[HtmlNode]
 }
@@ -131,9 +132,9 @@ case class TxtNode (
   var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-  ) extends Node {
+) extends Node {
   final val mediaType: MediaType = MediaTypes.`text/html`
-  final val kind : Symbol = 'Text
+  final val kind : Symbol = 'Txt
   def apply(context: Context): Future[Result[_]] = {
     val txt : Txt = template(args,context)
     Future.successful(TxtResult(txt, Successful))
@@ -161,8 +162,8 @@ case class FileNode (
   var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-  ) extends Node {
-  final val kind : Symbol = 'Asset
+) extends Node {
+  final val kind : Symbol = 'File
   def apply(ctxt: Context): Future[Result[_]] = ctxt.scrupal.withExecutionContext { implicit ec =>
     Future {
       // FIXME: make this file I/O non-blocking and resource managed !
@@ -196,7 +197,7 @@ case class LinkNode (
   var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-  ) extends Node {
+) extends Node {
   final val kind : Symbol = 'Link
   override val mediaType: MediaType = MediaTypes.`text/html`
   def apply(ctxt: Context): Future[Result[_]] = Future.successful {
@@ -232,11 +233,11 @@ case class LayoutNode (
   var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-  ) extends Node {
+) extends Node {
   final val kind : Symbol = 'Layout
   def apply(ctxt: Context): Future[Result[_]] = {
     ctxt.withSchema { case (dbc: DBContext, schema: Schema) =>
-      ctxt.withExecutionContext { implicit ececCtxt: ExecutionContext ⇒
+      ctxt.withExecutionContext { implicit ec: ExecutionContext ⇒
         val layout = Layout(layoutId).getOrElse(Layout.default)
         val pairsF = for ((tag, id) <- tags) yield {
           schema.nodes.fetch(id) map {
@@ -273,15 +274,14 @@ object LayoutNode {
   * @param code
   * @param modified
   * @param created
-  * @param kind
   */
 case class ScalaNode (
   description: String,
   code: String,
   modified: Option[DateTime] = None,
-  created: Option[DateTime] = None,
+  created: Option[DateTime] = None
+) extends Node {
   final val kind : Symbol = 'Scala
-  ) extends Node {
   override val mediaType: MediaType = MediaTypes.`text/html`
 
   def apply(ctxt: Context): Future[Result[_]] = Future.successful {
@@ -308,15 +308,14 @@ object ScalaNode {
   * @param command
   * @param modified
   * @param created
-  * @param kind
   */
 case class CommandNode (
   description: String,
   command: String,
   modified: Option[DateTime] = None,
-  created: Option[DateTime] = None,
-  final val kind : Symbol = 'Scala
-  ) extends Node {
+  created: Option[DateTime] = None
+) extends Node {
+  final val kind : Symbol = 'Command
   override val mediaType: MediaType = MediaTypes.`text/html`
 
   def apply(ctxt: Context): Future[Result[_]] = Future.successful {
@@ -339,9 +338,9 @@ case class TwirlScriptNode (
   description: String,
   twirl_script: String,
   modified: Option[DateTime] = None,
-  created: Option[DateTime] = None,
-  final val kind : Symbol = 'Scala
-  ) extends Node {
+  created: Option[DateTime] = None
+) extends Node {
+final val kind : Symbol = 'TwirlScript
   override val mediaType: MediaType = MediaTypes.`text/html`
 
   def apply(ctxt: Context): Future[Result[_]] = Future.successful {
@@ -384,15 +383,14 @@ object TwirlScriptNode {
   * @param scrupalesy
   * @param modified
   * @param created
-  * @param kind
   */
 case class ScrupalesyNode (
   description: String,
   scrupalesy: String,
   modified: Option[DateTime] = None,
-  created: Option[DateTime] = None,
-  final val kind : Symbol = 'Scala
-  ) extends Node {
+  created: Option[DateTime] = None
+) extends Node {
+  final val kind : Symbol = 'Scrupalesy
   override val mediaType: MediaType = MediaTypes.`text/html`
 
   def apply(ctxt: Context): Future[Result[_]] = Future.successful {
@@ -414,11 +412,16 @@ object Node {
       doc.getAs[BSONString]("kind") match {
         case Some(str) =>
           str.value match {
-            case "Message"  => MessageNode.MessageNodeHandler.read(doc)
-            case "Html"    => HtmlNode.HtmlNodeHandler.read(doc)
-            case "Asset"    => FileNode.FileNodeHandler.read(doc)
-            case "Link"     => LinkNode.LinkNodeHandler.read(doc)
-            case "Layout"   => LayoutNode.LayoutNodeHandler.read(doc)
+            case "Message"  ⇒ MessageNode.MessageNodeHandler.read(doc)
+            case "Html"     ⇒ HtmlNode.HtmlNodeHandler.read(doc)
+            case "Txt"      ⇒ TxtNode.TxtNodeHandler.read(doc)
+            case "File"     ⇒ FileNode.FileNodeHandler.read(doc)
+            case "Link"     ⇒ LinkNode.LinkNodeHandler.read(doc)
+            case "Layout"   ⇒ LayoutNode.LayoutNodeHandler.read(doc)
+            case "Scala"    ⇒ ScalaNode.ScalaNodeHandler.read(doc)
+            case "Command"  ⇒ CommandNode.CommandNodeHandler.read(doc)
+            case "TwirlScript" ⇒ TwirlScriptNode.TwirlScriptNodeHandler.read(doc)
+            case "Scrupalesy" ⇒  ScrupalesyNode.ScrupalesyNodeHandler.read(doc)
           }
         case None => toss(s"Field 'kind' is missing from Node: ${doc.toString()}")
       }
@@ -428,11 +431,16 @@ object Node {
   implicit val NodeWriter = new VariantBSONDocumentWriter[Node] {
     def write(node: Node) : BSONDocument = {
       node.kind match {
-        case 'Message  => MessageNode.MessageNodeHandler.write(node.asInstanceOf[MessageNode])
-        case 'Html     => HtmlNode.HtmlNodeHandler.write(node.asInstanceOf[HtmlNode])
-        case 'Asset    => FileNode.FileNodeHandler.write(node.asInstanceOf[FileNode])
-        case 'Link     => LinkNode.LinkNodeHandler.write(node.asInstanceOf[LinkNode])
-        case 'Layout   => LayoutNode.LayoutNodeHandler.write(node.asInstanceOf[LayoutNode])
+        case 'Message  ⇒ MessageNode.MessageNodeHandler.write(node.asInstanceOf[MessageNode])
+        case 'Html     ⇒ HtmlNode.HtmlNodeHandler.write(node.asInstanceOf[HtmlNode])
+        case 'Txt      ⇒ TxtNode.TxtNodeHandler.write(node.asInstanceOf[TxtNode])
+        case 'File     ⇒ FileNode.FileNodeHandler.write(node.asInstanceOf[FileNode])
+        case 'Link     ⇒ LinkNode.LinkNodeHandler.write(node.asInstanceOf[LinkNode])
+        case 'Layout   ⇒ LayoutNode.LayoutNodeHandler.write(node.asInstanceOf[LayoutNode])
+        case 'Scala    ⇒ ScalaNode.ScalaNodeHandler.write(node.asInstanceOf[ScalaNode])
+        case 'Command     ⇒ CommandNode.CommandNodeHandler.write(node.asInstanceOf[CommandNode])
+        case 'TwirlScript ⇒ TwirlScriptNode.TwirlScriptNodeHandler.write(node.asInstanceOf[TwirlScriptNode])
+        case 'Scrupalesy  ⇒ ScrupalesyNode.ScrupalesyNodeHandler.write(node.asInstanceOf[ScrupalesyNode])
       }
     }
   }

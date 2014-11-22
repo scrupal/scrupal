@@ -14,7 +14,6 @@
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/streams" />
-      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/test-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/web" />
     </content>
     <orderEntry type="inheritedJdk" />

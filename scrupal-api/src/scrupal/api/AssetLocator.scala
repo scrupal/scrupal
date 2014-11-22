@@ -20,9 +20,12 @@ package scrupal.api
 import java.io.File
 import java.net.{URLClassLoader, URL}
 
+import com.typesafe.config.{ConfigFactory}
+import scrupal.utils.{OSSLicense, Configuration}
 import spray.http.{MediaType, MediaTypes}
 
 import scala.reflect.internal.util.ScalaClassLoader
+import scala.collection.JavaConverters._
 
 trait AssetLocator {
 
@@ -104,38 +107,32 @@ trait AssetLocator {
     fetch(path, mediaType)
   }
 
-  def everythingUnder(rootDir: String) : Seq[(String,Boolean)] = {
-     cl.getResource(rootDir) match {
-       case url: URL if isFile(url) ⇒
-         val file = new File(url.toURI)
-         for ( item <- file.listFiles() ) yield {
-           item.getName → item.isDirectory
-         }
-       case url: URL if isJar(url) ⇒
-         Seq.empty[(String,Boolean)]
-     }
-  }
+  val directoryAssetName = "__dir.conf"
 
-  def isNonRecursiveDirectory(file: File) : Boolean = {
-    if (file != null && file.isDirectory) {
-      val file_path = file.getCanonicalPath
-      if (file_path != null) {
-        val child = new File(file, "child")
-        val child_path = child.getCanonicalPath
-        if (child_path != null) {
-          return child_path.startsWith(file_path) && (child_path.length > file_path.length)
-        }
-      }
-    }
-    false
-  }
+  case class Directory(
+    author : Option[String] = None,
+    copyright : Option[String] = None,
+    license : Option[OSSLicense] = None,
+    title : Option[String] = None,
+    description: Option[String] = None,
+    files : Map[String, Option[URL]],
+    dirs : Option[List[String]]
+  )
 
-  def isNonRecursiveDirectory(url: URL) : Boolean = {
-    if (isFile(url)) {
-      val file = new File(url.toURI)
-      return isNonRecursiveDirectory(file)
-    }
-    false
+  def fetchDirectory(path: String) : Directory = {
+    val config : Configuration = Configuration(ConfigFactory.load(cl, path + "/" + directoryAssetName ))
+    val license = config.getString("license").flatMap { l ⇒ OSSLicense.lookup(Symbol(l)) }
+    val files = config.getConfig("files").fold(Map.empty[String, Option[URL]])(c ⇒
+      (c.entrySet.filter { case (k, v) ⇒
+        v.unwrapped.isInstanceOf[String]
+      } map {
+        case (k, v) ⇒
+          val kSlashed = if (k.startsWith("/")) k else "/" + k
+          v.unwrapped.asInstanceOf[String] -> minifiedResourceOf(path + kSlashed)
+      }).toMap)
+    val dirs = config.getStringList("dirs").map { l ⇒ l.asScala.toList }
+    Directory(config.getString("author"), config.getString("copyright"), license, config.getString("title"),
+              config.getString("description"), files, dirs)
   }
 
   def isFile(url: URL) = { url != null && url.getProtocol == "file" }

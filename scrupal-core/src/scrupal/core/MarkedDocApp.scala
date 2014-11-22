@@ -18,8 +18,11 @@
 package scrupal.core
 
 import org.joda.time.DateTime
-import scrupal.api.{Entity, Module, Application}
+import play.twirl.api.Html
+import reactivemongo.bson.BSONDocument
+import scrupal.api._
 import scrupal.core.CoreModule.PageEntity
+import scrupal.utils.OSSLicense
 
 /** Documentation Application For Marked
   *
@@ -40,4 +43,40 @@ case class MarkedDocApp(
   def kind : Symbol = 'MarkedDoc
 
 
+  object MarkedDocEntity extends Entity {
+
+    def id: Symbol = 'Echo
+
+    def kind: Symbol = 'Echo
+
+    def instanceType: BundleType = BundleType.Empty
+
+    def author: String = "Reid Spencer"
+
+    def copyright: String = "© 2014, 2015 Reid Spencer. All Rights Reserved."
+
+    def license: OSSLicense = OSSLicense.GPLv3
+
+    def description: String = "An entity that stores nothing and merely echos its requests"
+
+    override def retrieve(context: ApplicationContext, id: String) : Retrieve =  new Retrieve(context, id) {
+      override def apply : HtmlResult = {
+
+/*        case class HtmlNode (
+          description: String,
+          template: TwirlHtmlTemplate,
+          args: Map[String, Html],
+          var enabled: Boolean = true,
+          modified: Option[DateTime] = None,
+          created: Option[DateTime] = None
+          ) extends Node { }
+*/
+        HtmlResult(scrupal.core.views.html.echo.retrieve(id)(context))
+      }
+    }
+  }
+
+  MarkedDocEntity.enable(this)
+  CoreModule.enable(MarkedDocEntity)
 }
+

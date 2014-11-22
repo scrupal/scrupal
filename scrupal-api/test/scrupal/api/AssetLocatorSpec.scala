@@ -19,7 +19,9 @@ package scrupal.api
 
 import java.io.File
 
+import com.typesafe.config.ConfigFactory
 import scrupal.test.{FakeContext, ScrupalSpecification}
+import scrupal.utils.{OSSLicense, Configuration}
 import spray.http.MediaTypes
 
 class TestAssetLocator extends AssetLocator {
@@ -105,41 +107,21 @@ sequential
     }
   }
 
-  "everythingUnder" should {
+  "fetchDirectory" should {
     val locator = new TestAssetLocator
-    "give us a list of the files under resources"
+    "grok the test directory" in {
+      val dir = locator.fetchDirectory("root")
+      val cfg = Configuration(ConfigFactory.parseFile(new File("scrupal-api/test/resources/root/__dir.conf")))
+      dir.author must beEqualTo(cfg.getString("author"))
+      dir.title must beEqualTo(cfg.getString("title"))
+      dir.copyright must beEqualTo(cfg.getString("copyright"))
+      dir.license must beEqualTo(OSSLicense.lookup(Symbol(cfg.getString("license").getOrElse(""))))
+      dir.description must beEqualTo(cfg.getString("description"))
+      val optB = dir.files.get("Foo File").map { x ⇒ x.isDefined }
+      optB.isDefined must beTrue
+      optB.get must beTrue
+
+    }
   }
 
-  "isNonRecursiveDirectory" should {
-    val locator = new TestAssetLocator
-    "return false for null" in {
-      locator.isNonRecursiveDirectory(null.asInstanceOf[File]) must beFalse
-    }
-    "return false for ." in {
-      val isNRD = locator.resourceOf(".") map { url ⇒ locator.isNonRecursiveDirectory(url) }
-      isNRD.isDefined must beTrue
-    }
-    "return false for .." in {
-      val isNRD = locator.resourceOf("..") map { url ⇒ locator.isNonRecursiveDirectory(url) }
-      isNRD.isDefined must beFalse
-    }
-    "return false for root/up (symlink back to root)" in {
-      val isNRD = locator.resourceOf("root/up") map { url ⇒ locator.isNonRecursiveDirectory(url) }
-      isNRD.isDefined must beFalse
-    }
-    "return false for root/up/flat (symlink back to root)" in {
-      val isNRD = locator.resourceOf("root/up/flat") map { url ⇒ locator.isNonRecursiveDirectory(url) }
-      isNRD.isDefined must beFalse
-    }
-    "return false for a file in a directory" in {
-      val isNRD = locator.resourceOf("root/foo.txt") map { url ⇒ locator.isNonRecursiveDirectory(url) }
-      isNRD.isDefined must beFalse
-    }
-    "return true for 'root/.'" in {
-      val url = locator.resourceOf("root/.")
-      url.isDefined must beTrue
-      val isNRD = locator.isNonRecursiveDirectory(url.get)
-      isNRD.isDefined must beTrue
-    }
-  }
 }
