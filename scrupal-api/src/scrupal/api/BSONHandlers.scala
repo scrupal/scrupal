@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
 import org.joda.time.DateTime
 import play.twirl.api.{Html, Txt}
 import reactivemongo.bson._
+import scrupal.api.Layout.BSONHandlerForLayout
 import scrupal.api.Template.BSONHandlerForTemplate
 import scrupal.api.Type.BSONHandlerForType
 
@@ -88,6 +89,12 @@ object BSONHandlers {
     new BSONHandlerForTemplate[TwirlTxtTemplate]
   implicit val TwirlHtmlTemplateHandler : BSONHandler[BSONString,TwirlHtmlTemplate] =
     new BSONHandlerForTemplate[TwirlHtmlTemplate]
+
+  implicit val LayoutHandler : BSONHandler[BSONString,Layout] = new BSONHandlerForLayout[Layout]
+  implicit val TwirlTxtLayoutHandler : BSONHandler[BSONString,TwirlTxtLayout] = new
+      BSONHandlerForTemplate[TwirlTxtLayout]
+  implicit val TwirlHtmlLayoutHandler : BSONHandler[BSONString,TwirlHtmlLayout] = new
+      BSONHandlerForTemplate[TwirlHtmlLayout]
 
   implicit val EntityHandler : BSONHandler[BSONString,Entity] = new BSONHandler[BSONString,Entity] {
     override def write(m: Entity): BSONString = BSONString(m.id.name)
@@ -168,13 +175,28 @@ object BSONHandlers {
       MapOfNamedDocumentsHandler.read(doc).map { case (k,v) ⇒ k -> v.asInstanceOf[BSONObjectID] }
   }
 
-
-  implicit val MapOfNamedNodeRef = new BSONHandler[BSONDocument,Map[String,NodeRef]]{
-    override def write(elements: Map[String,NodeRef]): BSONDocument = {
-      BSONDocument( elements.map { case (key,nodeRef) ⇒ key → NodeRef.nodeRefHandler.write(nodeRef) }  )
+  implicit val EitherNodeRefOrNodeHandler = new BSONHandler[BSONDocument, Either[NodeRef,Node]] {
+    def write(e: Either[NodeRef,Node]) : BSONDocument = {
+      BSONDocument(
+        "either" → (if (e.isLeft) BSONString("left") else BSONString("right")),
+        "value"  → (if (e.isLeft) NodeRef.nodeRefHandler.write(e.left.get) else Node.NodeWriter.write(e.right.get) )
+      )
     }
-    override def read(doc: BSONDocument): Map[String,NodeRef] = {
-      val elems = doc.elements.map { case (key,d) ⇒ key → NodeRef.nodeRefHandler.read(d.asInstanceOf[BSONDocument]) }
+    def read(doc: BSONDocument) : Either[NodeRef,Node] = {
+      val value = doc.get("value").get.asInstanceOf[BSONDocument]
+      doc.getAs[String]("either").get match {
+        case "left" ⇒  Left[NodeRef,Node](NodeRef.nodeRefHandler.read(value))
+        case "right" ⇒ Right[NodeRef,Node](Node.NodeReader.read(value))
+      }
+    }
+  }
+
+  implicit val MapOfNamedNodeRefHandler = new BSONHandler[BSONDocument,Map[String,Either[NodeRef,Node]]]{
+    override def write(elements: Map[String,Either[NodeRef,Node]]): BSONDocument = {
+      BSONDocument( elements.map { case (key,e) ⇒ key → EitherNodeRefOrNodeHandler.write(e) } )
+    }
+    override def read(doc: BSONDocument): Map[String,Either[NodeRef,Node]] = {
+      val elems = doc.elements.map { case (k,d) ⇒ k → EitherNodeRefOrNodeHandler.read(d.asInstanceOf[BSONDocument]) }
       elems.toMap
     }
   }

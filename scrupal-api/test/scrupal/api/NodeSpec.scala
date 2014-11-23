@@ -21,15 +21,14 @@ import java.io.{StringWriter, File}
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
+import play.api.libs.iteratee.{Enumerator, Iteratee}
 import play.twirl.api.Html
-import reactivemongo.bson.BSONObjectID
 import scrupal.api.Template.TwirlHtmlTemplateFunction
-import scrupal.api.HtmlHelpers._
 import scrupal.test.{FakeContext, ScrupalSpecification}
 import spray.http.MediaTypes
 import org.apache.commons.io.IOUtils
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{FiniteDuration, Duration}
 import scala.concurrent.{Await, Future}
 import scala.language.existentials
 
@@ -48,16 +47,54 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
 
     val template = TwirlHtmlTemplate(Symbol(name), "Describe me", templateF)
 
-    val message = MessageNode("Description", "text-warning", Html("This is boring."))
+    val message : MessageNode = MessageNode("Description", "text-warning", Html("This is boring."))
     val html = HtmlNode("Description", template, args=Map.empty[String,Html])
     val file = FileNode("Description",
                         new File("scrupal-api/test/resources/fakeAsset.txt"), MediaTypes.`text/plain`)
     val link = LinkNode("Description", new URL("http://scrupal.org/"))
-    val tags = Map[String,NodeRef]("one" -> message.reference("nodes"), "two" -> html.reference("nodes"))
+    val tags = Map[String,Either[NodeRef,Node]](
+      "one" -> Right(message),
+      "two" -> Right(html)
+    )
 
-    val layout = LayoutNode("Description", tags, 'no_such_layout, MediaTypes.`text/html`)
+    val layout = LayoutNode("Description", tags, Layout.default)
 
   }
+
+
+  def consume(e: Enumerator[Array[Byte]]) : Array[Byte] = {
+    val i = Iteratee.fold(Array.empty[Byte]) { (x:Array[Byte],y:Array[Byte]) ⇒ Array.concat(x, y) }
+    Await.result(e.run(i),FiniteDuration(2, TimeUnit.SECONDS))
+  }
+
+  def runProducer(str: String, tags : Map[String,(Node,EnumeratorResult)] = Map()) : String = {
+    val lp = new LayoutProducer(str.getBytes(utf8), tags)
+    val en = lp.buildEnumerator
+    val raw_data = consume(en)
+    new String(raw_data, utf8)
+  }
+
+  "LayoutProducer" should {
+    "handle empty input correctly" in {
+      val data = runProducer("")
+      data must not contain("@@@")
+      data.length must beEqualTo(0)
+    }
+    "handle missing tags correctly" in {
+      val data = runProducer("This has some @@@missing@@@ tags.")
+      data must contain("@@@ Missing Tag 'missing' @@@")
+    }
+    "substitute tags correctly" in Fixture("LayoutProducer1") { f : Fixture ⇒
+      val future = f.message(f) map { case h : Result[_] ⇒
+        f.message → h.apply()
+      }
+      val pair = Await.result(future, Duration(1,TimeUnit.SECONDS))
+      val data = runProducer("This has a @@@replaced@@@ tag.", Map("replaced" → pair))
+      data must contain("This is boring.")
+      data must not contain("@@@")
+    }
+  }
+
 
   "MessageNode" should {
     "put a message in a <div> element" in Fixture("MessageNode1") { f : Fixture ⇒
@@ -127,24 +164,18 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
 
   "LayoutNode" should {
     "handle missing tags with missing layout" in Fixture("LayoutNode") { f: Fixture ⇒
-      val future = f.layout(f) map {
-        case h: HtmlResult ⇒
-          val futures = f.tags.map {
-            case(tag,oid) ⇒
-            tag-> {
-              val node = MessageNode("Missing Node", "alert-warning", s"Could not find node '$tag".toHtml)
-              node → node(f)
-            }
-          }
-          val iter_of_F = futures.toSeq.map { case(k,v) ⇒ v._2.map { r ⇒ k → (v._1,r) }  }
-          val x2 = (Future.sequence { iter_of_F }).map { seq ⇒ Map(seq:_*)  }
-          val resolved = Await.result(x2,Duration(1,TimeUnit.SECONDS))
-          val expected = views.html.defaults.defaultLayout(resolved)(f).body
-          h.payload.body must beEqualTo(expected)
-          success
-        case _ ⇒ failure("Incorrect result type")
+      val future : Future[Array[Byte]] = f.layout(f) flatMap { r: Result[_] ⇒
+        val i = Iteratee.fold(Array.empty[Byte]) { (x:Array[Byte],y:Array[Byte]) ⇒ Array.concat(x, y) }
+        r.asInstanceOf[EnumeratorResult].payload.run(i)
       }
-      Await.result(future, Duration(1, TimeUnit.SECONDS))
+      val ts1 = System.nanoTime()
+      val data = Await.result(future, Duration(3, TimeUnit.SECONDS))
+      val ts2 = System.nanoTime()
+      val dt = (ts2 - ts1).toDouble / 1000000.0
+      log.info(s"Resolve layout time = $dt milliseconds")
+      val str = new String(data, utf8)
+      str.contains("@@one@@") must beFalse
+      str.contains("@@two@@") must beFalse
     }
   }
 }

@@ -18,6 +18,7 @@
 package scrupal.api
 
 import play.twirl.api._
+import reactivemongo.bson.{BSONString, BSONHandler}
 import scrupal.utils.{Registry, Registrable}
 import spray.http.{MediaTypes, MediaType}
 
@@ -34,7 +35,7 @@ trait Arranger extends ( (Map[String,(Node,Result[_])], Context) => Array[Byte] 
   *
   * A layout is a memory only function object. It
   */
-trait Layout[P] extends Registrable[Layout[_]] with Describable with Arranger {
+trait Layout extends Registrable[Layout] with Describable with Arranger {
   def mediaType : MediaType
   def registry = Layout
   def asT : this.type = this
@@ -44,7 +45,7 @@ case class TwirlHtmlLayout(
   id : Symbol,
   description : String = "",
   template: Layout.TwirlHtmlLayoutFunction
-) extends Layout[Html] {
+) extends Layout {
   val mediaType = MediaTypes.`text/html`
   def apply(args: Map[String,(Node,Result[_])], context: Context) : Array[Byte] = {
     template(args)(context).body.getBytes(utf8)
@@ -55,22 +56,27 @@ case class TwirlTxtLayout(
   id : Symbol,
   description : String = "",
   template: Layout.TwirlTxtLayoutFunction
-) extends Layout[String] {
+) extends Layout {
   val mediaType = MediaTypes.`text/plain`
   def apply(args: Map[String,(Node,Result[_])], context: Context) : Array[Byte] = {
     template(args)(context).body.getBytes(utf8)
   }
 }
 
-object Layout extends Registry[Layout[_]] {
+object Layout extends Registry[Layout] {
   def registryName = "Layouts"
   def registrantsName = "layout"
-
 
   type TwirlHtmlLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Html }
   type TwirlTxtLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Txt }
 
   lazy val default = TwirlHtmlLayout('default, "Default Layout", scrupal.api.views.html.defaults.defaultLayout)
+
+  class BSONHandlerForLayout[T <: Layout] extends BSONHandler[BSONString,T] {
+    override def write(t: T): BSONString = BSONString(t.id.name)
+    override def read(bson: BSONString): T = Layout.as(Symbol(bson.value))
+  }
+
 }
 
 
