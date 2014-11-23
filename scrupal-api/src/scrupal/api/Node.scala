@@ -116,6 +116,30 @@ trait CompoundNode extends Node {
 
 import scrupal.api.HtmlHelpers._
 
+case class URLNode(
+  description: String,
+  url: URL,
+  mediaType: MediaType = MediaTypes.`text/html`,
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None
+) extends Node {
+  final val kind : Symbol = 'URL
+  def apply(ctxt: Context) : Future[Result[_]] = Future.successful {
+    StreamResult(url.openStream(), mediaType)
+  }
+}
+
+case class StringNode(
+  description: String,
+  text: String,
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None
+) extends Node {
+  final val kind : Symbol = 'String
+  final val mediaType = MediaTypes.`text/plain`
+  def apply(ctxt: Context) : Future[Result[_]] = Future.successful { StringResult(text) }
+}
+
 /** Message Node
   *
   * This is a very simple node that simply renders a standard Boostrap message. It is used for generating error messages
@@ -141,11 +165,10 @@ object MessageNode {
   implicit val MessageNodeHandler : BSONHandler[BSONDocument,MessageNode] = Macros.handler[MessageNode]
 }
 
-/** Basic Node
+/** Twirl Html Node
   * This is a node that simply contains a static blob of data that it produces faithly. The data can be any type
   * but is typically html which is why its mediaType
   * @param description
-  * @param enabled
   * @param modified
   * @param created
   *
@@ -154,7 +177,6 @@ case class HtmlNode (
   description: String,
   template: TwirlHtmlTemplate,
   args: Map[String, Html],
-  var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
   ) extends Node {
@@ -338,7 +360,6 @@ case class LayoutProducer (
   * @param description
   * @param subordinates
   * @param layout
-  * @param enabled
   * @param modified
   * @param created
   */
@@ -346,7 +367,6 @@ case class LayoutNode (
   description: String,
   subordinates: Map[String, Either[NodeRef,Node]],
   layout: Layout,
-  var enabled: Boolean = true,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
 ) extends CompoundNode {

@@ -18,8 +18,10 @@
 package scrupal.core
 
 import org.joda.time.DateTime
+import play.twirl.api.Html
 import scrupal.api._
-import spray.http.MediaTypes
+
+import scala.concurrent.Future
 
 /** Documentation Application For Marked
   *
@@ -41,14 +43,14 @@ case class MarkedDocApp(
 
   object mdentity extends MarkedDocEntity(document_root)
   mdentity.enable(this)
-  CoreModule.enable(mdentity)
+  CoreModule.enable(this)
 }
 
 class MarkedDocEntity(val root: String) extends Entity {
 
-  def id: Symbol = 'Echo
+  def id: Symbol = 'MarkedDoc
 
-  def kind: Symbol = 'Echo
+  def kind: Symbol = 'MarkedDoc
 
   def instanceType: BundleType = BundleType.Empty
 
@@ -56,57 +58,56 @@ class MarkedDocEntity(val root: String) extends Entity {
 
   def description: String = "An entity that stores nothing and merely echos its requests"
 
-  override def retrieve(context: ApplicationContext, id: String): Retrieve = new Retrieve(context, id) {
+  object docLayout extends
+    TwirlHtmlLayout('docLayout, "Layout for Marked Documentation", scrupal.core.views.html.pages.docPage)
 
-    override def apply(): Result[_] = {
+  object docFooter extends
+    TwirlHtmlTemplate('docFooter, "Footer for Marked Documentation", scrupal.core.views.html.docFooter)
+
+
+    override def retrieve(context: ApplicationContext, id: String): Retrieve = new Retrieve(context, id) {
+
+    override def apply(): Future[Result[_]] = {
       val locator = context.scrupal.assetsLocator
       locator.fetchDirectory(root) match {
-        case None ⇒ ErrorResult(s"Root directory at $root was not found", NotFound)
+        case None ⇒ Future.successful(ErrorResult(s"Root directory at $root was not found", NotFound))
         case Some(dir) ⇒
           val doc : String = {
             if (id.nonEmpty)
               id
             else dir.index match {
-              case None ⇒ return ErrorResult(s"Document at $root/ was not found", NotFound)
+              case None ⇒ return Future.successful(ErrorResult(s"Document at $root/ was not found", NotFound))
               case Some(index) ⇒ index
             }
           }
-          if (dir.files.contains(doc)) {
-            locator.resourceOf(root + "/" + doc) match {
-              case None ⇒ ErrorResult(s"Document at $root/$doc was not found", NotFound)
-              case Some(url) ⇒
-                val stream = url.openStream()
-                val length = stream.available
-                StreamResult(stream, MediaTypes.`text/html`)
-                url.openStream()
-            }
-          } else {
-            ErrorResult(s"Document at $root/$doc was not listed in directory", NotFound)
+          dir.files.get(doc) match {
+            case None ⇒ Future.successful(ErrorResult(s"Document at $root/$doc was not found", NotFound))
+            case Some((docTitle,urlOpt)) ⇒
+              urlOpt match {
+                case Some(url) ⇒
+                  val title = StringNode("docTitle", docTitle)
+                  val content = URLNode("docUrl", url)
+                  val footer = HtmlNode(doc, docFooter, Map("footer" → Html(dir.copyright.getOrElse("Footer"))))
+                  val subordinates: Map[String, Either[NodeRef, Node]] = Map(
+                    "title" → Right(title),
+                    "content" → Right(content),
+                    "footer" → Right(footer)
+                  )
+                  val layout = LayoutNode("Doc", subordinates, docLayout)
+                  layout.apply(context)
+                case None ⇒ Future.successful(
+                  ErrorResult(s"Document at $root/$doc was not listed in directory",NotFound)
+                )
+              }
           }
       }
-      val path = root + "/" + id
-      context.scrupal.assetsLocator.fetchDirectory(path) match {
-        case Some(dir) ⇒
-
-        case None ⇒ ErrorResult(s"Document at $path was not found", NotFound)
-      }
-      /*        case class HtmlNode (
-                description: String,
-                template: TwirlHtmlTemplate,
-                args: Map[String, Html],
-                var enabled: Boolean = true,
-                modified: Option[DateTime] = None,
-                created: Option[DateTime] = None
-                ) extends Node { }
-      */
-      HtmlResult(scrupal.core.views.html.echo.retrieve(id)(context))
     }
   }
 
   override def retrieveFacet(context: ApplicationContext, id: String, what: Seq[String]): RetrieveFacet = {
     new RetrieveFacet(context, id, what) {
-      def apply(): Result[_] = {
-        HtmlResult(scrupal.core.views.html.echo.retrieve(id)(context))
+      def apply(): Future[Result[_]] = {
+        Future.successful(HtmlResult(scrupal.core.views.html.echo.retrieveFacet(id,what)(context)))
       }
     }
   }

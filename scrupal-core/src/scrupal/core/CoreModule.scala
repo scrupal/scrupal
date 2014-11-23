@@ -74,7 +74,7 @@ object CoreModule extends Module {
   }
 
   def entities = Seq[Entity](
-    PageEntity
+    PageEntity, EchoEntity
   )
 
   def nodes = Seq[Node]()

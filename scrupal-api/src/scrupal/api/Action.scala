@@ -16,7 +16,8 @@
  **********************************************************************************************************************/
 package scrupal.api
 
-import spray.http.ContentType
+
+import scala.concurrent.Future
 
 
 /** An Invokable Action
@@ -35,7 +36,7 @@ import spray.http.ContentType
   * and implementing the `apply` function.
 
   */
-trait Action extends (() => Result[_]) {
+trait Action extends (() => Future[Result[_]]) {
   /** The action part of an Action object.
     *
     * Objects mixing in this trait will define apply to implement the Action. Note that the result type is a generic
@@ -43,7 +44,7 @@ trait Action extends (() => Result[_]) {
     * arbitrary type. Clients of the action should understand the actual type of result.
     * @return The Result[_] yielded from executing the action.
     */
-  def apply() : Result[_]
+  def apply() : Future[Result[_]]
 
   /** The context in which the Action is invoked.
     *

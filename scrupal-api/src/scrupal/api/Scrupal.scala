@@ -252,7 +252,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @return A Future to the eventual Result[P]
     */
   def handle(action: Action) : Future[Result[_]] = {
-    _dispatcher.ask(action)(_timeout) map { any ⇒ any.asInstanceOf[Result[_]] }
+    _dispatcher.ask(action)(_timeout) flatMap { any ⇒ any.asInstanceOf[Future[Result[_]]] }
   }
 
   /**

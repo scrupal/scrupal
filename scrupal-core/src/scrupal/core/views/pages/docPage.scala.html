@@ -1,10 +1,10 @@
-@(args: Map[String,Html])(implicit context : scrupal.api.Context)
-@scrupal.api.views.html.pages.markedPage @{args.get("title").get.body} {
+@(args: Map[String,(scrupal.api.Node,scrupal.api.Result[_])])(implicit context : scrupal.api.Context)
+@scrupal.api.views.html.pages.markedPage("@@@title@@@") {
 <div class="row span12">
 <div class="well">
-} @{args.get("body").get} {
+} { @@@@@@content@@@@@@ } {
 <hr/>
-@{args.get("footer").get}
+@@@@@@footer@@@@@@
 </div>
 </div>
 }

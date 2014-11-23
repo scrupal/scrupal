@@ -3,25 +3,23 @@
 @import scrupal.api.PathOf
 @pages.basicPage(title) {
 <script src=@{PathOf.lib("marked","marked.js")}></script>
-<script>
-var marked = require('marked');
+} {
+@{prefix}
+<div id="marked">
+@{content}
+</div>
+@{suffix}
+} {
 marked.setOptions({
   renderer: new marked.Renderer(),
   gfm: true,
   tables: true,
-  breaks: false,
+  breaks: true,
   pedantic: false,
-  sanitize: true,
+  sanitize: false,
   smartLists: true,
   smartypants: false
-});
-</script>
-} {
-<div id="marked" data-marked="marked"></div>
-} {
-<script>
+  });
   var elem = document.getElementById('marked');
-  var content = "@{content}";
-  elem.innerHTML = marked(content);
-</script>
+  elem.innerHTML = marked(elem.innerHTML);
 }

@@ -123,7 +123,7 @@ trait AssetLocator {
     title : Option[String] = None,
     description: Option[String] = None,
     index : Option[String] = None,
-    files : Map[String, Option[URL]],
+    files : Map[String, (String,Option[URL])],
     dirs : Map[String, Option[Directory]]
   )
 
@@ -133,7 +133,7 @@ trait AssetLocator {
       return None
     val config : Configuration = Configuration(cfg)
     val license = config.getString("license").flatMap { l ⇒ OSSLicense.lookup(Symbol(l)) }
-    val files = config.getConfig("files").fold(Map.empty[String, Option[URL]])(c ⇒
+    val files = config.getConfig("files").fold(Map.empty[String, (String,Option[URL])])(c ⇒
       (c.entrySet.filter { case (k, v) ⇒
         v.unwrapped.isInstanceOf[String]
       } map {
@@ -141,7 +141,7 @@ trait AssetLocator {
           val kSlashed = if (k.startsWith("/")) k else "/" + k
           val title = v.unwrapped.asInstanceOf[String]
           val resource = minifiedResourceOf(path + kSlashed)
-          title -> resource
+          k → (title -> resource)
       }).toMap)
 
     val dirs : Map[String, Option[Directory]] = recurse match {

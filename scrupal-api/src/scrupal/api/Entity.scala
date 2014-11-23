@@ -22,6 +22,8 @@ import scrupal.db.{VariantStorableRegistrable, IdentifierDAO, ScrupalDB}
 
 import scrupal.utils.{Enablee, Patterns, Pluralizer}
 
+import scala.concurrent.Future
+
 trait EntityCollectionCommand extends Action {
   def id: String
 }
@@ -181,7 +183,7 @@ abstract class Entity
 }
 
 trait NoopAction {
-  def apply : Result[_] = BSONResult(BSONDocument(), Indeterminate)
+  def apply : Future[Result[_]] = Future.successful( BSONResult(BSONDocument(), Indeterminate) )
 }
 
 case class NoopCreate(

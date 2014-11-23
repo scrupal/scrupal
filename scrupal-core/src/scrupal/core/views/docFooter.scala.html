@@ -1,0 +1,4 @@
+@(args: Map[String,play.twirl.api.Html])(implicit context: scrupal.api.Context)
+<div class="footer">
+  <sub><sub>@{args.get("footer").get}</sub></sub>
+</div>

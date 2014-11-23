@@ -21,7 +21,7 @@ import org.joda.time.DateTime
 import play.twirl.api.Html
 import scrupal.api.{HtmlNode, Node}
 import scrupal.api.{TwirlHtmlTemplate, Site}
-import scrupal.core.EchoApp
+import scrupal.core.{MarkedDocApp, EchoApp}
 
 class WelcomeSite extends Site {
   def id: Symbol = 'WelcomeToScrupal
@@ -29,18 +29,19 @@ class WelcomeSite extends Site {
   val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
   val modified: Option[DateTime] = Some(DateTime.now)
   val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
+  override val themeName = "amelia"
   def host: String = ".*"
   val siteRoot: Node =
     HtmlNode (
       "Main index page for Welcome To Scrupal Site",
       WelcomeSite.WelcomePageTemplate,
       args = Map.empty[String,Html],
-      enabled=true,
       modified=Some(DateTime.now),
       created=Some(new DateTime(2014, 11, 18, 18, 0))
   )
    EchoApp.enable(this)
+   val apiDoc = new MarkedDocApp('doc, "Documentation", "Documentation", "docs/api")
+   apiDoc.enable(this)
 }
 
 object WelcomeSite {

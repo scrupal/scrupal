@@ -124,7 +124,7 @@ sequential
       dir.description must beEqualTo(cfg.getString("description"))
       val direct = locator.resourceOf("root/foo.txt")
       direct.isDefined must beTrue
-      val optB = dir.files.get("Foo File").map { x ⇒ x.isDefined }
+      val optB = dir.files.get("foo.txt").map { x ⇒ x._2.isDefined }
       optB.isDefined must beTrue
       optB.get must beTrue
      }
