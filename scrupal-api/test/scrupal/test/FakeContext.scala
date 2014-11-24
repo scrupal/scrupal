@@ -32,7 +32,7 @@ class FakeContext[T <: FakeContext[T]](name: String = "")(implicit val scrupal: 
   def sym(name: String) = Symbol(nm(name))
   def sym = Symbol(nm)
 
-  override val site = Some(BasicSite(sym("Site"), "FakeContextSite", "Just For Testing", nm("localhost")))
+  override val site = Some(NodeSite(sym("Site"), "FakeContextSite", "Just For Testing", nm("localhost")))
 
   def apply[R: AsResult](f: T => R) = {
     val result = f(this.asInstanceOf[T])

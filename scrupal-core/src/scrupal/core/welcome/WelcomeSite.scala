@@ -19,9 +19,13 @@ package scrupal.core.welcome
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
-import scrupal.api.{HtmlNode, Node}
-import scrupal.api.{TwirlHtmlTemplate, Site}
+import scrupal.api._
 import scrupal.core.{MarkedDocApp, EchoApp}
+import shapeless.{HList, HNil, ::}
+import spray.http.Uri
+import spray.routing.PathMatchers.RestPath
+
+import scala.concurrent.Future
 
 class WelcomeSite extends Site {
   def id: Symbol = 'WelcomeToScrupal
@@ -31,6 +35,7 @@ class WelcomeSite extends Site {
   val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
   override val themeName = "amelia"
   def host: String = ".*"
+  final val key = ""
   val siteRoot: Node =
     HtmlNode (
       "Main index page for Welcome To Scrupal Site",
@@ -39,9 +44,21 @@ class WelcomeSite extends Site {
       modified=Some(DateTime.now),
       created=Some(new DateTime(2014, 11, 18, 18, 0))
   )
-   EchoApp.enable(this)
-   val apiDoc = new MarkedDocApp('doc, "Documentation", "Documentation", "docs/api")
-   apiDoc.enable(this)
+
+  case class RootAction(context: Context) extends Action {
+    def apply() : Future[Result[_]] = { siteRoot(context) }
+  }
+  object AnyPathToRoot extends PathToAction(RestPath) {
+    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
+  }
+
+  def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
+    AnyPathToRoot
+  )
+
+  EchoApp.enable(this)
+  val apiDoc = new MarkedDocApp('doc, "Documentation", "Documentation", "docs/api")
+  apiDoc.enable(this)
 }
 
 object WelcomeSite {

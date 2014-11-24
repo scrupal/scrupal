@@ -16,7 +16,6 @@
  **********************************************************************************************************************/
 package scrupal.api
 
-
 import shapeless.HList
 import spray.http.Uri
 import spray.routing.PathMatcher
@@ -39,7 +38,6 @@ import scala.concurrent.Future
   * Action objects are how Scrupal represents an action taken from an external application. Actions are processed by
   * the ActionProcessor actor. Extensions of Action represent actual requests by adding parametric data to the Action
   * and implementing the `apply` function.
-
   */
 trait Action extends (() => Future[Result[_]]) {
   /** The action part of an Action object.

@@ -91,6 +91,6 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
       genApplication(i, mods, ents, instances, nodes)
     }
     val name = s"Site-$id"
-    BasicSite(Symbol(name), name, name, "localhost", Node.Empty, applications)
+    NodeSite(Symbol(name), name, name, "localhost", Node.Empty, applications)
   }
 }

@@ -84,8 +84,9 @@ abstract class SiteController
     request_context { rc: RequestContext ⇒
       complete {
         implicit val context = Context(scrupal, rc)
-        val node = aSite.siteRoot
-        val result = node(context)
+        val path : Uri.Path = rc.unmatchedPath
+        val action = aSite.matchingAction(path, context).get
+        val result = action()
         makeMarshallable(result)
       }
     }

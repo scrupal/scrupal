@@ -23,6 +23,7 @@ import shapeless.HNil
 import spray.http.HttpHeader
 import spray.routing.Route
 import spray.routing._
+import shapeless.::
 
 /** A Controller For Entities
   * This controller handles entity requests for an site. It caches the set of entities it is responsible for by traversing
@@ -39,7 +40,7 @@ case class EntityController(id: Symbol, priority: Int, theSite: Site, appEntitie
   extends SiteController
 {
 
-  type AppEntityList = shapeless.::[Application,shapeless.::[String,shapeless.::[Entity,HNil]]]
+  type AppEntityList = ::[Application,::[String,::[Entity,HNil]]]
 
   def app_entity : Directive[AppEntityList] = new Directive[AppEntityList] {
     def happly(f: AppEntityList ⇒ Route) = {

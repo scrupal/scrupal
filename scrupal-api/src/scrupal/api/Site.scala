@@ -21,11 +21,14 @@ import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import scrupal.api._
 
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
 import scrupal.utils.{Enablee, Enablement, AbstractRegistry, Registry}
+import shapeless.{HNil,::}
+import spray.http.Uri
+import spray.routing.PathMatchers.RestPath
 
+import scala.concurrent.Future
 import scala.util.matching.Regex
 
 /** Site Top Level Object
@@ -34,15 +37,13 @@ import scala.util.matching.Regex
  */
 trait Site
   extends VariantStorableRegistrable[Site]
-          with Nameable with Describable with Enablement[Site] with Enablee with Modifiable {
+          with Nameable with Describable with Enablement[Site] with Enablee with Modifiable with ActionProvider {
 
   val kind = 'Site
 
   def requireHttps: Boolean = false
 
   def host: String
-
-  def siteRoot: Node
 
   def themeProvider : String = "bootswatch"
 
@@ -67,7 +68,7 @@ trait Site
 
 }
 
-case class BasicSite (
+case class NodeSite (
   id : Identifier,
   name: String,
   description: String,
@@ -79,14 +80,25 @@ case class BasicSite (
   created: Option[DateTime] = None
 ) extends Site {
   final override val kind = 'BasicSite
+  final val key = ""
+
+  case class SiteRootNodeAction(context: Context) extends Action {
+    def apply() : Future[Result[_]] = { siteRoot.apply(context) }
+  }
+
+  object SiteRootPathToAction extends PathToAction(RestPath) {
+    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, ctxt: Context): Action = SiteRootNodeAction(ctxt)
+  }
+
+  final val pathsToActions = Seq( SiteRootPathToAction )
 }
 
-object BasicSite {
+object NodeSite {
   import BSONHandlers._
 
   implicit val nodeReader = Node.NodeReader
   implicit val nodeWriter = Node.NodeWriter
-  implicit val BasicSiteHandler = Macros.handler[BasicSite]
+  implicit val NodeSiteHandler = Macros.handler[NodeSite]
 }
 
 object Site extends Registry[Site] {
@@ -127,7 +139,7 @@ object Site extends Registry[Site] {
       doc.getAs[BSONString]("kind") match {
         case Some(str) =>
           str.value match {
-            case "Basic"  => BasicSite.BasicSiteHandler.read(doc)
+            case "Basic"  => NodeSite.NodeSiteHandler.read(doc)
             case _ ⇒ toss(s"Unknown kind of Site: '${str.value}")
           }
         case None => toss(s"Field 'kind' is missing from Node: ${doc.toString()}")
@@ -138,7 +150,7 @@ object Site extends Registry[Site] {
   implicit val SiteWriter = new VariantBSONDocumentWriter[Site] {
     def write(site: Site) : BSONDocument = {
       site.kind match {
-        case 'Basic  => BasicSite.BasicSiteHandler.write(site.asInstanceOf[BasicSite])
+        case 'Basic  => NodeSite.NodeSiteHandler.write(site.asInstanceOf[NodeSite])
         case _ ⇒ toss(s"Unknown kind of Site: ${site.kind}")
       }
     }

@@ -193,8 +193,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
       schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
           for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
-            log.debug(s"Loading site '${s._id.name }' for host ${s.host }, index=${s.siteRoot.toString() }, enabled=${
-              s.isEnabled(this)}")
+            log.debug(s"Loading site '${s._id.name }' for host ${s.host }, enabled=${s.isEnabled(this)}")
             s.enable(this)
             s.host → s
           }
