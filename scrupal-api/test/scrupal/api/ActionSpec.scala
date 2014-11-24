@@ -17,16 +17,112 @@
 
 package scrupal.api
 
-import org.specs2.mutable.Specification
+import java.util.concurrent.TimeUnit
 
-/**
- * Created by reid on 11/11/14.
- */
-class ActionSpec extends Specification {
+import scrupal.test.{ScrupalSpecification, FakeContext}
+import shapeless.{HList, HNil, ::}
+import spray.http.Uri
+import spray.routing.PathMatcher
+import spray.routing.PathMatchers._
+
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
+
+
+/** Test Suite for Actions and Related Traits */
+class ActionSpec extends ScrupalSpecification("ActionSpec") {
+
+  case class Fixture(name: String) extends FakeContext(name) {
+    val int_p2a = new PathToAction(PathMatcher("foo")/IntNumber) {
+      def apply(list: ::[Int,HNil], rest: Uri.Path, ctxt: Context) : Action = {
+        new Action {
+          val context = ctxt
+          def apply() : Future[Result[_]] = {
+            Future.successful(StringResult(list.head.toString))
+          }
+        }
+      }
+    }
+    val empty_p2a = new PathToAction(PathMatcher("foo")) {
+      def apply(list: HNil, rest: Uri.Path, ctxt: Context) : Action = {
+        new Action { val context = ctxt; def apply() : Future[Result[_]] = Future.successful(StringResult("")) }
+      }
+    }
+    val provider0 = new ActionProvider {
+      def key : String = "p0"
+      def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
+    }
+    val provider1 = new ActionProvider {
+      def key : String = "1"
+      def pathsToActions = Seq(int_p2a)
+    }
+    val provider2 = new ActionProvider {
+      def key = "2"
+      def pathsToActions = Seq(empty_p2a, int_p2a)
+    }
+  }
 
   "Action" should {
     "perform some tests" in {
       pending
+    }
+  }
+
+
+
+  "PathToAction" should {
+    "map integer to string" in Fixture("p2a1") { fix : Fixture ⇒
+      val matched = fix.int_p2a.matches(Uri.Path("foo/42"), fix) match {
+        case Some(action) ⇒
+          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          Await.result(f, Duration(1,TimeUnit.SECONDS))
+        case None ⇒ "0"
+      }
+      matched must beEqualTo ("42")
+    }
+
+    "map empty to nothing" in Fixture("p2a2") { fix : Fixture ⇒
+      val matched = fix.empty_p2a.matches(Uri.Path("foo"), fix) match {
+        case Some(action) ⇒
+          val f2 = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload }
+          Await.result(f2, Duration(1, TimeUnit.SECONDS))
+        case None ⇒ "Nope"
+      }
+      matched.isEmpty must beTrue
+    }
+  }
+
+  "ActionProvider" should {
+    "find None with an empty pathsToActions" in Fixture("ap1") { fix: Fixture ⇒
+      fix.provider0.matchingAction("foo", fix) must beEqualTo(None)
+    }
+    "find the matching one" in Fixture("ap2") { fix: Fixture ⇒
+      val result = fix.provider1.matchingAction("foo/42", fix)
+      val str = result match {
+        case Some(action) ⇒
+          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          Await.result(f, Duration(1,TimeUnit.SECONDS))
+        case None ⇒ ""
+      }
+      str must beEqualTo("42")
+    }
+    "find the first one that matches" in Fixture("api3") { fix : Fixture ⇒
+      val result = fix.provider2.matchingAction("foo", fix)
+      val str = result match {
+        case Some(action) ⇒
+          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          Await.result(f, Duration(1,TimeUnit.SECONDS))
+        case None ⇒ "Nope"
+      }
+      str must beEqualTo("")
+      val r2 = fix.provider2.matchingAction("foo/42", fix)
+      val s2 = result match {
+        case Some(action) ⇒
+          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          Await.result(f, Duration(1,TimeUnit.SECONDS))
+        case None ⇒ "Nope"
+      }
+      s2 must beEqualTo("")
     }
   }
 }

@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext
   */
 trait Context {
   // Scrupal Related things
-  val scrupal: Scrupal
+  def scrupal: Scrupal
 
   // Request related things
   val request : Option[RequestContext] = None
