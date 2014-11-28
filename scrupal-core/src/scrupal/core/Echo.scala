@@ -35,7 +35,7 @@ import scala.concurrent.Future
   */
 object EchoApp extends Application {
 
-  lazy val id: Symbol = 'Echo
+  lazy val id: Symbol = 'EchoApp
 
   val name: String = "Echo Application"
 
@@ -66,6 +66,8 @@ object EchoEntity extends Entity {
 
   def kind: Symbol = 'Echo
 
+  val key: String = "Echo"
+
   def instanceType: BundleType = BundleType.Empty
 
   def author: String = "Reid Spencer"
@@ -76,7 +78,7 @@ object EchoEntity extends Entity {
 
   def description: String = "An entity that stores nothing and merely echos its requests"
 
-  override def create(context: ApplicationContext, id: String, instance: BSONDocument) : Create = {
+  override def create(context: Context, id: String, instance: BSONDocument) : Create = {
     new Create(context, id, instance) {
       override def apply() : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.create(id, instance)(context)) )
@@ -84,7 +86,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def retrieve(context: ApplicationContext, id: String) : Retrieve = {
+  override def retrieve(context: Context, id: String) : Retrieve = {
     new Retrieve(context, id) {
       override def apply : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.retrieve(id)(context)) )
@@ -92,7 +94,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def update(context: ApplicationContext, id: String, fields: BSONDocument) : Update = {
+  override def update(context: Context, id: String, fields: BSONDocument) : Update = {
     new Update(context, id, fields) {
       override def apply : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.update(id, fields)(context)) )
@@ -100,7 +102,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override  def delete(context: ApplicationContext, id: String) : Delete = {
+  override  def delete(context: Context, id: String) : Delete = {
     new Delete(context, id) {
       override def apply : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.delete(id)(context)) )
@@ -109,7 +111,7 @@ object EchoEntity extends Entity {
   }
 
 
-  override def query(context: ApplicationContext, id: String, fields: BSONDocument) : Query = {
+  override def query(context: Context, id: String, fields: BSONDocument) : Query = {
     new Query(context, id, fields) {
       override def apply : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.query(id, fields)(context)) )
@@ -117,7 +119,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def createFacet(context: ApplicationContext, id: String,
+  override def createFacet(context: Context, id: String,
                            what: Seq[String], instance: BSONDocument) : CreateFacet = {
     new CreateFacet(context, id, what, instance) {
       override def apply : Future[Result[_]] = {
@@ -126,7 +128,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def retrieveFacet(context: ApplicationContext, id: String, what: Seq[String]) : RetrieveFacet = {
+  override def retrieveFacet(context: Context, id: String, what: Seq[String]) : RetrieveFacet = {
     new RetrieveFacet(context, id, what) {
       override def apply : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.retrieveFacet(id, what)(context)) )
@@ -134,7 +136,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def updateFacet(context: ApplicationContext, id: String,
+  override def updateFacet(context: Context, id: String,
                            what: Seq[String], fields: BSONDocument) : UpdateFacet = {
     new UpdateFacet(context, id, what, fields) {
       override def apply : Future[Result[_]] = {
@@ -143,7 +145,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def deleteFacet(context: ApplicationContext, id: String, what: Seq[String]) : DeleteFacet = {
+  override def deleteFacet(context: Context, id: String, what: Seq[String]) : DeleteFacet = {
     new DeleteFacet(context, id, what) {
       override def apply : Future[Result[_]] = {
         Future.successful( HtmlResult(scrupal.core.views.html.echo.deleteFacet(id, what)(context)) )
@@ -151,7 +153,7 @@ object EchoEntity extends Entity {
     }
   }
 
-  override def queryFacet(context: ApplicationContext, id: String,
+  override def queryFacet(context: Context, id: String,
                           what: Seq[String], args: BSONDocument) : QueryFacet = {
     new QueryFacet(context, id, what, args) {
       override def apply : Future[Result[_]] = {

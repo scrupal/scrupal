@@ -48,16 +48,16 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
         new Action { val context = ctxt; def apply() : Future[Result[_]] = Future.successful(StringResult("")) }
       }
     }
-    val provider0 = new ActionProvider {
-      def key : String = "p0"
+    val provider0 = new TerminalActionProvider {
+      val key : String = "p0"
       def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
     }
-    val provider1 = new ActionProvider {
-      def key : String = "1"
+    val provider1 = new TerminalActionProvider {
+      val key : String = "1"
       def pathsToActions = Seq(int_p2a)
     }
-    val provider2 = new ActionProvider {
-      def key = "2"
+    val provider2 = new TerminalActionProvider {
+      val key = "2"
       def pathsToActions = Seq(empty_p2a, int_p2a)
     }
   }

@@ -26,6 +26,7 @@ import scrupal.api._
 import scrupal.utils.{OSSLicense, Version}
 
 import scrupal.core.CoreFeatures._
+import shapeless.HList
 
 /** Scrupal's Core Module.
   * This is the base module of all modules. It provides the various abstractions that permit other modules to extend
@@ -66,11 +67,13 @@ object CoreModule extends Module {
   object PageEntity extends Entity {
     def id = 'Page
     def kind = 'Page
+    val key = "Page"
     val description =  "An entity for simple HTML5 pages."
     val author = CoreModule.author
     val copyright = CoreModule.copyright
     val license = CoreModule.license
     val instanceType = PageBundle_t
+    override def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
   }
 
   def entities = Seq[Entity](

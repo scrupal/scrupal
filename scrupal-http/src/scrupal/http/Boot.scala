@@ -78,7 +78,7 @@ object Boot extends App with ScrupalComponent
     for (site ← Site.values if site.isEnabled(scrupal)) {
       val app_names = for (app ← site.applications if app.isEnabled(site)) yield {
         for (mod ← app.modules if mod.isEnabled(app)) yield {
-          val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield {ent.path }
+          val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield {ent.singularKey }
           val distinct_paths = paths.distinct
           if (paths.size != distinct_paths.size) {
             toss(

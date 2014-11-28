@@ -52,6 +52,8 @@ class MarkedDocEntity(val root: String) extends Entity {
 
   def kind: Symbol = 'MarkedDoc
 
+  val key = "MarkedDoc"
+
   def instanceType: BundleType = BundleType.Empty
 
   override def moduleOf = Some(CoreModule)
@@ -65,7 +67,7 @@ class MarkedDocEntity(val root: String) extends Entity {
     TwirlHtmlTemplate('docFooter, "Footer for Marked Documentation", scrupal.core.views.html.docFooter)
 
 
-    override def retrieve(context: ApplicationContext, id: String): Retrieve = new Retrieve(context, id) {
+    override def retrieve(context: Context, id: String): Retrieve = new Retrieve(context, id) {
 
     override def apply(): Future[Result[_]] = {
       val locator = context.scrupal.assetsLocator
@@ -104,7 +106,7 @@ class MarkedDocEntity(val root: String) extends Entity {
     }
   }
 
-  override def retrieveFacet(context: ApplicationContext, id: String, what: Seq[String]): RetrieveFacet = {
+  override def retrieveFacet(context: Context, id: String, what: Seq[String]): RetrieveFacet = {
     new RetrieveFacet(context, id, what) {
       def apply(): Future[Result[_]] = {
         Future.successful(HtmlResult(scrupal.core.views.html.echo.retrieveFacet(id,what)(context)))

@@ -27,7 +27,9 @@ import akka.util.Timeout
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
 import scrupal.db.DBContext
-import scrupal.utils.{Configuration, Enablement, Registry, ScrupalComponent}
+import scrupal.utils._
+import shapeless.HList
+import spray.routing.RequestContext
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration._
@@ -42,10 +44,12 @@ class Scrupal(
   dbc: Option[DBContext] = None,
   actSys: Option[ActorSystem] = None
 )
-extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
+extends ActionProvider with ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 {
+  val key = ""
   def registry = Scrupal
   def asT = this
+  def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
 
   val Copyright = "© 2013-2015 Reactific Systems, Inc. All Rights Reserved."
 
@@ -115,6 +119,8 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     case s: Site ⇒  Site.containsValue(s)
     case _ ⇒ false
   }
+
+  def authenticate(rc: RequestContext) : Option[Principal] = None
 
   /**
 	 * Called before the application starts.
@@ -212,34 +218,13 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
   def onStart() {
   }
 
-
-  /** Mapping of site names to Sites and their corresponding AppEntityMap
-    * This type just gives a name to a nested set of tuples that defines the top level structure in Scrupal.
-    * At the root we have various Sites which contain Applications which contain Entities (via Modules). Note
-    * that Modules provide entities generally, possibly to more than one site or application. This is how entity paths
-    * are mapped. The outer map maps the name of a site to a pair of the Site object and the middle map. The middle
-    * map, similarly, maps the path of the application to a pair of the Application object and the inner map. The
-    * inner map maps the path(s) of an entity (type) to the Entity object.
-    */
-  type SiteAppEntityMap = Map[String,(Site,Site#ApplicationMap)]
-
-
-  /** Construct Top Level Structure For Current Situation
-    * This method constructs a TopLevelStructure instance that reflects the current enablement status of sites,
-    * applications, modules and entities. The intention here is to allow dynamic routing in an efficient way so that
-    * a request can be matched against this structure efficiently and the corresponding objects involved accessed.
-    * Note that the three object types (Site, Application, Entity) are the same three as in the Context. This isn't
-    * a coincidence. Also note that the inner map of entities will contain both the singular and plural forms of the
-    * entity's path as keys in the map. This makes it simple to invoke collection versus instance operations.
-    * The intent of all this is to match paths like {{{http://site/application/entity}}} dynamically and quickly
-    * locate the correct entity to which the request should be forwarded.
-    * @return The TopLevelStructure mapping sites to applications to entities
-    */
-  def getAppEntities : SiteAppEntityMap = {
-    forEach { e ⇒ e.isInstanceOf[Application] && isEnabled(e,this) } { theSite: Site ⇒
-      theSite.name → ( theSite → theSite.getApplicationMap )
+  def subordinateActionProviders : ActionProviderMap = {
+    val pairs = forEach[(String,Site)] { e ⇒ e.isInstanceOf[Site] && isEnabled(e, this) } { siteE: Enablee ⇒
+      val site = siteE.asInstanceOf[Site]
+      site.key → site
     }
-  }.toMap
+    pairs.toMap
+  }
 
 
   /** Handle An Action
@@ -250,7 +235,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
     * @param action The action to act upon (a Request => Result[P] function).
     * @return A Future to the eventual Result[P]
     */
-  def handle(action: Action) : Future[Result[_]] = {
+  def dispatch(action: Action) : Future[Result[_]] = {
     _dispatcher.ask(action)(_timeout) flatMap { any ⇒ any.asInstanceOf[Future[Result[_]]] }
   }
 

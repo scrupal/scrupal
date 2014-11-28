@@ -23,7 +23,7 @@ import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
-import scrupal.utils.{Enablee, Enablement, AbstractRegistry, Registry}
+import scrupal.utils._
 import shapeless.{HNil,::}
 import spray.http.Uri
 import spray.routing.PathMatchers.RestPath
@@ -36,8 +36,8 @@ import scala.util.matching.Regex
  * Created by reidspencer on 11/3/14.
  */
 trait Site
-  extends VariantStorableRegistrable[Site]
-          with Nameable with Describable with Enablement[Site] with Enablee with Modifiable with ActionProvider {
+  extends ActionProvider with VariantStorableRegistrable[Site]
+          with Nameable with Describable with Enablement[Site] with Enablee with Modifiable {
 
   val kind = 'Site
 
@@ -53,17 +53,16 @@ trait Site
 
   def asT = this
 
-  def applications : Seq[Application] = Seq.empty[Application]
+  def applications = forEach[Application] { e ⇒
+    e.isInstanceOf[Application] && isEnabled(e, this)
+  } { e ⇒
+    e.asInstanceOf[Application]
+  }
 
   def isChildScope(e: Enablement[_]) : Boolean = applications.contains(e)
 
-  /** Mapping of application paths to Applications and their corresponding EntityMap  */
-  type ApplicationMap= Map[String,(Application,Application#EntityMap)]
-
-  def getApplicationMap : ApplicationMap = {
-    forEach { e ⇒ e.isInstanceOf[Application] && isEnabled(e,this) } { app: Application ⇒
-      app.path → (app → app.getEntityMap())
-    }
+  def subordinateActionProviders : ActionProviderMap = {
+    for (a ← applications) yield { a.key → a }
   }.toMap
 
 }
@@ -80,7 +79,8 @@ case class NodeSite (
   created: Option[DateTime] = None
 ) extends Site {
   final override val kind = 'BasicSite
-  final val key = ""
+  final val key : String = makeKey(id.name)
+
 
   case class SiteRootNodeAction(context: Context) extends Action {
     def apply() : Future[Result[_]] = { siteRoot.apply(context) }

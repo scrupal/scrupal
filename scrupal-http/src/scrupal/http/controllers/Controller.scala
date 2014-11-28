@@ -19,8 +19,8 @@ package scrupal.http.controllers
 
 import scrupal.api._
 import scrupal.http.ScrupalMarshallers
-import scrupal.http.directives.{PathHelpers, SiteDirectives}
 import scrupal.utils.{Registrable, Registry}
+import shapeless.{::,HNil}
 import spray.http.StatusCodes.NotFound
 import spray.http.{HttpResponse, HttpRequest}
 import spray.routing._
@@ -37,7 +37,8 @@ import akka.event.Logging._
   *
   * Created by reidspencer on 10/29/14.
   */
-trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Directives {
+trait Controller extends Registrable[Controller]
+                         with Directives with ScrupalMarshallers with RequestLoggers {
 
   /** The priority of this controller for routing
     * This affects the controller's placement in the list of controllers that form the route processing.
@@ -69,48 +70,107 @@ trait Controller extends /* TwirlSupport with */ Registrable[Controller] with Di
 
   def request_context = extract( rc ⇒ rc )
 
-}
-
-
-/** Controller That Requires A Site.
-  *
-  * This is the controller superclass
-  */
-abstract class SiteController
-  extends Controller with Directives with SiteDirectives with PathHelpers with ScrupalMarshallers with RequestLoggers {
-
-  def rootPage(aSite: Site)(implicit scrupal: Scrupal)  : Route =
-  {
-    request_context { rc: RequestContext ⇒
-      complete {
-        implicit val context = Context(scrupal, rc)
-        val path : Uri.Path = rc.unmatchedPath
-        val action = aSite.matchingAction(path, context).get
-        val result = action()
-        makeMarshallable(result)
-      }
-    }
-  }
-
-  def routes(implicit scrupal: Scrupal): Route = {
-    logRequestResponse(showAllResponses _) {
-      site(scrupal) { aSite: Site ⇒
-        get {
-          pathEndOrSingleSlash {
-            rootPage(aSite)
-          } ~ {
-            routes(aSite)
+  def context(scrupal: Scrupal): Directive1[Context] = {
+    hostName.flatMap { host: String ⇒
+      extract { ctxt: RequestContext ⇒
+        val sites = Site.forHost(host)
+        if (sites.isEmpty)
+          Context(scrupal, ctxt)
+        else {
+          val site = sites.head
+          if (site.isEnabled(scrupal)) {
+            if ((ctxt.request.uri.scheme == "https") == site.requireHttps)
+              scrupal.authenticate(ctxt) match {
+                case Some(principal: Principal) ⇒ Context(scrupal, ctxt, site, principal)
+                case None ⇒ Context(scrupal, ctxt, site)
+              }
+            else
+              Context(scrupal, ctxt)
+          } else {
+            Context(scrupal, ctxt)
           }
         }
       }
     }
   }
-
-  def routes(aSite: Site)(implicit scrupal: Scrupal) : Route
 }
 
-abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller with RequestLoggers
+abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller
 
+/** A Controller For ActionProviders
+  *
+  * Scrupal API module provides the ActionProvider that can convert a path
+  */
+abstract class ActionProviderController extends Controller {
+
+  def provider : ActionProvider
+
+  def providerToAction(unmatchedPath: Uri.Path, context: Context) : Option[Action] = {
+    provider.matchingAction(unmatchedPath, context)
+  }
+
+  def action(key: String, unmatchedPath: Uri.Path, context: Context) : Directive1[Action] = {
+    new Directive1[Action] {
+      def happly(f: ::[Action,HNil] ⇒ Route) : Route = {
+        providerToAction(unmatchedPath, context) match {
+          case Some(action) ⇒ f(action :: HNil)
+          case None ⇒ reject
+        }
+      }
+    }
+  }
+
+  def routes(implicit scrupal: Scrupal) : Route = {
+    context(scrupal) { ctxt : Context ⇒
+      if (provider.key.nonEmpty) {
+        pathPrefix(provider.singularKey ~ Slash) {
+          action(provider.singularKey, ctxt.request.get.unmatchedPath, ctxt) {
+            a: Action ⇒ complete {
+              makeMarshallable {
+                a.dispatch
+              }
+            }
+          }
+        } ~
+        pathPrefix(provider.pluralKey ~ Slash) {
+          action(provider.pluralKey, ctxt.request.get.unmatchedPath, ctxt) {
+            a: Action ⇒ complete {
+              makeMarshallable {
+                a.dispatch
+              }
+            }
+          }
+        }
+      } else {
+        action("", ctxt.request.get.unmatchedPath, ctxt) {
+          a: Action ⇒ complete {
+            makeMarshallable {
+              a.dispatch
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/** Controller That Requires A Site.
+  *
+  * This is the controller superclass
+  */
+case class SiteController(
+  id: Symbol,
+  provider: Site,
+  priority: Int = 0
+) extends ActionProviderController {
+}
+
+case class ApplicationController(
+  id: Symbol,
+  provider: Application,
+  priority: Int = 0
+) extends ActionProviderController {
+}
 
 trait RequestLoggers {
   def showRequest(request: HttpRequest) = LogEntry(request.uri, InfoLevel)

@@ -23,15 +23,17 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
 import scrupal.utils._
+import shapeless.HList
 
 /** A Scrupal Application
   * Applications are a fundamental unit of organization in Scrupal. A Site defines the set of applications that are to
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
  * Created by reid on 11/6/14.
  */
-trait Application
-  extends VariantStorableRegistrable[Application]
-          with Nameable with Describable with Modifiable with Pathable with Enablement[Application] with Enablee {
+trait Application extends ActionProvider
+  with VariantStorableRegistrable[Application] with Nameable with Describable with Modifiable
+  with Enablement[Application] with Enablee {
+
   def registry: Registry[Application] = Application
   def asT  : Application = this
 
@@ -39,27 +41,22 @@ trait Application
     * This is the path at the start of the Site's URL that this application uses.
     * @return
     */
-  lazy val path : String = id.name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
+  val key : String = makeKey(id.name)
 
   /** Applicable Modules
     * This modules are assigned (enabled) within this application
     */
-  def modules = forEach[Module,Module] { e ⇒ e.isInstanceOf[Module] && isEnabled(e, this) } { e ⇒ e }
+  def modules = forEach[Module] { e ⇒ e.isInstanceOf[Module] && isEnabled(e, this) } { e ⇒ e.asInstanceOf[Module] }
 
-  def entities = forEach[Entity,Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e,this) } { e ⇒ e }
+  def entities = forEach[Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e,this) } { e ⇒ e.asInstanceOf[Entity] }
 
   def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
-  type EntityMap = Map[String,(String,Entity)]
-
-  def getEntityMap() : EntityMap = {
-    for (
-      entity ← entities if entity.isEnabled(this) ;
-      name ← Seq(entity.path, entity.plural_path)
-    ) yield {
-      name → (name → entity)
-    }
+  def subordinateActionProviders : ActionProviderMap = {
+    for (entity ← entities ; name ← Seq(entity.singularKey, entity.pluralKey)) yield { name → entity }
   }.toMap
+
+  def pathsToActions  = Seq.empty[PathToAction[_ <: HList]]
 }
 
 case class BasicApplication(
@@ -83,8 +80,8 @@ object Application extends Registry[Application] {
   def registrantsName = "application"
 
   private[this] val _bypath = new AbstractRegistry[String, Application] {
-    def reg(app:Application) = _register(app.path,app)
-    def unreg(app:Application) = _unregister(app.path)
+    def reg(app:Application) = _register(app.key,app)
+    def unreg(app:Application) = _unregister(app.key)
   }
 
   override def register(app: Application) : Unit = {

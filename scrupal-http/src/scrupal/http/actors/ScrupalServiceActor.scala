@@ -19,7 +19,8 @@ package scrupal.http.actors
 
 import akka.actor.{Props, Actor}
 import akka.util.Timeout
-import scrupal.api.{Scrupal, Context}
+import scrupal.api._
+import scrupal.core.welcome.WelcomeSite
 import scrupal.http.controllers._
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
@@ -45,10 +46,7 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   // val assets = new AssetsController
   // val webjars = new WebJarsController
 
-  // First, create all the controllers because routing depends on having controllers to make the routes.
-  val the_controllers = createControllers(scrupal)
-
-  val the_router = createRouter(scrupal, the_controllers)
+  val the_router = createRouter(scrupal)
 
 
   log.warn("Router: " + the_router) // TODO: turn down to trace when we're sure routing works
@@ -65,21 +63,38 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   */
 trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives with RequestLoggers {
 
-  def head_route(scrupal: Scrupal) : Route = {
-    scrupalIsReady(scrupal) {
-      logRequestResponse(showAllResponses _) {
-        reject
+  def createController(key: String, ap: ActionProvider) : ActionProviderController = {
+    ap match {
+      case e: Entity ⇒ new EntityController(Symbol(key),e,0)
+      case a: Application ⇒ new ApplicationController(Symbol(key),a,10)
+      case w: WelcomeSite ⇒ new WelcomeController(w)
+      case s: Site ⇒ new SiteController(Symbol(key),s,100)
+      case ap: ActionProvider ⇒ new ActionProviderController {
+        val provider = ap
+        def id = Symbol(key)
+        val priority: Int = 0
       }
     }
-  }
 
-  def createRouter(scrupal: Scrupal, controllers: Seq[Controller]) : Route = {
+  }
+  def createRouter(scrupal: Scrupal) : Route = {
+    def subordinates(ap: ActionProvider): Seq[ActionProviderController] = {
+      ap.subordinateActionProviders.flatMap {
+        case (key: String, ap: ActionProvider) ⇒
+          createController(key, ap) +: subordinates(ap)
+      }
+    }.toSeq
+
     Try {
-      // Fold all the controller routes into one big one, sorted by priority
+      val controllers = createController("", scrupal) +: subordinates(scrupal)
+
+      val assets_controller = new AssetsController(scrupal)
+
+    // Fold all the controller routes into one big one, sorted by priority
       val sorted_controllers = controllers.sortBy { c => c.priority }
 
       // Now construct the routes from the prioritized set of controllers we found
-      sorted_controllers.foldLeft[Route](head_route(scrupal)) { (route, ctrlr) =>
+      sorted_controllers.foldLeft[Route](assets_controller.routes(scrupal)) { (route, ctrlr) =>
         route ~ ctrlr.routes(scrupal)
       }
     } match {
@@ -120,13 +135,5 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
   private val pathsOkayWhenUnconfigured = "^/(assets/|webjars/|configure|reconfigure|doc|scaladoc)".r
    */
 
-  def createControllers(scrupal: Scrupal) : Seq[Controller] = {
-    val configured_controllers = {
-      for ((siteName, (site, appEntities)) ← scrupal.getAppEntities) yield {
-        new EntityController(Symbol(siteName), 0, site, appEntities)
-      }
-    }.toSeq
-    new AssetsController(scrupal) +: configured_controllers :+ new WelcomeController()
-  }
 }
 

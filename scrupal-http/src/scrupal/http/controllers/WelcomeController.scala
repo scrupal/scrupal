@@ -18,30 +18,31 @@
 package scrupal.http.controllers
 
 import scrupal.api._
+import scrupal.core.welcome.WelcomeSite
 import spray.routing._
 
 /**
  * A controller to provide the Introduction To Scrupal content
  * Further description here.
  */
-case class WelcomeController() extends SiteController {
+case class WelcomeController(welcomeSite: WelcomeSite) extends ActionProviderController {
   def id = 'Welcome
-  val priority = 0
+  val priority = 1000
+  val provider = welcomeSite
 
-  def routes(aSite: Site)(implicit scrupal: Scrupal): Route = {
+  override def routes(implicit scrupal: Scrupal): Route = {
+    super.routes ~
     get {
       path("install_echo") {
         complete("Not Implemented Yet")
       } ~
       path("config") {
         complete("Not Implemented Yet")
-      } ~
-      path(RestPath) { the_path ⇒
-        rootPage(aSite)
       }
     }
   }
 }
+
   /*
   /** The home page */
 	def index = UserAction.async { implicit context: AnyUserContext => {

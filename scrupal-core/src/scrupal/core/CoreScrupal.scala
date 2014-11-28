@@ -30,15 +30,15 @@ class CoreScrupal extends Scrupal {
     super.open()
   }
 
-  override def getAppEntities : SiteAppEntityMap = {
-    val apiAppEntities = super.getAppEntities
-    if (apiAppEntities.isEmpty){
+  override def subordinateActionProviders : ActionProviderMap = {
+    val map = super.subordinateActionProviders
+    if (map.isEmpty) {
       val site = new WelcomeSite
       site.enable(this)
-      Map ( site.name → ( site → site.getApplicationMap ) )
+      Map ( site.key → site )
     }
     else
-      apiAppEntities.toMap
+      map
   }
 
   override def onLoadConfig(config: Configuration): Configuration = {

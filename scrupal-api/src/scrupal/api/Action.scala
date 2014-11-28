@@ -16,12 +16,14 @@
  **********************************************************************************************************************/
 package scrupal.api
 
+import scrupal.utils.{Pluralizer, Patterns}
 import shapeless.HList
 import spray.http.Uri
 import spray.routing.PathMatcher
 import spray.routing.PathMatcher.{Matched, Unmatched}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+import akka.pattern.ask
 
 
 /** An Invokable Action
@@ -58,6 +60,10 @@ trait Action extends (() => Future[Result[_]]) {
     */
   def context : Context
 
+  def dispatch : Future[Result[_]] = {
+    context.scrupal.dispatch(this)
+  }
+
 }
 
 /** Mapping Of PathMatcher To Action
@@ -67,6 +73,15 @@ trait Action extends (() => Future[Result[_]]) {
   * @tparam L
   */
 abstract class PathToAction[L <: HList](val pm: PathMatcher[L]) extends ( (L, Uri.Path, Context) ⇒ Action ) {
+
+  /** A convenience function for converting a path and context into an action using this PathToAction's
+    * apply function. This just bypasses the need to apply the Uri.Path to the PathMatcher and process its
+    * Matched or Unmatched result. Instead, it returns None for an Unmatched result, or the Action provided by
+    * this PathToAction
+    * @param path The path to match
+    * @param c The context in which to match the path
+    * @return None if the path did not match the PathMatcher, Some(Action) if it did
+    */
   def matches(path: Uri.Path, c: Context) : Option[Action] = {
     pm(path) match {
       case Matched(rest, value) ⇒ Some(this.apply(value, rest, c))
@@ -82,7 +97,7 @@ abstract class PathToAction[L <: HList](val pm: PathMatcher[L]) extends ( (L, Ur
   * extraction facility based on shapeless.HList and provided by spray.routing. This can be used generally, without
   * Spray, or nicely in combination with the support in scrupal-http which is based on spray.
   */
-trait ActionProvider {
+abstract class ActionProvider {
 
   /** Key For Identifying This Provider
     *
@@ -98,7 +113,14 @@ trait ActionProvider {
     *
     * @return The constant string used to identify this ActionProvider
     */
-  def key : String
+
+  val key: String
+
+  def makeKey(id: String) = id.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
+
+  lazy val singularKey = makeKey ( key )
+
+  lazy val pluralKey = makeKey( Pluralizer.pluralize(key) )
 
   /** List The Acceptable Matches
     *
@@ -130,4 +152,12 @@ trait ActionProvider {
     * @return
     */
   def matchingAction(path: String, context: Context) : Option[Action] = matchingAction(Uri.Path(path), context)
+
+  type ActionProviderMap = Map[String,ActionProvider]
+  def subordinateActionProviders: ActionProviderMap
+
+}
+
+trait TerminalActionProvider extends ActionProvider {
+  final override val subordinateActionProviders = Map.empty[String,ActionProvider]
 }

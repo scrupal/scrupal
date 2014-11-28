@@ -25,6 +25,7 @@ import scrupal.utils.Configuration
 
 import spray.http._
 import spray.routing.RequestContext
+import spray.routing.authentication.UserPass
 
 import scala.concurrent.ExecutionContext
 
@@ -107,18 +108,19 @@ class ApplicationContext(scrupal: Scrupal, request: RequestContext, theSite: Sit
   require(app != null)
   override val application : Option[Application] = Some(app)
   override val appName = app.name
-  override val appPath = app.path
+  override val appPath = app.key
 }
 
 /** A User context which extends SiteContext by adding specific user information.
   * Details TBD.
-  * @param user The user that initiated the request.
+  * @param principal The user that initiated the request.
   * @param site The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class UserContext(scrupal: Scrupal, request: RequestContext, site: Site, override val user: String)
+class UserContext(scrupal: Scrupal, request: RequestContext, site: Site, principal: Principal)
     extends SiteContext(scrupal, request, site) {
-  val principal  = Nil // TODO: Finish UserContext implementation
+  // TODO: Finish UserContext implementation
+  override val user: String = principal._id.name
 }
 
 /** Some utility applicators for constructing the various Contexts */
@@ -130,8 +132,8 @@ object Context {
   def apply(scrupal: Scrupal, request: RequestContext, site: Site, app: Application) =
     new ApplicationContext(scrupal, request, site, app)
 
-  def apply(scrupal: Scrupal, user: String, site: Site, request: RequestContext) =
-    new UserContext(scrupal, request, site, user)
+  def apply(scrupal: Scrupal, request: RequestContext, site: Site, principal: Principal) =
+    new UserContext(scrupal, request, site, principal)
 
 }
 

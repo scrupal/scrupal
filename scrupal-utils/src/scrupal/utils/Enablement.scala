@@ -81,8 +81,8 @@ trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponen
     }
   }
 
-  def forEach[C <: Enablee,R](p: Enablee ⇒ Boolean)(f : C ⇒ R) : Seq[R] = {
-    for (e ← _enabled.keys if p(e)) yield { f(e.asInstanceOf[C]) }
+  def forEach[R](p: Enablee ⇒ Boolean)(f : Enablee ⇒ R) : Seq[R] = {
+    for (e ← _enabled.keys if p(e)) yield { f(e) }
   }.toSeq
 
   def forEachEnabled[R](f : Enablee ⇒ R) : Seq[R] = forEach( e ⇒ isEnabled(e))(f)
