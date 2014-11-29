@@ -20,7 +20,6 @@ package scrupal.http.actors
 import akka.actor.{Props, Actor}
 import akka.util.Timeout
 import scrupal.api._
-import scrupal.core.welcome.WelcomeSite
 import scrupal.http.controllers._
 import scrupal.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
@@ -63,40 +62,11 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   */
 trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives with RequestLoggers {
 
-  def createController(key: String, ap: ActionProvider) : ActionProviderController = {
-    ap match {
-      case e: Entity ⇒ new EntityController(Symbol(key),e,0)
-      case a: Application ⇒ new ApplicationController(Symbol(key),a,10)
-      case w: WelcomeSite ⇒ new WelcomeController(w)
-      case s: Site ⇒ new SiteController(Symbol(key),s,100)
-      case ap: ActionProvider ⇒ new ActionProviderController {
-        val provider = ap
-        def id = Symbol(key)
-        val priority: Int = 0
-      }
-    }
-
-  }
   def createRouter(scrupal: Scrupal) : Route = {
-    def subordinates(ap: ActionProvider): Seq[ActionProviderController] = {
-      ap.subordinateActionProviders.flatMap {
-        case (key: String, ap: ActionProvider) ⇒
-          createController(key, ap) +: subordinates(ap)
-      }
-    }.toSeq
 
     Try {
-      val controllers = createController("", scrupal) +: subordinates(scrupal)
-
-      val assets_controller = new AssetsController(scrupal)
-
-    // Fold all the controller routes into one big one, sorted by priority
-      val sorted_controllers = controllers.sortBy { c => c.priority }
-
-      // Now construct the routes from the prioritized set of controllers we found
-      sorted_controllers.foldLeft[Route](assets_controller.routes(scrupal)) { (route, ctrlr) =>
-        route ~ ctrlr.routes(scrupal)
-      }
+      new AssetsController(scrupal).routes(scrupal) ~
+      new ActionProviderController().routes(scrupal)
     } match {
       case Success(r) ⇒ r
       case Failure(xcptn) ⇒

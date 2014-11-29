@@ -32,12 +32,17 @@ trait PathHelpers {
     val matcher = {
       if (segments.isEmpty)
         PathMatchers.nothingMatcher
-      else
-        segments.map {
+      else {
+        val pairs = segments.map {
           case (prefix, value) ⇒
-            val provided : SegmentsResult[T] = HList((prefix,value))
-            stringExtractionPair2PathMatcher((prefix, provided))
-        }.reduceLeft(_ | _)
+            val provided: SegmentsResult[T] = HList((prefix, value))
+            prefix → provided
+        }
+        val matchers = pairs.toSeq.sortWith { case (l,r) ⇒ l._1.length > r._1.length } map { tuple ⇒
+          stringExtractionPair2PathMatcher(tuple)
+        }
+        matchers.reduceLeft(_ | _)
+      }
     }
     rawPathPrefix(matcher ~ Slash) hmap { x ⇒ x.head }
   }

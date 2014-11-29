@@ -17,9 +17,11 @@
 
 package scrupal.core
 
-import scrupal.api.Scrupal
-import scrupal.core.welcome.WelcomeSite
+import scrupal.api.{Site, Scrupal}
+import scrupal.db.DBContext
 import scrupal.utils.Configuration
+
+import scala.concurrent.Future
 
 class CoreScrupal extends Scrupal {
 
@@ -30,21 +32,22 @@ class CoreScrupal extends Scrupal {
     super.open()
   }
 
-  override def subordinateActionProviders : ActionProviderMap = {
-    val map = super.subordinateActionProviders
-    if (map.isEmpty) {
-      val site = new WelcomeSite
-      site.enable(this)
-      Map ( site.key → site )
+  override def load(config: Configuration, context: DBContext)  : Future[Map[String, Site]] = {
+    super.load(config, context).map { map: Map[String,Site] ⇒
+      if (map.isEmpty) {
+        val site = new WelcomeSite()
+        site.enable(this)
+        Map(site.host → site )
+      } else {
+        map
+      }
     }
-    else
-      map
   }
 
   override def onLoadConfig(config: Configuration): Configuration = {
     val new_config = super.onLoadConfig(config)
 
-      CoreModule.bootstrap(config)
+    CoreModule.bootstrap(config)
 
     // Make things from the configuration override defaults and database read settings
     // Features

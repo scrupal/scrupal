@@ -19,8 +19,6 @@ package scrupal.http.controllers
 
 import scrupal.api._
 import scrupal.http.ScrupalMarshallers
-import scrupal.http.directives.SiteDirectives
-import scrupal.utils.Configuration
 import spray.http.{MediaTypes, StatusCodes, Uri}
 import spray.routing._
 
@@ -30,7 +28,7 @@ import spray.routing._
   * This controller provides the assets that are "baked" in to a Scrupal applications.
  */
 class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.MinValue /*Make Assets first*/)
-  with AssetLocator with SiteDirectives with ScrupalMarshallers {
+  with AssetLocator with ScrupalMarshallers {
 
   val assets_path: Seq[String] = {
     scrupal.withConfiguration[Seq[String]] { config => super.asset_path_from_config(config)}

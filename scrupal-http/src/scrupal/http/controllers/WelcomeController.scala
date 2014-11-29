@@ -18,16 +18,18 @@
 package scrupal.http.controllers
 
 import scrupal.api._
-import scrupal.core.welcome.WelcomeSite
+import scrupal.core.WelcomeSite
 import spray.routing._
 
 /**
  * A controller to provide the Introduction To Scrupal content
  * Further description here.
  */
-case class WelcomeController(welcomeSite: WelcomeSite) extends ActionProviderController {
-  def id = 'Welcome
-  val priority = 1000
+case class WelcomeController(
+  welcomeSite: WelcomeSite
+) extends ActionProviderController {
+  override val id : Symbol = 'Welcome
+  override val priority = 1000
   val provider = welcomeSite
 
   override def routes(implicit scrupal: Scrupal): Route = {

@@ -15,13 +15,12 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.welcome
+package scrupal.core
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
 import scrupal.api._
-import scrupal.core.{MarkedDocApp, EchoApp}
-import shapeless.{HList, HNil, ::}
+import shapeless.{::, HList, HNil}
 import spray.http.Uri
 import spray.routing.PathMatchers.RestPath
 

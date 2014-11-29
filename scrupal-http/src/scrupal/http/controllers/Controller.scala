@@ -17,10 +17,11 @@
 
 package scrupal.http.controllers
 
+import reactivemongo.bson.{BSONString, BSONDocument}
 import scrupal.api._
 import scrupal.http.ScrupalMarshallers
+import scrupal.http.directives.PathHelpers
 import scrupal.utils.{Registrable, Registry}
-import shapeless.{::,HNil}
 import spray.http.StatusCodes.NotFound
 import spray.http.{HttpResponse, HttpRequest}
 import spray.routing._
@@ -93,6 +94,27 @@ trait Controller extends Registrable[Controller]
       }
     }
   }
+
+  def site(scrupal: Scrupal): Directive1[Site] = {
+    hostName.flatMap { host:String ⇒
+      val sites = Site.forHost(host)
+      if (sites.isEmpty)
+        reject(ValidationRejection(s"No site defined for host '$host'."))
+      else {
+        val site = sites.head
+        if (site.isEnabled(scrupal)) {
+          schemeName.flatMap { scheme: String ⇒
+            validate((scheme == "https") == site.requireHttps,
+                      s"Site '${site.name} requires ${if (site.requireHttps) "https" else "http"}.").hflatMap { hNil ⇒
+              extract { ctxt ⇒ site }
+            }
+          }
+        } else {
+          reject(ValidationRejection(s"Site '${site.name} is disabled."))
+        }
+      }
+    }
+  }
 }
 
 abstract class BasicController(val id : Identifier, val priority: Int = 0) extends Controller
@@ -101,75 +123,103 @@ abstract class BasicController(val id : Identifier, val priority: Int = 0) exten
   *
   * Scrupal API module provides the ActionProvider that can convert a path
   */
-abstract class ActionProviderController extends Controller {
+class ActionProviderController extends Controller with PathHelpers {
 
-  def provider : ActionProvider
+  def id = 'ActionProviderController
+  val priority = 0
 
-  def providerToAction(unmatchedPath: Uri.Path, context: Context) : Option[Action] = {
-    provider.matchingAction(unmatchedPath, context)
-  }
-
-  def action(key: String, unmatchedPath: Uri.Path, context: Context) : Directive1[Action] = {
-    new Directive1[Action] {
-      def happly(f: ::[Action,HNil] ⇒ Route) : Route = {
-        providerToAction(unmatchedPath, context) match {
-          case Some(action) ⇒ f(action :: HNil)
-          case None ⇒ reject
-        }
-      }
+  def make_args(ctxt: Context) : BSONDocument = {
+    ctxt.request match {
+      case Some(context) ⇒
+        val headers = context.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
+        val params = context.request.uri.query.map { case(k,v) ⇒ k -> BSONString(v) }
+        BSONDocument(headers ++ params)
+      case None ⇒
+        BSONDocument()
     }
   }
 
-  def routes(implicit scrupal: Scrupal) : Route = {
-    context(scrupal) { ctxt : Context ⇒
-      if (provider.key.nonEmpty) {
-        pathPrefix(provider.singularKey ~ Slash) {
-          action(provider.singularKey, ctxt.request.get.unmatchedPath, ctxt) {
-            a: Action ⇒ complete {
-              makeMarshallable {
-                a.dispatch
-              }
+  def entityAction(e: Entity, key: String, unmatchedPath: Uri.Path, context: Context) : Directive1[Action] = {
+    rawPathPrefix(Segments ~ PathEnd).flatMap { segments: List[String] ⇒
+      val id_path = segments.mkString("/")
+      if (segments.size > 0) {
+        if (key == e.pluralKey) {
+          extract { ctxt ⇒
+            ctxt.request.method match {
+              case HttpMethods.POST ⇒ e.create(context, id_path, make_args(context))
+              case HttpMethods.GET ⇒ e.retrieve(context, id_path)
+              case HttpMethods.PUT ⇒ e.update(context, id_path, make_args(context))
+              case HttpMethods.DELETE ⇒ e.delete(context, id_path)
+              case HttpMethods.OPTIONS ⇒ e.query(context, id_path, make_args(context))
             }
           }
-        } ~
-        pathPrefix(provider.pluralKey ~ Slash) {
-          action(provider.pluralKey, ctxt.request.get.unmatchedPath, ctxt) {
-            a: Action ⇒ complete {
-              makeMarshallable {
-                a.dispatch
-              }
+        } else if (key == e.singularKey) {
+          val id = segments.head
+          val facet_id = segments.tail
+          extract { ctxt ⇒
+            ctxt.request.method match {
+              case HttpMethods.POST ⇒ e.createFacet(context, id, facet_id, make_args(context))
+              case HttpMethods.GET ⇒ e.retrieveFacet(context, id, facet_id)
+              case HttpMethods.PUT ⇒ e.updateFacet(context, id, facet_id, make_args(context))
+              case HttpMethods.DELETE ⇒ e.deleteFacet(context, id, facet_id)
+              case HttpMethods.OPTIONS ⇒ e.queryFacet(context, id, facet_id, make_args(context))
             }
           }
+        } else {
+          reject
         }
       } else {
-        action("", ctxt.request.get.unmatchedPath, ctxt) {
-          a: Action ⇒ complete {
-            makeMarshallable {
-              a.dispatch
+        reject
+      }
+    }
+  }
+
+  def provideAction(ap: ActionProvider, key: String, unmatchedPath: Uri.Path, context: Context): Directive1[Action] = {
+    ap match {
+      case e: Entity ⇒
+        entityAction(e, key, unmatchedPath, context)
+      case _ ⇒
+        extract { ctxt ⇒ ap.matchingAction(key, unmatchedPath, context).get }
+    }
+  }
+
+  def subordinate(key: String, provider: ActionProvider)(f: (String,ActionProvider) ⇒ Route) : Route = {
+    if (provider.isTerminal)
+      f(key, provider)
+    else {
+      val subordinates = provider.subordinateActionProviders
+      rawPathPrefixWithMatch(subordinates) {
+        case (subkey: String, ap: ActionProvider) ⇒
+          subordinate(subkey, ap)(f)
+      }
+    }
+  }
+
+  def routes(implicit scrupal: Scrupal): Route = {
+    site(scrupal) { site: Site ⇒
+      rawPathPrefix(Slash) {
+        subordinate("", site) {
+          case (key: String, ap: ActionProvider) ⇒
+            request_context { ctxt: RequestContext ⇒
+              implicit val context = Context(scrupal, ctxt, site)
+              provideAction(ap, key, ctxt.unmatchedPath, context) { action ⇒
+                complete {
+                  makeMarshallable {
+                    action.dispatch
+                  }
+                }
+              }
             }
+        } ~ request_context { ctxt: RequestContext ⇒
+          implicit val context = Context(scrupal, ctxt, site)
+          site.matchingAction("",ctxt.unmatchedPath, Context(scrupal, ctxt, site)) match {
+            case Some(action) ⇒ complete { makeMarshallable { action.dispatch }}
+            case None ⇒ reject
           }
         }
       }
     }
   }
-}
-
-/** Controller That Requires A Site.
-  *
-  * This is the controller superclass
-  */
-case class SiteController(
-  id: Symbol,
-  provider: Site,
-  priority: Int = 0
-) extends ActionProviderController {
-}
-
-case class ApplicationController(
-  id: Symbol,
-  provider: Application,
-  priority: Int = 0
-) extends ActionProviderController {
 }
 
 trait RequestLoggers {
@@ -178,7 +228,7 @@ trait RequestLoggers {
   def showAllResponses(request: HttpRequest) : Any ⇒ Option[LogEntry] = {
     case x: HttpResponse => {
       println (s"Normal: $request")
-      createLogEntry(request,   x.status + " " + x.toString())
+      createLogEntry(request,   x.status + " " + x.toString)
     }
     case Rejected(rejections) => {
       println (s"Rejection: $request")
@@ -186,7 +236,7 @@ trait RequestLoggers {
     }
     case x => {
       println (s"other: $request")
-      createLogEntry(request,   x.toString())
+      createLogEntry(request,   x.toString)
     }
   }
 

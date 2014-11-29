@@ -36,8 +36,12 @@ import shapeless.::
   * start simply returning 404 instead of errors about unavailable resources.
   * Created by reid on 11/7/14.
   */
-case class EntityController(id: Symbol, provider: Entity, priority: Int) extends ActionProviderController {
-  def make_args(ctxt: Context) : BSONDocument = {
+case class EntityController(
+  override val id: Symbol,
+  provider: Entity,
+  override val priority: Int = 0
+) extends ActionProviderController {
+  override def make_args(ctxt: Context) : BSONDocument = {
     ctxt.request match {
       case Some(context) ⇒
         val headers = context.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
@@ -48,7 +52,7 @@ case class EntityController(id: Symbol, provider: Entity, priority: Int) extends
     }
   }
 
-  override def action(key: String, unmatchedPath: Uri.Path, context: Context) : Directive1[Action] = {
+  def action(key: String, unmatchedPath: Uri.Path, context: Context) : Directive1[Action] = {
     new Directive1[Action] {
       def happly(f: ::[Action, HNil] ⇒ Route): Route = {
         if (key == provider.pluralKey) {

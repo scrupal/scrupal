@@ -53,7 +53,11 @@ trait Application extends ActionProvider
   def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
   def subordinateActionProviders : ActionProviderMap = {
-    for (entity ← entities ; name ← Seq(entity.singularKey, entity.pluralKey)) yield { name → entity }
+    for (entity ← entities ;
+      name ← Seq(entity.singularKey, entity.pluralKey)
+    ) yield {
+      name → entity
+    }
   }.toMap
 
   def pathsToActions  = Seq.empty[PathToAction[_ <: HList]]

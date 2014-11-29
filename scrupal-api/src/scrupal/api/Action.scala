@@ -22,9 +22,7 @@ import spray.http.Uri
 import spray.routing.PathMatcher
 import spray.routing.PathMatcher.{Matched, Unmatched}
 
-import scala.concurrent.{ExecutionContext, Future}
-import akka.pattern.ask
-
+import scala.concurrent.Future
 
 /** An Invokable Action
   *
@@ -60,10 +58,15 @@ trait Action extends (() => Future[Result[_]]) {
     */
   def context : Context
 
+  /** Convenience function to dispatch the action
+    *
+    * Dispatching of actions is done by the scrupal object, but since that is contained within this action's Context, we
+    * can provide a shortcut for dispatching this action directly.
+    * @return
+    */
   def dispatch : Future[Result[_]] = {
     context.scrupal.dispatch(this)
   }
-
 }
 
 /** Mapping Of PathMatcher To Action
@@ -139,7 +142,7 @@ abstract class ActionProvider {
     * @param context The context to use to match the PathToAction function
     * @return
     */
-  def matchingAction(path: Uri.Path, context: Context) : Option[Action] = {
+  def matchingAction(key: String, path: Uri.Path, context: Context) : Option[Action] = {
     for (p2a ← pathsToActions ; action = p2a.matches(path, context) if action != None) { return action }
     None
   }
@@ -151,13 +154,17 @@ abstract class ActionProvider {
     * @param context The context to use to match the PathToAction function
     * @return
     */
-  def matchingAction(path: String, context: Context) : Option[Action] = matchingAction(Uri.Path(path), context)
+  def matchingAction(key: String, path: String, context: Context) : Option[Action] = {
+    matchingAction(key, Uri.Path(path), context)
+  }
 
   type ActionProviderMap = Map[String,ActionProvider]
   def subordinateActionProviders: ActionProviderMap
 
+  def isTerminal : Boolean = subordinateActionProviders.isEmpty
 }
 
 trait TerminalActionProvider extends ActionProvider {
   final override val subordinateActionProviders = Map.empty[String,ActionProvider]
+  override val isTerminal = true
 }

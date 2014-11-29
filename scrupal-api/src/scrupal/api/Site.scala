@@ -62,7 +62,9 @@ trait Site
   def isChildScope(e: Enablement[_]) : Boolean = applications.contains(e)
 
   def subordinateActionProviders : ActionProviderMap = {
-    for (a ← applications) yield { a.key → a }
+    for (a ← applications) yield {
+      a.key → a
+    }
   }.toMap
 
 }

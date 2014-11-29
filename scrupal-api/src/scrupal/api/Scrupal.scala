@@ -194,7 +194,7 @@ extends ActionProvider with ScrupalComponent with AutoCloseable with Enablement[
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  private def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
+  protected def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
     withSchema { (dbc, schema) =>
       schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
@@ -221,7 +221,7 @@ extends ActionProvider with ScrupalComponent with AutoCloseable with Enablement[
   def subordinateActionProviders : ActionProviderMap = {
     val pairs = forEach[(String,Site)] { e ⇒ e.isInstanceOf[Site] && isEnabled(e, this) } { siteE: Enablee ⇒
       val site = siteE.asInstanceOf[Site]
-      site.key → site
+      site.singularKey → site
     }
     pairs.toMap
   }
