@@ -55,9 +55,15 @@ class WelcomeSite extends Site {
     AnyPathToRoot
   )
 
-  EchoApp.enable(this)
-  val apiDoc = new MarkedDocApp('doc, "Documentation", "Documentation", "docs/api")
-  apiDoc.enable(this)
+  CoreModule.enable(this)
+  EchoEntity.enable(this)
+  CoreModule.enable(EchoEntity)
+
+  val apiDoc = new MarkedDocument('api, "docs/api") ;       apiDoc.enable(this)   ; CoreModule.enable(apiDoc)
+  val coreDoc = new MarkedDocument('core, "docs/core");     coreDoc.enable(this)  ; CoreModule.enable(coreDoc)
+  val dbDoc = new MarkedDocument('db, "docs/db");           dbDoc.enable(this)    ; CoreModule.enable(dbDoc)
+  val httpDoc = new MarkedDocument('http, "docs/http");     httpDoc.enable(this)  ; CoreModule.enable(httpDoc)
+  val utilsDoc = new MarkedDocument('utils, "docs/utils");  utilsDoc.enable(this) ; CoreModule.enable(utilsDoc)
 }
 
 object WelcomeSite {

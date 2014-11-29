@@ -1,3 +1,3 @@
-# Scrupal DB Project
+# Scrupal Utils Project
 
 This Scrupal project provides utilities for Scrupal

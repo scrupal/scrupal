@@ -23,6 +23,7 @@ import akka.actor.SupervisorStrategy.Decider
 import akka.actor._
 import akka.routing.{DefaultResizer, SmallestMailboxPool}
 
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
 object ActionProcessor {
@@ -109,7 +110,7 @@ class ActionProcessor extends Actor with ActorLogging {
       } catch {
         case xcptn: Throwable ⇒
           log.warning(s"The EntityCommand, $action, threw an exception: ", xcptn) // FIXME: doesn't print the exception
-          sender ! ExceptionResult(xcptn)
+          sender ! Future.failed(xcptn)
       }
   }
 }

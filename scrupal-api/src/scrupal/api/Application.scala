@@ -32,7 +32,7 @@ import shapeless.HList
  */
 trait Application extends ActionProvider
   with VariantStorableRegistrable[Application] with Nameable with Describable with Modifiable
-  with Enablement[Application] with Enablee {
+  with Enablement[Application] {
 
   def registry: Registry[Application] = Application
   def asT  : Application = this

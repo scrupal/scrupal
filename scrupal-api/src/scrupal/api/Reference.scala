@@ -18,7 +18,7 @@
 package scrupal.api
 
 import reactivemongo.bson._
-import scrupal.utils.Identifiable
+import scrupal.utils.{IdentifiedWithRegistry, Identifiable}
 
 import BSONHandlers._
 
@@ -33,7 +33,7 @@ import BSONHandlers._
   *
   * That's what this class is for.
   */
-class Reference[+T <: Identifiable ](val id: Symbol, val registry: String) extends ( () ⇒ Option[T] ) {
+class Reference[+T <: IdentifiedWithRegistry ](val id: Symbol, val registry: String) extends ( () ⇒ Option[T] ) {
   def as[C]() = this.apply().map { x ⇒ x.asInstanceOf[C] }
   def apply() : Option[T] = {
     registry match {
@@ -84,16 +84,16 @@ object ModuleReference {
 }
 
 object Reference {
-  implicit val ReferenceHandler : BSONHandler[BSONDocument,Reference[Identifiable]] =
-    new BSONHandler[BSONDocument, Reference[Identifiable]] {
-    def write(f: Reference[Identifiable]): BSONDocument = BSONDocument(
+  implicit val ReferenceHandler : BSONHandler[BSONDocument,Reference[IdentifiedWithRegistry]] =
+    new BSONHandler[BSONDocument, Reference[IdentifiedWithRegistry]] {
+    def write(f: Reference[IdentifiedWithRegistry]): BSONDocument = BSONDocument(
       "id" → BSONString(f.id.name ), "registry" → BSONString(f.registry)
     )
-    def read(bson: BSONDocument): Reference[Identifiable] =
+    def read(bson: BSONDocument): Reference[IdentifiedWithRegistry] =
       new Reference(Symbol(bson.getAs[String]("id").get), bson.getAs[String]("registry").get)
   }
 
-  def to[T <: Identifiable](o: T) : Reference[Identifiable] = {
+  def to[T <: IdentifiedWithRegistry](o: T) : Reference[IdentifiedWithRegistry] = {
     o match {
       case t: Type ⇒ new TypeReference(t)
       case f: Feature ⇒ new FeatureReference(f)

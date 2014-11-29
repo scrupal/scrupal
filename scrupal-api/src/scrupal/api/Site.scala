@@ -59,11 +59,17 @@ trait Site
     e.asInstanceOf[Application]
   }
 
+  def actionProviders = forEach[ActionProvider] { e: Enablee ⇒
+    e.isInstanceOf[ActionProvider] && isEnabled(e, this)
+  } { e: Enablee ⇒
+    e.asInstanceOf[ActionProvider]
+  }
+
   def isChildScope(e: Enablement[_]) : Boolean = applications.contains(e)
 
   def subordinateActionProviders : ActionProviderMap = {
-    for (a ← applications) yield {
-      a.key → a
+    for (ap ← actionProviders) yield {
+      ap.singularKey → ap
     }
   }.toMap
 

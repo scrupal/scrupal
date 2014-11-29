@@ -16,7 +16,7 @@
  **********************************************************************************************************************/
 package scrupal.api
 
-import scrupal.utils.{Pluralizer, Patterns}
+import scrupal.utils.{Enablee, Pluralizer, Patterns}
 import shapeless.HList
 import spray.http.Uri
 import spray.routing.PathMatcher
@@ -100,7 +100,7 @@ abstract class PathToAction[L <: HList](val pm: PathMatcher[L]) extends ( (L, Ur
   * extraction facility based on shapeless.HList and provided by spray.routing. This can be used generally, without
   * Spray, or nicely in combination with the support in scrupal-http which is based on spray.
   */
-abstract class ActionProvider {
+abstract class ActionProvider extends Enablee {
 
   /** Key For Identifying This Provider
     *
@@ -117,13 +117,11 @@ abstract class ActionProvider {
     * @return The constant string used to identify this ActionProvider
     */
 
-  val key: String
+  def makeKey(name: String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
 
-  def makeKey(id: String) = id.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
+  lazy val singularKey = makeKey ( id.name )
 
-  lazy val singularKey = makeKey ( key )
-
-  lazy val pluralKey = makeKey( Pluralizer.pluralize(key) )
+  lazy val pluralKey = makeKey( Pluralizer.pluralize(id.name) )
 
   /** List The Acceptable Matches
     *

@@ -24,6 +24,9 @@ import scala.util.Random
 trait Identifiable {
   def id : Symbol
   lazy val label = id.name
+}
+
+trait IdentifiedWithRegistry extends Identifiable {
   def registry : Registry[_]
   def registryName : String = registry.registryName
 }
@@ -31,7 +34,7 @@ trait Identifiable {
 /**
  * Mix this in to anything you want to register and define the "id"; then pass that object to the Registrar you want
  */
-trait Registrable[T <: Registrable[T]] extends Identifiable {
+trait Registrable[T <: Registrable[T]] extends IdentifiedWithRegistry {
   def registry : Registry[T]
   def asT : T
   def register() : Unit = registry.register(asT)

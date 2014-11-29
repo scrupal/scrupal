@@ -49,15 +49,15 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
       }
     }
     val provider0 = new TerminalActionProvider {
-      val key : String = "p0"
+      val id = 'p0
       def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
     }
     val provider1 = new TerminalActionProvider {
-      val key : String = "1"
+      val id = 'p1
       def pathsToActions = Seq(int_p2a)
     }
     val provider2 = new TerminalActionProvider {
-      val key = "2"
+      val id = 'p2
       def pathsToActions = Seq(empty_p2a, int_p2a)
     }
   }

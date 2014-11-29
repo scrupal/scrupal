@@ -28,7 +28,7 @@ import scrupal.api.Layout.BSONHandlerForLayout
 import scrupal.api.Template.BSONHandlerForTemplate
 import scrupal.api.Type.BSONHandlerForType
 
-import scrupal.utils.{AlertKind, Enablement, Icons, Identifiable}
+import scrupal.utils._
 import spray.http.{MediaType, MediaTypes}
 
 import scala.concurrent.duration.Duration
@@ -203,7 +203,7 @@ object BSONHandlers {
 
   implicit val EnablementHandler = new BSONHandler[BSONDocument,Enablement[_]] {
     override def write(e: Enablement[_]): BSONDocument =
-      Reference.ReferenceHandler.write(new Reference[Identifiable](e.id,e.registryName))
+      Reference.ReferenceHandler.write(new Reference[IdentifiedWithRegistry](e.id,e.registryName))
     override def read(doc: BSONDocument): Enablement[_] =
       Reference.ReferenceHandler.read(doc)().asInstanceOf[Enablement[_]]
   }
