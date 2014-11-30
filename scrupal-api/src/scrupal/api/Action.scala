@@ -16,7 +16,7 @@
  **********************************************************************************************************************/
 package scrupal.api
 
-import scrupal.utils.{Enablee, Pluralizer, Patterns}
+import scrupal.utils.{Enablement, Enablee, Pluralizer, Patterns}
 import shapeless.HList
 import spray.http.Uri
 import spray.routing.PathMatcher
@@ -165,4 +165,20 @@ abstract class ActionProvider extends Enablee {
 trait TerminalActionProvider extends ActionProvider {
   final override val subordinateActionProviders = Map.empty[String,ActionProvider]
   override val isTerminal = true
+}
+
+trait EnablementActionProvider[T <: EnablementActionProvider[T]]
+  extends ActionProvider with Enablement[T] with Enablee
+{
+  def actionProviders = forEach[ActionProvider] { e: Enablee ⇒
+    e.isInstanceOf[ActionProvider] && isEnabled(e, this)
+  } { e: Enablee ⇒
+    e.asInstanceOf[ActionProvider]
+  }
+
+  def subordinateActionProviders : ActionProviderMap = {
+    for (ap ← actionProviders ; name ← Seq(ap.singularKey, ap.pluralKey)) yield {
+      name → ap
+    }
+  }.toMap
 }

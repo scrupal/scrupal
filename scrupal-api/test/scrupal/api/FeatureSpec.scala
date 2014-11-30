@@ -83,28 +83,4 @@ class FeatureSpec extends ScrupalSpecification("FeatureSpec") {
       }
     }
   }
-/* TODO: See if this is worth reinstating
-  "WithFeature" should {
-    "Pass through for implemented/enabled" in new WithFakeScrupal {
-      implicit val context = Context()
-      val result: Result = WithFeature(impl_on) { Ok("foo") }
-      result.header.status must equalTo(http.Status.OK)
-    }
-    "Generate Redirect for implemented/disabled" in new WithFakeScrupal {
-      implicit val context = Context()
-      val result: Result = WithFeature(impl_off) { Ok("foo") }
-      result.header.status must equalTo(http.Status.SEE_OTHER)
-    }
-    "Generate NotImplemented for unimplemented/enabled" in new WithFakeScrupal {
-      implicit val context = Context()
-      val result: Result = WithFeature(unimpl_on) { Ok("foo") }
-      result.header.status must equalTo(http.Status.NOT_IMPLEMENTED)
-    }
-    "Generate NotImplemented for unimplemented/disabled" in new WithFakeScrupal {
-      implicit val context = Context()
-      val result: Result = WithFeature(unimpl_off) { Ok("foo") }
-      result.header.status must equalTo(http.Status.NOT_IMPLEMENTED)
-    }
-  }
-    */
 }

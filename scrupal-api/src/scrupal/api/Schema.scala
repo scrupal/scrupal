@@ -33,29 +33,27 @@ class Schema(dbc: DBContext, dbName: String) extends scrupal.db.Schema(dbc, dbNa
       Instance.InstanceDAO(db),
       Alert.AlertDAO(db),
       Principal.PrincipalDAO(db)
-      )
+    )
   }
 
-  // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
   // case class TokenDao(db: DB) extends JsonDao[String,BSONObjectID](db,"tokens") with DataAccessObject[String]
   // val aliases = dbc.withDatabase { db => new AliasDao(db) }
   // val tokens = dbc.withDatabase { db => new TokenDao(db) }
 
 
   def daos : Seq[DataAccessInterface[_,_]] = {
-    Seq( sites, nodes, instances,/* aliases, tokens, */ alerts, principals )
+    Seq( sites, nodes, instances, alerts, principals )
   }
 
   def validateDao(dao: DataAccessInterface[_,_]) : Boolean = {
     // FIXME: this needs to be written properly
     dao.collection.name match {
-      case "sites" => true
-      case "instances" => true
-      case "principals" => true
-      case "aliases" => true
-      case "tokens" => true
-      case "alerts" => true
-      case _ => false
+      case "sites" ⇒ true
+      case "nodes" ⇒ true
+      case "instances" ⇒ true
+      case "alerts" ⇒ true
+      case "principals" ⇒ true
+      case _ ⇒ false
     }
   }
 }

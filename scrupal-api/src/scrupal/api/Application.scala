@@ -30,9 +30,8 @@ import shapeless.HList
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
  * Created by reid on 11/6/14.
  */
-trait Application extends ActionProvider
-  with VariantStorableRegistrable[Application] with Nameable with Describable with Modifiable
-  with Enablement[Application] {
+trait Application extends EnablementActionProvider[Application]
+  with VariantStorableRegistrable[Application] with Nameable with Describable with Modifiable {
 
   def registry: Registry[Application] = Application
   def asT  : Application = this
@@ -51,14 +50,6 @@ trait Application extends ActionProvider
   def entities = forEach[Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e,this) } { e ⇒ e.asInstanceOf[Entity] }
 
   def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
-
-  def subordinateActionProviders : ActionProviderMap = {
-    for (entity ← entities ;
-      name ← Seq(entity.singularKey, entity.pluralKey)
-    ) yield {
-      name → entity
-    }
-  }.toMap
 
   def pathsToActions  = Seq.empty[PathToAction[_ <: HList]]
 }

@@ -26,16 +26,17 @@ import scrupal.utils.Hash
  * Information about a Principal, the essential identify of a user of the system. Authentication of Principals requires
  * either one or more authentication factors. The first factor (something the Principal knows) is embodied in this object
  * via the password, hasher algorithm, salt and complexity fields. Subsequent authentication factors are dealt with in
- * separate objects. Each Principal is associated with an email address and a unique identifier (long number).
+ * separate objects. Each Principal is associated with an email address and a unique identifier.
  * @param email The principal's Email address
  * @param password The Principal's hashed password
  * @param hasher The Hasher algorithm used
  * @param salt The salt used in generation of the principal's hashed password
  * @param complexity The complexity factor for the Hasher algorithm
  */
-case class Principal(
+case class Principal (
   _id : Identifier,
   email: String,
+  aliases: List[String],
   password: String,
   hasher: String,
   salt: String = Hash.salt,

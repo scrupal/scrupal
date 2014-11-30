@@ -36,8 +36,8 @@ import scala.util.matching.Regex
  * Created by reidspencer on 11/3/14.
  */
 trait Site
-  extends ActionProvider with VariantStorableRegistrable[Site]
-          with Nameable with Describable with Enablement[Site] with Enablee with Modifiable {
+  extends EnablementActionProvider[Site] with VariantStorableRegistrable[Site]
+          with Nameable with Describable with Modifiable {
 
   val kind = 'Site
 
@@ -59,20 +59,7 @@ trait Site
     e.asInstanceOf[Application]
   }
 
-  def actionProviders = forEach[ActionProvider] { e: Enablee ⇒
-    e.isInstanceOf[ActionProvider] && isEnabled(e, this)
-  } { e: Enablee ⇒
-    e.asInstanceOf[ActionProvider]
-  }
-
   def isChildScope(e: Enablement[_]) : Boolean = applications.contains(e)
-
-  def subordinateActionProviders : ActionProviderMap = {
-    for (ap ← actionProviders) yield {
-      ap.singularKey → ap
-    }
-  }.toMap
-
 }
 
 case class NodeSite (

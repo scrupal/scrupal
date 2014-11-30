@@ -267,9 +267,9 @@ class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext
       context.stop(self)
   }
 
-  def waitingForResponder(responder: ActorRef, requestor: ActorRef): Actor.Receive = {
+  def waitingForResponder(responder: ActorRef, requester: ActorRef): Actor.Receive = {
     case ChunkSent => {
-      requestor ! ChunkSent
+      requester ! ChunkSent
       context.become(waitingForData(responder))
     }
 

@@ -44,7 +44,7 @@ class Scrupal(
   dbc: Option[DBContext] = None,
   actSys: Option[ActorSystem] = None
 )
-extends ActionProvider with ScrupalComponent with AutoCloseable with Enablement[Scrupal]
+extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
 {
   val key = ""
   def registry = Scrupal
@@ -216,14 +216,6 @@ extends ActionProvider with ScrupalComponent with AutoCloseable with Enablement[
    * Called once the application is started.
    */
   def onStart() {
-  }
-
-  def subordinateActionProviders : ActionProviderMap = {
-    val pairs = forEach[(String,Site)] { e ⇒ e.isInstanceOf[Site] && isEnabled(e, this) } { siteE: Enablee ⇒
-      val site = siteE.asInstanceOf[Site]
-      site.singularKey → site
-    }
-    pairs.toMap
   }
 
 

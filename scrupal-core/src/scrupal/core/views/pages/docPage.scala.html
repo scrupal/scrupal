@@ -1,10 +1,14 @@
 @(args: Map[String,(scrupal.api.Node,scrupal.api.Result[_])])(implicit context : scrupal.api.Context)
 @scrupal.api.views.html.pages.markedPage("@@@title@@@") {
-<div class="row span12">
+<div class="container">
+<div class="panel panel-primary">
+<div class="panel-heading"><h1 class="panel-title">Welcome To Scrupal!</h1></div>
+<div class="panel-body">
 <div class="well">
 } { @@@@@@content@@@@@@ } {
-<hr/>
+</div>
 @@@@@@footer@@@@@@
+</div>
 </div>
 </div>
 }

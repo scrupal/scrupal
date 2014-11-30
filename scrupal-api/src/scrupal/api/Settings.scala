@@ -33,7 +33,10 @@ trait SettingsInterface extends BSONSettingsInterface {
   def validate(path: String) : ValidationResult
 }
 
-/**
+/** Settings For Anything That Needs Them
+  *
+  * Settings define a structured, typesafe way of specifying configuration settings, and other information for some
+  * object. Settings can be stored in the database
  * Created by reidspencer on 11/10/14.
  */
 case class Settings(

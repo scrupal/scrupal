@@ -58,7 +58,7 @@ object NodeRef {
   * very numerous. For that reason, they are not registered in an object registry.
   */
 trait Node extends VariantStorable[BSONObjectID]
-           with Describable with Modifiable with Enablable with Generator with Bootstrappable
+           with Describable with Modifiable with Generator with Bootstrappable
 {
   val _id = BSONObjectID.generate
   def mediaType : MediaType
@@ -404,12 +404,15 @@ case class ScalaNode (
   final val kind : Symbol = 'Scala
   override val mediaType: MediaType = MediaTypes.`text/html`
 
-  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
-    // TODO: Implement ScalaNode using Java ScriptEngine
-    // import javax.script.ScriptEngineManager
-    // val e = new ScriptEngineManager().getEngineByName("scala")
-    // e.eval("1 to n.asInstanceOf[Int] foreach println")
-    HtmlResult("Not Implemented".toHtml, Unimplemented)
+  def apply(ctxt: Context): Future[Result[_]] = ctxt.withExecutionContext {
+    implicit ec: ExecutionContext ⇒
+    Future {
+      import javax.script.ScriptEngineManager
+      val sem = new ScriptEngineManager()
+      val e = sem.getEngineByName("scala")
+      val html = e.eval(code).toString.toHtml
+      HtmlResult(html, Successful)
+    }
   }
 }
 
@@ -457,15 +460,16 @@ object CommandNode {
 case class TwirlScriptNode (
   description: String,
   twirl_script: String,
+  subordinates: Map[String, Either[NodeRef,Node]] = Map.empty[String, Either[NodeRef,Node]],
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-) extends Node {
+) extends CompoundNode {
 final val kind : Symbol = 'TwirlScript
   override val mediaType: MediaType = MediaTypes.`text/html`
-
-  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
-    // TODO: implement the TwirlScriptNode content generator
-    HtmlResult("Not Implemented".toHtml, Unimplemented)
+  def resolve(ctxt: Context, tags: Map[String,(Node,EnumeratorResult)]) : EnumeratorResult = {
+    // val layout = Layout(layoutId).getOrElse(Layout.default)
+    val template: Array[Byte] = twirl_script.getBytes(utf8)
+    EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
   }
 }
 
