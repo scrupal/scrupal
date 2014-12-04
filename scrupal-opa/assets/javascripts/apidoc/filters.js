@@ -15,55 +15,15 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-define([
-    'angular',
-    './controllers.js',
-    './directives.js',
-    './filters.js',
-    './services.js'
-], function (ng) {
+/* Filters */
+
+define(['angular'], function(angular) {
     'use strict';
 
-    var apidoc = ng.module('apidoc', [
-        'apidoc.filters',
-        'apidoc.services',
-        'apidoc.directives',
-        'apidoc.controllers'
-    ])
-
-    apidoc.config(['$routeProvider', function($routeProvider) {
-
-        $routeProvider
-            .when('/', {
-                templateUrl: 'chunks/apidoc/intro.html',
-                controller: 'Intro'
-            })
-            .when('/:method', {
-                templateUrl: 'chunks/apidoc/top.html',
-                controller: 'Top'
-            })
-            .when( '/:method/:kind', {
-                templateUrl: 'chunks/apidoc/kind.html',
-                controller: 'Kind'
-            })
-            .when('/:method/:kind/', {
-                templateUrl: 'chunks/apidoc/kind.html',
-                controller: 'Kind'
-            })
-            .when('/:method/:kind/:id', {
-                templateUrl: 'chunks/apidoc/item.html',
-                controller: 'Item'
-            })
-            .when('/:method/:kind/:id/:trait', {
-                templateUrl: 'chunks/apidoc/trait.html',
-                controller: 'Trait'
-            })
-            .otherwise({redirectTo: '/'})
-    }])
-
-    // Tell angular where to bootstrap this application
-    ng.bootstrap(document.body.querySelector('#apidoc'),['apidoc']);
-
-    return apidoc
+    angular.module('apidoc.filters', [])
+        .filter('interpolate', ['version', function(version) {
+            return function(text) {
+                return String(text).replace(/\%VERSION\%/mg, version);
+            };
+        }]);
 });
-

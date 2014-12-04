@@ -15,18 +15,47 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/* Scrupal Filters */
+/* Scrupal Controllers Definitions */
 
-define(['angular'], function(ng) {
+define(['angular', 'ngRoute', 'domReady'], function(ng, ngRoute, domReady) {
     'use strict';
 
-    var mod = ng.module('scrupal.filters', []);
+    var mod = ng.module('scrupal.controllers', ['ngRoute']);
 
-    mod.filter('interpolate', ['version', function(version) {
-        return function(text) {
-            return String(text).replace(/\%VERSION\%/mg, version);
-        }
-    }]);
+    var simpleNavCtrl = function($scope, $route, $routeParams, $location) {
+        $scope.navClass = function (page) {
+            var currentRoute = $location.path().substring(1) || '/';
+            return page === currentRoute ? 'active' : '';
+        };
+        $scope.absUrl = $location.absUrl();
+        $scope.url = $location.path();
+    };
 
-    return mod
+    var acquireUrl = function($location, $scope) {
+        var hash = $location.hash;
+        var base = $location.path('').hash('');
+        var result = base + '/assets/docs/' + hash;
+        $scope.newUrl = result;
+        return result;
+    };
+
+    mod.controller('scrupal', function($scope) {
+        $scope.page_is_ready = domReady;
+    });
+
+    mod.controller('simpleNavCtrl', simpleNavCtrl);
+
+    mod.config( function ($routeProvider, $locationProvider) {
+        $routeProvider.when('/:path*', {
+            templateUrl: acquireUrl,
+            controller: simpleNavCtrl,
+            controllerAs: 'simpleUrlNav'
+        }).
+        otherwise( {
+                redirectTo: '/'
+        });
+
+        $locationProvider.html5Mode(true);
+    });
+    return mod;
 });

@@ -15,14 +15,18 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/* Services */
+/* Scrupal Filters */
 
 define(['angular'], function(ng) {
     'use strict';
 
-    // Demonstrate how to register services
-    // In this case it is a simple value service.
-    ng.module('apidoc.services', [])
-      .value('version', '0.1');
+    var mod = ng.module('scrupal.filters', []);
 
-})
+    mod.filter('interpolate', ['version', function(version) {
+        return function(text) {
+            return String(text).replace(/\%VERSION\%/mg, version);
+        };
+    }]);
+
+    return mod;
+});

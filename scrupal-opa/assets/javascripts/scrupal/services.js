@@ -15,15 +15,18 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/* Directives */
+/** Scrupal Services Definitions */
 
 define(['angular'], function(ng) {
     'use strict';
 
-    ng.module('apidoc.directives', [])
-      .directive('appVersion', ['version', function(version) {
-        return function(scope, elm) {
-            elm.text(version);
-        };
-    }]);
-})
+    // Demonstrate how to register services
+    // In this case it is a simple value service.
+    var mod = ng.module('scrupal.services', []);
+
+    // Simple value service for the version of the Scrupal UI
+    mod.value('version', '0.1');
+
+    return mod;
+
+});

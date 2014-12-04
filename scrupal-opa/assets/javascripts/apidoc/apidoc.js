@@ -15,14 +15,55 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/* Services */
-
-define(['angular'], function(ng) {
+define([
+    'angular',
+    './controllers.js',
+    './directives.js',
+    './filters.js',
+    './services.js'
+], function (ng) {
     'use strict';
 
-    // Demonstrate how to register services
-    // In this case it is a simple value service.
-    ng.module('admin.services', [])
-      .value('version', '0.1');
+    var apidoc = ng.module('apidoc', [
+        'apidoc.filters',
+        'apidoc.services',
+        'apidoc.directives',
+        'apidoc.controllers'
+    ]);
 
-})
+    apidoc.config(['$routeProvider', function($routeProvider) {
+
+        $routeProvider
+            .when('/', {
+                templateUrl: 'chunks/apidoc/intro.html',
+                controller: 'Intro'
+            })
+            .when('/:method', {
+                templateUrl: 'chunks/apidoc/top.html',
+                controller: 'Top'
+            })
+            .when( '/:method/:kind', {
+                templateUrl: 'chunks/apidoc/kind.html',
+                controller: 'Kind'
+            })
+            .when('/:method/:kind/', {
+                templateUrl: 'chunks/apidoc/kind.html',
+                controller: 'Kind'
+            })
+            .when('/:method/:kind/:id', {
+                templateUrl: 'chunks/apidoc/item.html',
+                controller: 'Item'
+            })
+            .when('/:method/:kind/:id/:trait', {
+                templateUrl: 'chunks/apidoc/trait.html',
+                controller: 'Trait'
+            })
+            .otherwise({redirectTo: '/'});
+    }]);
+
+    // Tell angular where to bootstrap this application
+    ng.bootstrap(document.body.querySelector('#apidoc'),['apidoc']);
+
+    return apidoc;
+});
+

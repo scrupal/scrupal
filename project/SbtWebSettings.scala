@@ -46,7 +46,7 @@ trait SbtWebSettings {
     pipelineStages := Seq(digest, gzip)
   )
 
-  lazy val web_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
+  lazy val opa_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
     pipelineStages := Seq(rjs, digest, gzip)
   )
 }

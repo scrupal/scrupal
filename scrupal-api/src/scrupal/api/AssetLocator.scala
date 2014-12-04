@@ -116,16 +116,7 @@ trait AssetLocator {
 
   val directoryAssetName = "__dir.conf"
 
-  case class Directory(
-    author : Option[String] = None,
-    copyright : Option[String] = None,
-    license : Option[OSSLicense] = None,
-    title : Option[String] = None,
-    description: Option[String] = None,
-    index : Option[String] = None,
-    files : Map[String, (String,Option[URL])],
-    dirs : Map[String, Option[Directory]]
-  )
+  import AssetLocator.Directory
 
   def fetchDirectory(path: String, recurse: Boolean = false) : Option[Directory] = {
     val cfg: Config = ConfigFactory.parseResourcesAnySyntax(cl, path + "/" + directoryAssetName)
@@ -155,8 +146,8 @@ trait AssetLocator {
           dirs.toMap
         }
     }
-    Some(Directory(config.getString("author"), config.getString("copyright"), license, config.getString("title"),
-              config.getString("description"), config.getString("index"), files, dirs))
+    Some(Directory(config.getString("author"), config.getString("copyright"), license, config.getString("name"),
+      config.getString("title"), config.getString("description"), config.getString("index"), files, dirs))
   }
 
   def isFile(url: URL) = { url != null && url.getProtocol == "file" }
@@ -214,3 +205,16 @@ class ConfiguredAssetsLocator(config: Configuration) extends AssetLocator {
   def assets_path = asset_path_from_config(config)
 }
 
+object AssetLocator {
+  case class Directory(
+    author : Option[String] = None,
+    copyright : Option[String] = None,
+    license : Option[OSSLicense] = None,
+    name : Option[String] = None,
+    title : Option[String] = None,
+    description: Option[String] = None,
+    index : Option[String] = None,
+    files : Map[String, (String,Option[URL])],
+    dirs : Map[String, Option[Directory]]
+  )
+}

@@ -19,10 +19,11 @@
 
 define(['angular'], function(ng) {
     'use strict';
-    ng.module('admin.directives', [])
+
+    ng.module('apidoc.directives', [])
       .directive('appVersion', ['version', function(version) {
         return function(scope, elm) {
             elm.text(version);
         };
     }]);
-})
+});

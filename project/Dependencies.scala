@@ -167,7 +167,7 @@ trait Dependencies
     akka_actor, Test.spray_testkit, Test.akka_testkit
   ) ++ common_dependencies
 
-  val web_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
+  val opa_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
     // requirejs, requirejs_domready
     // angularjs, angular_drag_drop, angular_multi_select,
     // angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar

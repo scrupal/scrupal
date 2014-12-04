@@ -15,26 +15,14 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/** AngularJS module for the Scrupal Configuration Wizard
-  */
+/* Services */
 
-define([
-  'angular'
-], function (ng) {
-  'use strict';
+define(['angular'], function(ng) {
+    'use strict';
 
-  require(['nguibootstrap', 'ng.ui.bootstrap.tpls'])
+    // Demonstrate how to register services
+    // In this case it is a simple value service.
+    ng.module('admin.services', [])
+      .value('version', '0.1');
 
-  /**
-   * Declare the scrupal module. This is fundamental to Scrupal applications and this module provides all the basic
-   * elements and capabilities that any Scrupal application needs. What it doesn't do is provide any particular
-   * application level constructs, just facilities applications can utilize.
-   */
-  var config = ng.module('config', [
-    'nguibootstrap',
-    'ng.ui.bootstrap.tpls'
-  ]);
-
-  return config
 });
-

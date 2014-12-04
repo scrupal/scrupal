@@ -20,7 +20,7 @@
     <orderEntry type="module" module-name="scrupal-db" exported="" />
     <orderEntry type="module" module-name="scrupal-http" exported="" />
     <orderEntry type="module" module-name="scrupal-utils" exported="" />
-    <orderEntry type="module" module-name="scrupal-web" exported="" />
+    <orderEntry type="module" module-name="scrupal-opa" exported="" />
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: ch.qos.logback:logback-classic:1.1.2" level="project" />
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-core:1.1.1" level="project" />
@@ -109,5 +109,6 @@
     <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
     <orderEntry type="module" module-name="scrupal-api" exported="" />
+    <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4" level="project" />
   </component>
 </module>

@@ -30,7 +30,7 @@ import scala.concurrent.Future
   * @param id Name of the entity and its path key
   * @param root Root of the documents as found in the classpath via the asset locator
   */
-case class MarkedDocument(id: Symbol, root: String) extends Entity {
+case class MarkedDocument(id: Symbol, root: String, roots: Seq[String] = Seq.empty[String]) extends Entity {
 
   def kind: Symbol = 'MarkedDoc
 
@@ -41,6 +41,34 @@ case class MarkedDocument(id: Symbol, root: String) extends Entity {
   override def moduleOf = Some(CoreModule)
 
   def description: String = "An entity that stores nothing and merely echos its requests"
+
+  def  menuItems(context: Context) : Map[String,Map[String,String]] = {
+    val locator = context.scrupal.assetsLocator
+    for (root ← roots) yield {
+      locator.fetchDirectory(root) match {
+        case Some(dir) ⇒
+          val key = dir.name.getOrElse(root.substring(root.lastIndexOf('/')+1))
+          val map = for ((k,(v1,v2)) ← dir.files) yield {
+            v1 → k
+          }
+          key -> map
+        case None ⇒ key → Map.empty[String,String]
+      }
+    }
+  }.toMap
+
+  var menuHtml : Option[Html] = None
+
+  def menu(context: Context) : Html = {
+    menuHtml match {
+      case Some(m) ⇒ m
+      case None ⇒ {
+        val result = scrupal.core.views.html.pages.docNav(menuItems(context))
+        menuHtml = Some(result)
+        result
+      }
+    }
+  }
 
   def findDocument(context: Context, id: String) : Future[Result[_]] = {
     val locator = context.scrupal.assetsLocator
@@ -63,9 +91,11 @@ case class MarkedDocument(id: Symbol, root: String) extends Entity {
               case Some(url) ⇒
                 val title = StringNode("docTitle", docTitle)
                 val content = URLNode("docUrl", url)
+                val menuNode = StaticNode("Menu", menu(context))
                 val footer = HtmlNode(doc, docFooter, Map("footer" → Html(dir.copyright.getOrElse("Footer"))))
                 val subordinates: Map[String, Either[NodeRef, Node]] = Map(
                   "title" → Right(title),
+                  "menu" → Right(menuNode),
                   "content" → Right(content),
                   "footer" → Right(footer)
                 )
@@ -97,5 +127,6 @@ object MarkedDocument {
 
   object docFooter extends
   TwirlHtmlTemplate('docFooter, "Footer for Marked Documentation", scrupal.core.views.html.docFooter)
+
 
 }

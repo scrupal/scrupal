@@ -17,54 +17,34 @@
 
 define([
     'angular',
-    './controllers.js',
-    './directives.js',
-    './filters.js',
-    './services.js'
-], function (ng) {
+    'scrupal/controllers',
+    'scrupal/directives',
+    'scrupal/filters',
+    'scrupal/services',
+    'ng.ui.bootstrap',
+    'ng.ui.bootstrap.tpls'],
+  function (ng) {
     'use strict';
 
-    var admin = ng.module('admin', [
-        'admin.filters',
-        'admin.services',
-        'admin.directives',
-        'admin.controllers'
-    ])
+    /**
+     * Declare the scrupal module. This is fundamental to Scrupal applications and this module provides all the basic
+     * elements and capabilities that any Scrupal application needs. What it doesn't do is provide any particular
+     * application level constructs, just facilities applications can utilize.
+     */
+    var scrupal = ng.module('scrupal', [
+        'ui.bootstrap',
+        'ui.bootstrap.tpls',
+        'scrupal.services',
+        'scrupal.controllers',
+        'scrupal.filters',
+        'scrupal.directives'
+    ]);
 
-    admin.config(['$routeProvider', function($routeProvider) {
+    scrupal.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
 
-        $routeProvider
-            .when( '/Scrupal', {
-                templateUrl: 'chunks/admin/scrupal.html',
-                controller: 'Scrupal'
-            })
-            .when('/Sites', {
-                templateUrl: 'chunks/admin/sites.html',
-                controller: 'Sites'
-            })
-            .when('/Modules', {
-                templateUrl: 'chunks/admin/modules.html',
-                controller: 'Modules'
-            })
-            .when('/Modules/:modName', {
-                templateUrl: 'chunks/admin/module.html',
-                controller: 'Module'
-            })
-            .when('/Entities', {
-                templateUrl: 'chunks/admin/entities.html',
-                controller: 'Entities'
-            })
-            .when('/Traits', {
-                templateUrl: 'chunks/admin/traits.html',
-                controller: 'Traits'
-            })
-            .when('/Types', {
-                templateUrl: 'chunks/admin/types.html',
-                controller: 'Types'
-            })
-            .otherwise({redirectTo: '/Scrupal'})
-    }])
+        $locationProvider.html5Mode(true);
 
-    return admin
+    }]);
+
+    return scrupal;
 });
-

@@ -25,7 +25,7 @@ import scrupal.db.Storable
   * This object just contains the form related things. Note that this is a very general notion of forms and not
   * much tied to the HTML ideas. Forms are Inputs inside Sections inside Pages. Inputs are named Types. All of
   * these are storable and are Validators so we can validate a BSON document against a form. This should be used
-  * for all input
+  * for all input to Scrupal.
   */
 object Forms {
 

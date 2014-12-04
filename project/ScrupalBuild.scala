@@ -85,18 +85,18 @@ object ScrupalBuild extends Build
     .dependsOn(utils_deps, db_deps, core_deps, http_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
 
-  lazy val web = Project(base_name + "-web", file("./scrupal-web"))
+  lazy val opa = Project(base_name + "-opa", file("./scrupal-opa"))
     .enablePlugins(SbtTwirl)
     .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(twirlSettings_web:_*)
+    .settings(twirlSettings_opa:_*)
     .settings(Revolver.settings:_*)
     .settings(sbt_web_settings:_*)
-    .settings(web_pipeline_settings:_*)
-    .settings(libraryDependencies ++= web_dependencies)
+    .settings(opa_pipeline_settings:_*)
+    .settings(libraryDependencies ++= opa_dependencies)
     .dependsOn(utils_deps, db_deps, api_deps, core_deps, http_deps)
-  val web_deps = web % "compile->compile;test->test"
+  val opa_deps = opa % "compile->compile;test->test"
 
   lazy val root = Project(base_name, file("."))
     .settings(buildSettings:_*)
@@ -107,8 +107,8 @@ object ScrupalBuild extends Build
       libraryDependencies ++= root_dependencies
     )
     .settings(UnidocPlugin.unidocSettings: _*)
-    .dependsOn(config_deps, web_deps, http_deps, core_deps, api_deps, db_deps, utils_deps)
-    .aggregate(config_proj, web, http, core, api, db, utils)
+    .dependsOn(config_deps, opa_deps, http_deps, core_deps, api_deps, db_deps, utils_deps)
+    .aggregate(config_proj, opa, http, core, api, db, utils)
 
   override def rootProject = Some(root)
 }

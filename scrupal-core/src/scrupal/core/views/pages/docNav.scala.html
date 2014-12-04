@@ -1,0 +1,13 @@
+@(menu: Map[String,Map[String,String]])
+<div class="well-small">
+@for((k,v) ← menu) {
+  <div class="btn-group">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">@k <span class="caret"></span></button>
+    <ul class="dropdown-menu" role="menu">
+      @for((label,href) ← v ) {
+        <li><a data-target="#" href="@href">@label</a></li>
+      }
+    </ul>
+  </div>
+}
+</div>

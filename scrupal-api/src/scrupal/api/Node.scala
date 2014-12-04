@@ -140,6 +140,24 @@ case class StringNode(
   def apply(ctxt: Context) : Future[Result[_]] = Future.successful { StringResult(text) }
 }
 
+case class StaticNode(
+  description: String,
+  body: Html
+) extends Node {
+  final val kind : Symbol = 'Static
+  val mediaType: MediaType = MediaTypes.`text/html`
+  var enabled: Boolean = true
+  val modified  = None
+  val created = None
+  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
+    HtmlResult(body, Successful)
+  }
+}
+
+object StaticNode {
+  implicit val StaticNodeHandler : BSONHandler[BSONDocument,StaticNode] = Macros.handler[StaticNode]
+}
+
 /** Message Node
   *
   * This is a very simple node that simply renders a standard Boostrap message. It is used for generating error messages
@@ -537,6 +555,7 @@ object Node {
         case Some(str) =>
           str.value match {
             case "Message"  ⇒ MessageNode.MessageNodeHandler.read(doc)
+            case "Static"   ⇒ StaticNode.StaticNodeHandler.read(doc)
             case "Html"     ⇒ HtmlNode.HtmlNodeHandler.read(doc)
             case "Txt"      ⇒ TxtNode.TxtNodeHandler.read(doc)
             case "File"     ⇒ FileNode.FileNodeHandler.read(doc)
@@ -556,6 +575,7 @@ object Node {
     def write(node: Node) : BSONDocument = {
       node.kind match {
         case 'Message  ⇒ MessageNode.MessageNodeHandler.write(node.asInstanceOf[MessageNode])
+        case 'Static   ⇒ StaticNode.StaticNodeHandler.write(node.asInstanceOf[StaticNode])
         case 'Html     ⇒ HtmlNode.HtmlNodeHandler.write(node.asInstanceOf[HtmlNode])
         case 'Txt      ⇒ TxtNode.TxtNodeHandler.write(node.asInstanceOf[TxtNode])
         case 'File     ⇒ FileNode.FileNodeHandler.write(node.asInstanceOf[FileNode])

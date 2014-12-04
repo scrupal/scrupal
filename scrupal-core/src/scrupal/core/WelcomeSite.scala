@@ -19,6 +19,7 @@ package scrupal.core
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
+import scrupal.api.AssetLocator
 import scrupal.api._
 import shapeless.{::, HList, HNil}
 import spray.http.Uri
@@ -59,11 +60,13 @@ class WelcomeSite extends Site {
   EchoEntity.enable(this)
   CoreModule.enable(EchoEntity)
 
-  val apiDoc = new MarkedDocument('api, "docs/api") ;       apiDoc.enable(this)   ; CoreModule.enable(apiDoc)
-  val coreDoc = new MarkedDocument('core, "docs/core");     coreDoc.enable(this)  ; CoreModule.enable(coreDoc)
-  val dbDoc = new MarkedDocument('db, "docs/db");           dbDoc.enable(this)    ; CoreModule.enable(dbDoc)
-  val httpDoc = new MarkedDocument('http, "docs/http");     httpDoc.enable(this)  ; CoreModule.enable(httpDoc)
-  val utilsDoc = new MarkedDocument('utils, "docs/utils");  utilsDoc.enable(this) ; CoreModule.enable(utilsDoc)
+  val roots = Seq("docs/api", "docs/core", "docs/db", "docs/http", "docs/utils")
+
+  val apiDoc = new MarkedDocument('api, "docs/api", roots) ;       apiDoc.enable(this)   ; CoreModule.enable(apiDoc)
+  val coreDoc = new MarkedDocument('core, "docs/core", roots);     coreDoc.enable(this)  ; CoreModule.enable(coreDoc)
+  val dbDoc = new MarkedDocument('db, "docs/db", roots);           dbDoc.enable(this)    ; CoreModule.enable(dbDoc)
+  val httpDoc = new MarkedDocument('http, "docs/http", roots);     httpDoc.enable(this)  ; CoreModule.enable(httpDoc)
+  val utilsDoc = new MarkedDocument('utils, "docs/utils", roots);  utilsDoc.enable(this) ; CoreModule.enable(utilsDoc)
 }
 
 object WelcomeSite {

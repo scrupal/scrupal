@@ -15,15 +15,14 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/* Filters */
+/* Directives */
 
-define(['angular'], function(angular) {
+define(['angular'], function(ng) {
     'use strict';
-
-    angular.module('apidoc.filters', [])
-        .filter('interpolate', ['version', function(version) {
-            return function(text) {
-                return String(text).replace(/\%VERSION\%/mg, version);
-            }
-        }]);
+    ng.module('admin.directives', [])
+      .directive('appVersion', ['version', function(version) {
+        return function(scope, elm) {
+            elm.text(version);
+        };
+    }]);
 });

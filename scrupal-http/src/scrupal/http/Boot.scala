@@ -35,7 +35,7 @@ import scala.concurrent.duration._
 /** Boot Main
   * This is the main entry point to Scrupal as it contains the "Main" function provided by the App Scrupal library class.
   * We don't override that class but instead just start whatever is necessary in the constructor of this object.
-  * Since we are Spray based that only consists of creating the actor system, the top leel Actor, and binding that
+  * Since we are Spray based that only consists of creating the actor system, the top level Actor, and binding that
   * actor to the correct HTTP interface and port.
   */
 object Boot extends App with ScrupalComponent
@@ -53,7 +53,7 @@ object Boot extends App with ScrupalComponent
   // we need an ActorSystem to host our application in
   implicit val system = ActorSystem("Scrupal-Http")
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout = Timeout(config.getMilliseconds("scrupal.timeout").getOrElse(8000), TimeUnit.MILLISECONDS)
 
   // create and start our service actor
   val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal, timeout), ScrupalServiceActor.name)
@@ -61,7 +61,7 @@ object Boot extends App with ScrupalComponent
   val interface = config.getString("scrupal.http.interface").getOrElse("localhost")
   val port = config.getInt("scrupal.http.port").getOrElse(8888)
 
-  log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port")
+  log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout}ms")
 
   // start a new HTTP server on port 8080 with our service actor as the handler
   IO(Http) ? Http.Bind(service, interface, port)

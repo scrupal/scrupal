@@ -20,7 +20,7 @@
 define(['angular'], function(ng) {
     'use strict';
 
-    var mod = ng.module('apidoc.controllers', [])
+    var mod = ng.module('apidoc.controllers', []);
 
     mod.controller('Intro', ['$scope', '$http', '$routeParams', '$compile',
         function ApiDocIntroCntl($scope, $http, $routeParams, $compile )  {
@@ -30,7 +30,7 @@ define(['angular'], function(ng) {
                     var elem = window.document.getElementById('index-placeholder');
                     // var par = elem.parent
                     /* Now replace that the data we got  */
-                    elem.html(data)
+                    elem.html(data);
 
                     /* Get angular to process this block */
                     var fnLink = $compile(elem);     // returns a Link function used to bind template to the scope
@@ -39,8 +39,8 @@ define(['angular'], function(ng) {
                     alert('content=' + content);
                 }).
                 error(function(data, status, headers) {
-                    alert('Failed with: ' + status + ' ' + headers + ' data=' + data)
-                })
+                    alert('Failed with: ' + status + ' ' + headers + ' data=' + data);
+                });
         }
     ]);
 
@@ -48,52 +48,52 @@ define(['angular'], function(ng) {
         function ApiDocTopCntl($scope, $http, $routeParams) {
             switch ($routeParams.method) {
                 case 'GET': {
-                    $http.get('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data });
+                    $http.get('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; });
                     break;
                 }
                 case 'PUT': {
-                    $http.put('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data });
+                    $http.put('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; });
                     break;
                 }
                 case 'POST': {
-                    $http.post('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data });
+                    $http.post('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; });
                     break;
                 }
                 case 'HEAD' : {
-                    $http.header('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data });
+                    $http.header('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; });
                     break;
                 }
                 case 'DELETE' : {
-//                    $http.delete('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data })
+//                    $http.delete('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; })
                     break;
                 }
                 case 'OPTIONS' : {
-                    $http.put('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data });
+                    $http.put('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; });
                     break;
                 }
                 default : {
                     break;
                 }
             }
-            $http.get('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data })
+            $http.get('/doc/api/modules/' + $routeParams.modName).success(function(data) { $scope.module = data; });
         }
     ]);
 
     mod.controller('Kind', ['$scope', '$http',
         function ScrupalSitesController($scope, $http)  {
-            $http.get('/api/sites').success(function(data) { $scope.sites = data })
+            $http.get('/api/sites').success(function(data) { $scope.sites = data; });
         }
     ]);
 
     mod.controller('Item', ['$scope', '$http', '$routeParams',
         function ScrupalModuleController($scope, $http, $routeParams) {
-            $http.get('/api/sites/' + $routeParams.modName).success(function(data) { $scope.site = data })
+            $http.get('/api/sites/' + $routeParams.modName).success(function(data) { $scope.site = data; });
         }
-    ])
+    ]);
 
     mod.controller('Trait', ['$scope', '$http',
         function ScrupalEntitiesController($scope, $http)  {
-            $http.get('/api/entities').success(function(data) { $scope.entities = data })
+            $http.get('/api/entities').success(function(data) { $scope.entities = data; });
         }
     ]);
 

@@ -47,11 +47,11 @@ define(['require'], function (require) {
                 var mod = window.scrupal_module_to_load;
                 if (mod !== 'scrupal') {
                     require(['/assets/javascripts/' + mod + '/' + mod + '.js'], function() {
-                        var body_selector = '#' + mod
-                        ng.bootstrap( window.document.body.querySelector(body_selector), [mod])
-                    })
+                        var body_selector = '#' + mod;
+                        ng.bootstrap( window.document.body.querySelector(body_selector), [mod]);
+                    });
                 }
             }
-        })
+        });
     });
 });
