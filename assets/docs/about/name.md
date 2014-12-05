@@ -15,8 +15,11 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
+# About The Name
+You might be wondering about how we came up with the name. It had a number of incarnations over a few years but
+eventually the idea for Scrupal was: *do what drupal did 15 years ago but make it much better*. The *make it much
+better* part has a lot to do with the Scala programming language that is at the essence of Scrupal. So, I'm sure
+you've caught on by now: ```SCRUPAL = SCala + dRUPAL```. We also like that it has a pun with the word scruple. Much
+of what is done in software is unscrupulous. We intend to change that, both in what we produce and how we produce it.
 
-<marked>
-# Authors
-TBD
-</marked>
+And, no, sorry to disappoint, but this has nothing to do with screwing your pals!

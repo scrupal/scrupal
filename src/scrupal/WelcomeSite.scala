@@ -15,15 +15,17 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
-import scrupal.api.AssetLocator
 import scrupal.api._
+import scrupal.core.{MarkedDocNode, MarkedDocument, CoreModule, EchoEntity}
 import shapeless.{::, HList, HNil}
 import spray.http.Uri
-import spray.routing.PathMatchers.RestPath
+import spray.http.Uri.Path
+import spray.routing.PathMatcher
+import spray.routing.PathMatchers._
 
 import scala.concurrent.Future
 
@@ -45,14 +47,22 @@ class WelcomeSite extends Site {
       created=Some(new DateTime(2014, 11, 18, 18, 0))
   )
 
+  object DocPathToDocs extends PathToAction(PathMatcher("doc") / Segments) {
+    def apply(list: ::[List[String],HNil], rest: Path, context: Context): Action = {
+      NodeAction(context, new MarkedDocNode(context.scrupal.assetsLocator, "doc", "docs", list.head))
+    }
+  }
+
   case class RootAction(context: Context) extends Action {
     def apply() : Future[Result[_]] = { siteRoot(context) }
   }
+
   object AnyPathToRoot extends PathToAction(RestPath) {
     def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
   }
 
   def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
+    DocPathToDocs,
     AnyPathToRoot
   )
 
@@ -60,16 +70,17 @@ class WelcomeSite extends Site {
   EchoEntity.enable(this)
   CoreModule.enable(EchoEntity)
 
-  val roots = Seq("docs/api", "docs/core", "docs/db", "docs/http", "docs/utils")
+  val roots = Seq("docs/api", "docs/core", "docs/db", "docs/http", "docs/utils", "docs/intro")
 
   val apiDoc = new MarkedDocument('api, "docs/api", roots) ;       apiDoc.enable(this)   ; CoreModule.enable(apiDoc)
   val coreDoc = new MarkedDocument('core, "docs/core", roots);     coreDoc.enable(this)  ; CoreModule.enable(coreDoc)
   val dbDoc = new MarkedDocument('db, "docs/db", roots);           dbDoc.enable(this)    ; CoreModule.enable(dbDoc)
   val httpDoc = new MarkedDocument('http, "docs/http", roots);     httpDoc.enable(this)  ; CoreModule.enable(httpDoc)
   val utilsDoc = new MarkedDocument('utils, "docs/utils", roots);  utilsDoc.enable(this) ; CoreModule.enable(utilsDoc)
+  val introDoc = new MarkedDocument('intro, "docs/intro", roots);  introDoc.enable(this) ; CoreModule.enable(introDoc)
 }
 
 object WelcomeSite {
   lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.core.views.html.WelcomePage)
+    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
 }

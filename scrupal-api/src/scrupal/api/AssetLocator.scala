@@ -123,7 +123,6 @@ trait AssetLocator {
     if (cfg.isEmpty)
       return None
     val config : Configuration = Configuration(cfg)
-    val license = config.getString("license").flatMap { l ⇒ OSSLicense.lookup(Symbol(l)) }
     val files = config.getConfig("files").fold(Map.empty[String, (String,Option[URL])])(c ⇒
       (c.entrySet.filter { case (k, v) ⇒
         v.unwrapped.isInstanceOf[String]
@@ -146,8 +145,14 @@ trait AssetLocator {
           dirs.toMap
         }
     }
-    Some(Directory(config.getString("author"), config.getString("copyright"), license, config.getString("name"),
-      config.getString("title"), config.getString("description"), config.getString("index"), files, dirs))
+    val author = config.getString("author")
+    val copyright = config.getString("copyright")
+    val license = config.getString("license").flatMap { l ⇒ OSSLicense.lookup(Symbol(l)) }
+    val name = config.getString("name")
+    val title = config.getString("title")
+    val description = config.getString("description")
+    val index = config.getString("index")
+    Some(Directory(author, copyright, license, name, title, description, index, files, dirs))
   }
 
   def isFile(url: URL) = { url != null && url.getProtocol == "file" }

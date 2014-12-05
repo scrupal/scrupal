@@ -31,7 +31,6 @@ import scrupal.utils.OSSLicense
   * it simply echos its input to its output. This can be be used for benchmarking the routing and dispatch and layout
   * parts of Scrupal since the response content is generated computationally without blocking.
   */
-
 object EchoEntity extends Entity {
 
   def id: Symbol = 'Echo

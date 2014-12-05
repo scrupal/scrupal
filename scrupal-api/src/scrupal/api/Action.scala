@@ -69,6 +69,19 @@ trait Action extends (() => Future[Result[_]]) {
   }
 }
 
+/** Action From Node
+  *
+  * This is an adapter that captures the context and a node and turns it into an action that invokes the
+  * Generator function on the node to produce the action's result. This just allows a node to be used as an action.
+  * @param context Context in which the action should occur
+  * @param node The node that will produce the action's result
+  */
+case class NodeAction(context: Context, node: Node) extends Action {
+  def apply() : Future[Result[_]] = {
+    node(context)
+  }
+}
+
 /** Mapping Of PathMatcher To Action
   *
   * This Function1 subclass is used to declare that a particular shape of HList can be converted into an Action and

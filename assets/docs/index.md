@@ -14,47 +14,7 @@
   ~ You should have received a copy of the GNU General Public License along with Scrupal.                             ~
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<tabset>
-<tab heading="Overview" active>
-  <div class="well">
-      <div ng-include="'top.html'"></div>
-  </div>
-</tab>
-<tab heading="Introduction">
-  <div class="well">
-    <div ng-include="'/assets/docs/intro/index.html'"></div>
-  </div>
-</tab>
-<tab heading="Starting">
-  <div class="well">
-    <div ng-include="'/assets/docs/starting/index.html'"></div>
-  </div>
-</tab>
-<tab heading="Tutorials">
-  <div class="well">
-    <div ng-include="'/assets/docs/tutorials/index.html'"></div>
-  </div>
-</tab>
-<tab heading="Developers">
-  <div class="well">
-    <div ng-include="'/assets/docs/developers/index.html'"></div>
-  </div>
-</tab>
-<tab heading="About">
-  <div class="well">
-    <div ng-include="'/assets/docs/about/index.html'"></div>
-  </div>
-</tab>
-<tab heading="!RTFM">
-  <div class="well">
-    <div ng-include="'/assets/docs/!rtfm/index.html'"></div>
-  </div>
-</tab>
-</tabset>
 
-<script type="text/ng-template" id="top.html">
-<section id="top">
-<marked>
 # Scrupal Documentation Index
 Welcome to Scrupal. This is the table of contents for Scrupal documentation. Use the links above or below to learn
 more.
@@ -65,9 +25,3 @@ more.
 * **Developers** - Want to improve or extend Scrupal? This section is for you.
 * **About** - More information about Scrupal, its underpinnings, origins, etc.
 * **!RTFM** - If you know what !RTFM means and you agree, this section is for you. Otherwise, try one of the others.
-
-</marked>
-<hr/><div><a href="/doc"><i class="icon-level-up"></i> Return to Index</a></div>
-</section>
-</script>
-

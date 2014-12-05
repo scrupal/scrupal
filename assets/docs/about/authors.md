@@ -15,21 +15,6 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<section id="intro">
-<tabset>
-<tab heading="Overview" active>
-<marked>
-# Introduction To Scrupal
-This section provides introductory material that you should read if you are
-new to Scrupal and want to learn what it is all about. If you want to skip the details, try the !RTFM section.
-Please use the tabs below to learn more about Scrupal.
-</marked>
-</tab>
-<tab heading="Features"><div ng-include="'/assets/docs/intro/features.html'"></div></tab>
-<tab heading="Scruples"><div ng-include="'/assets/docs/intro/scruples.html'"></div></tab>
-<tab heading="Audience"><div ng-include="'/assets/docs/intro/audience.html'"></div></tab>
-<tab heading="Technology"><div ng-include="'/assets/docs/intro/technology.html'"></div></tab>
-</tabset>
-<hr/>
-<div><a href="/doc"><i class="icon-level-up"></i> Return to Index</a></div>
-</section>
+
+# Authors
+TBD

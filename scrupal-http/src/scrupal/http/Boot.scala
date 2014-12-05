@@ -23,8 +23,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
-import scrupal.api.Site
-import scrupal.core.CoreScrupal
+import scrupal.api.{Scrupal, Site}
 import scrupal.http.actors.ScrupalServiceActor
 import scrupal.utils.{ScrupalComponent, DateTimeHelpers}
 import spray.can.Http
@@ -38,12 +37,8 @@ import scala.concurrent.duration._
   * Since we are Spray based that only consists of creating the actor system, the top level Actor, and binding that
   * actor to the correct HTTP interface and port.
   */
-object Boot extends App with ScrupalComponent
+case class Boot(scrupal: Scrupal) extends ScrupalComponent
 {
-
-  // Instantiate the Scrupal object
-  val scrupal = new CoreScrupal
-
   // Ask Scrupal to do its initialization .. lots of things can go wrong ;)
   val (config,dbContext) = scrupal.open()
 
@@ -62,6 +57,8 @@ object Boot extends App with ScrupalComponent
   val port = config.getInt("scrupal.http.port").getOrElse(8888)
 
   log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout}ms")
+
+  val executionStart = Platform.currentTime
 
   // start a new HTTP server on port 8080 with our service actor as the handler
   IO(Http) ? Http.Bind(service, interface, port)

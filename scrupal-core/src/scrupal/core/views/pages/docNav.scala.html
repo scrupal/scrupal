@@ -1,10 +1,15 @@
-@(menu: Map[String,Map[String,String]])
-<div class="well-small">
-@for((k,v) ← menu) {
+@(files: Map[String,String], dirs: Map[String,Map[String,String]])
+<div class="well-small col-md-2">
+<ul role="menu">
+  @for((title,link) ← files) {
+    <li><a href="@link">@title</a></li>
+  }
+</ul>
+@for((title,map) ← dirs) {
   <div class="btn-group">
-    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">@k <span class="caret"></span></button>
+    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">@title <span class="caret"></span></button>
     <ul class="dropdown-menu" role="menu">
-      @for((label,href) ← v ) {
+      @for((label,href) ← map ) {
         <li><a data-target="#" href="@href">@label</a></li>
       }
     </ul>

@@ -99,11 +99,13 @@ object ScrupalBuild extends Build
   val opa_deps = opa % "compile->compile;test->test"
 
   lazy val root = Project(base_name, file("."))
+    .enablePlugins(SbtTwirl)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
+    .settings(twirlSettings_top:_*)
     .settings(docSettings:_*)
     .settings(
-      mainClass in (Compile, run) := Some("scrupal.http.Boot"),
+      mainClass in (Compile, run) := Some("scrupal.Boot"),
       libraryDependencies ++= root_dependencies
     )
     .settings(UnidocPlugin.unidocSettings: _*)

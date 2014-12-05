@@ -23,7 +23,7 @@ import reactivemongo.bson.{BSONDocument, BSONString}
 import scrupal.api.Node
 import scrupal.db.DBContext
 import scrupal.api._
-import scrupal.utils.{OSSLicense, Version}
+import scrupal.utils.{Configuration, OSSLicense, Version}
 
 import scrupal.core.CoreFeatures._
 import shapeless.HList
@@ -85,4 +85,13 @@ object CoreModule extends Module {
   def handlers = Seq()
 
   override def schemas(implicit dbc: DBContext) : Seq[CoreSchema] = Seq( new CoreSchema(dbc, "Scrupal") )
+
+  override protected[scrupal] def bootstrap(config: Configuration) = {
+    super.bootstrap(config)
+    // Make things from the configuration override defaults and database read settings
+    // Features
+    config.getBoolean("scrupal.developer.mode") map { value => CoreFeatures.DevMode.enable(this, value)}
+    config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enable(this, value)}
+    config.getBoolean("scrupal.config.wizard") map { value => CoreFeatures.ConfigWizard.enable(this, value)}
+  }
 }

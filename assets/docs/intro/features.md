@@ -15,13 +15,29 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<marked>
-# About The Name
-You might be wondering about how we came up with the name. It had a number of incarnations over a few years but
-eventually the idea for Scrupal was: *do what drupal did 15 years ago but make it much better*. The *make it much
-better* part has a lot to do with the Scala programming language that is at the essence of Scrupal. So, I'm sure
-you've caught on by now: ```SCRUPAL = SCala + dRUPAL```. We also like that it has a pun with the word scruple. Much
-of what is done in software is unscrupulous. We intend to change that, both in what we produce and how we produce it.
+## Scrupal Features
 
-And, no, sorry to disappoint, but this has nothing to do with screwing your pals!
-</marked>
+### Simple Installation
+Installation of Scrupal is dead simple:
+* Download a file and unpack it with unzip.
+* Run the included start program
+* Point your web browser at localhost:9000
+* Answer some questions to complete the installation.
+Easy, pleasy. As easy as WordPress .. maybe even easier.
+
+### Cutting Edge Technology
+Scrupal was designed as a technology refresh from the outset. While we avoid the bleeding edge (so you don't cut
+yourself), we do rapidly adopt the latest proven technologies and we will continue to do so with each major release.
+We are always looking for:
+* The right tool for the job (replacing older ones as better ones come along)
+* New tools to do things we never originally imagined.
+* Better ways of developing software to be more responsive to user demand.
+
+### Verity
+Verity is a module in Scrupal that provides a user driven system of vouching for the veracity of information put into
+a Scrupal web application. The days of free-for-all wiki and forum systems are over. Without some way to keep the
+malfeasants, scammers, spammers, and the terminally unkind out of your system, the quality of information that will
+get put into it will decline. Any popular site will suffer the signal-to-noise problem simply because of its
+popularity. Verity is how we combat that, by asking a system's users to participate collaboratively in vouching and
+verifying each others' information.
+

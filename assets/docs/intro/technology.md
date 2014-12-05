@@ -15,7 +15,6 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<marked>
 ## Technology
 Scrupal is an integration of some of the latest technologies to ensure that it remains technically relevant for many
 decades to come. Below is the rational for choosing the technologies that comprise Scrupal.
@@ -50,4 +49,3 @@ permits us to do interesting things with the build and deployment side of Scrupa
 ### Specs2
 
 ### Deadbolt
-</marked>

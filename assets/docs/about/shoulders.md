@@ -1,4 +1,3 @@
-
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright © 2014 Reactific Software LLC                                                                           ~
   ~                                                                                                                   ~
@@ -16,11 +15,12 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<h2>Standing On The Shoulders Of Giants</h2>
-<p>Scrupal would not be possible without the free/libre/open source software community. Any recognition it
+# Standing On The Shoulders Of Giants
+Scrupal would not be possible without the free/libre/open source software community. Any recognition it
 achieves clearly needs to acknowledge the technologies upon which it is built, and the dedication and brilliance
 of their inventors. This page is all about giving such recognition and making sure we honor their software license
-agreement through inclusion of their licenses here. </p>
+agreement through inclusion of their licenses here.
+
 <tabset>
 <tab heading="Java" active><div class="well"><div ng-include="'java.html'"></div></div></tab>
 <tab heading="Scala"><div class="well"><div ng-include="'scala.html'"></div></div></tab>
@@ -42,20 +42,19 @@ agreement through inclusion of their licenses here. </p>
 <section id="java">
 <h3>The Java Virtual Machine and Java Programming Language</h3>
 <p>Scrupal runs on top of the long trusted, production competent Java Virtual Machine. Running application software
-this
-way has made sense for numerous organizations and will continue to do so for many years to come. The depth of
+this way has made sense for numerous organizations and will continue to do so for many years to come. The depth of
 resources, wealth of libraries, and deployment flexibility in the JVM eco-system bring levels of competence and
 capability Scrupal could not achieve otherwise. Because Scrupal does not re-distribute the JVM, we do not have a
 license restriction. However, if you plan to use the "Commerical Features" provided by the JVM via Scrupal then you
 should be aware of this clause of the Oracle BCL:</p>
-<blockquote>
+```
 Use of the Commercial Features for any commercial or production purpose requires a separate license from Oracle.
 “Commercial Features” means those features identified Table 1-1 (Commercial Features In Java SE Product Editions) of
 the Java SE documentation accessible at
 <a href="http://www.oracle.com/technetwork/java/javase/documentation/index.html">
 http://www.oracle.com/technetwork/java/javase/documentation/index.html>
 </a>
-</blockquote>
+```
 <a href="http://www.oracle.com/technetwork/java/javase/terms/license/index.html">License</a>
 </section>
 </script>

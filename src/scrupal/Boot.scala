@@ -15,20 +15,22 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal
 
-import scrupal.api.{Site, Scrupal}
+import scrupal.api.{Scrupal, Site}
+import scrupal.core.CoreModule
 import scrupal.db.DBContext
 import scrupal.utils.Configuration
 
 import scala.concurrent.Future
 
-class CoreScrupal extends Scrupal {
+object Boot extends Scrupal with App {
+
+  val http = scrupal.http.Boot(this)
 
   override def open() = {
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require(CoreModule.id == 'Core)
-
     super.open()
   }
 
@@ -46,16 +48,7 @@ class CoreScrupal extends Scrupal {
 
   override def onLoadConfig(config: Configuration): Configuration = {
     val new_config = super.onLoadConfig(config)
-
-    CoreModule.bootstrap(config)
-
-    // Make things from the configuration override defaults and database read settings
-    // Features
-    new_config.getBoolean("scrupal.developer.mode") map   { value => CoreFeatures.DevMode.enable(this, value) }
-    new_config.getBoolean("scrupal.developer.footer") map { value => CoreFeatures.DebugFooter.enable(this, value) }
-    new_config.getBoolean("scrupal.config.wizard") map    { value => CoreFeatures.ConfigWizard.enable(this, value) }
-
-    // return the configuration
+    CoreModule.bootstrap(new_config)
     new_config
   }
 

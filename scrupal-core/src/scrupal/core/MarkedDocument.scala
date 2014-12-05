@@ -17,8 +17,11 @@
 
 package scrupal.core
 
+import org.joda.time.DateTime
 import play.twirl.api.Html
+import scrupal.api.AssetLocator.Directory
 import scrupal.api._
+import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.Future
 
@@ -63,7 +66,7 @@ case class MarkedDocument(id: Symbol, root: String, roots: Seq[String] = Seq.emp
     menuHtml match {
       case Some(m) ⇒ m
       case None ⇒ {
-        val result = scrupal.core.views.html.pages.docNav(menuItems(context))
+        val result = scrupal.core.views.html.pages.docNav(Map.empty[String,String], menuItems(context))
         menuHtml = Some(result)
         result
       }
@@ -127,6 +130,90 @@ object MarkedDocument {
 
   object docFooter extends
   TwirlHtmlTemplate('docFooter, "Footer for Marked Documentation", scrupal.core.views.html.docFooter)
+}
 
+/** Marked Document Nodes
+  *
+  * This type of node translates a document written in marked (like markdown) format into HTMl via the marked.js
+  * javascript library. It also produces a navigation system for documents located in a directory.
+  * @param root The root directory in the classpath resources in which to find the documentation
+  * @param path The path to the specific document to show
+  * @param modified Date of modification
+  * @param created Date of creation
+ */
+case class MarkedDocNode(
+  locator: AssetLocator,
+  contextPath: String,
+  root: String,
+  path: List[String],
+  modified: Option[DateTime] = None,
+  created: Option[DateTime] = None
+) extends Node {
+  override def mediaType: MediaType = MediaTypes.`text/html`
+  override def kind: Symbol = 'MarkedDoc
+  override def description: String = "A node that provides a marked document from a resource as html."
 
+  def menuItems(dirPath: String, dir: Directory) : (Map[String,String], Map[String,Map[String,String]]) = {
+      val fileMap = for ((filename,(title,url)) ← dir.files) yield {
+        title → (dirPath + "/" + filename)
+      }
+      val dirMap = for ((dirName, optdir) ← dir.dirs if optdir.isDefined) yield {
+        val subdirPath = dirPath + "/" + dirName
+        val subfilesMap = optdir match {
+          case Some(d2) ⇒
+            for ((filename, (title, url)) ← d2.files) yield {
+              title → (subdirPath + "/" + filename)
+            }
+          case None ⇒ Map.empty[String,String]
+        }
+        dirName → subfilesMap
+      }
+      fileMap → dirMap
+  }
+
+  def apply(context: Context) : Future[Result[_]] = {
+    val pathStr = path.mkString("/")
+    val relPath = path.dropRight(1).mkString("/")
+    val page = path.takeRight(1).headOption.getOrElse("")
+    val dirPath = if (path.isEmpty) root else root + "/" + relPath
+    val directory = locator.fetchDirectory(dirPath, recurse=true)
+    directory match {
+      case None ⇒ Future.successful(ErrorResult(s"Directory at $dirPath was not found", NotFound))
+      case Some(dir) ⇒
+        val doc : String = {
+          if (page.nonEmpty)
+            page
+          else dir.index match {
+            case None ⇒ return Future.successful(ErrorResult(s"Document at $dirPath was not found", NotFound))
+            case Some(index) ⇒ index
+          }
+        }
+        import MarkedDocument._
+        dir.files.get(doc) match {
+          case None ⇒ Future.successful(ErrorResult(s"Document at $dirPath/$doc was not found", NotFound))
+          case Some((docTitle,urlOpt)) ⇒
+            urlOpt match {
+              case Some(url) ⇒
+                val title = StringNode("docTitle", docTitle)
+                val content = URLNode("docUrl", url)
+                val linkPath = if (relPath.isEmpty) "/" + contextPath else "/" + contextPath + "/" + relPath
+                val (files,dirs) = menuItems(linkPath, dir)
+                val nav = scrupal.core.views.html.pages.docNav(files,dirs)
+                val menuNode = StaticNode("Menu", nav)
+                val footer = HtmlNode(doc, docFooter, Map("footer" → Html(dir.copyright.getOrElse("Footer"))))
+                val subordinates: Map[String, Either[NodeRef, Node]] = Map(
+                  "title" → Right(title),
+                  "menu" → Right(menuNode),
+                  "content" → Right(content),
+                  "footer" → Right(footer)
+                )
+                val layout = LayoutNode("Doc", subordinates, docLayout)
+                layout.apply(context)
+              case None ⇒ Future.successful(
+                ErrorResult(s"Document at $root/$doc was not listed in directory",NotFound)
+              )
+            }
+        }
+    }
+  }
 }

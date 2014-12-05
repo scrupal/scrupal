@@ -15,7 +15,6 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<marked>
 ## Audience
 This article explains the target audience for Scrupal - who should use it and why. We'll first examine the use cases
 Scrupal was intended for and how that affected its design. Then we'll review some examples of the places where Scrupal
@@ -79,4 +78,3 @@ features to ensure that spammers, scammers, idiots and other malfeasants simply 
 The intranet for a service organization needs a knowledgebase that is maintained actively by the various field agents
 roaming the world. Because these information workers depend on accurate, verifiable information that is in constant
 flux, a system of information validation was needed. The Verity feature of Scrupal was employed to
-</marked>
