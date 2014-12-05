@@ -1,13 +1,13 @@
-@(files: Map[String,String], dirs: Map[String,Map[String,String]])
+@(uplink: String, files: Map[String,String], dirs: Map[String,Map[String,String]])
 <div class="well-small col-md-2">
-<ul role="menu">
-  @for((title,link) ← files) {
-    <li><a href="@link">@title</a></li>
-  }
-</ul>
+<button type="button" class="btn btn-xs btn-primary"><a href="@uplink">Up</a></button>
+@for((title,link) ← files) {
+<button type="button" class="btn btn-xs btn-primary"><a href="@link">@title</a></button>
+}
 @for((title,map) ← dirs) {
   <div class="btn-group">
-    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">@title <span class="caret"></span></button>
+    <button type="button" class="btn btn-xs btn-primary dropdown-toggle" data-toggle="dropdown"
+    aria-expanded="false">@title <span class="caret"></span></button>
     <ul class="dropdown-menu" role="menu">
       @for((label,href) ← map ) {
         <li><a data-target="#" href="@href">@label</a></li>

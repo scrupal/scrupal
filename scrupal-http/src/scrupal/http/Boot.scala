@@ -53,7 +53,7 @@ case class Boot(scrupal: Scrupal) extends ScrupalComponent
   // create and start our service actor
   val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal, timeout), ScrupalServiceActor.name)
 
-  val interface = config.getString("scrupal.http.interface").getOrElse("localhost")
+  val interface = config.getString("scrupal.http.interface").getOrElse("0.0.0.0")
   val port = config.getInt("scrupal.http.port").getOrElse(8888)
 
   log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout}ms")

@@ -20,7 +20,7 @@ package scrupal
 import org.joda.time.DateTime
 import play.twirl.api.Html
 import scrupal.api._
-import scrupal.core.{MarkedDocNode, MarkedDocument, CoreModule, EchoEntity}
+import scrupal.core.{MarkedDocNode, CoreModule, EchoEntity}
 import shapeless.{::, HList, HNil}
 import spray.http.Uri
 import spray.http.Uri.Path
@@ -69,15 +69,6 @@ class WelcomeSite extends Site {
   CoreModule.enable(this)
   EchoEntity.enable(this)
   CoreModule.enable(EchoEntity)
-
-  val roots = Seq("docs/api", "docs/core", "docs/db", "docs/http", "docs/utils", "docs/intro")
-
-  val apiDoc = new MarkedDocument('api, "docs/api", roots) ;       apiDoc.enable(this)   ; CoreModule.enable(apiDoc)
-  val coreDoc = new MarkedDocument('core, "docs/core", roots);     coreDoc.enable(this)  ; CoreModule.enable(coreDoc)
-  val dbDoc = new MarkedDocument('db, "docs/db", roots);           dbDoc.enable(this)    ; CoreModule.enable(dbDoc)
-  val httpDoc = new MarkedDocument('http, "docs/http", roots);     httpDoc.enable(this)  ; CoreModule.enable(httpDoc)
-  val utilsDoc = new MarkedDocument('utils, "docs/utils", roots);  utilsDoc.enable(this) ; CoreModule.enable(utilsDoc)
-  val introDoc = new MarkedDocument('intro, "docs/intro", roots);  introDoc.enable(this) ; CoreModule.enable(introDoc)
 }
 
 object WelcomeSite {

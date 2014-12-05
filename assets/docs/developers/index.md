@@ -15,26 +15,6 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<section id="developers">
-<marked>
+# Scrupal For Developers
 This section is for Scrupal developers. If you work on Scrupal itself, or any of the modules,
 here is where you'll find the inside poop on what makes Scrupal rock!
-</marked>
-
-<tabset>
-<tab heading="Ables" active><div ng-include="'/assets/docs/developers/ables.html'"></div></tab>
-<tab heading="Things" ><div ng-include="'/assets/docs/developers/things.html'"></div></tab>
-<tab heading="ITEMS" active><div ng-include="'/assets/docs/developers/items.html'"></div></tab>
-<tab heading="Sites" ><div ng-include="'/assets/docs/developers/sites.html'"></div></tab>
-<tab heading="Modules"><div ng-include="'/assets/docs/developers/modules.html'"></div></tab>
-<tab heading="Entities"><div ng-include="'/assets/docs/developers/entities.html'"></div></tab>
-<tab heading="Types"><div ng-include="'/assets/docs/developers/types.html'"></div></tab>
-<tab heading="Instances"><div ng-include="'/assets/docs/developers/instances.html'"></div></tab>
-<tab heading="Database"><div ng-include="'/assets/docs/developers/database.html'"></div></tab>
-<tab heading="REST API"><div ng-include="'/assets/docs/developers/api.html'"></div></tab>
-<tab heading="REST API Auto-Doc"><div ng-include="'/assets/docs/developers/apidoc.html'"></div></tab>
-<tab heading="Configuration"><div ng-include="'/assets/docs/developers/configuration.html'"></div></tab>
-</tabset>
-<hr/>
-<div><a href="/doc"><i class="icon-level-up"></i> Return to Index</a></div>
-</section>
