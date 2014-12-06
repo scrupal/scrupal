@@ -1,3 +1,3 @@
-# Scrupal OPA SubProject
+# Scrupal OPA Project
 
-This Scrupal subproject provides One Page Application utilities for Scrupal
+The scrupal-opa project provides One Page Application utilities for Scrupal

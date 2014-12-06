@@ -16,5 +16,7 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 # Scrupal For Developers
-This section is for Scrupal developers. If you work on Scrupal itself, or any of the modules,
-here is where you'll find the inside poop on what makes Scrupal rock!
+This section is for Scrupal _developers_. If you work on Scrupal itself, or any of the modules, here is where you'll
+find the inside scroop on what makes Scrupal rock! If you are not a software developer, you should probably try one
+of the other sections as the information in this section is highly technical. 
+

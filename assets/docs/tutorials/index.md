@@ -15,19 +15,9 @@
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<section id="tutorials">
-<tabset>
-<tab heading="Overview" active>
-<marked>
 # Tutorials
-Here are some step-by-step, learn-by-doing-as-you-go tutorials.
-</marked>
-</tab>
-<tab heading="Installation">TBD</tab>
-<tab heading="Configuration">TBD</tab>
-<tab heading="Adding Pages">TBD</tab>
-<tab heading="Themes">TBD</tab>
-<tab heading="Name">TBD</tab>
-</tabset>
-<hr/><div><a href="/doc"><i class="icon-level-up"></i> Return to Index</a></div>
-</section>
+Here are some step-by-step, learn-by-doing-as-you-go tutorials:
+* [Installation](installation.md) - Learn how to install Scrupal
+* [Configuration](configuration.md) - All about configuring Scrupal
+* [Site Administration](siteadmin.md) - Basic administration procedures for small web sites
+* [Write A Module](module.md) - How to write a new module to plug into Scrupal

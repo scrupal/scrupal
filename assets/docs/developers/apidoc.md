@@ -14,35 +14,10 @@
   ~ You should have received a copy of the GNU General Public License along with Scrupal.                             ~
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-# Getting Started
-When you're ready to try Scrupal, everything you need to know to get started is on this page.
+# Entity REST API Auto-Documentation
+Scrupal entities provide a REST API to allow interaction with them. Understanding this API is a large part of learning
+how to use the entities so Scrupal provides an automatically generated documentation site for all accessible entities.
+The documentation is generated via introspection on the Entity subclasses and with cooperation of those subclasses to
+provide written documentation for each operation.
 
-### Installation
-Installation of Scrupal is straight forward as it is packaged for your operating system. Use one of these links
-depending on which kind of system you want to install Scrupal on:
-<a href="#OSX">Mac OS/X</a>, <a href="#Linux">Linux</a>, <a href="#Windows">Windows</a>, <a href="#Others">Others</a>.
-<h3><a hame="OSX">Mac OS/X</a></h3>
-The Scrupal installation comes as a standard DMG package. Download it from
-<a href="http://scrupal.org/download#OSX">here</a> and then follow these steps:
-<marked>
-+ In Finder, browse to where you downloaded the `scrupal-x.y.dmg` file (x and y are digits).
-+ Double click on the scrupal-x.y.dmg file to mount it. Notice the new disk icon on your desktop.
-+ Double click the `scrupal-x.y` disk drive icon on your desktop.
-+ Open the `bin` directory and double click on the `scrupal` script to get Scrupal running.
-+ You can install Scrupal to a more permanent location by just copying the files to another location
-</marked>
-<h3><a hame="Linux">Linux</a></h3>
-<h3><a hame="Windows">WindowsX</a></h3>
-<h3><a hame="Other">Other</a></h3>
-
-### Configuration
-TBD
-
-### Your First Site
-TBD
-
-### Using HTTPS
-TBD
-
-### Managing Modules
-TBD
+More details TBD

@@ -35,7 +35,7 @@ class WelcomeSite extends Site {
   val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
   val modified: Option[DateTime] = Some(DateTime.now)
   val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "amelia"
+  override val themeName = "cyborg"
   def host: String = ".*"
   final val key = ""
   val siteRoot: Node =

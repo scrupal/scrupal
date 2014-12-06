@@ -1,8 +1,8 @@
 @(uplink: String, files: Map[String,String], dirs: Map[String,Map[String,String]])
 <div class="well-small col-md-2">
-<button type="button" class="btn btn-xs btn-primary"><a href="@uplink">Up</a></button>
+<a href="@uplink" class="btn btn-xs btn-primary active" role="button">Up</a>
 @for((title,link) ← files) {
-<button type="button" class="btn btn-xs btn-primary"><a href="@link">@title</a></button>
+<a href="@link" class="btn btn-xs btn-primary" role="button">@title</a>
 }
 @for((title,map) ← dirs) {
   <div class="btn-group">

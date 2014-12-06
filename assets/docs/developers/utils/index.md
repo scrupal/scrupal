@@ -1,3 +1,3 @@
 # Scrupal Utils Project
 
-This Scrupal project provides utilities for Scrupal
+The scrupal-utils project provides general utilities for Scrupal that are used by the other projects/

@@ -14,25 +14,4 @@
   ~ You should have received a copy of the GNU General Public License along with Scrupal.                             ~
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-
-<marked>
-# Development Policies
-
-## Versions
-
-+ Odd numbered minor versions (0.1, 0.3, 0.5, etc.) are unstable development versions.
-+ Even numbered minor versions (0.2, 0.4, 0.6, etc.) are tested, stable, released versions.
-+ There will be no backporting of fixes to preior release versions before 1.0
-
-## Patch & Pull Request Standards
-
-+ Follow applicable portions of [Play's guidelines](http://www.playframework.com/documentation/2.2.x/Guidelines)
-+ No Java code, Scala only.
-+ Code review is our first line of quality assurance. Do not be offended if your submission is heavily critiqued.
-Instead, learn from the review, or point out where you believe the reviewer may have made a mistake. The point is to
-have a conversation about the code until multiple people are happy that the patch is the RightThing(tm)
-
-## GIT Workflow
-
-+ Read [this](https://sandofsky.com/blog/git-workflow.html) and follow it. ;)
-</marked>
+# Instance

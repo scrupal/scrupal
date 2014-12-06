@@ -1,3 +1,3 @@
 # Scrupal Http Project
 
-This Scrupal project provides an interface to HTTP for Scrupal
+The scrupal-http project provides an interface to HTTP for Scrupal via spray-http, spray-routing and spray-can.

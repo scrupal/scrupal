@@ -19,3 +19,8 @@
 # About Scrupal
 This section provides background information about Scrupal, the software it is based on, its origins, authors, and
 etc. This is more about the people, history and foundations than the technology.
+
++ [History](history.md) - A brief technical history of how Scrupal evolved.
++ [Name](name.md) - How scrupal got its name.
++ [Shoulders](shoulders.md) - The shoulders of giants that Scrupal stands upon.
++ [Authors](authors.md) - A list of the authors of the software.

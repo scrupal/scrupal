@@ -14,7 +14,7 @@
   ~ You should have received a copy of the GNU General Public License along with Scrupal.                             ~
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-
-
 # Authors
-TBD
+Reid Spencer, President & CTO, Reactific Software LLC - reid@reactific.com
+
+

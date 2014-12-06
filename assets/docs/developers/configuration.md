@@ -14,9 +14,8 @@
   ~ You should have received a copy of the GNU General Public License along with Scrupal.                             ~
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-
-<marked>
-# Things
-The `scrupal/api/Things.scala` file defines a variety of abstract classes whose name ends in "Thing". These blend
-together the various `...ables` traits to form reusable abstract classes that combine data and functionality.
-</marked>
+# Configuration
+Scrupal uses the Typesafe Config library for its configuration. There are multiple ways to manage the configuration:
++ Specify options on the command line as java system properties.
++ Place options in a configuration file and use a java system property to tell Scrupal where it is.
++ Once running, use the administration system to manage configuration files.

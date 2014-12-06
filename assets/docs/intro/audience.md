@@ -14,16 +14,14 @@
   ~ You should have received a copy of the GNU General Public License along with Scrupal.                             ~
   ~ If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                        ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-
-## Audience
-This article explains the target audience for Scrupal - who should use it and why. We'll first examine the use cases
+# Audience
+This page explains the target audience for Scrupal - who should use it and why. We'll first examine the use cases
 Scrupal was intended for and how that affected its design. Then we'll review some examples of the places where Scrupal
 might be useful.
 
 ### Quck Summary
 Essentially, Scrupal is for web site administrators who need any of the following:
-- Highly scalable web framework involving zero programming
-- Social sites that have users and must encrypt traffic
+- Highly scalable web framework involving zero programming (web based administration)
 - Sites needing a framework for highly interactive, asynchronous, Javascript based interaction
 
 

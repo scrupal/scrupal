@@ -94,7 +94,7 @@ case class MarkedDocNode(
           case Some((docTitle,urlOpt)) ⇒
             urlOpt match {
               case Some(url) ⇒
-                val title = StringNode("docTitle", docTitle)
+                val title = StringNode("docTitle", docTitle + " &mdash; " + dir.title.getOrElse("Documentation"))
                 val content = URLNode("docUrl", url)
                 val linkPath = if (relPath.isEmpty) "/" + contextPath else "/" + contextPath + "/" + relPath
                 val parentPath = path.dropRight(2).mkString("/")
