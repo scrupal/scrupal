@@ -21,18 +21,18 @@ processing engine of Scrupal resides. The core abstractions in Scrupal form an a
 
 - **[M: Module](module.md):** A container of functionality that defines the other types of api objects.
 
-- **[A: Action](action.md):** A URL context and a set of enabled modules, entities and nodes
+- **[A: Action](action.md):** A functor that produces a Result; the primary object of behavior in Scrupal.
 
-- **[N: Node](node.md):** A content generation function
+- **[N: Node](node.md):** A content generation function that converts a Context into a Result
 
 - **[I: Instance](instance.md):** An instance of an entity (essentially a document)
 
-- **[F: Facet](facet.md):** Something to add on to an instance's main payload
+- **[F: Facet](facet.md):** Something to add on to an instance's main payload; a mechanism of extension
 
-- **[E: Entity](entity.md):** A type of instance with definitions for the actions that can be performed on it
+- **[E: Entity](entity.md):** A type of instance with definitions the actions that can be performed on it
 
-- **[S: Site](site.md):** Site management data and a set of applications enabled for it.
+- **[S: Site](site.md):** A site definition as a collection of enabled capabilities.
 
 - **[T: Type](type.md):** A fundamental data type used for validating BSONValues (Instances and Node results)
 
-- **[O: Others](others.md):** Other objects of lesser importance and reserved for future use.
+- **[O: Others](others.md):** Other objects of lesser importance.
