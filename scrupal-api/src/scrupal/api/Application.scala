@@ -51,7 +51,7 @@ trait Application extends EnablementActionProvider[Application]
 
   def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
-  def pathsToActions  = Seq.empty[PathToAction[_ <: HList]]
+  def pathsToActions  = Seq.empty[PathMatcherToAction[_ <: HList]]
 }
 
 case class BasicApplication(

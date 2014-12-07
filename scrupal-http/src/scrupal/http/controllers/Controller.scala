@@ -179,7 +179,10 @@ class ActionProviderController extends Controller with PathHelpers {
       case e: Entity ⇒
         entityAction(e, key, unmatchedPath, context)
       case _ ⇒
-        extract { ctxt ⇒ ap.matchingAction(key, unmatchedPath, context).get }
+        ap.matchingAction(key, unmatchedPath, context) match {
+          case Some(action) ⇒ extract { ctxt ⇒ action }
+          case None ⇒ reject
+        }
     }
   }
 

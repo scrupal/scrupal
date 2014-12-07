@@ -75,6 +75,7 @@ case class NodeSite (
   final override val kind = 'NodeSite
   final val key : String = makeKey(id.name)
 
+  /* FIXME: Delete this
   case class SiteRootNodeAction(context: Context) extends Action {
     def apply() : Future[Result[_]] = { siteRoot.apply(context) }
   }
@@ -82,8 +83,8 @@ case class NodeSite (
   object SiteRootPathToAction extends PathToAction(RestPath) {
     def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, ctxt: Context): Action = SiteRootNodeAction(ctxt)
   }
-
-  final val pathsToActions = Seq( SiteRootPathToAction )
+*/
+  final val pathsToActions = Seq( PathToNodeAction(RestPath, siteRoot) )
 }
 
 object NodeSite {

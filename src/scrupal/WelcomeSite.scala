@@ -20,14 +20,10 @@ package scrupal
 import org.joda.time.DateTime
 import play.twirl.api.Html
 import scrupal.api._
-import scrupal.core.{MarkedDocNode, CoreModule, EchoEntity}
+import scrupal.core.{AdminApp, MarkedDocNode, CoreModule, EchoEntity}
 import shapeless.{::, HList, HNil}
-import spray.http.Uri
-import spray.http.Uri.Path
 import spray.routing.PathMatcher
 import spray.routing.PathMatchers._
-
-import scala.concurrent.Future
 
 class WelcomeSite extends Site {
   def id: Symbol = 'WelcomeToScrupal
@@ -47,28 +43,21 @@ class WelcomeSite extends Site {
       created=Some(new DateTime(2014, 11, 18, 18, 0))
   )
 
-  object DocPathToDocs extends PathToAction(PathMatcher("doc") / Segments) {
-    def apply(list: ::[List[String],HNil], rest: Path, context: Context): Action = {
-      NodeAction(context, new MarkedDocNode("doc", "docs", list.head))
-    }
-  }
+  object DocPathToDocs extends PathToNodeActionFunction(PathMatcher("doc")/Segments, {
+    (list: ::[List[String],HNil], rest, ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
+  }) {}
 
-  case class RootAction(context: Context) extends Action {
-    def apply() : Future[Result[_]] = { siteRoot(context) }
-  }
 
-  object AnyPathToRoot extends PathToAction(RestPath) {
-    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
-  }
-
-  def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
+  def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
     DocPathToDocs,
-    AnyPathToRoot
+    PathToNodeAction(RestPath, siteRoot)
   )
 
   CoreModule.enable(this)
   EchoEntity.enable(this)
+  AdminApp.enable(this)
   CoreModule.enable(EchoEntity)
+  CoreModule.enable(AdminApp)
 }
 
 object WelcomeSite {

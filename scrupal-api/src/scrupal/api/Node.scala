@@ -30,7 +30,7 @@ import scrupal.api.BSONHandlers._
 import scrupal.api.Node.NodeDAO
 import scrupal.api.HtmlHelpers._
 import scrupal.db._
-import spray.http.{MediaType, MediaTypes}
+import spray.http.{ContentType, MediaType, MediaTypes}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
@@ -201,6 +201,18 @@ object MessageNode {
   Node.variants.register(kind, MessageNodeVRW)
 }
 
+abstract class AbstractHtmlNode extends Node {
+  final val mediaType: MediaType = MediaTypes.`text/html`
+  def content(context: Context)(implicit ec: ExecutionContext) : Future[Html]
+  def apply(context: Context) : Future[Result[_]] = {
+    context.withExecutionContext { implicit ec: ExecutionContext ⇒
+      content(context)(ec).map { html ⇒ HtmlResult(html, Successful) }
+    }
+  }
+}
+
+
+
 /** Twirl Html Node
   * This is a node that simply contains a static blob of data that it produces faithly. The data can be any type
   * but is typically html which is why its mediaType
@@ -217,15 +229,14 @@ case class HtmlNode (
   created: Option[DateTime] = Some(DateTime.now),
   _id: BSONObjectID = BSONObjectID.generate,
   final val kind: Symbol = HtmlNode.kind
-) extends Node {
-  final val mediaType: MediaType = MediaTypes.`text/html`
-  def apply(ctxt: Context): Future[Result[_]] = {
-    val html = template(args,ctxt)
-    Future.successful(HtmlResult(html, Successful))
+) extends AbstractHtmlNode {
+  def content(context: Context)(implicit ec: ExecutionContext) : Future[Html] = {
+    Future.successful(template(args,context))
   }
 }
 
 object HtmlNode {
+  import BSONHandlers._
   final val kind = 'Html
   object HtmlNodeVRW extends VariantReaderWriter[Node,HtmlNode] {
     implicit val HtmlNodeHandler : BSONHandler[BSONDocument,HtmlNode] = Macros.handler[HtmlNode]

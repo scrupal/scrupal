@@ -19,12 +19,34 @@ Scrupal would not be possible without the free/libre/open source software commun
 achieves clearly needs to acknowledge the technologies upon which it is built, and the dedication and brilliance
 of their inventors. This page is all about giving such recognition and making sure we honor their software license
 agreement through inclusion of their licenses here.
+</div>
 <div role="tabpanel">
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active"><a href="#Java" aria-controls="Java" role="tab" data-toggle="tab">Java</a></li><li role="presentation"><a href="#Scala" aria-controls="Scala" role="tab" data-toggle="tab">Scala</a></li><li role="presentation"><a href="#Akka" aria-controls="akka" role="tab" data-toggle="tab">Akka</a></li><li role="presentation"><a href="#MongoDB" aria-controls="mongodb" role="tab" data-toggle="tab">MongoDB</a></li><li role="presentation"><a href="#AngularJS" aria-controls="mongodb" role="tab" data-toggle="tab">AngularJS</a></li><li role="presentation"><a href="#Bootstrap" aria-controls="mongodb" role="tab" data-toggle="tab">Bootstrap</a></li><li role="presentation"><a href="#PBKDF2" aria-controls="mongodb" role="tab" data-toggle="tab">PBKDF2</a></li><li role="presentation"><a href="#BCrypt" aria-controls="mongodb" role="tab" data-toggle="tab">BCrypt</a></li><li role="presentation"><a href="#SCrypt" aria-controls="mongodb" role="tab" data-toggle="tab">SCrypt</a></li><li role="presentation"><a href="#Specs2" aria-controls="mongodb" role="tab" data-toggle="tab">Specs2</a></li>
+<ul class="nav nav-pills" role="tablist">
+<li role="presentation" class="active">
+  <a href="#Java" aria-controls="Java" role="tab" data-toggle="pill">Java</a></li>
+<li role="presentation">
+  <a href="#Scala" aria-controls="Scala" role="tab" data-toggle="pill">Scala</a></li>
+<li role="presentation">
+  <a href="#Akka" aria-controls="Akka" role="tab" data-toggle="pill">Akka</a></li>
+<li role="presentation">
+  <a href="#MongoDB" aria-controls="MongoDB" role="tab" data-toggle="pill">MongoDB</a></li>
+<li role="presentation">
+  <a href="#AngularJS" aria-controls="AngularJS" role="tab" data-toggle="pill">AngularJS</a></li>
+<li role="presentation">
+  <a href="#Bootstrap" aria-controls="Bootstrap" role="tab" data-toggle="pill">Bootstrap</a></li>
+<li role="presentation">
+  <a href="#PBKDF2" aria-controls="PBKDF2" role="tab" data-toggle="pill">PBKDF2</a></li>
+<li role="presentation">
+  <a href="#BCrypt" aria-controls="BCrypt" role="tab" data-toggle="pill">BCrypt</a></li>
+<li role="presentation">
+  <a href="#SCrypt" aria-controls="SCrypt" role="tab" data-toggle="pill">SCrypt</a></li>
+<li role="presentation">
+  <a href="#Specs2" aria-controls="Specs2" role="tab" data-toggle="pill">Specs2</a></li>
+<li role="presentation">
+  <a href="#OthersToDo" aria-controls="OthersToDo" role="tab" data-toggle="pill">Others</a><li>
 </ul>
 <div class="tab-content">
-<div role="tabpanel" class="tab-pane active" id="Java">
+<div class="tab-pane active" id="Java">
 <h3>The Java Virtual Machine and Java Programming Language</h3>
 <p>Scrupal runs on top of the long trusted, production competent Java Virtual Machine. Running application software
 this way has made sense for numerous organizations and will continue to do so for many years to come. The depth of
@@ -37,8 +59,9 @@ Use of the Commercial Features for any commercial or production purpose requires
 “Commercial Features” means those features identified Table 1-1 (Commercial Features In Java SE Product Editions) of
 the Java SE documentation accessible at
 </pre>
-<a href="http://www.oracle.com/technetwork/java/javase/documentation/index.html">Java Documentation</a>
-<a href="http://www.oracle.com/technetwork/java/javase/terms/license/index.html">Oracle Binary Code License</a>
+<div><a href="http://www.oracle.com/technetwork/java/javase/documentation/index.html">Java Documentation</a></div>
+<div><a href="http://www.oracle.com/technetwork/java/javase/terms/license/index.html">Oracle Binary Code License</a>
+</div>
 </div>
 
 <div role="tabpanel" class="tab-pane" id="Scala">
@@ -226,5 +249,46 @@ Copyright (c) 2013 DCIT, a.s. http://www.dcit.cz / Karel Miko
 <h3>Specs2</h3>
 <p>TBD</p>
 </div>
+
+<div rle="tabpanel" class="tab-pane" id="OthersToDo">
+<h3>Others - To Do</h3>
+<p>There are many other pieces of software we depend upon, which have not been broken out separately ... yet!</p>
+<pre style="font-size:8pt">
+addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.0.3")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.7.6")
+addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.1.1")
+addSbtPlugin("com.typesafe.sbt" % "sbt-coffeescript" % "1.0.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-jshint" % "1.0.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-rjs" % "1.0.6")
+addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.0.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.0.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.0.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
+addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.5.2")
+addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.11.2")
+addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.1")
+addSbtPlugin("com.github.mpeltonen" %% "sbt-idea" % "1.6.0")
+addSbtPlugin("org.scala-lang.modules.scalajs" % "scalajs-sbt-plugin" % "0.5.5")
+val play_iteratees          = "com.typesafe.play"   %% "play-iteratees"         % playV
+val play_json               = "com.typesafe.play"   %% "play-json"              % playV
+val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
+val twirl_api		        = "com.typesafe.play"   %% "twirl-api"		        % "1.0.3"
+val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.4"
+val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.5"
+val requirejs               = "org.webjars"         % "requirejs"               % "2.1.15"
+val osgi_core               = "org.osgi"            % "org.osgi.core"           % "6.0.0"
+val grizzled_slf4j          = "org.clapper"         %% "grizzled-slf4j"         % "1.0.2"
+val mango                   = "org.feijoas"         %% "mango"                  % "0.11-SNAPSHOT"
+val joda_time               = "joda-time"           %  "joda-time"              % "2.5"
+val joda_convert            = "org.joda"            % "joda-convert"            % "1.2"
+val config                  =  "com.typesafe"       %  "config"                 % "1.2.1"
+val logback_classic         = "ch.qos.logback"      %  "logback-classic"        % "1.1.2"      % "test"
+val specs2                  = "org.specs2"          %% "specs2-core"            % "2.3.11"     % "test"
+val commons_io              = "commons-io"          %  "commons-io"             % "2.4"        % "test"
+
+</pre>
 </div>
 </div>

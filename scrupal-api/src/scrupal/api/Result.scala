@@ -22,11 +22,8 @@ import java.io.InputStream
 import play.api.libs.iteratee.Enumerator
 import play.twirl.api.{Html, Txt}
 import reactivemongo.api.BSONSerializationPack
-import reactivemongo.bson.lowlevel.LowLevelBsonDocWriter
-import reactivemongo.bson.{BSONNull, BSONArray, BSONDocument, BSONString}
+import reactivemongo.bson.{BSONArray, BSONDocument, BSONString}
 import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
-
-import scala.util.{Failure, Success}
 
 trait Resolvable extends ( () ⇒ EnumeratorResult)
 
@@ -105,8 +102,6 @@ case class StreamResult (
     EnumeratorResult(enum, contentType, disposition)
   }
 }
-
-
 
 /** Result with an Array of Bytes.
   *

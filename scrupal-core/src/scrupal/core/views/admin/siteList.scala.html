@@ -1,0 +1,9 @@
+@(sites: Seq[scrupal.api.Site])(implicit ctxt: scrupal.api.Context)
+<div class="well">
+  <p>Sites Defined:</p>
+  <ul>
+    @for(site ← sites) {
+      <li>@{site.name} - @{site.host}</li>
+    }
+  </ul>
+</div>

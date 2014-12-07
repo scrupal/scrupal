@@ -1,0 +1,43 @@
+@(args: Map[String,(scrupal.api.Node,scrupal.api.Result[_])])(implicit context : scrupal.api.Context)
+@import scrupal.api.views.html.pages
+@import scrupal.api.PathOf
+@pages.basicPage("Scrupal Administration") {
+  <!-- No additional headers -->
+} {
+<div class="container">
+<div class="panel panel-primary">
+<div class="panel-heading"><h1 class="panel-title">@@@@@@StatusBar@@@@@@</h1></div>
+<div class="panel-body">
+<div role="tabpanel">
+<ul class="nav nav-pills" role="tablist">
+  <li role="presentation" class="active">
+    <a href="#scrupal" aria-controls="scrupal" role="tab" data-toggle="pill">Scrupal</a></li>
+  <li role="presentation">
+    <a href="#sites" aria-controls="sites" role="tab" data-toggle="pill">Sites</a></li>
+  <li role="presentation">
+    <a href="#modules" aria-controls="modules" role="tab" data-toggle="pill">Modules</a></li>
+  <li role="presentation">
+    <a href="#applications" aria-controls="applications" role="tab" data-toggle="pill">Applications</a></li>
+</ul>
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane active" id="scrupal">
+    <iframe width="100%" height="900px" seamless src="@PathOf.entity("scrupal","id")">Frames are not supported in your
+      browser.</iframe>
+  </div>
+  <div role="tabpanel" class="tab-pane" id="sites">@@@@@@SitesList@@@@@@</div>
+  <div role="tabpanel" class="tab-pane" id="modules">
+    <iframe width="100%" height="900px" seamless src="/admin/modules">Frames are not supported in your browser.</iframe>
+  </div>
+  <div role="tabpanel" class="tab-pane span12 " id="applications">
+    <iframe width="100%" height="900px" seamless src="/admin/applications">Frames are not supported in your browser
+      .</iframe>
+  </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+} {
+  <!-- No additional script -->
+}
+

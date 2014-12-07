@@ -42,6 +42,6 @@ object PathOf {
 
   def lib(library: String, path: String)(implicit context: Context) = s"/assets/lib/$library/$path"
 
-  def entity(kind: String, id: String)(implicit context: Context) = s"/${context.appName}/kind/id"
+  def entity(kind: String, id: String)(implicit context: Context) = s"/${context.appName}/$kind/$id"
 
 }

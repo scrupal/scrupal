@@ -40,7 +40,7 @@ trait EntityInstanceAction extends Action {
   */
 trait EntityActionProvider extends TerminalActionProvider {
 
-  def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
+  def pathsToActions = Seq.empty[PathMatcherToAction[_ <: HList]]
 
   /** CREATE ENTITY (POST/plural) - Create a new entity from scratch
     * This is a command on the entity type's container to insert a new entity. The instance should be created

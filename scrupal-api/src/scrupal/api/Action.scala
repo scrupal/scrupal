@@ -88,8 +88,8 @@ case class NodeAction(context: Context, node: Node) extends Action {
   * provides the means to do so
   * @tparam L
   */
-abstract class PathToAction[L <: HList](val pm: PathMatcher[L]) extends ( (L, Uri.Path, Context) ⇒ Action ) {
-
+trait PathMatcherToAction[L <: HList] extends ( (L, Uri.Path, Context) ⇒ Action ) {
+  def pm: PathMatcher[L]
   /** A convenience function for converting a path and context into an action using this PathToAction's
     * apply function. This just bypasses the need to apply the Uri.Path to the PathMatcher and process its
     * Matched or Unmatched result. Instead, it returns None for an Unmatched result, or the Action provided by
@@ -105,6 +105,21 @@ abstract class PathToAction[L <: HList](val pm: PathMatcher[L]) extends ( (L, Ur
     }
   }
   def apply(list: L, rest: Uri.Path, c: Context) : Action
+}
+
+abstract class PathToAction[L <:HList](val pm: PathMatcher[L]) extends PathMatcherToAction[L]
+
+case class PathToNodeAction[L <:HList](pm: PathMatcher[L], node: Node) extends PathMatcherToAction[L] {
+  def apply(list: L, rest: Uri.Path, c: Context) : Action = {
+    NodeAction(c,node)
+  }
+}
+
+case class PathToNodeActionFunction[L <:HList](pm: PathMatcher[L], nodeF: (L, Uri.Path, Context) ⇒ Node )
+  extends PathMatcherToAction[L] {
+  def apply(list: L, rest: Uri.Path, c: Context) : Action = {
+    NodeAction(c,nodeF(list,rest,c))
+  }
 }
 
 /** Something That Provides Actions.
@@ -143,7 +158,7 @@ abstract class ActionProvider extends Enablee {
     * `/path/to/42` and `/path` then put the longer one first or else /path will get recognized first.
     * @return
     */
-  def pathsToActions: Seq[PathToAction[_ <: HList]]
+  def pathsToActions: Seq[PathMatcherToAction[_ <: HList]]
 
   /** Resolve An Action
     *

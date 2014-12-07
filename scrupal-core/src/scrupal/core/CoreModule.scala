@@ -73,7 +73,7 @@ object CoreModule extends Module {
     val copyright = CoreModule.copyright
     val license = CoreModule.license
     val instanceType = PageBundle_t
-    override def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
+    override def pathsToActions = Seq.empty[PathMatcherToAction[_ <: HList]]
   }
 
   def entities = Seq[Entity](
