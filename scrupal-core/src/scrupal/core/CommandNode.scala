@@ -15,63 +15,53 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.core
 
 import org.joda.time.DateTime
-import play.twirl.api.Html
+import reactivemongo.bson.{BSONObjectID, Macros, BSONDocument, BSONHandler}
 import scrupal.api._
-import scrupal.core.{MarkedDocNode, CoreModule, EchoEntity}
-import shapeless.{::, HList, HNil}
-import spray.http.Uri
-import spray.http.Uri.Path
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
+import scrupal.api.HtmlHelpers._
+import scrupal.db.VariantReaderWriter
+import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.Future
 
-class WelcomeSite extends Site {
-  def id: Symbol = 'WelcomeToScrupal
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+/** Generate content With an operating system command
+  *
+  * This will invoke a local operating system command to generate content. As this forks the VM it should be
+  * restricted to administrative users. However, for those cases where python, bash, perl or a simple grep/awk/sed
+  * pipeline is the best thing, this is the tool to use. It simply passes the string to the local operating system's
+  * command processor for interpretation and execution. Whatever it generates is Streamed as a result to this node.
+  *
+  * @param description
+  * @param command
+  * @param modified
+  * @param created
+  */
+case class CommandNode (
+  description: String,
+  command: String,
+  modified: Option[DateTime] = Some(DateTime.now()),
+  created: Option[DateTime] = Some(DateTime.now()),
+  _id: BSONObjectID = BSONObjectID.generate,
+  final val kind: Symbol = CommandNode.kind
+) extends Node {
+  override val mediaType: MediaType = MediaTypes.`text/html`
 
-  object DocPathToDocs extends PathToAction(PathMatcher("doc") / Segments) {
-    def apply(list: ::[List[String],HNil], rest: Path, context: Context): Action = {
-      NodeAction(context, new MarkedDocNode("doc", "docs", list.head))
-    }
+  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
+    // TODO: implement CommandNode
+    HtmlResult("Not Implemented".toHtml, Unimplemented)
   }
-
-  case class RootAction(context: Context) extends Action {
-    def apply() : Future[Result[_]] = { siteRoot(context) }
-  }
-
-  object AnyPathToRoot extends PathToAction(RestPath) {
-    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
-  }
-
-  def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    AnyPathToRoot
-  )
-
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  CoreModule.enable(EchoEntity)
 }
 
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
+object CommandNode {
+  import scrupal.api.BSONHandlers._
+  final val kind = 'Command
+  object CommandNodeBRW extends VariantReaderWriter[Node,CommandNode] {
+    implicit val CommandNodeHandler : BSONHandler[BSONDocument,CommandNode] = Macros.handler[CommandNode]
+    override def fromDoc(doc: BSONDocument): CommandNode = CommandNodeHandler.read(doc)
+    override def toDoc(obj: Node): BSONDocument = CommandNodeHandler.write(obj.asInstanceOf[CommandNode])
+  }
+  Node.variants.register(kind, CommandNodeBRW)
 }
+

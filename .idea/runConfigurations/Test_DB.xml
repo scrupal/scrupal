@@ -13,8 +13,14 @@
     <setting name="testKind" value="All in package" />
     <setting name="showProgressMessages" value="true" />
     <envs />
+    <RunnerSettings RunnerId="Debug">
+      <option name="DEBUG_PORT" value="" />
+      <option name="TRANSPORT" value="0" />
+      <option name="LOCAL" value="true" />
+    </RunnerSettings>
     <RunnerSettings RunnerId="JRebel Executor" />
     <RunnerSettings RunnerId="Run" />
+    <ConfigurationWrapper RunnerId="Debug" />
     <ConfigurationWrapper RunnerId="JRebel Executor" />
     <ConfigurationWrapper RunnerId="Run" />
     <method />

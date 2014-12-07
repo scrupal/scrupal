@@ -15,63 +15,20 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.api
 
-import org.joda.time.DateTime
 import play.twirl.api.Html
-import scrupal.api._
-import scrupal.core.{MarkedDocNode, CoreModule, EchoEntity}
-import shapeless.{::, HList, HNil}
-import spray.http.Uri
-import spray.http.Uri.Path
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
 
-import scala.concurrent.Future
+import scala.xml.{Elem, NodeSeq}
 
-class WelcomeSite extends Site {
-  def id: Symbol = 'WelcomeToScrupal
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+object HtmlHelpers {
 
-  object DocPathToDocs extends PathToAction(PathMatcher("doc") / Segments) {
-    def apply(list: ::[List[String],HNil], rest: Path, context: Context): Action = {
-      NodeAction(context, new MarkedDocNode("doc", "docs", list.head))
-    }
-  }
+  implicit class NodeSeqToHtml(nodes: NodeSeq) {def toHtml: Html = { Html(nodes.toString()) }}
 
-  case class RootAction(context: Context) extends Action {
-    def apply() : Future[Result[_]] = { siteRoot(context) }
-  }
+  implicit class NodeToHtml(node: Node) {def toHtml: Html = { Html(node.toString()) }}
 
-  object AnyPathToRoot extends PathToAction(RestPath) {
-    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
-  }
+  implicit class ElemToHtml(elem: Elem) {def toHtml: Html = { Html(elem.toString()) }}
 
-  def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    AnyPathToRoot
-  )
+  implicit class StringToHtml(str: String) { def toHtml: Html = { Html(str) }}
 
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  CoreModule.enable(EchoEntity)
-}
-
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
 }

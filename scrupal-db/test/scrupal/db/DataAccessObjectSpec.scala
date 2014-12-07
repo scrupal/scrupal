@@ -35,6 +35,16 @@ class DataAccessObjectSpec extends DBContextSpecification("DataAccessObjectSpec"
     val converter = (id: Long) => BSONLong(id)
   }
 
+  case class TestData2(_id: BSONObjectID = BSONObjectID.generate, int: Int = (Math.random*1000).toInt)
+      extends Storable[BSONObjectID]
+
+  case class TestDao2(db: DefaultDB, collectionName: String) extends DataAccessObject[TestData2,BSONObjectID] {
+    val reader = Macros.reader[TestData2]
+    val writer = Macros.writer[TestData2]
+    val converter = (id: BSONObjectID) => id
+  }
+
+
   "DataAccessObject" should {
     "create new collection" in {
       withEmptyDB("test_newCollection") { db ⇒
@@ -52,6 +62,26 @@ class DataAccessObjectSpec extends DBContextSpecification("DataAccessObjectSpec"
           dao.drop.flatMap { u ⇒ db.hasCollection("testdata") }
         }
         Await.result(future, timeout) must beFalse
+      }
+    }
+
+    "use generated BSONObjectId" in {
+      withEmptyDB("test_generatedBSONObjectID") { db ⇒
+        val dao = new TestDao2(db, "testdata")
+        val td2 = TestData2()
+        val future = dao.insert(td2) flatMap { wr ⇒
+          wr.ok must beTrue
+          dao.fetch(td2._id) map { optTD ⇒
+            optTD match {
+              case Some(td) ⇒
+                td._id must beEqualTo(td2._id)
+                td.int must beEqualTo(td2.int)
+                success
+              case None ⇒ failure("not found")
+            }
+          }
+        }
+        Await.result(future, timeout)
       }
     }
 

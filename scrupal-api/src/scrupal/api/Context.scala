@@ -25,7 +25,6 @@ import scrupal.utils.Configuration
 
 import spray.http._
 import spray.routing.RequestContext
-import spray.routing.authentication.UserPass
 
 import scala.concurrent.ExecutionContext
 
@@ -136,69 +135,3 @@ object Context {
     new UserContext(scrupal, request, site, principal)
 
 }
-
-
-/* A trait for producing a Request's context via ContextualAction action builder
-  * This trait simply defines the ContextualAction object which is an ActionBuilder with a ConcreteContext type. We
-  * construct the ConcreteContext using the request provided to invokeBlock[A] and then invoke the block or generate
-  * an error if this is more appropriate. Note that we derive from RichResults so the error factories there can be
-  * used. This ContextualAction is used by controllers wherever they need Scrupal relevant contextual information.
-  * Their action block is provided a ConcreteContext from which information can be derived.
-
-trait ContextProvider extends ((HttpRequest) ⇒ Context) {
-  val scrupal: Scrupal
-
-  def apply(request: HttpRequest) : Context = {
-    if (scrupal.isReady) {
-      // HTTP Requires the Host Header, but we guard anyway and assume "localhost" if its empty
-      val host = request.uri.authority.host.address
-      val port = request.uri.authority.port
-      val site = Site.forHost(host) map { site: Site ⇒
-        if (site.enabled) {
-          if (site.requireHttps) {
-            request.protocol.value {
-              case "https" ⇒ Context(site, request)
-              case _ => Context(request)
-            }
-          } else if (request.protocl{
-            site.withCoreSchema { schema: CoreSchema =>
-              block( Context(schema, site, request) )
-            }
-              }
-            } else {
-              implicit val ctxt = Context(request)
-              Future.successful(Forbidden("browse site '" + site.data._id.name + "'", "it is disabled"))
-            }
-          }
-        }  getOrElse {
-          implicit val ctxt = Context(request)
-          Future.successful(NotFound("content for site '" + host + "'"))
-        }
-      } else {
-        implicit val ctxt = Context(request)
-        Future.successful(Redirect(routes.ConfigWizard.configure))
-      }
-    }
-  }
-  object SiteAction extends SiteAction
-
-  /** A simple rename of the unwieldy ConcreteContext[AnyContent] that gets used frequently. */
-  type AnySiteContext = SiteContext[AnyContent]
-
-  type UserActionBlock[A] = (UserContext[A]) => Future[Result]
-
-  class UserAction extends ActionBuilder[UserContext] {
-    def invokeBlock[A](request: HttpRequest, block: UserActionBlock[A]) : Future[Result] = {
-      SiteAction.invokeBlock(request, {
-        context: SiteContext[A] => {
-          val user = "guest" // FIXME: Need to look up the actual user
-          block( Context(user, context.schema, context.site, request))
-        }
-      })
-    }
-  }
-  object UserAction extends UserAction
-
-  type AnyUserContext = UserContext[AnyContent]
-}
-*/

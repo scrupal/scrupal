@@ -15,63 +15,45 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.db
 
-import org.joda.time.DateTime
-import play.twirl.api.Html
-import scrupal.api._
-import scrupal.core.{MarkedDocNode, CoreModule, EchoEntity}
-import shapeless.{::, HList, HNil}
-import spray.http.Uri
-import spray.http.Uri.Path
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
+import reactivemongo.bson._
+import scrupal.utils.AbstractRegistry
 
-import scala.concurrent.Future
+trait VariantReaderWriter[B <: VariantStorable[_], S <: B] {
+  def fromDoc(doc: BSONDocument) : S
+  def toDoc(obj: B) : BSONDocument
+}
 
-class WelcomeSite extends Site {
-  def id: Symbol = 'WelcomeToScrupal
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+/** Registry Of Variants Of Base Class
+  *
+  * This registry keeps track of how to read and write variant subclasses of a base class so they can all be stored in
+  * one collection. Subclasses must register their BSONHandler with the registry
+  */
+case class VariantRegistry[B <: VariantStorable[_]](name: String)
+  extends AbstractRegistry[Symbol, VariantReaderWriter[B,_ <: B]]
+  with VariantBSONDocumentReader[B]
+  with VariantBSONDocumentWriter[B] {
 
-  object DocPathToDocs extends PathToAction(PathMatcher("doc") / Segments) {
-    def apply(list: ::[List[String],HNil], rest: Path, context: Context): Action = {
-      NodeAction(context, new MarkedDocNode("doc", "docs", list.head))
+  def register[S <: B](kind: Symbol, handler: VariantReaderWriter[B, S]) = {
+    super._register(kind, handler)
+  }
+
+  def read(doc: BSONDocument) : B = {
+    doc.getAs[BSONString]("kind") match {
+      case Some(str) =>
+        super.lookup(Symbol(str.value)) match {
+          case Some(handler) ⇒ handler.fromDoc(doc)
+          case None ⇒ toss(s"Unknown kind of $name: '${str.value}")
+        }
+      case None => toss(s"Field 'kind' is missing from Node: ${doc.toString()}")
     }
   }
 
-  case class RootAction(context: Context) extends Action {
-    def apply() : Future[Result[_]] = { siteRoot(context) }
+  def write(obj: B) : BSONDocument = {
+    super.lookup(obj.kind) match {
+      case Some(handler) ⇒ handler.toDoc(obj)
+      case None ⇒ toss(s"Unknown kind of $name: ${obj.kind.name}")
+    }
   }
-
-  object AnyPathToRoot extends PathToAction(RestPath) {
-    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
-  }
-
-  def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    AnyPathToRoot
-  )
-
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  CoreModule.enable(EchoEntity)
-}
-
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
 }

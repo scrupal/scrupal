@@ -179,7 +179,11 @@ object BSONHandlers {
     def write(e: Either[NodeRef,Node]) : BSONDocument = {
       BSONDocument(
         "either" → (if (e.isLeft) BSONString("left") else BSONString("right")),
-        "value"  → (if (e.isLeft) NodeRef.nodeRefHandler.write(e.left.get) else Node.NodeWriter.write(e.right.get) )
+        "value"  → (
+          if (e.isLeft)
+            NodeRef.nodeRefHandler.write(e.left.get)
+          else
+            Node.NodeWriter.write(e.right.get) )
       )
     }
     def read(doc: BSONDocument) : Either[NodeRef,Node] = {

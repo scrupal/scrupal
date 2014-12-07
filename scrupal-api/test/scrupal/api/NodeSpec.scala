@@ -47,20 +47,19 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
 
     val template = TwirlHtmlTemplate(Symbol(name), "Describe me", templateF)
 
-    val message : MessageNode = MessageNode("Description", "text-warning", Html("This is boring."))
+    val message = MessageNode("Description", "text-warning", Html("This is boring."))
     val html = HtmlNode("Description", template, args=Map.empty[String,Html])
     val file = FileNode("Description",
                         new File("scrupal-api/test/resources/fakeAsset.txt"), MediaTypes.`text/plain`)
     val link = LinkNode("Description", new URL("http://scrupal.org/"))
+
     val tags = Map[String,Either[NodeRef,Node]](
       "one" -> Right(message),
       "two" -> Right(html)
     )
 
     val layout = LayoutNode("Description", tags, Layout.default)
-
   }
-
 
   def consume(e: Enumerator[Array[Byte]]) : Array[Byte] = {
     val i = Iteratee.fold(Array.empty[Byte]) { (x:Array[Byte],y:Array[Byte]) ⇒ Array.concat(x, y) }
@@ -84,7 +83,7 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
       val data = runProducer("This has some @@@missing@@@ tags.")
       data must contain("@@@ Missing Tag 'missing' @@@")
     }
-    "substitute tags correctly" in Fixture("LayoutProducer1") { f : Fixture ⇒
+    "substitute tags correctly" in { val f = Fixture("LayoutProducer1")
       val future = f.message(f) map { case h : Result[_] ⇒
         f.message → h.apply()
       }
@@ -97,7 +96,7 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
 
 
   "MessageNode" should {
-    "put a message in a <div> element" in Fixture("MessageNode1") { f : Fixture ⇒
+    "put a message in a <div> element" in { val f = Fixture("MessageNode1")
       val future = f.message(f) map {
         case h: HtmlResult ⇒
           val rendered = h.payload.body
@@ -114,7 +113,7 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
   }
 
   "BasicNode" should {
-    "echo its content" in Fixture("BasicNode") { f : Fixture ⇒
+    "echo its content" in { val f = Fixture("BasicNode")
       val future = f.html(f) map {
         case h: HtmlResult ⇒
           h.payload.body must beEqualTo("scrupal")
@@ -127,7 +126,7 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
   }
 
   "FileNode" should {
-    "load a simple file" in Fixture("AssetNode") { f: Fixture ⇒
+    "load a simple file" in { val f = Fixture("AssetNode")
       val future = f.file(f) map  { result: Result[_] ⇒
         result.contentType.mediaType must beEqualTo(MediaTypes.`text/plain`)
         val rendered : String  = result match {
@@ -147,7 +146,7 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
   }
 
   "LinkNode" should {
-    "properly render a link" in Fixture("LinkNode") { f: Fixture ⇒
+    "properly render a link" in { val f = Fixture("LinkNode")
       val future = f.link(f) map  {
         case t: HtmlResult ⇒
           val rendered = t.payload.body
@@ -163,12 +162,13 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
   }
 
   "LayoutNode" should {
-    "handle missing tags with missing layout" in Fixture("LayoutNode") { f: Fixture ⇒
+    "handle missing tags with missing layout" in {
+      val f = Fixture("LayoutNode")
+      val ts1 = System.nanoTime()
       val future : Future[Array[Byte]] = f.layout(f) flatMap { r: Result[_] ⇒
         val i = Iteratee.fold(Array.empty[Byte]) { (x:Array[Byte],y:Array[Byte]) ⇒ Array.concat(x, y) }
         r.asInstanceOf[EnumeratorResult].payload.run(i)
       }
-      val ts1 = System.nanoTime()
       val data = Await.result(future, Duration(3, TimeUnit.SECONDS))
       val ts2 = System.nanoTime()
       val dt = (ts2 - ts1).toDouble / 1000000.0
@@ -176,6 +176,58 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
       val str = new String(data, utf8)
       str.contains("@@one@@") must beFalse
       str.contains("@@two@@") must beFalse
+    }
+  }
+
+  "Node" should {
+    "disambiguate variants" in {
+      val f = Fixture("Node")
+      f.withSchema { (dbc, schema) ⇒
+        val o1 = f.message
+        val f1 = schema.nodes.insert(o1) flatMap { wr ⇒
+          wr.ok must beTrue
+          schema.nodes.fetch(o1._id) map { optNode ⇒
+            optNode match {
+              case Some(node) ⇒
+                node.isInstanceOf[MessageNode] must beTrue
+              case None ⇒
+                failure("not found")
+            }
+            optNode.isDefined must beTrue
+          }
+        }
+        val f2 = schema.nodes.insert(f.html) flatMap { wr ⇒
+          wr.ok must beTrue
+          schema.nodes.fetch(f.html._id) map { optNode ⇒
+            optNode.isDefined must beTrue
+            optNode.get.isInstanceOf[HtmlNode] must beTrue
+          }
+        }
+        val f3 = schema.nodes.insert(f.file) flatMap { wr ⇒
+          wr.ok must beTrue
+          schema.nodes.fetch(f.file._id) map { optNode ⇒
+            optNode.isDefined must beTrue
+            optNode.get.isInstanceOf[FileNode] must beTrue
+          }
+        }
+        val f4 = schema.nodes.insert(f.link) flatMap { wr ⇒
+          wr.ok must beTrue
+          schema.nodes.fetch(f.link._id) map { optNode ⇒
+            optNode.isDefined must beTrue
+            optNode.get.isInstanceOf[LinkNode] must beTrue
+          }        }
+        val f5 = schema.nodes.insert(f.layout) flatMap { wr ⇒
+          wr.ok must beTrue
+          schema.nodes.fetch(f.layout._id) map { optNode ⇒
+            optNode.isDefined must beTrue
+            optNode.get.isInstanceOf[LayoutNode] must beTrue
+          }
+        }
+        val futures = Future sequence List(f1,f2,f3,f4,f5)
+        val result = Await.result(futures, Duration(2,TimeUnit.SECONDS))
+        val summary = result.foldLeft(true) { (last,next) ⇒ last && next }
+        summary must beTrue
+      }
     }
   }
 }

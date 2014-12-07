@@ -19,8 +19,10 @@ package scrupal.core
 
 import org.joda.time.DateTime
 import play.twirl.api.Html
+import reactivemongo.bson.{BSONObjectID, Macros, BSONDocument, BSONHandler}
 import scrupal.api.AssetLocator.Directory
 import scrupal.api._
+import scrupal.db.VariantReaderWriter
 import spray.http.{MediaTypes, MediaType}
 
 import scala.concurrent.Future
@@ -29,7 +31,6 @@ import scala.concurrent.Future
   *
   * This type of node translates a document written in marked (like markdown) format into HTMl via the marked.js
   * javascript library. It also produces a navigation system for documents located in a directory.
-  * @param locator The locator to use for looking up the documents
   * @param contextPath The URI path context in which the documentation occurs
   * @param root The root directory in the classpath resources in which to find the documentation
   * @param path The path to the specific document to show, relative to contextPath
@@ -37,15 +38,15 @@ import scala.concurrent.Future
   * @param created Date of creation
  */
 case class MarkedDocNode(
-  locator: AssetLocator,
   contextPath: String,
   root: String,
   path: List[String],
-  modified: Option[DateTime] = None,
-  created: Option[DateTime] = None
+  modified: Option[DateTime] = Some(DateTime.now()),
+  created: Option[DateTime] = Some(DateTime.now()),
+  _id: BSONObjectID = BSONObjectID.generate,
+  final val kind: Symbol = MarkedDocNode.kind
 ) extends Node {
   override def mediaType: MediaType = MediaTypes.`text/html`
-  override def kind: Symbol = 'MarkedDoc
   override def description: String = "A node that provides a marked document from a resource as html."
 
   /** Traverse the directories and generate the menu structure
@@ -77,6 +78,7 @@ case class MarkedDocNode(
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
     val dirPath = if (path.isEmpty) root else root + "/" + relPath
+    val locator = context.scrupal.assetsLocator
     val directory = locator.fetchDirectory(dirPath, recurse=true)
     directory match {
       case None ⇒ Future.successful(ErrorResult(s"Directory at $dirPath was not found", NotFound))
@@ -132,8 +134,15 @@ case class MarkedDocNode(
 }
 
 object MarkedDocNode {
-  val docLayout =
-    TwirlHtmlLayout('docLayout, "Layout for Marked Documentation", scrupal.core.views.html.pages.docPage)
-  val docFooter =
-    TwirlHtmlTemplate('docFooter, "Footer for Marked Documentation", scrupal.core.views.html.docFooter)
+  import scrupal.api.BSONHandlers._
+  final val kind = 'MarkedDoc
+  object MarkedDocNodeBRW extends VariantReaderWriter[Node,MarkedDocNode] {
+    implicit val MarkedDocNodeHandler : BSONHandler[BSONDocument,MarkedDocNode] = Macros.handler[MarkedDocNode]
+    override def fromDoc(doc: BSONDocument): MarkedDocNode = MarkedDocNodeHandler.read(doc)
+    override def toDoc(obj: Node): BSONDocument = MarkedDocNodeHandler.write(obj.asInstanceOf[MarkedDocNode])
+  }
+  Node.variants.register(kind, MarkedDocNodeBRW)
+
+  val docLayout = TwirlHtmlLayout('docLayout, "Layout for Marked Documentation", scrupal.core.views.html.pages.docPage)
+  val docFooter = TwirlHtmlTemplate('docFooter, "Footer for Marked Documentation", scrupal.core.views.html.docFooter)
 }

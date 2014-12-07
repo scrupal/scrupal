@@ -1,36 +1,36 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * Copyright © 2014 Reactific Software LLC                                                                            *
  *                                                                                                                    *
  * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
  *                                                                                                                    *
  * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * of the GNU General Public License as published by the Free Software Foundation,                                    *
+ * either version 3 of the License, or (at your option) any later version.                                            *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
+ * See the GNU General Public License for more details.                                                               *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * You should have received a copy of the GNU General Public License along with Scrupal.                              *
+ * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
 package scrupal.db
 
 import reactivemongo.api.DefaultDB
-import reactivemongo.bson.Macros
 import reactivemongo.bson._
 
 import scala.concurrent.{Future, Await}
 
-/**
- * Created by reid on 11/9/14.
- */
-class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAccessObjectSpec") {
+class VariantRegistrySpec extends DBContextSpecification("VariantRegistrySpec") {
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-  trait Noom extends VariantStorable[BSONObjectID] { val identity = "I am Noom" }
+  trait Noom extends VariantStorable[BSONObjectID] {
+    val identity = "I am Noom"
+  }
+
+  object variants extends VariantRegistry[Noom]("Noom")
 
   implicit val IdentifierBSONHandler = new BSONHandler[BSONString,Symbol] {
     override def write(t: Symbol): BSONString = BSONString(t.name)
@@ -41,44 +41,45 @@ class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAcc
     extends Noom { override val identity = "I am Woon" }
   case class Twoo(_id: BSONObjectID = BSONObjectID.generate, data: Double, final val kind: Symbol = 'Twoo)
     extends Noom { override val identity = "I am Twoo" }
-  case class Tree(_id: BSONObjectID = BSONObjectID.generate, data: Long, final val kind: Symbol = 'Tree)
+  case class Tree(_id: BSONObjectID = BSONObjectID.generate, data: Long,   final val kind: Symbol = 'Tree)
     extends Noom { override val identity = "I am Tree" }
 
-  implicit val WoonHandler = Macros.handler[Woon]
-  implicit val TwooHandler = Macros.handler[Twoo]
-  implicit val TreeHandler = Macros.handler[Tree]
+  object WoonVRW extends VariantReaderWriter[Noom, Woon] {
+    implicit val WoonHandler = Macros.handler[Woon]
+    def fromDoc(doc: BSONDocument) : Woon = WoonHandler.read(doc)
+    def toDoc(obj: Noom) : BSONDocument = WoonHandler.write(obj.asInstanceOf[Woon])
+  }
+  variants.register('Woon, WoonVRW)
+
+  object TwooVRW extends VariantReaderWriter[Noom, Twoo] {
+    implicit val TwooHandler = Macros.handler[Twoo]
+    def fromDoc(doc: BSONDocument) : Twoo = TwooHandler.read(doc)
+    def toDoc(obj: Noom) : BSONDocument = TwooHandler.write(obj.asInstanceOf[Twoo])
+  }
+  variants.register('Twoo, TwooVRW)
+
+  object TreeVRW extends VariantReaderWriter[Noom, Tree] {
+    implicit val TreeHandler = Macros.handler[Tree]
+    def fromDoc(doc: BSONDocument) : Tree = TreeHandler.read(doc)
+    def toDoc(obj: Noom) : BSONDocument = TreeHandler.write(obj.asInstanceOf[Tree])
+  }
+  variants.register('Tree, TreeVRW)
 
   implicit val WoonReader = new VariantBSONDocumentReader[Noom] {
-    def read(doc: BSONDocument) : Noom = {
-      doc.getAs[BSONString]("kind") match {
-        case Some(str) =>
-          str.value match {
-            case "Woon"  => WoonHandler.read(doc)
-            case "Twoo"  => TwooHandler.read(doc)
-            case "Tree"  => TreeHandler.read(doc)
-          }
-        case None => throw new Exception(s"Field 'kind' is missing from Node: ${doc.toString()}")
-      }
-    }
+    def read(doc: BSONDocument) : Noom = variants.read(doc)
   }
 
   implicit val WoonWriter = new VariantBSONDocumentWriter[Noom] {
-    def write(node: Noom) : BSONDocument = {
-      node.kind.name match {
-        case "Woon" => WoonHandler.write(node.asInstanceOf[Woon])
-        case "Twoo" => TwooHandler.write(node.asInstanceOf[Twoo])
-        case "Tree" => TreeHandler.write(node.asInstanceOf[Tree])
-      }
-    }
+    def write(node: Noom) : BSONDocument = variants.write(node)
   }
 
   case class TestDao(db: DefaultDB, collectionName: String) extends VariantDataAccessObject[Noom,BSONObjectID] {
-    val writer = new Writer(WoonWriter)
-    val reader = new Reader(WoonReader)
+    val writer = new Writer(variants)
+    val reader = new Reader(variants)
     val converter = (id: BSONObjectID) => id
   }
 
-  "VariantDataAccessObject" should {
+  "VariantRegistryDAO" should {
     "create new collection" in {
       withEmptyDB("test_newCollection") { db ⇒
         val dao = new TestDao(db, "testdata")
@@ -143,4 +144,5 @@ class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAcc
     }
   }
 }
+
 

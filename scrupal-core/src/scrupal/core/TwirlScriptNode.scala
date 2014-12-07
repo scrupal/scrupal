@@ -15,63 +15,44 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.core
 
 import org.joda.time.DateTime
-import play.twirl.api.Html
+import reactivemongo.bson.{BSONObjectID, Macros, BSONDocument, BSONHandler}
 import scrupal.api._
-import scrupal.core.{MarkedDocNode, CoreModule, EchoEntity}
-import shapeless.{::, HList, HNil}
-import spray.http.Uri
-import spray.http.Uri.Path
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
+import scrupal.db.VariantReaderWriter
+import spray.http.{MediaTypes, MediaType}
 
-import scala.concurrent.Future
-
-class WelcomeSite extends Site {
-  def id: Symbol = 'WelcomeToScrupal
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
-
-  object DocPathToDocs extends PathToAction(PathMatcher("doc") / Segments) {
-    def apply(list: ::[List[String],HNil], rest: Path, context: Context): Action = {
-      NodeAction(context, new MarkedDocNode("doc", "docs", list.head))
-    }
+/** Generate Content with TwirlScript Template
+  * This allows users to create template type content in their browser. It looks a bit like twirl in that it is simply
+  * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
+  * You can substitute a node (@{node('mynode}), values from the [[scrupal.api.Context]] (@{context.`var_name`}),
+  * predefined variables/functions (@{datetime}), etc.
+  */
+case class TwirlScriptNode (
+  description: String,
+  twirl_script: String,
+  subordinates: Map[String, Either[NodeRef,Node]] = Map.empty[String, Either[NodeRef,Node]],
+  modified: Option[DateTime] = Some(DateTime.now()),
+  created: Option[DateTime] = Some(DateTime.now()),
+  _id: BSONObjectID = BSONObjectID.generate,
+  final val kind: Symbol = TwirlScriptNode.kind
+) extends CompoundNode {
+  final val mediaType: MediaType = MediaTypes.`text/html`
+  def resolve(ctxt: Context, tags: Map[String,(Node,EnumeratorResult)]) : EnumeratorResult = {
+    // val layout = Layout(layoutId).getOrElse(Layout.default)
+    val template: Array[Byte] = twirl_script.getBytes(utf8)
+    EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
   }
-
-  case class RootAction(context: Context) extends Action {
-    def apply() : Future[Result[_]] = { siteRoot(context) }
-  }
-
-  object AnyPathToRoot extends PathToAction(RestPath) {
-    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, context: Context) : Action = RootAction(context)
-  }
-
-  def pathsToActions : Seq[PathToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    AnyPathToRoot
-  )
-
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  CoreModule.enable(EchoEntity)
 }
 
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
+object TwirlScriptNode {
+  import scrupal.api.BSONHandlers._
+  final val kind = 'TwirlScript
+  object TwirlScriptNodeBRW extends VariantReaderWriter[Node,TwirlScriptNode] {
+    implicit val TwirlScriptNodeHandler : BSONHandler[BSONDocument,TwirlScriptNode] = Macros.handler[TwirlScriptNode]
+    override def fromDoc(doc: BSONDocument): TwirlScriptNode = TwirlScriptNodeHandler.read(doc)
+    override def toDoc(obj: Node): BSONDocument = TwirlScriptNodeHandler.write(obj.asInstanceOf[TwirlScriptNode])
+  }
+  Node.variants.register(kind, TwirlScriptNodeBRW)
 }
