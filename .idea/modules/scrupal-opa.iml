@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="scrupal-web" external.linked.project.path="$MODULE_DIR$/../../scrupal-web" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="scrupal-opa" external.linked.project.path="$MODULE_DIR$/../../scrupal-opa" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../scrupal-web/target/scala-2.11/classes" />
-    <output-test url="file://$MODULE_DIR$/../../scrupal-web/target/scala-2.11/test-classes" />
+    <output url="file://$MODULE_DIR$/../../scrupal-opa/target/scala-2.11/classes" />
+    <output-test url="file://$MODULE_DIR$/../../scrupal-opa/target/scala-2.11/test-classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../scrupal-opa">
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/target/scala-2.11/twirl/main" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/target/scala-2.11/twirl/test" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/test" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/src/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/target/scala-2.11/resource_managed/main" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/target/scala-2.11/resource_managed/test" type="java-test-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-web/test/resources" type="java-test-resource" />
-      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-opa/target" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/scala-2.11/twirl/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/scala-2.11/twirl/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/src/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/scala-2.11/resource_managed/main" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/scala-2.11/resource_managed/test" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../scrupal-opa/test/resources" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/resolution-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-opa/target/web" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -89,5 +91,6 @@
     <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
     <orderEntry type="module" module-name="scrupal-api" exported="" />
+    <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4" level="project" />
   </component>
 </module>

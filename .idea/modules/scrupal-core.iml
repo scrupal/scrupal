@@ -14,7 +14,6 @@
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-core/test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/streams" />
-      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/test-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-core/target/web" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -40,7 +39,6 @@
     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5" level="project" />
     <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.1" level="project" />
     <orderEntry type="library" name="SBT: org.clapper:grizzled-slf4j_2.11:1.0.2" level="project" />
-    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.2" level="project" />
     <orderEntry type="library" name="SBT: org.jvnet.mimepull:mimepull:1.9.4" level="project" />
     <orderEntry type="library" name="SBT: org.mindrot:jbcrypt:0.3m" level="project" />
     <orderEntry type="library" name="SBT: org.parboiled:parboiled-core:1.1.6" level="project" />
@@ -67,5 +65,12 @@
     <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1" level="project" />
     <orderEntry type="module" module-name="scrupal-api" exported="" />
     <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2" level="project" />
+    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.6" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.6" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6" level="project" />
+    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6" level="project" />
   </component>
 </module>

@@ -19,10 +19,10 @@
             <option value="$PROJECT_DIR$/scrupal-db/project" />
             <option value="$PROJECT_DIR$/scrupal-http" />
             <option value="$PROJECT_DIR$/scrupal-http/project" />
+            <option value="$PROJECT_DIR$/scrupal-opa" />
+            <option value="$PROJECT_DIR$/scrupal-opa/project" />
             <option value="$PROJECT_DIR$/scrupal-utils" />
             <option value="$PROJECT_DIR$/scrupal-utils/project" />
-            <option value="$PROJECT_DIR$/scrupal-web" />
-            <option value="$PROJECT_DIR$/scrupal-web/project" />
           </set>
         </option>
         <option name="resolveClassifiers" value="true" />

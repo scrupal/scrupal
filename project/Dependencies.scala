@@ -150,7 +150,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val db_dependencies : Seq[ModuleID] = Seq(
-    reactivemongo, play_iteratees
+    reactivemongo, play_iteratees, play_json
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(

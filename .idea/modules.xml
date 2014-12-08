@@ -15,9 +15,9 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-http.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-http.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-http-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-http-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-opa.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-opa.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-opa-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-opa-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-web-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-web-build.iml" />
     </modules>
   </component>
 </project>
