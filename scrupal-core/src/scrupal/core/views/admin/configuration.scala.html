@@ -1,0 +1,6 @@
+@(implicit ctxt: scrupal.api.Context)
+<div class="well">
+@for((enablee,enablement) <- ctxt.site.get.getEnablementMap) {
+  <p>@enablee.id is enabled in @{enablement.map{ e => e.id.name }.mkString(", ")}</p>
+}
+</div>

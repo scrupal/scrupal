@@ -31,7 +31,6 @@ object ScrupalBuild extends Build
   lazy val utils = Project(base_name + "-utils", file("./scrupal-utils"))
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(Revolver.settings:_*)
     .settings(libraryDependencies ++= utils_dependencies)
   lazy val utils_deps = utils % "compile->compile;test->test"
 
@@ -60,7 +59,6 @@ object ScrupalBuild extends Build
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(twirlSettings_core:_*)
-    .settings(Revolver.settings:_*)
     .settings(sbt_web_settings:_*)
     .settings(core_pipeline_settings:_*)
     .settings(less_settings:_*)
@@ -73,7 +71,6 @@ object ScrupalBuild extends Build
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(twirlSettings_http:_*)
-    .settings(Revolver.settings:_*)
     .settings(libraryDependencies ++= http_dependencies)
     .dependsOn(utils_deps, db_deps, api_deps, core_deps)
   lazy val http_deps = http % "compile->compile;test->test"
@@ -91,7 +88,6 @@ object ScrupalBuild extends Build
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(twirlSettings_opa:_*)
-    .settings(Revolver.settings:_*)
     .settings(sbt_web_settings:_*)
     .settings(opa_pipeline_settings:_*)
     .settings(libraryDependencies ++= opa_dependencies)
@@ -103,6 +99,7 @@ object ScrupalBuild extends Build
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(twirlSettings_top:_*)
+    .settings(Revolver.settings:_*)
     .settings(docSettings:_*)
     .settings(
       mainClass in (Compile, run) := Some("scrupal.Boot"),

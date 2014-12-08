@@ -50,18 +50,64 @@ object AdminApp extends Application {
     }
   }
 
-  object SitesNode extends AbstractHtmlNode {
-    def description: String = "Lists the Sites"
+  object ConfigurationNode extends AbstractHtmlNode {
+    def description: String = "Configuration"
     def created: Option[DateTime] = timestamp
     def modified: Option[DateTime] = timestamp
     def _id: BSONObjectID = BSONObjectID.generate
-    def kind: Symbol = 'SitesNode
+    def kind: Symbol = 'ConfigurationNode
+    def content(context: Context)(implicit ec: ExecutionContext): Future[Html] = {
+      context.withSchema { (dbc, schema) ⇒
+        schema.sites.fetchAll.map { sites =>
+          scrupal.core.views.html.admin.configuration(context)
+        }
+      }
+    }
+
+  }
+
+  object DatabaseNode extends AbstractHtmlNode {
+    def description: String = "Database Configuration"
+    def created: Option[DateTime] = timestamp
+    def modified: Option[DateTime] = timestamp
+    def _id: BSONObjectID = BSONObjectID.generate
+    def kind: Symbol = 'DatabaseNode
 
     def content(context: Context)(implicit ec: ExecutionContext): Future[Html] = {
       context.withSchema { (dbc, schema) ⇒
         schema.sites.fetchAll.map { sites =>
-          scrupal.core.views.html.admin.siteList(sites)(context)
+          val all_sites = (Site.values ++ sites).distinct
+          scrupal.core.views.html.admin.database(all_sites)(context)
         }
+      }
+    }
+  }
+
+  object ModulesNode extends AbstractHtmlNode {
+    def description: String = "Module Administration"
+    def created: Option[DateTime] = timestamp
+    def modified: Option[DateTime] = timestamp
+    def _id: BSONObjectID = BSONObjectID.generate
+    def kind: Symbol = 'ModulesNode
+
+    def content(context: Context)(implicit ec: ExecutionContext): Future[Html] = {
+      Future.successful {
+        scrupal.core.views.html.admin.modulesAdmin(Module.values)(context)
+      }
+    }
+  }
+
+  object ApplicationsNode extends AbstractHtmlNode {
+    def description: String = "Module Administration"
+    def created: Option[DateTime] = timestamp
+    def modified: Option[DateTime] = timestamp
+    def _id: BSONObjectID = BSONObjectID.generate
+    def kind: Symbol = 'ApplicationsNode
+
+    def content(context: Context)(implicit ec: ExecutionContext): Future[Html] = {
+      Future.successful{
+        val all_applications = context.site.get.applications
+        scrupal.core.views.html.admin.applicationsAdmin(all_applications)(context)
       }
     }
   }
@@ -70,7 +116,10 @@ object AdminApp extends Application {
     description = "Layout for Admin application",
     subordinates = Map[String, Either[NodeRef,Node]](
       "StatusBar" → Right(StatusBarNode),
-      "SitesList" → Right(SitesNode)
+      "Configuration" → Right(ConfigurationNode),
+      "Database" → Right(DatabaseNode),
+      "Modules" → Right(ModulesNode),
+      "Applications" → Right(ApplicationsNode)
     ),
     layout = new TwirlHtmlLayout('adminLayout, "Administration Pages Layout", scrupal.core.views.html.admin.adminLayout)
   )
