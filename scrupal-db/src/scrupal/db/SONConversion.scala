@@ -77,7 +77,7 @@ object SONConversion {
       case 13 ⇒ JavaScriptFormat.writes(bson.asInstanceOf[BSONJavaScript])
       case 15 ⇒ JavaScriptWSFormat.writes(bson.asInstanceOf[BSONJavaScriptWS])
       case 17 ⇒ TimestampFormat.writes(bson.asInstanceOf[BSONTimestamp])
-      case _ ⇒ throw new Exception(s"BSONValue unregocnized: $bson")
+      case _ ⇒ throw new Exception(s"BSONValue unrecognized: $bson")
     }
   }
 
