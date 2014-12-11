@@ -27,7 +27,7 @@ import spray.routing._
   *
   * This controller provides the assets that are "baked" in to a Scrupal applications.
  */
-class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.MinValue /*Make Assets first*/)
+class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priority=Int.MinValue /*Make Assets first*/)
   with AssetLocator with ScrupalMarshallers {
 
   val assets_path: Seq[String] = {
@@ -129,6 +129,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, Int.Mi
   }
 
 }
+
 case class WebJarsController() extends BasicController('webjars) {
   def routes(implicit scrupal: Scrupal): Route = {
     path("javascripts" / RestPath) { file =>
@@ -286,10 +287,7 @@ private[controllers] def resourceNameAt(path: String, file: String): Option[Stri
 }
 
 private val dblSlashPattern = """//+""".r
-*/
 
-
-/* FIXME: Implement Assets controller
 // Save the Play AssetBuilder object under a new name so we can refer to it without referring to ourself!
 val assetBuilder = controllers.Assets
 def fallback(path : String, file : String) : Action[AnyContent] = {
@@ -376,7 +374,7 @@ def css_s(file: String) = fallback(stylesheets, minify(file, ".css", min=false))
 def img(file: String) = fallback(images, file)
 
 /** Get the correct favicon for the context
- * TODO: Defaulted for now to a static result :(
+ * todo : Defaulted for now to a static result :(
  * @return The /public/images/favicon.png file
  */
 def favicon = fallback(images, "viritude.ico")
@@ -392,11 +390,11 @@ def theme(provider: String, name: String, min: Boolean = true) : Action[AnyConte
    case true => {
      provider.toLowerCase() match {
        case "scrupal"    => {
-         // TODO: Look it up in the database first and if that does not work forward on to static resolution
+         // TODO : Look it up in the database first and if that does not work forward on to static resolution
          fallback(themes, minify(name,".css", true))
        }
        case "bootswatch" =>  Action { request:RequestHeader =>
-         // TODO: Deal with "NotModified" better here?
+         // TODO : Deal with "NotModified" better here?
          MovedPermanently("http://bootswatch.com/" + name + "/" + minify("bootstrap", ".css", min))
        }
        case _ =>  fallback(stylesheets, "boostrap.min.css")

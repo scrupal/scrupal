@@ -29,7 +29,7 @@ class FeatureDirectivesSpec extends Specification with Specs2RouteTest with Http
 
   def actorRefFactory = system
 
-  /* FIXME: This needs to be re-thought as feature enablement is a scope depenent activity
+  /* FIXME: This needs to be re-thought as feature enablement is a scope dependent activity
   var f1 = Feature('disabled_unimnplemented, "Feature", false).disable()
   var f2 = Feature('disabled_imnplemented, "Feature", true).disable()
   var f3 = Feature('enabled_unimnplemented, "Feature", false)
