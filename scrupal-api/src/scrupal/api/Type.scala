@@ -75,7 +75,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
     */
   def convert[S <: ScalaValueType](value: BSONValue)(implicit reader: BSONReader[BSONValue,S]) : Try[S] = {
     apply(value) match {
-      case Some(error) => Failure[S](new ValidationError(asT, error, value))
+      case Some(error) => Failure[S](new ValidationError(this, error, value))
       case None => reader.readTry(value)
     }
   }
@@ -91,7 +91,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
   def convert[S <: ScalaValueType](value: S)(implicit writer: BSONWriter[S,BSONValue]) : Try[BSONValue] = {
     writer.writeTry(value).flatMap { bson =>
       apply(bson) match {
-        case Some(error) => Failure[BSONValue](new ValidationError(asT, error, bson))
+        case Some(error) => Failure[BSONValue](new ValidationError(this, error, bson))
         case None => Success[BSONValue](bson)
       }
     }

@@ -22,7 +22,7 @@ import reactivemongo.bson.{BSONArray, BSONDocument, BSONValue}
 case class ValidationError[T<:Type](t: T, errors: Seq[String], value: BSONValue) extends Exception {
   def this(t: T, error: String, value: BSONValue) = this(t, Seq(error), value)
   override def getMessage: String = {
-    s"Failed to validate type ${t.asT.label}:\n ${errors.map{ e => "\t"+e+"\n"}}\nfor bson data:\n$value"
+    s"Failed to validate type ${t.label}:\n ${errors.map{ e => "\t"+e+"\n"}}\nfor bson data:\n$value"
   }
 }
 

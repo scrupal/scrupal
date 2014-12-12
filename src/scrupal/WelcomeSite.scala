@@ -25,8 +25,7 @@ import shapeless.{::, HList, HNil}
 import spray.routing.PathMatcher
 import spray.routing.PathMatchers._
 
-class WelcomeSite extends Site {
-  def id: Symbol = 'WelcomeToScrupal
+case class WelcomeSite(id : Identifier = 'WelcomeToScrupal) extends Site(id) {
   val name: String = "Welcome To Scrupal"
   val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
   val modified: Option[DateTime] = Some(DateTime.now)

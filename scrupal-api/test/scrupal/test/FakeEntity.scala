@@ -22,7 +22,7 @@ import scrupal.utils.OSSLicense
 import shapeless.HList
 
 /** Mockup of an Entity for testing */
-case class FakeEntity(name: String, instanceType: BundleType) extends Entity {
+case class FakeEntity(name: String, instanceType: BundleType) extends Entity(Symbol(name)) {
 
   def id: Symbol = Symbol(name)
 

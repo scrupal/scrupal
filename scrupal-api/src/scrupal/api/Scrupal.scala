@@ -44,19 +44,15 @@ class Scrupal(
   dbc: Option[DBContext] = None,
   actSys: Option[ActorSystem] = None
 )
-extends ScrupalComponent with AutoCloseable with Enablement[Scrupal]
+extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal]
 {
   val key = ""
   def registry = Scrupal
-  def asT = this
   def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
 
   val Copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
 
-  def id : Symbol = {
-
-    Symbol(name)
-  }
+  def id : Symbol = Symbol(name)
 
   val _configuration  = config.getOrElse(Configuration.default)
 

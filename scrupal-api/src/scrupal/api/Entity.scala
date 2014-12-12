@@ -18,18 +18,18 @@
 package scrupal.api
 
 import reactivemongo.bson._
-import scrupal.db.{VariantStorableRegistrable, IdentifierDAO, ScrupalDB}
+import scrupal.db.{VariantStorable, IdentifierDAO, ScrupalDB}
 
-import scrupal.utils.Enablee
+import scrupal.utils.{Registrable, Enablee}
 import shapeless.HList
 
 import scala.concurrent.Future
 
-trait EntityCollectionAction extends Action {
+trait EntityCollectionAction extends Action with Nameable with Describable {
   def id: String
 }
 
-trait EntityInstanceAction extends Action {
+trait EntityInstanceAction extends Action with Nameable with Describable {
   def id: String
   def what: Seq[String]
 }
@@ -94,35 +94,60 @@ trait EntityActionProvider extends TerminalActionProvider {
   def queryFacet(context: Context, id: String, what: Seq[String], args: BSONDocument) : QueryFacet
 }
 
-abstract class Create(val context: Context, val id: String, val instance: BSONDocument)
-  extends EntityCollectionAction
+abstract class Create(val context: Context, val id: String, val instance: BSONDocument, val name: String = "Create")
+  extends EntityCollectionAction {
+  val description = "Create a specific instance of the entity and insert it in the entity collection."
+}
 
-abstract class Retrieve(val context: Context, val id: String)
-  extends EntityCollectionAction
+abstract class Retrieve(val context: Context, val id: String, val name : String = "Retrieve")
+  extends EntityCollectionAction {
+  val description = "Retrieve a specific instance of the entity from the entity collection."
+}
 
-abstract class Update(val context: Context, val id: String, fields: BSONDocument)
-  extends EntityCollectionAction
+abstract class Update(val context: Context, val id: String, fields: BSONDocument, val name : String = "Retrieve")
+  extends EntityCollectionAction {
+  val description = "Update a specific instance of the entity."
+}
 
-abstract class Delete(val context: Context, val id: String)
-  extends EntityCollectionAction
+abstract class Delete(val context: Context, val id: String, val name : String = "Delete")
+  extends EntityCollectionAction {
+  val description = "Delete a specific instance from the entity collection."
+}
 
-abstract class Query(val context: Context, val id: String, fields: BSONDocument)
-  extends EntityCollectionAction
+abstract class Query(val context: Context, val id: String, fields: BSONDocument, val name : String = "Query")
+  extends EntityCollectionAction {
+  val description = "Query the entity collection for an entity of a certain id or containing certain data."
+}
 
-abstract class CreateFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument)
-  extends EntityInstanceAction
+abstract class CreateFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument,
+                           val name : String = "CreateFacet")
+  extends EntityInstanceAction {
+  val description = "Create a facet on a specific entity in the collection."
+}
 
-abstract class RetrieveFacet(val context: Context, val id: String, val what: Seq[String])
-  extends EntityInstanceAction
+abstract class RetrieveFacet(val context: Context, val id: String, val what: Seq[String],
+                             val name: String = "RetrieveFacet")
+  extends EntityInstanceAction {
+  val description = "Retrieve a facet from a specific entity in the collection."
+}
 
-abstract class UpdateFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument)
-  extends EntityInstanceAction
+abstract class UpdateFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument,
+                           val name: String = "UpdateFacet")
+  extends EntityInstanceAction {
+  val description = "Update a facet from a specific entity in the collection."
+}
 
-abstract class DeleteFacet(val context: Context, val id: String, val what: Seq[String])
-  extends EntityInstanceAction
+abstract class DeleteFacet(val context: Context, val id: String, val what: Seq[String],
+                           val name: String = "DeleteFacet")
+  extends EntityInstanceAction {
+  val description = "Delete a facet from a specific entity in the collection."
+}
 
-abstract class QueryFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument)
-  extends EntityInstanceAction
+abstract class QueryFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument,
+                          val name: String = "QueryFacet")
+  extends EntityInstanceAction {
+  val description = "Query a specific entity in the collection for a facet of a certain id or containing certain data."
+}
 
 
 /** The fundamental unit of storage, behavior and interaction in Scrupal.
@@ -132,8 +157,8 @@ abstract class QueryFacet(val context: Context, val id: String, val what: Seq[St
   * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   */
-abstract class Entity
-  extends EntityActionProvider with VariantStorableRegistrable[Entity] with ModuleOwned
+abstract class Entity(id: Symbol) extends { val _id: Symbol = id } with EntityActionProvider with
+  VariantStorable[Symbol] with Registrable[Entity] with ModuleOwned
           with Describable with Enablee with BSONValidator[BSONDocument] with Bootstrappable
 {
   def moduleOf = { Module.values.find(mod ⇒ mod.entities.contains(this)) }
@@ -143,7 +168,6 @@ abstract class Entity
   def instanceType: BundleType
 
   def registry = Entity
-  def asT = this
 
   def apply(value: BSONDocument) : ValidationResult = instanceType(value)
 
@@ -179,14 +203,16 @@ abstract class Entity
 
 }
 
-trait NoopAction {
+trait NoopAction extends Describable {
   def apply : Future[Result[_]] = Future.successful( BSONResult(BSONDocument(), Indeterminate) )
+  override val description = "Noop"
 }
 
 case class NoopCreate(
   override val context: Context,
   override val id: String,
-  override val instance: BSONDocument) extends Create(context, id,  instance) with NoopAction
+  override val instance: BSONDocument
+) extends Create(context, id,  instance) with NoopAction
 
 case class NoopRetrieve(
   override val context: Context,

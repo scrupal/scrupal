@@ -172,9 +172,7 @@ object HasherKinds extends Enumeration {
 /**
  * A hasher based on the PBKDF2 algorithm by Nicolas Rémond
  */
-object PBKDF2Hasher extends Hasher {
-
-  def id = 'PBKDF2
+object PBKDF2Hasher extends { val id = 'PBKDF2 } with Hasher {
 
   def defaultIterations = if ( isFastMode ) 12500 else 25000
 
@@ -193,11 +191,7 @@ object PBKDF2Hasher extends Hasher {
 /**
  * A hasher based on the BCrypt algorithm
  */
-object BCryptHasher extends Hasher {
-
-  // Provide the name of this hasher
-  def id = 'BCrypt
-
+object BCryptHasher extends { val id = 'BCrypt } with Hasher {
 
   def defaultRounds = if ( isFastMode ) 4 else 10
 
@@ -216,9 +210,7 @@ object BCryptHasher extends Hasher {
 /**
  * A hasher based on the SCrypt algorithm
  */
-object SCryptHasher extends Hasher {
-
-  def id = 'SCrypt
+object SCryptHasher extends { val id = 'SCrypt } with Hasher {
 
   def default_args = if (isFastMode)  (16384 << 16) | (1 << 8) | 1  else (1024 << 16) | (8 << 8) | 1
 

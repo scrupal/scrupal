@@ -22,21 +22,18 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 
-import scrupal.db.{VariantReaderWriter, VariantRegistry, VariantIdentifierDAO, VariantStorableRegistrable}
+import scrupal.db._
 import scrupal.utils._
-import shapeless.{HNil,::}
-import spray.http.Uri
 import spray.routing.PathMatchers.RestPath
 
-import scala.concurrent.Future
 import scala.util.matching.Regex
 
 /** Site Top Level Object
   * Scrupal manages sites.
  * Created by reidspencer on 11/3/14.
  */
-trait Site
-  extends EnablementActionProvider[Site] with VariantStorableRegistrable[Site]
+abstract class Site(id: Identifier) extends { val _id : Identifier = id }
+  with EnablementActionProvider[Site] with VariantStorable[Identifier] with Registrable[Site]
           with Nameable with Describable with Modifiable {
 
   val kind = 'Site
@@ -50,8 +47,6 @@ trait Site
   def themeName : String = "default"
 
   def registry = Site
-
-  def asT = this
 
   def applications = forEach[Application] { e ⇒
     e.isInstanceOf[Application] && isEnabled(e, this)
@@ -71,7 +66,7 @@ case class NodeSite (
   override val requireHttps: Boolean = false,
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
-) extends Site {
+) extends Site(id) {
   final override val kind = 'NodeSite
   final val key : String = makeKey(id.name)
 

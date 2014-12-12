@@ -34,11 +34,10 @@ trait IdentifiedWithRegistry extends Identifiable {
 /**
  * Mix this in to anything you want to register and define the "id"; then pass that object to the Registrar you want
  */
-trait Registrable[T <: Registrable[T]] extends IdentifiedWithRegistry {
+trait Registrable[T <: Registrable[T]] extends IdentifiedWithRegistry { self: T ⇒
   def registry : Registry[T]
-  def asT : T
-  def register() : Unit = registry.register(asT)
-  def unregister() : Unit = registry.unregister(asT)
+  def register() : Unit = registry.register(self)
+  def unregister() : Unit = registry.unregister(self)
   def isRegistered : Boolean = registry.isRegistered(id)
   override def finalize() : Unit = {
     try {

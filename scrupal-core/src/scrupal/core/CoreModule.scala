@@ -64,7 +64,7 @@ object CoreModule extends Module {
     LegalName_t, SiteInfo_t, PageBundle_t, settingsType
   )
 
-  object PageEntity extends Entity {
+  object PageEntity extends Entity('Page) {
     def id = 'Page
     def kind = 'Page
     val key = "Page"

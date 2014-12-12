@@ -18,12 +18,10 @@ package scrupal.api
 
 import scrupal.utils.{Enablee, Enablement, Registrable, Registry}
 
-abstract class AbstractFeature extends Registrable[Feature]
-                                       with Describable with Enablee with ModuleOwned with Bootstrappable {
+abstract class AbstractFeature extends Describable with Enablee with ModuleOwned with Bootstrappable {
   def implemented : Boolean
   def moduleOf = { Module.values.find(mod ⇒ mod.features.contains(this)) }
   override def parent = moduleOf
-  def registry = Feature
   override def isEnabled(scope: Enablement[_]) : Boolean = implemented && scope.isEnabled(this)
 }
 
@@ -39,9 +37,8 @@ case class Feature(
   description: String,
   override val parent: Option[Module],
   implemented: Boolean = true
-) extends AbstractFeature {
-  def asT = this
-
+) extends AbstractFeature with Registrable[Feature] {
+  def registry: Registry[Feature] = Feature
   /** Get the name of the feature */
   def name = id.name
 

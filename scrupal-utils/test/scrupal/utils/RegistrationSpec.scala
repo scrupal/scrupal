@@ -22,9 +22,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.FixtureExample
 
 trait Abstract extends Registrable[Abstract] {
-  def id = 'abstract
   def doit() : Unit = { throw new Exception("did it!") }
-  def asT : Abstract = this
 }
 
 trait TestRegistry extends Registry[Abstract] {
@@ -49,7 +47,7 @@ class RegistrationSpec extends Specification with FixtureExample[TestRegistry] {
 
       case class Test(override val id: Symbol) extends Abstract {
         override def registry: TestRegistry = test_registry
-        override def asT: Test = this
+        // override def asT: Test = this
       }
 
       val one = new Test('one)
@@ -71,10 +69,9 @@ class RegistrationSpec extends Specification with FixtureExample[TestRegistry] {
     }
 
     "ensure abstraction works" in { abstract_registry : TestRegistry ⇒
-      class Concrete extends Abstract {
-        override def id = 'concrete
+      class Concrete extends { override val id = 'concrete } with Abstract {
         override def registry: TestRegistry = abstract_registry
-        override def asT: Concrete = this
+        // override def asT: Concrete = this
 
       }
 
@@ -91,25 +88,69 @@ class RegistrationSpec extends Specification with FixtureExample[TestRegistry] {
       abstract_registry.size must beEqualTo(1)
     }
 
-    "fail if a val is used" in { abstract_registry : TestRegistry ⇒
-
-      class Concrete extends Abstract {
-        override val id = 'concrete
+    "succeed if a lazy val is used" in { abstract_registry : TestRegistry ⇒
+      class Concrete extends { override val id = 'concrete } with Abstract {
         override def registry: TestRegistry = abstract_registry
-        override def asT: Concrete = this
+        // override def asT: Concrete = this
       }
       abstract_registry.size must beEqualTo(0)
-      new Concrete must throwA[NullPointerException]
+      try { new Concrete ; success } catch {
+        case x: Throwable ⇒ failure("Exception should not have been thrown, but got: " + x.getClass.getName)
+      }
+    }
+
+    "succeed if a lazy val is used in a concrete subclass" in {
+      class ConcreteRegistry extends Registry[Concrete] {
+        override def logger_identity = "Concrete-Registry"
+        val registryName = logger_identity
+        val registrantsName = "Concrete"
+      }
+      lazy val concrete_registry = new ConcreteRegistry
+      case class Concrete(id: Symbol) extends { } with Registrable[Concrete] {
+        def registry = concrete_registry
+        def doit() : Unit = { throw new Exception("did it!") }
+      }
+      try {
+        val c = Concrete('concrete)
+        c.id must beEqualTo('concrete)
+        concrete_registry.contains('concrete) must beTrue
+        success
+      } catch {
+        case x: Throwable ⇒ failure("Exception should not have been thrown, but got: " + x.getClass.getName)
+      }
+    }
+
+    "succeed if a val is used in a concrete subclass" in {
+      class ConcreteRegistry extends Registry[Concrete] {
+        override def logger_identity = "Concrete-Registry"
+        val registryName = logger_identity
+        val registrantsName = "Concrete"
+      }
+      lazy val concrete_registry = new ConcreteRegistry
+      case class Concrete() extends { val id = 'concrete } with Registrable[Concrete] {
+        def registry = concrete_registry
+        def doit() : Unit = { throw new Exception("did it!") }
+      }
+      try {
+        val c = Concrete()
+        c.id must beEqualTo('concrete)
+        concrete_registry.contains('concrete) must beTrue
+        success
+      } catch {
+        case x: Throwable ⇒ failure("Exception should not have been thrown, but got: " + x.getClass.getName)
+      }
     }
 
     "work with a case class" in { abstract_registry : TestRegistry ⇒
       case class Concrete(override val id : Symbol = 'concrete) extends Abstract {
         override def registry: TestRegistry = abstract_registry
-        override def asT: Concrete = this
+        // override def asT: Concrete = this
       }
       abstract_registry.size must beEqualTo(0)
       val c = new Concrete
       abstract_registry.size must beEqualTo(1)
+      c.id must beEqualTo('concrete)
+      abstract_registry.contains('concrete) must beTrue
     }
 
   }

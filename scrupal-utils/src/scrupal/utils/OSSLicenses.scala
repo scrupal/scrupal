@@ -20,10 +20,9 @@ package scrupal.utils
 /** A Registration of the Open Source Software Licenses
  * Created by reid on 11/11/14.
  */
-case class OSSLicense(name: String, description: String, url: String) extends Registrable[OSSLicense] {
-  def id = Symbol(name)
+case class OSSLicense(name: String, description: String, url: String)
+  extends { val id = Symbol(name) } with Registrable[OSSLicense] {
   def registry = OSSLicense
-  def asT = this
 }
 
 object OSSLicense extends Registry[OSSLicense] {

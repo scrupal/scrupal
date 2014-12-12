@@ -32,15 +32,9 @@ trait VariantStorable[ID] extends Storable[ID] {
   def kind : Symbol // always make final and add as last parameter to case class constructor with default value
 }
 
-/** Something that is both variantly storable and registrable
-  */
-trait VariantStorableRegistrable[T <: VariantStorableRegistrable[T]]
-  extends VariantStorable[Symbol] with Registrable[T] {
-  lazy val _id = id
-}
-
-/**
- * Created by reid on 11/9/14.
+/** DataAccessObject with variant objects.
+  *
+  * This kind of DAO allows a class and its subclasses to be stored in the collection.
  */
 abstract class VariantDataAccessObject[Model <: VariantStorable[ID],ID] extends DataAccessInterface[Model,ID] {
   import BSONValueBuilder._
@@ -172,7 +166,7 @@ abstract class VariantDataAccessObject[Model <: VariantStorable[ID],ID] extends 
   def bulkInsert(objs: TraversableOnce[Model],
     bulkSize: Int /*= bulk.MaxDocs*/, bulkByteSize: Int /*= bulk.MaxBulkSize*/)
       (implicit ec: ExecutionContext): Future[Int] = {
-    /*
+    /* FIXME: Implement bulkInsert in VariantDataAccessObject
     val enumerator = Enumerator.enumerate(objs)
     collection.bulkInsert(enumerator, bulkSize, bulkByteSize) map { result =>
       mappedDocuments.map(lifeCycle.postPersist)

@@ -21,7 +21,7 @@ import org.joda.time.DateTime
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
-import scrupal.db.{VariantIdentifierDAO, VariantStorableRegistrable}
+import scrupal.db.{VariantIdentifierDAO, VariantStorable}
 import scrupal.utils._
 import shapeless.HList
 
@@ -30,11 +30,11 @@ import shapeless.HList
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
  * Created by reid on 11/6/14.
  */
-trait Application extends EnablementActionProvider[Application]
-  with VariantStorableRegistrable[Application] with Nameable with Describable with Modifiable {
+abstract class Application(id: Identifier) extends { val _id : Identifier = id }
+  with EnablementActionProvider[Application]
+  with VariantStorable[Identifier] with Registrable[Application] with Nameable with Describable with Modifiable {
 
   def registry: Registry[Application] = Application
-  def asT  : Application = this
 
   /** Application Context Path
     * This is the path at the start of the Site's URL that this application uses.
@@ -60,7 +60,7 @@ case class BasicApplication(
   description: String,
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None
-) extends Application {
+) extends Application(id) {
   final val kind = 'BasicApplication
 }
 

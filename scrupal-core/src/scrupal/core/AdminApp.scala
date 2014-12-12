@@ -26,7 +26,7 @@ import spray.routing.PathMatchers.PathEnd
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object AdminApp extends Application {
+object AdminApp extends Application('admin) {
   def id: Symbol = 'admin
   def description: String = "The Scrupal Administrative Application"
   def name: String = "AdminApp"
@@ -129,7 +129,7 @@ object AdminApp extends Application {
   )
 }
 
-object SiteAdminEntity extends Entity {
+object SiteAdminEntity extends Entity('SiteAdmin) {
   def id: Symbol = 'SiteAdmin
 
   def kind: Symbol = 'SiteAdmin

@@ -29,7 +29,7 @@ import scala.collection.mutable
   *
   */
 
-trait Enablement[T <: Enablement[T]] extends Registrable[T] with ScrupalComponent {
+trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with ScrupalComponent {
 
   private val _enabled = new  AbstractRegistry[Enablee,mutable.HashSet[AnyRef]] {
     def register(key: Enablee, obj: mutable.HashSet[AnyRef]) = _register(key, obj)

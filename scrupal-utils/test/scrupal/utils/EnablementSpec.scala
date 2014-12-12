@@ -22,7 +22,7 @@ import scrupal.test.ClassFixture
 
 class Scenario extends AutoCloseable {
   object TSRegistry extends Registry[TestScope] { val registryName = "TestScopes"; val registrantsName = "test scopes" }
-  case class TestScope(id: Symbol, children : Seq[Enablement[_]] = Seq())
+  case class TestScope(id:Symbol, children : Seq[Enablement[_]] = Seq())
     extends Enablement[TestScope] with Registrable[TestScope] {
     def registry : Registry[TestScope] = TSRegistry
     def asT : TestScope = this
