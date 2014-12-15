@@ -22,6 +22,9 @@ import scrupal.db.{VariantStorable, IdentifierDAO, ScrupalDB}
 
 import scrupal.utils.{Registrable, Enablee}
 import shapeless.HList
+import spray.http.{HttpHeader, HttpMethods, Uri}
+import spray.routing.PathMatcher.{Unmatched, Matched}
+import spray.routing.PathMatchers._
 
 import scala.concurrent.Future
 
@@ -30,7 +33,6 @@ trait EntityCollectionAction extends Action with Nameable with Describable {
 }
 
 trait EntityInstanceAction extends Action with Nameable with Describable {
-  def id: String
   def what: Seq[String]
 }
 
@@ -40,7 +42,50 @@ trait EntityInstanceAction extends Action with Nameable with Describable {
   */
 trait EntityActionProvider extends TerminalActionProvider {
 
-  def pathsToActions = Seq.empty[PathMatcherToAction[_ <: HList]]
+  def make_args(ctxt: Context) : BSONDocument = {
+    ctxt.request match {
+      case Some(context) ⇒
+        val headers = context.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
+        val params = context.request.uri.query.map { case(k,v) ⇒ k -> BSONString(v) }
+        BSONDocument(headers ++ params)
+      case None ⇒
+        BSONDocument()
+    }
+  }
+
+  def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
+    if (key == pluralKey) {
+      val pm = (Segments ~PathEnd)
+      pm(path) match {
+        case Matched(pathRest, extractions) ⇒
+          val id_path : String = extractions.head.mkString("/")
+          context.request.get.request.method match {
+            case HttpMethods.POST ⇒ Some(create(context, id_path, make_args(context)))
+            case HttpMethods.GET ⇒ Some(retrieve(context, id_path))
+            case HttpMethods.PUT ⇒ Some(update(context, id_path, make_args(context)))
+            case HttpMethods.DELETE ⇒ Some(delete(context, id_path))
+            case HttpMethods.OPTIONS ⇒ Some(query(context, id_path, make_args(context)))
+          }
+        case Unmatched ⇒ None
+      }
+    } else if (key == singularKey) {
+      val pm = (Segments ~ PathEnd)
+      pm(path) match {
+        case Matched(pathRest, extractions) ⇒
+          val id_path = extractions.head
+          context.request.get.request.method match {
+            case HttpMethods.POST ⇒ Some(createFacet(context, id_path, make_args(context)))
+            case HttpMethods.GET ⇒ Some(retrieveFacet(context, id_path))
+            case HttpMethods.PUT ⇒ Some(updateFacet(context, id_path, make_args(context)))
+            case HttpMethods.DELETE ⇒ Some(deleteFacet(context, id_path))
+            case HttpMethods.OPTIONS ⇒ Some(queryFacet(context, id_path, make_args(context)))
+          }
+        case Unmatched ⇒ None
+      }
+    } else {
+      None
+    }
+  }
 
   /** CREATE ENTITY (POST/plural) - Create a new entity from scratch
     * This is a command on the entity type's container to insert a new entity. The instance should be created
@@ -79,19 +124,19 @@ trait EntityActionProvider extends TerminalActionProvider {
   def query(context: Context, id: String, fields: BSONDocument) : Query
 
   /** Create Facet Command (POST/singular) */
-  def createFacet(context: Context, id: String, what: Seq[String], args: BSONDocument) : CreateFacet
+  def createFacet(context: Context, what: Seq[String], args: BSONDocument) : CreateFacet
 
   /** RetrieveAspect Command (GET/singular) */
-  def retrieveFacet(context: Context, id: String, what: Seq[String]) : RetrieveFacet
+  def retrieveFacet(context: Context, what: Seq[String]) : RetrieveFacet
 
   /** UpdateAspect Command (PUT/singular) */
-  def updateFacet(context: Context, id: String, what: Seq[String], args: BSONDocument) : UpdateFacet
+  def updateFacet(context: Context, what: Seq[String], args: BSONDocument) : UpdateFacet
 
   /** XXX Command (DELETE/singular) */
-  def deleteFacet(context: Context, id: String, what: Seq[String]) : DeleteFacet
+  def deleteFacet(context: Context, what: Seq[String]) : DeleteFacet
 
   /** XXX Command (OPTIONS/singular) */
-  def queryFacet(context: Context, id: String, what: Seq[String], args: BSONDocument) : QueryFacet
+  def queryFacet(context: Context, what: Seq[String], args: BSONDocument) : QueryFacet
 }
 
 abstract class Create(val context: Context, val id: String, val instance: BSONDocument, val name: String = "Create")
@@ -119,31 +164,29 @@ abstract class Query(val context: Context, val id: String, fields: BSONDocument,
   val description = "Query the entity collection for an entity of a certain id or containing certain data."
 }
 
-abstract class CreateFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument,
+abstract class CreateFacet(val context: Context, val what: Seq[String], val args: BSONDocument,
                            val name : String = "CreateFacet")
   extends EntityInstanceAction {
   val description = "Create a facet on a specific entity in the collection."
 }
 
-abstract class RetrieveFacet(val context: Context, val id: String, val what: Seq[String],
-                             val name: String = "RetrieveFacet")
+abstract class RetrieveFacet(val context: Context, val what: Seq[String], val name: String = "RetrieveFacet")
   extends EntityInstanceAction {
   val description = "Retrieve a facet from a specific entity in the collection."
 }
 
-abstract class UpdateFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument,
+abstract class UpdateFacet(val context: Context, val what: Seq[String], val args: BSONDocument,
                            val name: String = "UpdateFacet")
   extends EntityInstanceAction {
   val description = "Update a facet from a specific entity in the collection."
 }
 
-abstract class DeleteFacet(val context: Context, val id: String, val what: Seq[String],
-                           val name: String = "DeleteFacet")
+abstract class DeleteFacet(val context: Context, val what: Seq[String], val name: String = "DeleteFacet")
   extends EntityInstanceAction {
   val description = "Delete a facet from a specific entity in the collection."
 }
 
-abstract class QueryFacet(val context: Context, val id: String, val what: Seq[String], val args: BSONDocument,
+abstract class QueryFacet(val context: Context, val what: Seq[String], val args: BSONDocument,
                           val name: String = "QueryFacet")
   extends EntityInstanceAction {
   val description = "Query a specific entity in the collection for a facet of a certain id or containing certain data."
@@ -157,7 +200,8 @@ abstract class QueryFacet(val context: Context, val id: String, val what: Seq[St
   * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   */
-abstract class Entity(id: Symbol) extends { val _id: Symbol = id } with EntityActionProvider with
+abstract class Entity(sym: Symbol) extends { val id: Symbol = sym; val _id: Symbol = sym} with EntityActionProvider
+with
   VariantStorable[Symbol] with Registrable[Entity] with ModuleOwned
           with Describable with Enablee with BSONValidator[BSONDocument] with Bootstrappable
 {
@@ -186,20 +230,20 @@ abstract class Entity(id: Symbol) extends { val _id: Symbol = id } with EntityAc
   def query(context: Context, id: String, fields: BSONDocument)
     : Query = NoopQuery(context, id, fields)
 
-  def createFacet(context: Context, id: String, what: Seq[String], args: BSONDocument)
-    : CreateFacet = NoopCreateFacet(context, id, what, args)
+  def createFacet(context: Context, what: Seq[String], args: BSONDocument)
+    : CreateFacet = NoopCreateFacet(context, what, args)
 
-  def retrieveFacet(context: Context, id: String, what: Seq[String])
-    : RetrieveFacet = NoopRetrieveFacet(context, id, what)
+  def retrieveFacet(context: Context, what: Seq[String])
+    : RetrieveFacet = NoopRetrieveFacet(context, what)
 
-  def updateFacet(context: Context, id: String, what: Seq[String], args: BSONDocument)
-    : UpdateFacet = NoopUpdateFacet(context, id, what, args)
+  def updateFacet(context: Context, what: Seq[String], args: BSONDocument)
+    : UpdateFacet = NoopUpdateFacet(context, what, args)
 
-  def deleteFacet(context: Context, id: String, what: Seq[String])
-    : DeleteFacet = NoopDeleteFacet(context, id, what)
+  def deleteFacet(context: Context, what: Seq[String])
+    : DeleteFacet = NoopDeleteFacet(context, what)
 
-  def queryFacet(context: Context, id: String, what: Seq[String], args: BSONDocument)
-    : QueryFacet = NoopQueryFacet(context, id, what, args)
+  def queryFacet(context: Context, what: Seq[String], args: BSONDocument)
+    : QueryFacet = NoopQueryFacet(context,what, args)
 
 }
 
@@ -232,32 +276,31 @@ case class NoopQuery(
 
 case class NoopCreateFacet(
   override val context: Context,
-  override val id: String,
   override val what: Seq[String],
   override val args: BSONDocument
-) extends CreateFacet(context, id, what, args) with NoopAction
+) extends CreateFacet(context, what, args) with NoopAction
 
 case class NoopRetrieveFacet(
   override val context: Context,
-  override val id: String,
-  override val what: Seq[String]) extends RetrieveFacet(context, id, what) with NoopAction
+  override val what: Seq[String]
+) extends RetrieveFacet(context, what) with NoopAction
 
 case class NoopUpdateFacet(
   override val context: Context,
-  override val id: String,
   override val what: Seq[String],
-  override val args: BSONDocument) extends UpdateFacet(context, id, what, args) with NoopAction
+  override val args: BSONDocument
+) extends UpdateFacet(context, what, args) with NoopAction
 
 case class NoopDeleteFacet(
   override val context: Context,
-  override val id: String,
-  override val what: Seq[String]) extends DeleteFacet(context, id, what) with NoopAction
+  override val what: Seq[String]
+) extends DeleteFacet(context, what) with NoopAction
 
 case class NoopQueryFacet(
   override val context: Context,
-  override val id: String,
   override val what: Seq[String],
-  override val args: BSONDocument) extends QueryFacet(context, id, what, args) with NoopAction
+  override val args: BSONDocument
+) extends QueryFacet(context, what, args) with NoopAction
 
 
 object Entity extends scrupal.utils.Registry[Entity] {

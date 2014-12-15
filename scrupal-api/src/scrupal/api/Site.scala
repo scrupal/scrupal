@@ -24,7 +24,7 @@ import reactivemongo.bson._
 
 import scrupal.db._
 import scrupal.utils._
-import spray.routing.PathMatchers.RestPath
+import spray.http.Uri
 
 import scala.util.matching.Regex
 
@@ -32,8 +32,8 @@ import scala.util.matching.Regex
   * Scrupal manages sites.
  * Created by reidspencer on 11/3/14.
  */
-abstract class Site(id: Identifier) extends { val _id : Identifier = id }
-  with EnablementActionProvider[Site] with VariantStorable[Identifier] with Registrable[Site]
+abstract class Site(sym: Identifier) extends { val id: Symbol = sym ; val _id : Identifier = sym }
+  with EnablementPathMatcherToActionProvider[Site] with VariantStorable[Identifier] with Registrable[Site]
           with Nameable with Describable with Modifiable {
 
   val kind = 'Site
@@ -58,7 +58,7 @@ abstract class Site(id: Identifier) extends { val _id : Identifier = id }
 }
 
 case class NodeSite (
-  id : Identifier,
+  override val id : Identifier,
   name: String,
   description: String,
   host: String,
@@ -70,16 +70,9 @@ case class NodeSite (
   final override val kind = 'NodeSite
   final val key : String = makeKey(id.name)
 
-  /* FIXME: Delete this
-  case class SiteRootNodeAction(context: Context) extends Action {
-    def apply() : Future[Result[_]] = { siteRoot.apply(context) }
+  override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
+    Some( NodeAction(context, siteRoot) )
   }
-
-  object SiteRootPathToAction extends PathToAction(RestPath) {
-    def apply(matched: ::[Uri.Path,HNil], rest: Uri.Path, ctxt: Context): Action = SiteRootNodeAction(ctxt)
-  }
-*/
-  final val pathsToActions = Seq( PathToNodeAction(RestPath, siteRoot) )
 }
 
 object NodeSite {

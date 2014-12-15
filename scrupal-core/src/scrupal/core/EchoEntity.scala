@@ -33,8 +33,6 @@ import scrupal.utils.OSSLicense
   */
 object EchoEntity extends Entity('Echo) {
 
-  def id: Symbol = 'Echo
-
   def kind: Symbol = 'Echo
 
   val key: String = "Echo"
@@ -90,6 +88,7 @@ object EchoEntity extends Entity('Echo) {
     }
   }
 
+  /* FIXME:
   override def createFacet(context: Context, id: String,
                            what: Seq[String], instance: BSONDocument) : CreateFacet = {
     new CreateFacet(context, id, what, instance) {
@@ -132,4 +131,5 @@ object EchoEntity extends Entity('Echo) {
       }
     }
   }
+  */
 }

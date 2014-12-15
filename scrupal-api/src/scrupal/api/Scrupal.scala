@@ -28,7 +28,6 @@ import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
 
 import scrupal.db.DBContext
 import scrupal.utils._
-import shapeless.HList
 import spray.routing.RequestContext
 
 import scala.collection.immutable.TreeMap
@@ -48,7 +47,6 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
 {
   val key = ""
   def registry = Scrupal
-  def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
 
   val Copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
 
@@ -170,7 +168,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
     _actorSystem.shutdown()
   }
 
-  override def finalize = {
+  override def finalize() = {
     close()
   }
 

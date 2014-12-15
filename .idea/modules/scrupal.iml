@@ -14,7 +14,6 @@
       <sourceFolder url="file://$MODULE_DIR$/../../target/scala-2.11/resource_managed/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/resolution-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/../../target/specs2-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../target/streams" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -84,9 +83,6 @@
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson-macros_2.11:0.11.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson_2.11:0.11.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo_2.11:0.11.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.2" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.2" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.plugins:scala-continuations-library_2.11:1.0.1" level="project" />
@@ -114,5 +110,6 @@
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0" level="project" />
     <orderEntry type="module" module-name="scrupal-api" exported="" />
     <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.11.4" level="application" />
   </component>
 </module>

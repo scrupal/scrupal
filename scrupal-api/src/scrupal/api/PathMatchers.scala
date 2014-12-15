@@ -15,51 +15,20 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.api
 
-import org.joda.time.DateTime
-import play.twirl.api.Html
-import scrupal.api._
-import scrupal.core.{AdminApp, MarkedDocNode, CoreModule, EchoEntity}
-import shapeless.{::, HList, HNil}
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
+import reactivemongo.bson.BSONObjectID
+import spray.routing._
 
-case class WelcomeSite() extends Site('WelcomeToScrupal) {
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+object PathMatchers {
 
-  object DocPathToDocs extends PathToNodeActionFunction(PathMatcher("doc")/Segments, {
-    (list: ::[List[String],HNil], rest, ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
-  }) {}
-
-
-  override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    PathToNodeAction(RestPath, siteRoot)
-  )
-
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  AdminApp.enable(this)
-  CoreModule.enable(EchoEntity)
-  CoreModule.enable(AdminApp)
-}
-
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
+  /**
+   * A PathMatcher that matches and extracts a BSONObjectID instance.
+   */
+  val BSONObjectIdentifier: PathMatcher1[BSONObjectID] =
+    PathMatcher("""[\da-fA-F]{24}""".r) flatMap { id: String ⇒
+      try {
+        Some(BSONObjectID(id))
+      } catch { case x: Throwable ⇒ None }
+    }
 }

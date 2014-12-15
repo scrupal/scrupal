@@ -63,9 +63,6 @@
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson-macros_2.11:0.11.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson_2.11:0.11.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo_2.11:0.11.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.plugins:scala-continuations-library_2.11:1.0.1" level="project" />
@@ -93,5 +90,6 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.11.4" level="application" />
   </component>
 </module>

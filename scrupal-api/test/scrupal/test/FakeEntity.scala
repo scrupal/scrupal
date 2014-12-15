@@ -17,16 +17,11 @@
 
 package scrupal.test
 
-import scrupal.api.{PathToAction, BundleType, Entity}
+import scrupal.api.{BundleType, Entity}
 import scrupal.utils.OSSLicense
-import shapeless.HList
 
 /** Mockup of an Entity for testing */
 case class FakeEntity(name: String, instanceType: BundleType) extends Entity(Symbol(name)) {
-
-  def id: Symbol = Symbol(name)
-
-  override def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
 
   final val key: String = name
 

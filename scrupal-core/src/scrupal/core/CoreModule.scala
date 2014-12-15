@@ -65,7 +65,6 @@ object CoreModule extends Module {
   )
 
   object PageEntity extends Entity('Page) {
-    def id = 'Page
     def kind = 'Page
     val key = "Page"
     val description =  "An entity for simple HTML5 pages."
@@ -73,7 +72,6 @@ object CoreModule extends Module {
     val copyright = CoreModule.copyright
     val license = CoreModule.license
     val instanceType = PageBundle_t
-    override def pathsToActions = Seq.empty[PathMatcherToAction[_ <: HList]]
   }
 
   def entities = Seq[Entity](

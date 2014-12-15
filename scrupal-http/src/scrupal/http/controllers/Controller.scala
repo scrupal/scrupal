@@ -128,61 +128,10 @@ class ActionProviderController extends Controller with PathHelpers {
   def id = 'ActionProviderController
   val priority = 0
 
-  def make_args(ctxt: Context) : BSONDocument = {
-    ctxt.request match {
-      case Some(context) ⇒
-        val headers = context.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
-        val params = context.request.uri.query.map { case(k,v) ⇒ k -> BSONString(v) }
-        BSONDocument(headers ++ params)
-      case None ⇒
-        BSONDocument()
-    }
-  }
-
-  def entityAction(e: Entity, key: String, unmatchedPath: Uri.Path, context: Context) : Directive1[Action] = {
-    rawPathPrefix(Segments ~ PathEnd).flatMap { segments: List[String] ⇒
-      val id_path = segments.mkString("/")
-      if (segments.size > 0) {
-        if (key == e.pluralKey) {
-          extract { ctxt ⇒
-            ctxt.request.method match {
-              case HttpMethods.POST ⇒ e.create(context, id_path, make_args(context))
-              case HttpMethods.GET ⇒ e.retrieve(context, id_path)
-              case HttpMethods.PUT ⇒ e.update(context, id_path, make_args(context))
-              case HttpMethods.DELETE ⇒ e.delete(context, id_path)
-              case HttpMethods.OPTIONS ⇒ e.query(context, id_path, make_args(context))
-            }
-          }
-        } else if (key == e.singularKey) {
-          val id = segments.head
-          val facet_id = segments.tail
-          extract { ctxt ⇒
-            ctxt.request.method match {
-              case HttpMethods.POST ⇒ e.createFacet(context, id, facet_id, make_args(context))
-              case HttpMethods.GET ⇒ e.retrieveFacet(context, id, facet_id)
-              case HttpMethods.PUT ⇒ e.updateFacet(context, id, facet_id, make_args(context))
-              case HttpMethods.DELETE ⇒ e.deleteFacet(context, id, facet_id)
-              case HttpMethods.OPTIONS ⇒ e.queryFacet(context, id, facet_id, make_args(context))
-            }
-          }
-        } else {
-          reject
-        }
-      } else {
-        reject
-      }
-    }
-  }
-
   def provideAction(ap: ActionProvider, key: String, unmatchedPath: Uri.Path, context: Context): Directive1[Action] = {
-    ap match {
-      case e: Entity ⇒
-        entityAction(e, key, unmatchedPath, context)
-      case _ ⇒
-        ap.matchingAction(key, unmatchedPath, context) match {
-          case Some(action) ⇒ extract { ctxt ⇒ action }
-          case None ⇒ reject
-        }
+    ap.actionFor(key, unmatchedPath, context) match {
+      case Some(action) ⇒ extract { ctxt ⇒ action }
+      case None ⇒ reject
     }
   }
 
@@ -190,8 +139,7 @@ class ActionProviderController extends Controller with PathHelpers {
     if (provider.isTerminal)
       f(key, provider)
     else {
-      val subordinates = provider.subordinateActionProviders
-      rawPathPrefixWithMatch(subordinates) {
+      rawPathPrefixWithMatch(provider.subordinates) {
         case (subkey: String, ap: ActionProvider) ⇒
           subordinate(subkey, ap)(f)
       }
@@ -201,7 +149,7 @@ class ActionProviderController extends Controller with PathHelpers {
   def routes(implicit scrupal: Scrupal): Route = {
     site(scrupal) { site: Site ⇒
       rawPathPrefix(Slash) {
-        subordinate("", site) {
+        subordinate(site.singularKey, site) {
           case (key: String, ap: ActionProvider) ⇒
             request_context { ctxt: RequestContext ⇒
               implicit val context = Context(scrupal, ctxt, site)
@@ -215,7 +163,7 @@ class ActionProviderController extends Controller with PathHelpers {
             }
         } ~ request_context { ctxt: RequestContext ⇒
           implicit val context = Context(scrupal, ctxt, site)
-          site.matchingAction("",ctxt.unmatchedPath, Context(scrupal, ctxt, site)) match {
+          site.actionFor(site.singularKey,ctxt.unmatchedPath, Context(scrupal, ctxt, site)) match {
             case Some(action) ⇒ complete { makeMarshallable { action.dispatch }}
             case None ⇒ reject
           }

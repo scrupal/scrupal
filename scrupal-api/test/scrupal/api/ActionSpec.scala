@@ -48,17 +48,17 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
         new Action { val context = ctxt; def apply() : Future[Result[_]] = Future.successful(StringResult("")) }
       }
     }
-    val provider0 = new TerminalActionProvider {
+    val provider0 = new PathMatcherToActionProvider with TerminalActionProvider {
       val id = 'p0
-      def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
+      override def pathsToActions = Seq.empty[PathToAction[_ <: HList]]
     }
-    val provider1 = new TerminalActionProvider {
+    val provider1 = new PathMatcherToActionProvider with TerminalActionProvider {
       val id = 'p1
-      def pathsToActions = Seq(int_p2a)
+      override def pathsToActions = Seq(int_p2a)
     }
-    val provider2 = new TerminalActionProvider {
+    val provider2 = new PathMatcherToActionProvider with TerminalActionProvider {
       val id = 'p2
-      def pathsToActions = Seq(empty_p2a, int_p2a)
+      override def pathsToActions = Seq(empty_p2a, int_p2a)
     }
   }
 
@@ -94,10 +94,10 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
 
   "ActionProvider" should {
     "find None with an empty pathsToActions" in Fixture("ap1") { fix: Fixture ⇒
-      fix.provider0.matchingAction("", "foo", fix) must beEqualTo(None)
+      fix.provider0.actionFor("", "foo", fix) must beEqualTo(None)
     }
     "find the matching one" in Fixture("ap2") { fix: Fixture ⇒
-      val result = fix.provider1.matchingAction("", "foo/42", fix)
+      val result = fix.provider1.actionFor("", "foo/42", fix)
       val str = result match {
         case Some(action) ⇒
           val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
@@ -107,7 +107,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
       str must beEqualTo("42")
     }
     "find the first one that matches" in Fixture("api3") { fix : Fixture ⇒
-      val result = fix.provider2.matchingAction("", "foo", fix)
+      val result = fix.provider2.actionFor("", "foo", fix)
       val str = result match {
         case Some(action) ⇒
           val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
@@ -115,7 +115,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
         case None ⇒ "Nope"
       }
       str must beEqualTo("")
-      val r2 = fix.provider2.matchingAction("", "foo/42", fix)
+      val r2 = fix.provider2.actionFor("", "foo/42", fix)
       val s2 = result match {
         case Some(action) ⇒
           val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }

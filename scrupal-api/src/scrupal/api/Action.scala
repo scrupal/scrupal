@@ -16,10 +16,9 @@
  **********************************************************************************************************************/
 package scrupal.api
 
-import scrupal.utils.{Enablement, Enablee, Pluralizer, Patterns}
 import shapeless.HList
 import spray.http.Uri
-import spray.routing.PathMatcher
+import spray.routing.{PathMatcher}
 import spray.routing.PathMatcher.{Matched, Unmatched}
 
 import scala.concurrent.Future
@@ -120,93 +119,4 @@ case class PathToNodeActionFunction[L <:HList](pm: PathMatcher[L], nodeF: (L, Ur
   def apply(list: L, rest: Uri.Path, c: Context) : Action = {
     NodeAction(c,nodeF(list,rest,c))
   }
-}
-
-/** Something That Provides Actions.
-  *
-  * ActionProviders convert an path into an action by using a PathMatcher. PathMatchers are a general matching and
-  * extraction facility based on shapeless.HList and provided by spray.routing. This can be used generally, without
-  * Spray, or nicely in combination with the support in scrupal-http which is based on spray.
-  */
-abstract class ActionProvider extends Enablee {
-
-  /** Key For Identifying This Provider
-    *
-    * When matching a path, it is helpful to quickly identify which ActionProvider to apply to a given path. To that
-    * end, the key provides a constant path segment value that identifies this ActionProvider. For example, if
-    * your path was /foo/bar/doit then foo and bar are potential keys as they might separately identify
-    * an ActionProvider "foo" that contains an ActionProvider "bar". The "doit" suffix is not a candidate for an
-    * ActionProvider's key because it is not / terminated. Keys are path segments and must occur only between slashes.
-    *
-    * Strings returned by key will be URL sanitized. They should therefore match the regular expression for URL
-    * path characters ( [-A-Za-z0-9_~]+ ).  Any characters not matching the regular expression will be converted
-    * to a dash
-    *
-    * @return The constant string used to identify this ActionProvider
-    */
-
-  def makeKey(name: String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
-
-  lazy val singularKey = makeKey ( id.name )
-
-  lazy val pluralKey = makeKey( Pluralizer.pluralize(id.name) )
-
-  /** List The Acceptable Matches
-    *
-    * This method should return a set of PathToAction instances that translate the matched path to an Action. Be sure
-    * to list the longest patterns first as the first one that matches any prefix will win. So if you want to match
-    * `/path/to/42` and `/path` then put the longer one first or else /path will get recognized first.
-    * @return
-    */
-  def pathsToActions: Seq[PathMatcherToAction[_ <: HList]]
-
-  /** Resolve An Action
-    *
-    * Give a path and a context, find the matching PathToAction and then invoke it to yield the corresponding Action.
-    *
-    * @param path The path to use to match the PathToAction function
-    * @param context The context to use to match the PathToAction function
-    * @return
-    */
-  def matchingAction(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    for (p2a ← pathsToActions ; action = p2a.matches(path, context) if action != None) { return action }
-    None
-  }
-
-  /** Resolve An Action
-    *
-    * Same as the Uri.Path variant but takes a String path.
-    * @param path The path to use to match the PathToAction function
-    * @param context The context to use to match the PathToAction function
-    * @return
-    */
-  def matchingAction(key: String, path: String, context: Context) : Option[Action] = {
-    matchingAction(key, Uri.Path(path), context)
-  }
-
-  type ActionProviderMap = Map[String,ActionProvider]
-  def subordinateActionProviders: ActionProviderMap
-
-  def isTerminal : Boolean = subordinateActionProviders.isEmpty
-}
-
-trait TerminalActionProvider extends ActionProvider {
-  final override val subordinateActionProviders = Map.empty[String,ActionProvider]
-  override val isTerminal = true
-}
-
-trait EnablementActionProvider[T <: EnablementActionProvider[T]]
-  extends ActionProvider with Enablement[T] with Enablee
-{
-  def actionProviders = forEach[ActionProvider] { e: Enablee ⇒
-    e.isInstanceOf[ActionProvider] && isEnabled(e, this)
-  } { e: Enablee ⇒
-    e.asInstanceOf[ActionProvider]
-  }
-
-  def subordinateActionProviders : ActionProviderMap = {
-    for (ap ← actionProviders ; name ← Seq(ap.singularKey, ap.pluralKey)) yield {
-      name → ap
-    }
-  }.toMap
 }

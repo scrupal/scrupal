@@ -130,8 +130,6 @@ object AdminApp extends Application('admin) {
 }
 
 object SiteAdminEntity extends Entity('SiteAdmin) {
-  def id: Symbol = 'SiteAdmin
-
   def kind: Symbol = 'SiteAdmin
 
   val key: String = "Site"
@@ -180,47 +178,48 @@ object SiteAdminEntity extends Entity('SiteAdmin) {
       }
     }
   }
+/* FIXME:
 
-  override def createFacet(context: Context, id: String,
-    what: Seq[String], instance: BSONDocument) : CreateFacet = {
-    new CreateFacet(context, id, what, instance) {
-      override def apply : Future[Result[_]] = {
-        Future.successful( HtmlResult(scrupal.core.views.html.echo.createFacet(id, what, instance)(context)) )
-      }
+override def createFacet(context: Context, what: Seq[String], instance: BSONDocument) : CreateFacet = {
+  new CreateFacet(context, what, instance) {
+    override def apply : Future[Result[_]] = {
+      Future.successful( HtmlResult(scrupal.core.views.html.echo.createFacet(what, instance)(context)) )
     }
   }
+}
 
-  override def retrieveFacet(context: Context, id: String, what: Seq[String]) : RetrieveFacet = {
-    new RetrieveFacet(context, id, what) {
-      override def apply : Future[Result[_]] = {
-        Future.successful( HtmlResult(scrupal.core.views.html.echo.retrieveFacet(id, what)(context)) )
-      }
+override def retrieveFacet(context: Context, what: Seq[String]) : RetrieveFacet = {
+  new RetrieveFacet(context, what) {
+    override def apply : Future[Result[_]] = {
+      Future.successful( HtmlResult(scrupal.core.views.html.echo.retrieveFacet(what)(context)) )
     }
   }
+}
 
-  override def updateFacet(context: Context, id: String,
-    what: Seq[String], fields: BSONDocument) : UpdateFacet = {
-    new UpdateFacet(context, id, what, fields) {
-      override def apply : Future[Result[_]] = {
-        Future.successful( HtmlResult(scrupal.core.views.html.echo.updateFacet(id, what, fields)(context)) )
-      }
+override def updateFacet(context: Context, id: String,
+  what: Seq[String], fields: BSONDocument) : UpdateFacet = {
+  new UpdateFacet(context, id, what, fields) {
+    override def apply : Future[Result[_]] = {
+      Future.successful( HtmlResult(scrupal.core.views.html.echo.updateFacet(id, what, fields)(context)) )
     }
   }
+}
 
-  override def deleteFacet(context: Context, id: String, what: Seq[String]) : DeleteFacet = {
-    new DeleteFacet(context, id, what) {
-      override def apply : Future[Result[_]] = {
-        Future.successful( HtmlResult(scrupal.core.views.html.echo.deleteFacet(id, what)(context)) )
-      }
+override def deleteFacet(context: Context, id: String, what: Seq[String]) : DeleteFacet = {
+  new DeleteFacet(context, id, what) {
+    override def apply : Future[Result[_]] = {
+      Future.successful( HtmlResult(scrupal.core.views.html.echo.deleteFacet(id, what)(context)) )
     }
   }
+}
 
-  override def queryFacet(context: Context, id: String,
-    what: Seq[String], args: BSONDocument) : QueryFacet = {
-    new QueryFacet(context, id, what, args) {
-      override def apply : Future[Result[_]] = {
-        Future.successful( HtmlResult(scrupal.core.views.html.echo.queryFacet(id, what, args)(context)) )
-      }
+override def queryFacet(context: Context, id: String,
+  what: Seq[String], args: BSONDocument) : QueryFacet = {
+  new QueryFacet(context, id, what, args) {
+    override def apply : Future[Result[_]] = {
+      Future.successful( HtmlResult(scrupal.core.views.html.echo.queryFacet(id, what, args)(context)) )
     }
   }
+}
+*/
 }
