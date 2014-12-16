@@ -229,6 +229,9 @@ class SONConversionSpec extends Specification {
       val boid1 = BSONObjectID("0102030405060708090a0b0c")
       val boid2 = BSONObjectID("0102030405060708090a0b0c")
       boid1 must beEqualTo(boid2)
+      val j1 = toJSON(boid1)
+      val j2 = toJSON(boid2)
+      j1 must beEqualTo(j2)
     }
     "be BSON->JSON->BSON->JSON->BSON reflective" in {
       val b1 = BSONDocument(Seq(
@@ -239,11 +242,9 @@ class SONConversionSpec extends Specification {
         "string" → BSONString("forty-two"),
         "datetime" → BSONDateTime(System.currentTimeMillis()),
         "timestamp" → BSONTimestamp(System.currentTimeMillis()),
-        // FIXME: If "binary" is included, equality fails although binary objects are identical
-        // FIXME: "binary" → BSONBinary(Array[Byte](1,2,3), Subtype.GenericBinarySubtype),
+        "binary" → BSONBinary(Array[Byte](1,2,3), Subtype.GenericBinarySubtype),
         "objectid" → BSONObjectID(Array[Byte](1,2,3,4,5,6,7,8,9,10,11,12)),
-        // FIXME: if "dbpointer" is included, equality fails although dbpointer objects are identical
-        // FIXME: "dbpointer" → BSONDBPointer("coll", Array[Byte](1,2,3,4,5,6,7,8,9,10,11,12)),
+        "dbpointer" → BSONDBPointer("coll", Array[Byte](1,2,3,4,5,6,7,8,9,10,11,12)),
         "array" → BSONArray(Seq(BSONInteger(42), BSONString("42"), BSONDouble(42.0), BSONDateTime(0)))
       ))
       val j1 = toJSON(b1)
@@ -259,9 +260,9 @@ class SONConversionSpec extends Specification {
       b1.get("objectid") must beEqualTo(b2.get("objectid"))
       b1.get("dbpointer") must beEqualTo(b2.get("dbpointer"))
       b1.get("array") must beEqualTo(b2.get("array"))
-      b2 must beEqualTo(b1)
       val j2 = toJSON(b2)
       j2 must beEqualTo(j1)
+      b2 must beEqualTo(b1)
       val b3 = toBSON(j2).get
       b3 must beEqualTo(b1)
     }
