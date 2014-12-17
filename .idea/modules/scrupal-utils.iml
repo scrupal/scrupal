@@ -35,6 +35,6 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-common_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.11.4" level="application" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
   </component>
 </module>

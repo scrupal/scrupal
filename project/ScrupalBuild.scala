@@ -16,6 +16,8 @@
  **********************************************************************************************************************/
 
 import com.typesafe.sbt.web.SbtWeb
+import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import play.twirl.sbt.SbtTwirl
 import sbt._
 import sbt.Keys._
@@ -85,12 +87,19 @@ object ScrupalBuild extends Build
   lazy val opa = Project(base_name + "-opa", file("./scrupal-opa"))
     .enablePlugins(SbtTwirl)
     .enablePlugins(SbtWeb)
+    .enablePlugins(ScalaJSPlugin)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(twirlSettings_opa:_*)
     .settings(sbt_web_settings:_*)
     .settings(opa_pipeline_settings:_*)
+    .settings(less_settings:_*)
+    .settings(
+      requiresDOM := true
+    )
     .settings(libraryDependencies ++= opa_dependencies)
+    .settings(libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.7.1-SNAPSHOT")
+    .settings(libraryDependencies += "com.greencatsoft" %%% "scalajs-angular" % "0.3-SNAPSHOT")
     .dependsOn(utils_deps, db_deps, api_deps, core_deps, http_deps)
   val opa_deps = opa % "compile->compile;test->test"
 

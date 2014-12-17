@@ -15,56 +15,51 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.opa.views
 
 import org.joda.time.DateTime
-import play.twirl.api.Html
+import reactivemongo.bson.BSONObjectID
 import scrupal.api._
-import scrupal.core.{AdminApp, MarkedDocNode, CoreModule, EchoEntity}
-import scrupal.opa.views.OnePageApp
-import shapeless.{::, HList, HNil}
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
+import scrupal.opa.OPAPage
+import shapeless.HList
+import spray.http.{ContentTypes, MediaTypes}
+import spray.routing.PathMatchers.RestPath
 
-case class WelcomeSite() extends Site('WelcomeToScrupal) {
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+import scala.concurrent.{ExecutionContext, Future}
 
-  object DocPathToDocs extends PathToNodeActionFunction(PathMatcher("doc")/Segments, {
-    (list: ::[List[String],HNil], rest, ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
-  }) {}
+case class OnePageApp(
+  override val id : Identifier,
+  name: String,
+  description: String,
+  modified : Option[DateTime] = None,
+  created : Option[DateTime] = None
+) extends Application(id) {
+  final val kind = 'OnePageApp
 
+  val opaPage = new OPAPage(name, description, "" )
+
+  case class OPANode(
+    description: String,
+    modified: Option[DateTime] = Some(DateTime.now),
+    created: Option[DateTime] = Some(DateTime.now),
+    _id: BSONObjectID = BSONObjectID.generate,
+    final val kind : Symbol = 'OPANode
+  ) extends Node {
+    final val mediaType = MediaTypes.`text/html`
+    def apply(context: Context) : Future[Result[_]] = {
+      context.withExecutionContext { implicit ec: ExecutionContext ⇒
+        Future {
+          val page = opaPage.render(Map("module" → "scrupal"))(context)
+          OctetsResult(page.getBytes(utf8), MediaTypes.`text/html`, Successful)
+        }
+      }
+    }
+  }
+
+  val theOnePage: Node = OPANode(description, Some(DateTime.now()), Some(DateTime.now()))
 
   override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    PathToNodeAction(RestPath, siteRoot)
+    PathToNodeAction(RestPath, theOnePage)
   )
 
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  AdminApp.enable(this)
-  CoreModule.enable(EchoEntity)
-  CoreModule.enable(AdminApp)
-
-  val opa = OnePageApp('opa, "OnePageApp", "One Page App")
-  CoreModule.enable(opa)
-  opa.enable(this)
-}
-
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
 }

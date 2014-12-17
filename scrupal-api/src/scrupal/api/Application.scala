@@ -30,8 +30,8 @@ import shapeless.HList
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
  * Created by reid on 11/6/14.
  */
-abstract class Application(id: Identifier) extends { val _id : Identifier = id }
-  with EnablementActionProvider[Application]
+abstract class Application(sym: Identifier) extends { val id: Symbol = sym; val _id : Identifier = sym }
+  with EnablementPathMatcherToActionProvider[Application]
   with VariantStorable[Identifier] with Registrable[Application] with Nameable with Describable with Modifiable {
 
   def registry: Registry[Application] = Application
@@ -51,11 +51,11 @@ abstract class Application(id: Identifier) extends { val _id : Identifier = id }
 
   def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
-  def pathsToActions  = Seq.empty[PathMatcherToAction[_ <: HList]]
+  override def pathsToActions  = Seq.empty[PathMatcherToAction[_ <: HList]]
 }
 
 case class BasicApplication(
-  id : Identifier,
+  override val id : Identifier,
   name: String,
   description: String,
   modified : Option[DateTime] = None,

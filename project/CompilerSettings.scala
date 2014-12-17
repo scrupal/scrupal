@@ -46,5 +46,4 @@ trait CompilerSettings {
       "-target:jvm-1.7"
     )
   )
-
 }

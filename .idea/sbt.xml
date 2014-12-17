@@ -29,6 +29,6 @@
         <option name="resolveSbtClassifiers" value="true" />
       </SbtProjectSettings>
     </option>
-    <option name="sbtVersion" value="0.13.6" />
+    <option name="sbtVersion" value="0.13.7" />
   </component>
 </project>

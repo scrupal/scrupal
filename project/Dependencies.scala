@@ -55,6 +55,7 @@ trait Dependencies
 
   // Twirl template compiler and api
   val twirl_api		            = "com.typesafe.play"   %% "twirl-api"		          % "1.0.3"
+  val scalatags               = "com.scalatags"       %% "scalatags"              % "0.4.3-M1"
 
   // Spray Stuff
   val akkaV = "2.3.6"
@@ -81,7 +82,7 @@ trait Dependencies
   // WebJars based UI components
   val requirejs               = "org.webjars"         % "requirejs"               % "2.1.15"
   val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1-2"
-  val angularjs               = "org.webjars"         % "angularjs"               % "1.3.0"
+  val angularjs               = "org.webjars"         % "angularjs"               % "1.3.6"
   val angular_drag_drop       = "org.webjars"         % "angular-dragdrop"        % "1.0.3"
   val angular_multi_select    = "org.webjars"         % "angular-multi-select"    % "2.0.1"
   val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-3"
@@ -127,7 +128,6 @@ trait Dependencies
   */
 
   object Test {
-
     val spray_testkit        = "io.spray"            %% "spray-testkit"         % sprayV       % "test"
     val akka_testkit         = "com.typesafe.akka"   %% "akka-testkit"          % akkaV        % "test"
     val logback_classic      = "ch.qos.logback"      %  "logback-classic"       % "1.1.2"      % "test"
@@ -168,8 +168,9 @@ trait Dependencies
   ) ++ common_dependencies
 
   val opa_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
-    // requirejs, requirejs_domready
-    // angularjs, angular_drag_drop, angular_multi_select,
+    spray_routing, scalatags, requirejs, requirejs_domready,
+    angularjs
+    // angular_drag_drop, angular_multi_select,
     // angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
   ) ++ common_dependencies
 

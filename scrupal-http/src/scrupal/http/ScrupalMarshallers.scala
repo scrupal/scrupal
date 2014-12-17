@@ -64,15 +64,13 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
   implicit val string_marshaller: ToResponseMarshaller[StringResult] =
     ToResponseMarshaller.delegate[StringResult, String](text_ct) { h ⇒ h.payload }
 
-  implicit val octets_marshaller: ToResponseMarshaller[OctetsResult] =
-    ToResponseMarshaller.delegate[OctetsResult, Array[Byte]](MediaTypes.`application/octet-stream`) { o ⇒ o.payload }
+  implicit def octets_marshaller(ct: ContentType)(
+    implicit arf: ActorRefFactory, ec: ExecutionContext, timeout: Timeout): ToResponseMarshaller[OctetsResult] =
+    ToResponseMarshaller.delegate[OctetsResult, EnumeratorResult](ct) { or: OctetsResult ⇒ or() } (enumerator_marshaller(arf, ec, timeout))
 
   implicit def stream_marshaller(ct: ContentType)(
     implicit arf: ActorRefFactory, ec: ExecutionContext, timeout: Timeout): ToResponseMarshaller[StreamResult] =
-    ToResponseMarshaller.delegate[StreamResult, EnumeratorResult](ct) { s: StreamResult ⇒
-      val e = Enumerator.fromStream(s.payload)
-      EnumeratorResult(e, s.contentType, s.disposition)
-    }(enumerator_marshaller(arf, ec, timeout))
+    ToResponseMarshaller.delegate[StreamResult, EnumeratorResult](ct) { s: StreamResult ⇒ s() } (enumerator_marshaller(arf, ec, timeout))
 
   implicit def futureMarshaller[T](implicit m: ToResponseMarshaller[T], ec: ExecutionContext):
   ToResponseMarshaller[Future[T]] =
@@ -192,7 +190,9 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
           case t: TxtResult ⇒ txt_marshaller(t, trmc)
           case e: ErrorResult ⇒ error_marshaller(e, trmc)
           case x: ExceptionResult ⇒ exception_marshaller(x, trmc)
-          case o: OctetsResult ⇒ octets_marshaller(o, trmc)
+          case o: OctetsResult ⇒
+            val m = octets_marshaller(o.contentType)
+            m(o, trmc)
           case s: StreamResult ⇒
             val m = stream_marshaller(s.contentType)
             m(s, trmc)

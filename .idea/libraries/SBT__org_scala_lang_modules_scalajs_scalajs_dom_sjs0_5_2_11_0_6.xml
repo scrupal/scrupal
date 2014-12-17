@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="SBT: org.scala-lang.modules.scalajs:scalajs-dom_sjs0.5_2.11:0.6">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang.modules.scalajs/scalajs-dom_sjs0.5_2.11/jars/scalajs-dom_sjs0.5_2.11-0.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

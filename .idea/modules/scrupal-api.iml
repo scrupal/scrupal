@@ -13,8 +13,10 @@
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/target/scala-2.11/resource_managed/main" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/target/scala-2.11/resource_managed/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../scrupal-api/test/resources" type="java-test-resource" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/license-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/resolution-cache" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/streams" />
+      <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/test-reports" />
       <excludeFolder url="file://$MODULE_DIR$/../../scrupal-api/target/web" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -67,6 +69,6 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.11.4" level="application" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
   </component>
 </module>

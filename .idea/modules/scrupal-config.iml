@@ -90,6 +90,6 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.11.4" level="application" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
   </component>
 </module>

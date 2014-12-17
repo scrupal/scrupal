@@ -15,56 +15,46 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.opa
 
-import org.joda.time.DateTime
-import play.twirl.api.Html
-import scrupal.api._
-import scrupal.core.{AdminApp, MarkedDocNode, CoreModule, EchoEntity}
-import scrupal.opa.views.OnePageApp
-import shapeless.{::, HList, HNil}
-import spray.routing.PathMatcher
-import spray.routing.PathMatchers._
+import scrupal.api.{Context, PathOf}
 
-case class WelcomeSite() extends Site('WelcomeToScrupal) {
-  val name: String = "Welcome To Scrupal"
-  val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified: Option[DateTime] = Some(DateTime.now)
-  val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
-  override val themeName = "cyborg"
-  def host: String = ".*"
-  final val key = ""
-  val siteRoot: Node =
-    HtmlNode (
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html],
-      modified=Some(DateTime.now),
-      created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+import scalatags.Text.all._
+import scalatags.Text.tags2
 
-  object DocPathToDocs extends PathToNodeActionFunction(PathMatcher("doc")/Segments, {
-    (list: ::[List[String],HNil], rest, ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
-  }) {}
+class OPAPage(val head_title: String, val head_description: String, val head_suffix: String) {
 
+  val ng_controller : Attr = "ng-controller".attr
+  val ng_show : Attr = "ng-show".attr
+  val data_main : Attr = "data-main".attr
+  val media: Attr = "media".attr
 
-  override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
-    DocPathToDocs,
-    PathToNodeAction(RestPath, siteRoot)
-  )
+  def render(args: Map[String,String])(implicit context: Context) = {
+    val module = args.getOrElse("module", "scrupal")
 
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  AdminApp.enable(this)
-  CoreModule.enable(EchoEntity)
-  CoreModule.enable(AdminApp)
-
-  val opa = OnePageApp('opa, "OnePageApp", "One Page App")
-  CoreModule.enable(opa)
-  opa.enable(this)
-}
-
-object WelcomeSite {
-  lazy val WelcomePageTemplate =
-    TwirlHtmlTemplate('WelcomePage, "The Welcome Page", scrupal.views.html.WelcomePage)
+    "<!DOCTYPE html>\n" + html(
+      head(
+        tags2.title(head_title),
+        meta(charset := "UTF-8"),
+        meta(name := "viewport", content := "width=device-width, initial-scale=1.0"),
+        meta(name := "description", content := head_description),
+        link(rel := "shortcut icon", `type` := "image/x-icon", href := PathOf.favicon()),
+        link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
+        link(rel := "stylesheet", href := PathOf.lib("font-awesome", "css/font-awesome.css"), media := "screen"),
+        link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen"),
+        script(`type` := "text/javascript", src := PathOf.lib("jquery", "jquery.min.js")),
+        script(`type` := "text/javascript", src := PathOf.lib("bootstrap", "js/bootstrap.min.js")),
+        head_suffix
+      ),
+      body(ng_controller := "scrupal", ng_show := "page_is_ready",
+        div(`class`:="container",
+          div(id := module)
+        ),
+        script(lang := "javascript", "var scrupal_module_to_load='" + module + "';"),
+        script(data_main := "require-data-main.js", `type` := "text/javascript",
+          src := PathOf.lib("requirejs", "require.js")),
+        script(`type` := "text/javascript", src := PathOf.lib("angularjs", "angular.js"))
+      )
+    )
+  }
 }
