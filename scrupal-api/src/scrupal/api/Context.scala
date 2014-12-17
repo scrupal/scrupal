@@ -96,7 +96,7 @@ class SprayContext(val scrupal: Scrupal, rqst: RequestContext) extends Context {
 class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) extends SprayContext(scrupal, request) {
   require(theSite != null)
   override val site : Option[Site] = Some(theSite)
-  override val siteName : String = theSite.label
+  override val siteName : String = theSite.name
   override val description : String = theSite.description
   override val themeProvider : String = theSite.themeProvider
   override val themeName: String = theSite.themeName
