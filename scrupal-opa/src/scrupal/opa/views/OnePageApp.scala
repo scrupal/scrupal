@@ -20,7 +20,7 @@ package scrupal.opa.views
 import org.joda.time.DateTime
 import reactivemongo.bson.BSONObjectID
 import scrupal.api._
-import scrupal.opa.OPAPage
+import scrupal.api.html.OPAPage
 import shapeless.HList
 import spray.http.{ContentTypes, MediaTypes}
 import spray.routing.PathMatchers.RestPath
@@ -36,7 +36,7 @@ case class OnePageApp(
 ) extends Application(id) {
   final val kind = 'OnePageApp
 
-  val opaPage = new OPAPage(name, description, "" )
+  val opaPage = new OPAPage(name, description, "scrupal" )
 
   case class OPANode(
     description: String,
@@ -49,7 +49,7 @@ case class OnePageApp(
     def apply(context: Context) : Future[Result[_]] = {
       context.withExecutionContext { implicit ec: ExecutionContext ⇒
         Future {
-          val page = opaPage.render(Map("module" → "scrupal"))(context)
+          val page = opaPage(context)
           OctetsResult(page.getBytes(utf8), MediaTypes.`text/html`, Successful)
         }
       }

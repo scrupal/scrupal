@@ -50,5 +50,8 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6" level="project" />
     <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4" level="project" />
+    <orderEntry type="library" name="SBT: com.scalatags:scalatags_2.11:0.4.3-M1" level="project" />
   </component>
 </module>

@@ -17,7 +17,8 @@
 
 package scrupal.utils
 
-import play.twirl.api.Html
+import scalatags.Text.TypedTag
+import scalatags.Text.all._
 
 /**
  * Enumeration of icons available in Scrupal.
@@ -80,5 +81,5 @@ object Icons extends Enumeration
     "icon-" + kind.toString.replace('_','-')
   }
 
-  def html(kind: Kind) : Html = Html("<i class=\"" + name(kind) + "\"></i>")
+  def html(kind: Kind) : TypedTag[String] = i(cls:=name(kind))
 }

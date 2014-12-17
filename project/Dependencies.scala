@@ -146,7 +146,7 @@ trait Dependencies
   )
 
   val utils_dependencies : Seq[ModuleID] = Seq(
-    pbkdf2, bcrypt, scrypt, twirl_api, joda_time, joda_convert, config
+    scalatags, pbkdf2, bcrypt, scrypt, twirl_api, joda_time, joda_convert, config
   ) ++ common_dependencies
 
   val db_dependencies : Seq[ModuleID] = Seq(
@@ -154,7 +154,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(
-    spray_http, spray_routing, marked, fontawesome,
+    scalatags, spray_http, spray_routing, marked, fontawesome,
     Test.commons_io
   ) ++ common_dependencies
 

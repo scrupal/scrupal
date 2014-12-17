@@ -15,41 +15,11 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.http.controllers
+package scrupal.api.html
 
-class MiscController {
+import scrupal.api.Context
 
-  // TODO: Convert the implied functionality from old Play routes
-/*
-# Home page for Scrupal which provides setup instructions, etc.
-GET            /                                      scrupal.controllers.Home.index
+trait Layout extends TagFragment {
+  def compose(context: Context)
 
-# One-Page-Apps are the primary way to access things
-GET            /app/:name                             scrupal.controllers.Home.onePageApp(name)
-
-# Configuration main page for first-time or any-time configuration wizard
-GET            /configure                             scrupal.controllers.ConfigWizard.configure
-POST           /configure                             scrupal.controllers.ConfigWizard.configAction
-GET            /reconfigure                           scrupal.controllers.ConfigWizard.reconfigure
-
-# Special handling for AngularJS modules that have partial HTML files that need to be served.
-GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
-
-
-# Scrupal UI Applications routing
-GET            /admin                                 scrupal.controllers.Home.admin
-GET            /dump                                  scrupal.controllers.Home.dump
-
-
-
-
-# Routes that provide the Scrupal Documentation
-GET            /doc$path<.*>                          scrupal.controllers.Home.docPage(path)
-GET            /scaladoc$path<.*>                     scrupal.controllers.Home.scalaDoc(path)
-
-
-
-
-
- */
 }
