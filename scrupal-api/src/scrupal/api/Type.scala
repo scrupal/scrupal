@@ -17,6 +17,7 @@
 package scrupal.api
 
 import java.util.Date
+import java.util.regex.Pattern
 
 import reactivemongo.bson._
 import scrupal.utils.Patterns._
@@ -104,7 +105,6 @@ case class Not_A_Type() extends Type {
   override val trivial = true
   val description = "Not A Type"
   val module = 'NotAModule
-  def asT = this
   def apply(value: BSONValue) = Some(Seq("NotAType is not valid"))
 }
 
@@ -113,7 +113,6 @@ case class UnfoundType(id: Symbol) extends Type {
   override val trivial = true
   val description = "A type that was not loaded in memory"
   val module = 'NotAModule
-  def asT = this
   def apply(value: BSONValue) =
     Some(Seq(
       s"Unfound type '${id.name}' cannot be used for validation. The module defining the type is not loaded."))
@@ -187,7 +186,6 @@ case class AnyType(
   id : Identifier,
   description: String
   ) extends Type {
-  def asT = this
   def apply(value: BSONValue) : ValidationResult = None
   override def kind = 'Any
   override def trivial = true
@@ -198,8 +196,6 @@ case class BooleanType(
   description: String
   ) extends Type {
   override type ScalaValueType = Boolean
-
-  def asT = this
   override def kind = 'Boolean
   def verity = List("true", "on", "yes", "confirmed")
   def falseness = List("false", "off", "no", "denied")
@@ -220,7 +216,7 @@ case class BooleanType(
 /** A String type constrains a string by defining its content with a regular expression and a maximum length.
   *
   * @param id THe name of the string type
-  * @param description A brief expression of the string type
+  * @param description A brief description of the string type
   * @param regex The regular expression that specifies legal values for the string type
   * @param maxLen The maximum length of this string type
   */
@@ -232,14 +228,34 @@ case class StringType (
   ) extends Type {
   override type ScalaValueType = String
   require(maxLen >= 0)
-  def asT = this
   def apply(value: BSONValue) = single(value) {
     case BSONString(bs) if bs.length > maxLen => Some(s"String of length ${bs.length} exceeds maximum of $maxLen")
     case BSONString(bs) if !regex.pattern.matcher(bs).matches() => Some(s"String '${bs}' does not match pattern '${regex.pattern.pattern()}")
-    case BSONString(bs) => None
+    case BSONString(bs) ⇒ None
     case x: BSONValue => wrongClass("BSONString", x)
   }
   override def kind = 'String
+}
+
+/** A type for a regular expression
+  *
+  * @param id The name of the Regex type
+  * @param description A brief description of the regex type
+  */
+case class RegexType (
+  id : Identifier,
+  description: String
+) extends Type {
+  override type ScalaValueType = Regex
+  def apply(value: BSONValue) = single(value) {
+    case BSONString(bs) => Try {
+      Pattern.compile(bs)
+    } match {
+      case Success(x) ⇒ None
+      case Failure(x) ⇒ Some(s"Error in pattern: ${x.getClass.getName}: ${x.getMessage}" )
+    }
+    case x: BSONValue ⇒ wrongClass("BSONString", x)
+  }
 }
 
 /** A Range type constrains Long Integers between a minimum and maximum value
@@ -257,7 +273,6 @@ case class RangeType (
   ) extends Type {
   override type ScalaValueType = Long
   require(min <= max)
-  def asT = this
   def apply(value: BSONValue) = single(value) {
     case BSONLong(l) if l < min => Some(s"Value $l is out of range, below minimum of $min")
     case BSONLong(l) if l > max => Some(s"Value $l is out of range, above maximum of $max")
@@ -285,7 +300,6 @@ case class RealType (
   ) extends Type {
   override type ScalaValueType = Double
   require(min <= max)
-  def asT = this
   def apply(value: BSONValue) =  single(value) {
     case BSONDouble(d) if d < min => Some(s"Value $d is out of range, below minimum of $min")
     case BSONDouble(d) if d > max => Some(s"Value $d is out of range, above maximum of $max")
@@ -316,7 +330,6 @@ case class TimestampType (
   ) extends Type {
   override type ScalaValueType = Duration
   assert(min.getTime <= max.getTime)
-  def asT = this
   def apply(value: BSONValue) = single(value) {
     case BSONLong(l) if l < min.getTime => Some(s"Timestamp $l is out of range, below minimum of $min")
     case BSONLong(l) if l > max.getTime => Some(s"Timestamp $l is out of range, above maximum of $max")
@@ -342,7 +355,6 @@ case class BLOBType  (
   override type ScalaValueType = Array[Byte]
   assert(maxLen >= 0)
   assert(mime.contains("/"))
-  def asT = this
   def apply(value: BSONValue) = single(value) {
     case b: BSONBinary if b.value.size > maxLen => Some(s"BLOB of length ${b.value.size} exceeds maximum length of ${maxLen}")
     case b: BSONBinary => None
@@ -380,7 +392,6 @@ case class EnumType  (
   ) extends Type {
   override type ScalaValueType = Int
   require(enumerators.nonEmpty)
-  def asT = this
   def apply(value: BSONValue) = EnumValidator(enumerators,label)(value)
   override def kind = 'Enum
 
@@ -395,12 +406,25 @@ case class MultiEnumType(
   ) extends Type {
   override type ScalaValueType = Seq[Int]
   require(enumerators.nonEmpty)
-  def asT = this
   def apply(value: BSONValue) = {
     value match {
       case a: BSONArray => validate(a.values,  EnumValidator(enumerators, label))
       case x: BSONValue => single(value) { _ => wrongClass("BSONArray", x) }
     }
+  }
+}
+
+case class SelectionType(
+  id: Identifier,
+  description: String,
+  choices: Seq[String]
+) extends Type {
+  override type ScalaValueType = String
+  require(choices.nonEmpty)
+  def apply(value: BSONValue) = single(value) {
+    case BSONString(s) if !choices.contains(s) ⇒ Some(s"Invalid choice")
+    case BSONString(s) ⇒ None
+    case x: BSONValue ⇒ wrongClass("BSONString", x)
   }
 }
 
@@ -416,7 +440,6 @@ case class ListType  (
   elemType : Type
   ) extends IndexableType {
   override type ScalaValueType = Seq[elemType.ScalaValueType]
-  def asT = this
   override def kind = 'List
   def apply(value: BSONValue) : ValidationResult = {
     value match {
@@ -438,7 +461,6 @@ case class SetType  (
   elemType : Type
   ) extends IndexableType {
   override type ScalaValueType = Seq[elemType.ScalaValueType]
-  def asT = this
   override def kind = 'Set
   def apply(value: BSONValue) : ValidationResult = {
     value match {
@@ -468,9 +490,8 @@ case class MapType  (
   override val id : Identifier,
   description : String,
   elemType : Type
-  ) extends DocumentType {
+) extends DocumentType {
   override type ScalaValueType = Map[Identifier, elemType.ScalaValueType]
-  def asT = this
   override def kind = 'Map
   def validatorFor(id: String) : Option[Type] = Some(elemType)
   def fieldNames: Seq[String] = Seq.empty[String]
@@ -504,9 +525,8 @@ case class BundleType (
   id : Identifier,
   description : String,
   fields : Map[String, Type]
-  ) extends StructuredType {
+) extends StructuredType {
   override type ScalaValueType = Map[String,Any]
-  def asT = this
   override def kind = 'Bundle
 }
 
@@ -530,10 +550,9 @@ case class NodeType (
   description : String,
   fields : Map[String, Type],
   mediaType : MediaType = MediaTypes.`text/html`
-  ) extends StructuredType
+) extends StructuredType
 {
   override type ScalaValueType = Map[String,Any]
-  def asT : NodeType = this
   override def kind = 'Node
 }
 
@@ -564,10 +583,15 @@ object Password_t extends
 StringType('Password, "A type for human written passwords", anchored(Password), 64)
 
 object Description_t
-  extends StringType('Description, "Scrupal Description", anchored(Markdown), 1024)
+  extends StringType('Description, "Scrupal Description", anchored(".+".r), 1024)
 
 object Markdown_t
   extends StringType('Markdown, "Markdown document type", anchored(Markdown))
+
+object Regex_t
+  extends RegexType('Regex, "Regular expression type")
+
+object Theme_t extends SelectionType('Theme, "Choice of themes", DataCache.themes)
 
 /** Type Registry and companion */
 object Type extends Registry[Type] {
