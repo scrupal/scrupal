@@ -27,13 +27,12 @@ import spray.routing.PathMatchers.PathEnd
 import scala.concurrent.{ExecutionContext, Future}
 
 object AdminApp extends Application('admin) {
-  def id: Symbol = 'admin
+  val kind: Symbol = 'Admin
   def description: String = "The Scrupal Administrative Application"
   def name: String = "AdminApp"
   val timestamp = Some(new DateTime(2014,12,5,12,20,6))
   def created: Option[DateTime] = timestamp
   def modified: Option[DateTime] = timestamp
-  val kind: Symbol = 'Admin
 
   object StatusBarNode extends AbstractHtmlNode {
     def description: String = "Lists the Sites"

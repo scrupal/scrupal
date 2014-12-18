@@ -17,12 +17,41 @@
 
 package scrupal.api.html
 
+import java.io.{PrintWriter, StringWriter}
+
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.joda.time.DateTime
 import reactivemongo.bson._
 import scrupal.api.Context
 
 import scalatags.Text.all._
 
+case class danger(message: TagsFragment) extends TagFragment {
+  override def contents(context: Context) = {
+    div(cls:="bg-danger", message.contents(context))
+  }
+}
+
+case class warning(message: TagsFragment) extends TagFragment {
+  override def contents(context: Context) = {
+    div(cls:="bg-warning", message.contents(context))
+  }
+}
+
+case class success(message: TagsFragment) extends TagFragment {
+  override def contents(context: Context) = {
+    div(cls:="bg-success", message.contents(context))
+  }
+}
+
+case class exception(activity: String, error: Throwable) extends TagFragment {
+  override def contents(context: Context) = {
+    danger(Tags(Seq(
+      p(s"While attempting to ${activity} an exception occurred:"),
+      display_exception(error).contents(context)
+    )))
+  }.contents(context)
+}
 
 object display_context_table extends TagFragment
 {
@@ -62,33 +91,34 @@ object display_alerts extends TagsFragment {
   }
 }
 
-case class display_exception_result(xcptn: scrupal.api.ExceptionResult) extends TagFragment {
-  import java.io.StringWriter
-  import java.io.PrintWriter
-  import org.apache.commons.lang3.exception.ExceptionUtils
+case class display_exception(xcptn: Throwable) extends TagFragment {
   def contents(context: Context) = {
-    div(cls:="bg-danger",
-      dl(cls:="dl-horizontal",
-        dt("Exception:"),dd(xcptn.payload.getClass.getCanonicalName),
-        dt("Message:"),dd(xcptn.payload.getLocalizedMessage),
-        dt("Root Cause:"),dd(
-          pre(style:="width:95%", code(style:="font-size:8pt",{
-            var sw: StringWriter = null
-            var pw: PrintWriter = null
-            try {
-              sw = new StringWriter()
-              pw = new PrintWriter(sw)
-              ExceptionUtils.printRootCauseStackTrace(xcptn.payload, pw)
-              sw.toString
-            } finally {
-              if(pw != null)  pw.close()
-              if(sw != null)  sw.close()
-            }
-          })),
-          br()
-        )
+    dl(cls:="dl-horizontal",
+      dt("Exception:"),dd(xcptn.getClass.getName),
+      dt("Message:"),dd(xcptn.getLocalizedMessage),
+      dt("Root Cause:"),dd(
+        pre(style:="width:95%", code(style:="font-size:8pt",{
+          var sw: StringWriter = null
+          var pw: PrintWriter = null
+          try {
+            sw = new StringWriter()
+            pw = new PrintWriter(sw)
+            ExceptionUtils.printRootCauseStackTrace(xcptn, pw)
+            sw.toString
+          } finally {
+            if(pw != null)  pw.close()
+            if(sw != null)  sw.close()
+          }
+        })),
+        br()
       )
     )
+  }
+}
+
+case class display_exception_result(xcptn: scrupal.api.ExceptionResult) extends TagFragment {
+  def contents(context: Context) = {
+    div(cls:="bg-danger", display_exception(xcptn.payload).contents(context))
   }
 }
 

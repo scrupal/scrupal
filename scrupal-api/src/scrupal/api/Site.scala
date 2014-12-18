@@ -32,21 +32,19 @@ import scala.util.matching.Regex
   * Scrupal manages sites.
  * Created by reidspencer on 11/3/14.
  */
-abstract class Site(sym: Identifier) extends { val id: Symbol = sym ; val _id : Identifier = sym }
+abstract class Site(sym: Identifier) extends { val id: Identifier = sym ; val _id : Identifier = sym }
   with EnablementPathMatcherToActionProvider[Site] with VariantStorable[Identifier] with Registrable[Site]
-          with Nameable with Describable with Modifiable {
-
+          with Settingsable with Nameable with Describable with Modifiable {
   val kind = 'Site
+  def registry = Site
 
-  def requireHttps: Boolean = false
+  def requireHttps: Boolean = false // = getBoolean("requireHttps").get
 
-  def host: String
+  def host: String // = getString("host").get
 
   def themeProvider : String = "bootswatch"
 
-  def themeName : String = "default"
-
-  def registry = Site
+  def themeName : String = "default" // = getString("theme").get
 
   def applications = forEach[Application] { e ⇒
     e.isInstanceOf[Application] && isEnabled(e, this)
@@ -67,7 +65,7 @@ case class NodeSite (
   modified: Option[DateTime] = None,
   created: Option[DateTime] = None
 ) extends Site(id) {
-  final override val kind = 'NodeSite
+  final override val kind = NodeSite.kind
   final val key : String = makeKey(id.name)
 
   override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
@@ -85,7 +83,8 @@ object NodeSite {
     override def fromDoc(doc: BSONDocument): NodeSite = NodeSiteHandler.read(doc)
     override def toDoc(obj: Site): BSONDocument = NodeSiteHandler.write(obj.asInstanceOf[NodeSite])
   }
-  Site.variants.register('NodeSite, NodeSiteBRW)
+  val kind = 'NodeSite
+  Site.variants.register(kind, NodeSiteBRW)
 }
 
 object Site extends Registry[Site] {
@@ -95,6 +94,7 @@ object Site extends Registry[Site] {
 
   object variants extends VariantRegistry[Site]("Site")
 
+  def kinds: Seq[String] = {  variants.kinds }
 
 //  implicit val dtHandler = DateTimeBSONHandler
   private[this] val _byhost = new AbstractRegistry[String, Site] {

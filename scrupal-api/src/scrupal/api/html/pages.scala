@@ -20,7 +20,6 @@ package scrupal.api.html
 import scrupal.api.{Feature, Context, PathOf}
 
 import scalatags.Text.all._
-import scalatags.Text.tags2
 
 abstract class BasicPage(the_title: String, the_description: String) extends Page(the_title, the_description) {
   def headSuffix(context: Context): Seq[Modifier] = {
@@ -101,3 +100,36 @@ case class OPAPage(the_title: String, the_description: String, module: String)
   }
 }
 
+class ForbiddenPage(what: String, why: String)
+  extends BasicPage("Forbidden - " + what, "Forbidden Error Page")
+{
+  def bodyMain(context: Context) : Modifiers = Seq(
+    danger(Tags(Seq(
+      h1("Nuh Uh! I Can't Do That!"),
+      p(em("Drat!"), s"Because $why, you can't $what. That's just the way it is."),
+      p("You should try one of these options:"),
+      ul(li("Type in another URL, or"), li("Try to get lucky with ",
+        a(href:=context.suggestURL.toString,"this suggestion")))
+    ))).contents(context)
+  )
+}
+
+class NotFoundPage(what: String, causes: Seq[String] = Seq(), suggestions: Seq[String] = Seq())
+  extends BasicPage("Not Found - " + what, "Not Found Error Page")
+{
+  def bodyMain(context: Context) : Modifiers = Seq(
+    warning(Tags(Seq(
+      h1("There's A Hole In THe Fabrice Of The InterWebz!"),
+      p(em("Oops!"), "We couldn't find ", what, ". That might be because:"),
+      ul({ for (c ← causes) yield { li(c) } },
+        li("you used an old bookmark for which the resource is no longer available"),
+        li("you mis-typed the web address.")
+      ),
+      p("You can try one of these options:"),
+      ul( { for (s ← suggestions) yield { li(s) } },
+        li("type in another URL, or "),
+        li("Try to get lucky with ", a(href:=context.suggestURL.toString,"this suggestion"))
+      )
+    ))).contents(context)
+  )
+}

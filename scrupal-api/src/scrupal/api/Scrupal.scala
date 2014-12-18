@@ -190,6 +190,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
     */
   protected def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
     withSchema { (dbc, schema) =>
+      DataCache.update(this, schema)
       schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
           for (s <- schema.sites.fetchAllSync(5.seconds)) yield {

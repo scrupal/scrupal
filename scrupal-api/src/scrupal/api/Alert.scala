@@ -27,6 +27,7 @@ import scrupal.db.{IdentifierDAO, Storable}
 import scrupal.utils.{AlertKind, Icons}
 
 import scala.xml.{Elem, NodeSeq}
+import scalatags.Text.TypedTag
 
 /**
  * Representation of an alert message that is shown at the top of every page. Alerts are queued and each user
@@ -71,7 +72,7 @@ case class Alert (
           AlertKind.toCss(alertKind), AlertKind.toExpiry(alertKind), None, None)
   }
 
-  def iconHtml : Html = Icons.html(iconKind)
+  def iconHtml : TypedTag[String] = Icons.html(iconKind)
 
   implicit def Elem2Html(e : Elem) : Html = Html(e.buildString(stripComments = true))
   implicit def Node2Html(n : scala.xml.Node) : Html = Html(n.buildString(stripComments = true))

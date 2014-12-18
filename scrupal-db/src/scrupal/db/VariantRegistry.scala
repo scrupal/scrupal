@@ -35,6 +35,8 @@ case class VariantRegistry[B <: VariantStorable[_]](name: String)
   with VariantBSONDocumentReader[B]
   with VariantBSONDocumentWriter[B] {
 
+  def kinds: Seq[String] = { _keys.map { k ⇒ k.name} }.toSeq
+
   def register[S <: B](kind: Symbol, handler: VariantReaderWriter[B, S]) = {
     super._register(kind, handler)
   }

@@ -71,7 +71,7 @@ trait Describable {
 
 /** Something that has settings that can be specified and changed */
 trait Settingsable extends SettingsInterface {
-  def settingsType : BundleType = BundleType.Empty
+  def settingsType : StructuredType = BundleType.Empty
   def settingsDefault : BSONDocument = BSONDocument()
   def settings : Settings = Settings(settingsType, settingsDefault, settingsDefault)
   def validate(doc: BSONDocument) : ValidationResult = settings.apply(doc)

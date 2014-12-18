@@ -27,8 +27,8 @@
         </option>
         <option name="resolveClassifiers" value="true" />
         <option name="resolveSbtClassifiers" value="true" />
+        <option name="sbtVersion" value="0.13.7" />
       </SbtProjectSettings>
     </option>
-    <option name="sbtVersion" value="0.13.7" />
   </component>
 </project>

@@ -47,6 +47,14 @@ abstract class TagsFragment extends Fragment {
   def apply(context: Context) : String = contents(context).toString()
 }
 
+case class Tag(tag: TypedTag[String]) extends TagFragment {
+  def contents(context: Context) : TagContent = tag
+}
+
+case class Tags(tags: Seq[TypedTag[String]]) extends TagsFragment {
+  def contents(context: Context) : TagsContent = tags
+}
+
 abstract class ModifiersFragment extends Fragment {
   def contents(context: Context) : Modifiers
   def apply(context: Context) : String = contents(context).toString()
