@@ -15,10 +15,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="scrupal-core" exported="" />
     <orderEntry type="module" module-name="scrupal-db" exported="" />
     <orderEntry type="module" module-name="scrupal-utils" exported="" />
-    <orderEntry type="module" module-name="scrupal-http" exported="" />
     <orderEntry type="library" scope="TEST" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: ch.qos.logback:logback-core:1.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: com.chuusai:shapeless_2.11:1.2.4:jar" level="project" />
@@ -93,5 +91,6 @@
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0:jar" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:marked:0.3.2-1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.3.2:jar" level="project" />
+    <orderEntry type="module" module-name="scrupal-core" exported="" />
   </component>
 </module>

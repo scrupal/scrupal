@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Scrupal" type="Application" factoryName="Application" singleton="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-    <option name="MAIN_CLASS_NAME" value="scrupal.Boot" />
+    <option name="MAIN_CLASS_NAME" value="scrupal.core.Boot" />
     <option name="VM_PARAMETERS" value="-Dconfig.file=conf/application.conf" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />

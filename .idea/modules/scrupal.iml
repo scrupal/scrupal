@@ -16,12 +16,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="scrupal-config" exported="" />
-    <orderEntry type="module" module-name="scrupal-core" exported="" />
     <orderEntry type="module" module-name="scrupal-db" exported="" />
-    <orderEntry type="module" module-name="scrupal-http" exported="" />
     <orderEntry type="module" module-name="scrupal-utils" exported="" />
     <orderEntry type="module" module-name="scrupal-opa" exported="" />
-    <orderEntry type="module" module-name="scrupal-api" exported="" />
+    <orderEntry type="module" module-name="scrupal-core" exported="" />
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.1:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-core:1.1.1:jar" level="project" />

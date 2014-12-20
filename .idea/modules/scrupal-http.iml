@@ -15,7 +15,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="scrupal-core" exported="" />
+    <orderEntry type="module" module-name="scrupal-js" exported="" />
     <orderEntry type="module" module-name="scrupal-db" exported="" />
     <orderEntry type="module" module-name="scrupal-utils" exported="" />
     <orderEntry type="module" module-name="scrupal-api" exported="" />

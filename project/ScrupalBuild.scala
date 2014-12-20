@@ -42,39 +42,22 @@ object ScrupalBuild extends Build
     .dependsOn(utils_deps)
   lazy val db_deps = db % "compile->compile;test->test"
 
-  lazy val api = Project(base_name + "-api", file("./scrupal-api"))
-    .enablePlugins(SbtWeb)
-    .settings(buildSettings:_*)
-    .settings(resolver_settings:_*)
-    .settings(sbt_web_settings:_*)
-    .settings(api_pipeline_settings:_*)
-    .settings(libraryDependencies ++= api_dependencies)
-    .dependsOn(utils_deps, db_deps)
-  lazy val api_deps = api % "compile->compile;test->test"
-
   lazy val core = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(sbt_web_settings:_*)
-    .settings(core_pipeline_settings:_*)
     .settings(less_settings:_*)
+    .settings(core_pipeline_settings:_*)
     .settings(libraryDependencies ++= core_dependencies)
-    .dependsOn(utils_deps, db_deps, api_deps)
+    .dependsOn(utils_deps, db_deps)
   lazy val core_deps = core % "compile->compile;test->test"
-
-  lazy val http = Project(base_name + "-http", file("./scrupal-http"))
-    .settings(buildSettings:_*)
-    .settings(resolver_settings:_*)
-    .settings(libraryDependencies ++= http_dependencies)
-    .dependsOn(utils_deps, db_deps, api_deps, core_deps)
-  lazy val http_deps = http % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(libraryDependencies ++= http_dependencies)
-    .dependsOn(utils_deps, db_deps, core_deps, http_deps)
+    .settings(libraryDependencies ++= core_dependencies)
+    .dependsOn(utils_deps, db_deps, core_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
 
   lazy val opa = Project(base_name + "-opa", file("./scrupal-opa"))
@@ -91,7 +74,6 @@ object ScrupalBuild extends Build
     .settings(libraryDependencies ++= opa_dependencies)
     .settings(libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.7.1-SNAPSHOT")
     .settings(libraryDependencies += "com.greencatsoft" %%% "scalajs-angular" % "0.3-SNAPSHOT")
-    .dependsOn(utils_deps, db_deps, api_deps, core_deps, http_deps)
   val opa_deps = opa % "compile->compile;test->test"
 
   lazy val root = Project(base_name, file("."))
@@ -104,8 +86,8 @@ object ScrupalBuild extends Build
       libraryDependencies ++= root_dependencies
     )
     .settings(UnidocPlugin.unidocSettings: _*)
-    .dependsOn(config_deps, opa_deps, http_deps, core_deps, api_deps, db_deps, utils_deps)
-    .aggregate(config_proj, opa, http, core, api, db, utils)
+    .dependsOn(config_deps, opa_deps, core_deps, db_deps, utils_deps)
+    .aggregate(config_proj, opa, core, db, utils)
 
   override def rootProject = Some(root)
 }

@@ -25,9 +25,7 @@
 		<dir name="/Users/reidspencer/Code/assembla/scrupal/target/scala-2.11/classes"></dir>
 		<dir name="/Users/reidspencer/Code/assembla/scrupal/scrupal-utils/target/scala-2.11/classes"></dir>
 		<dir name="/Users/reidspencer/Code/assembla/scrupal/scrupal-db/target/scala-2.11/classes"></dir>
-		<dir name="/Users/reidspencer/Code/assembla/scrupal/scrupal-api/target/scala-2.11/classes"></dir>
 		<dir name="/Users/reidspencer/Code/assembla/scrupal/scrupal-core/target/scala-2.11/classes"></dir>
-		<dir name="/Users/reidspencer/Code/assembla/scrupal/scrupal-http/target/scala-2.11/classes"></dir>
 		<dir name="/Users/reidspencer/Code/assembla/scrupal/scrupal-opa/target/scala-2.11/classes"></dir>
 	</classpath>
 

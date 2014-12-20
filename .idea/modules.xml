@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-api.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-api.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-api-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" />
@@ -12,8 +10,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-http.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-http.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-http-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-http-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-js-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-opa.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-opa.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-opa-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-opa-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" />

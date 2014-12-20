@@ -152,23 +152,14 @@ trait Dependencies
     reactivemongo, play_iteratees, play_json
   ) ++ common_dependencies
 
-  val api_dependencies : Seq[ModuleID] = Seq(
-    scalatags, spray_http, spray_routing, marked, fontawesome, commons_lang3,
-    Test.commons_io
-  ) ++ common_dependencies
-
   val core_dependencies : Seq[ModuleID] = Seq(
-    spray_http, spray_routing, scala_arm, marked, fontawesome
+    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
+    commons_lang3, scala_arm, livestream_scredis, akka_actor,
+    Test.spray_testkit, Test.akka_testkit, Test.commons_io
   ) ++ common_dependencies
 
-  val http_dependencies : Seq[ModuleID] = Seq(
-    spray_can, spray_routing, spray_httpx, spray_caching, livestream_scredis,
-    akka_actor, Test.spray_testkit, Test.akka_testkit
-  ) ++ common_dependencies
-
-  val opa_dependencies : Seq[ModuleID] = http_dependencies ++ Seq(
-    spray_routing, scalatags, requirejs, requirejs_domready,
-    angularjs
+  val opa_dependencies : Seq[ModuleID] = core_dependencies ++ Seq(
+    scalatags, requirejs, requirejs_domready, angularjs
     // angular_drag_drop, angular_multi_select,
     // angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
   ) ++ common_dependencies
