@@ -19,6 +19,7 @@ package scrupal.api
 
 import org.joda.time.DateTime
 import reactivemongo.bson.BSONDocument
+import scrupal.api.types.BundleType
 import scrupal.utils.{Configuration, OSSLicense, Patterns, Version}
 
 import scala.concurrent.duration.Duration

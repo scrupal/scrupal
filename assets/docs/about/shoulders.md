@@ -254,7 +254,7 @@ Copyright (c) 2013 DCIT, a.s. http://www.dcit.cz / Karel Miko
 <h3>Others - To Do</h3>
 <p>There are many other pieces of software we depend upon, which have not been broken out separately ... yet!</p>
 <pre style="font-size:8pt">
-addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.0.3")
+addSbtPlugin("com.scalatags" %% "scalatags" % "0.4.3-M1")
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.7.6")
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.1.1")
@@ -275,7 +275,6 @@ addSbtPlugin("org.scala-lang.modules.scalajs" % "scalajs-sbt-plugin" % "0.5.5")
 val play_iteratees          = "com.typesafe.play"   %% "play-iteratees"         % playV
 val play_json               = "com.typesafe.play"   %% "play-json"              % playV
 val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
-val twirl_api		        = "com.typesafe.play"   %% "twirl-api"		        % "1.0.3"
 val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.4"
 val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.5"
 val requirejs               = "org.webjars"         % "requirejs"               % "2.1.15"
@@ -288,6 +287,7 @@ val config                  =  "com.typesafe"       %  "config"                 
 val logback_classic         = "ch.qos.logback"      %  "logback-classic"        % "1.1.2"      % "test"
 val specs2                  = "org.specs2"          %% "specs2-core"            % "2.3.11"     % "test"
 val commons_io              = "commons-io"          %  "commons-io"             % "2.4"        % "test"
+val commons_lang3           = "org.apache.commons"  % "commons-lang3"           % "3.3.2"
 
 </pre>
 </div>

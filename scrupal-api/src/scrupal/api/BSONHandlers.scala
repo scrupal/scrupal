@@ -22,11 +22,12 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
-import play.twirl.api.{Html, Txt}
 import reactivemongo.bson._
+import scrupal.api.Html.Fragment.BSONHandlerForHtmlFragment
+import scrupal.api.Html.Template.BSONHandlerForHtmlTemplate
 import scrupal.api.Layout.BSONHandlerForLayout
-import scrupal.api.Template.BSONHandlerForTemplate
 import scrupal.api.Type.BSONHandlerForType
+import scrupal.api.types.BundleType
 
 import scrupal.utils._
 import spray.http.{MediaType, MediaTypes}
@@ -84,17 +85,6 @@ object BSONHandlers {
   implicit val StructuredTypeHandler : BSONHandler[BSONString,StructuredType] = new BSONHandlerForType[StructuredType]
   implicit val BundleTypeHandler: BSONHandler[BSONString,BundleType] = new BSONHandlerForType[BundleType]
 
-  implicit val TemplateHandler : BSONHandler[BSONString,Template[_]] = new BSONHandlerForTemplate[Template[_]]
-  implicit val TwirlTxtTemplateHandler : BSONHandler[BSONString,TwirlTxtTemplate] =
-    new BSONHandlerForTemplate[TwirlTxtTemplate]
-  implicit val TwirlHtmlTemplateHandler : BSONHandler[BSONString,TwirlHtmlTemplate] =
-    new BSONHandlerForTemplate[TwirlHtmlTemplate]
-
-  implicit val LayoutHandler : BSONHandler[BSONString,Layout] = new BSONHandlerForLayout[Layout]
-  implicit val TwirlTxtLayoutHandler : BSONHandler[BSONString,TwirlTxtLayout] = new
-      BSONHandlerForTemplate[TwirlTxtLayout]
-  implicit val TwirlHtmlLayoutHandler : BSONHandler[BSONString,TwirlHtmlLayout] = new
-      BSONHandlerForTemplate[TwirlHtmlLayout]
 
   implicit val EntityHandler : BSONHandler[BSONString,Entity] = new BSONHandler[BSONString,Entity] {
     override def write(m: Entity): BSONString = BSONString(m.id.name)
@@ -128,39 +118,23 @@ object BSONHandlers {
     override def read(bson: BSONBinary) : Array[Byte] = bson.value.readArray(bson.value.size)
   }
 
-  implicit val HtmlHandler : BSONHandler[BSONBinary,Html] = new BSONHandler[BSONBinary,Html] {
-    override def write(html: Html) : BSONBinary = BSONBinary(html.body.getBytes("UTF-8"), Subtype.GenericBinarySubtype)
-    override def read(bson: BSONBinary) : Html = Html(new String(bson.value.readArray(bson.value.size)))
-  }
+  implicit val HtmlFragmentHandler = new BSONHandlerForHtmlFragment[Html.Fragment]
+  implicit val HtmlTemplateHandler = new BSONHandlerForHtmlTemplate[Html.Template]
 
-  implicit val TxtHandler : BSONHandler[BSONString,Txt] = new BSONHandler[BSONString,Txt] {
-    override def write(txt: Txt) : BSONString = BSONString(txt.body)
-    override def read(bson: BSONString) : Txt = Txt(bson.value)
-  }
-
+  implicit val LayoutHandler : BSONHandler[BSONString,Layout] = new BSONHandlerForLayout[Layout]
 
   implicit val FileHandler : BSONHandler[BSONString,File] = new BSONHandler[BSONString,File] {
     override def write(f: File): BSONString = BSONString(f.getPath)
     override def read(bson: BSONString): File = new File(bson.value)
   }
 
-  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html]] =
-    new BSONHandler[BSONDocument,Map[String,Html]] {
-      override def write(elements: Map[String,Html]): BSONDocument = {
-        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlHandler.write(html) } )
+  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html.Fragment]] =
+    new BSONHandler[BSONDocument,Map[String,Html.Fragment]] {
+      override def write(elements: Map[String,Html.Fragment]): BSONDocument = {
+        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlFragmentHandler.write(html) } )
       }
-      override def read(doc: BSONDocument): Map[String,Html] = {
-        doc.elements.map { case(name, value) ⇒ name -> HtmlHandler.read(value.asInstanceOf[BSONBinary]) }
-      }.toMap
-    }
-
-  implicit val MapOfNamedTxt : BSONHandler[BSONDocument,Map[String,Txt]] =
-    new BSONHandler[BSONDocument,Map[String,Txt]] {
-      override def write(elements: Map[String,Txt]): BSONDocument = {
-        BSONDocument( elements.map { case (name,html) ⇒ name → TxtHandler.write(html) } )
-      }
-      override def read(doc: BSONDocument): Map[String,Txt] = {
-        doc.elements.map { case(name, value) ⇒ name -> TxtHandler.read(value.asInstanceOf[BSONString]) }
+      override def read(doc: BSONDocument): Map[String,Html.Fragment] = {
+        doc.elements.map { case(name, value) ⇒ name -> HtmlFragmentHandler.read(value.asInstanceOf[BSONString]) }
       }.toMap
     }
 

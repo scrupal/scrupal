@@ -18,6 +18,7 @@
 package scrupal.api
 
 import reactivemongo.bson._
+import scrupal.api.types._
 
 import scrupal.db.{BSONSettingsInterface, BSONSettings, BSONPathWalker}
 import scrupal.utils.PathWalker

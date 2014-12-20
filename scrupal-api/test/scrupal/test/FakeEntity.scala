@@ -17,7 +17,8 @@
 
 package scrupal.test
 
-import scrupal.api.{BundleType, Entity}
+import scrupal.api.Entity
+import scrupal.api.types.BundleType
 import scrupal.utils.OSSLicense
 
 /** Mockup of an Entity for testing */

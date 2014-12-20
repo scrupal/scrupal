@@ -1,9 +1,0 @@
-@(modules: Seq[scrupal.api.Module])(implicit ctxt: scrupal.api.Context)
-<div class="well">
-  <p>Modules Defined:</p>
-  <ul>
-    @for(mod ← modules) {
-      <li>@{mod.id.name} - @{mod.description} - @{mod.moreDetailsURL} </li>
-    }
-  </ul>
-</div>

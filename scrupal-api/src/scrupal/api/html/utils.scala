@@ -22,41 +22,37 @@ import java.io.{PrintWriter, StringWriter}
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.joda.time.DateTime
 import reactivemongo.bson._
-import scrupal.api.Context
+import scrupal.api.Html._
+import scrupal.api.{Feature, Context}
+import scalatags.Text.Modifier
 
 import scalatags.Text.all._
 
-case class danger(message: TagsFragment) extends TagFragment {
-  override def contents(context: Context) = {
-    div(cls:="bg-danger", message.contents(context))
-  }
+case class danger(message: Contents) extends SimpleContentsGenerator {
+  def apply() : Contents = { Seq(div(cls:="bg-danger", message)) }
 }
 
-case class warning(message: TagsFragment) extends TagFragment {
-  override def contents(context: Context) = {
-    div(cls:="bg-warning", message.contents(context))
-  }
+case class warning(message: Contents) extends SimpleContentsGenerator {
+  def apply() : Contents = { Seq(div(cls:="bg-warning", message)) }
 }
 
-case class success(message: TagsFragment) extends TagFragment {
-  override def contents(context: Context) = {
-    div(cls:="bg-success", message.contents(context))
-  }
+case class success(message: Contents) extends SimpleContentsGenerator {
+  def apply() : Contents = { Seq(div(cls:="bg-success", message)) }
 }
 
-case class exception(activity: String, error: Throwable) extends TagFragment {
-  override def contents(context: Context) = {
-    danger(Tags(Seq(
+case class exception(activity: String, error: Throwable) extends SimpleContentsGenerator {
+  def apply() : Contents = {
+    danger(Seq(
       p(s"While attempting to ${activity} an exception occurred:"),
-      display_exception(error).contents(context)
-    )))
-  }.contents(context)
+      display_exception(error)()
+    ))()
+  }
 }
 
-object display_context_table extends TagFragment
-{
-  override def contents(context: Context) = {
-    div(cls := "span10 row", style := "font-size: 0.75em",
+
+object display_context_table extends ContentsGenerator {
+  def apply(context: Context) = {
+    Seq(div(cls := "span10 row", style := "font-size: 0.75em",
       table(cls := "span10 table table-striped table-bordered table-condensed",
         caption(style := "font-size: 1.2em; font-weight: bold;", "Context Details"),
         thead(tr(th("Parameter"), th("Value"))),
@@ -76,12 +72,22 @@ object display_context_table extends TagFragment
           tr(th("Headers"), td(context.headers.toString()))
         )
       )
-    )
+    ))
   }
 }
 
-object display_alerts extends TagsFragment {
-  override def contents(context: Context) = {
+object debug_footer extends ContentsGenerator {
+  def apply(context: Context) = {
+    if (Feature.enabled('DebugFooter, context.scrupal)) {
+      display_context_table(context)
+    } else {
+      emptyContents
+    }
+  }
+}
+
+object display_alerts extends ContentsGenerator {
+  def apply(context: Context) : Contents = {
     for (alert ← context.alerts if alert.unexpired) yield {
       div(cls := "alert alert-dismissible @alert.cssClass",
         button(`type` := "button", cls := "close", data("dismiss") := "alert", aria.hidden := "true",
@@ -91,91 +97,89 @@ object display_alerts extends TagsFragment {
   }
 }
 
-case class display_exception(xcptn: Throwable) extends TagFragment {
-  def contents(context: Context) = {
-    dl(cls:="dl-horizontal",
-      dt("Exception:"),dd(xcptn.getClass.getName),
-      dt("Message:"),dd(xcptn.getLocalizedMessage),
-      dt("Root Cause:"),dd(
-        pre(style:="width:95%", code(style:="font-size:8pt",{
-          var sw: StringWriter = null
-          var pw: PrintWriter = null
-          try {
-            sw = new StringWriter()
-            pw = new PrintWriter(sw)
-            ExceptionUtils.printRootCauseStackTrace(xcptn, pw)
-            sw.toString
-          } finally {
-            if(pw != null)  pw.close()
-            if(sw != null)  sw.close()
-          }
-        })),
-        br()
+case class display_exception(xcptn: Throwable) extends SimpleContentsGenerator {
+  def apply() = {
+    Seq(
+      dl(cls:="dl-horizontal",
+        dt("Exception:"),dd(xcptn.getClass.getName),
+        dt("Message:"),dd(xcptn.getLocalizedMessage),
+        dt("Root Cause:"),dd(
+          pre(style:="width:95%", code(style:="font-size:8pt",{
+            var sw: StringWriter = null
+            var pw: PrintWriter = null
+            try {
+              sw = new StringWriter()
+              pw = new PrintWriter(sw)
+              ExceptionUtils.printRootCauseStackTrace(xcptn, pw)
+              sw.toString
+            } finally {
+              if(pw != null)  pw.close()
+              if(sw != null)  sw.close()
+            }
+          })),
+          br()
+        )
       )
     )
   }
 }
 
-case class display_exception_result(xcptn: scrupal.api.ExceptionResult) extends TagFragment {
-  def contents(context: Context) = {
-    div(cls:="bg-danger", display_exception(xcptn.payload).contents(context))
-  }
+case class display_exception_result(xcptn: scrupal.api.ExceptionResult) extends SimpleContentsGenerator {
+  def apply() = { Seq(div(cls:="bg-danger", display_exception(xcptn.payload)()))  }
 }
 
-case class bson_value(bv: BSONValue) extends TagFragment {
-  def contents(context: Context) : TagContent = {
-    span(
-      bv match {
-        case s: BSONString ⇒ span("\"" + s.value + "\"")
-        case i: BSONInteger ⇒ span(i.value.toString)
-        case l: BSONLong ⇒ span(l.value + "L")
-        case d: BSONDouble ⇒ span(d.value + "D")
-        case b: BSONBoolean ⇒ span(b.value.toString)
-        case x: BSONDateTime ⇒ span(new DateTime(x.value).toString)
-        case a: BSONArray ⇒ bson_array(a).contents(context)
-        case d: BSONDocument ⇒ bson_document(d).contents(context)
-        case b: BSONBinary ⇒ span(s"Binary(${b.subtype})")
-        case x: BSONValue ⇒ span(s"Code(${x.code.toInt})")
-      }
-    )
-  }
-}
-
-case class bson_array(array: BSONArray) extends TagFragment {
-  def contents(context: Context) = {
-    div(s"Array(${array.length}) [", {
-      for (e ← array.values) {
-        bson_value(e)
-      }
-    }, "]"
-    )
-  }
-}
-
-case class bson_document(doc: BSONDocument) extends TagFragment {
-  def contents(context: Context) = {
-    dl(cls:="dl-horizontal", {
-      for ((k, v) ← doc.elements) yield {
-        Seq(dt(k), dd(bson_value(v).contents(context)))
-      }
+trait bson_fragment extends SimpleContentsGenerator {
+  def value(value: BSONValue) : Modifier = {
+    value match {
+      case s: BSONString ⇒ "\"" + s.value + "\""
+      case i: BSONInteger ⇒ i.value.toString
+      case l: BSONLong ⇒ l.value + "L"
+      case d: BSONDouble ⇒ d.value + "D"
+      case b: BSONBoolean ⇒ b.value.toString
+      case x: BSONDateTime ⇒ new DateTime(x.value).toString
+      case a: BSONArray ⇒ array(a)
+      case d: BSONDocument ⇒ document(d)
+      case b: BSONBinary ⇒ s"Binary(${b.subtype})"
+      case x: BSONValue ⇒ s"Code(${x.code.toInt})"
     }
+
+  }
+  def array(array: BSONArray) : Modifier = {
+    div(s"Array(${array.length}) [",
+    {
+      for (e ← array.values) { Seq(value(e), ", ") }
+    },
+    "]"
+    )
+  }
+
+  def document(doc: BSONDocument) : Modifier = {
+    div(s"Document(${doc.elements.length}) {",
+      dl(cls:="dl-horizontal",
+        for ((k, v) ← doc.elements) { Seq(dt(k), dd(value(v))) }
+      ),
+      "}"
     )
   }
 }
 
-case class bson_document_panel(title: String, doc: BSONDocument) extends TagFragment {
-  def contents(context: Context) = {
+case class bson_value(bv: BSONValue) extends bson_fragment {
+  def apply() : Contents = { Seq(span(value(bv)) ) }
+}
+
+case class bson_document_panel(title: String, doc: BSONDocument) extends bson_fragment {
+  def apply() = Seq (
     div(cls:="panel panel-primary",
       div(cls:="panel-heading",
         h3(cls:="panel-title", title)
       ),
-      div(cls:="panel-body",bson_document(doc).contents(context))
+      div(cls:="panel-body",document(doc))
     )
-  }
+  )
 }
 
-object reactific_copyright extends TagFragment {
-  def contents(context: Context) = {
-    sub(sup("Copyright &copy; 2012-2014, Reactific Software LLC. All Rights Reserved."))
+object reactific_copyright extends SimpleContentsGenerator {
+  def apply() = {
+    Seq( sub(sup("Copyright &copy; 2012-2014, Reactific Software LLC. All Rights Reserved.")) )
   }
 }

@@ -18,6 +18,7 @@
 package scrupal.api
 
 import org.specs2.mutable.Specification
+import scrupal.api.types.RangeType
 import scrupal.test.FakeModule
 import scrupal.utils.Version
 
@@ -83,4 +84,6 @@ class ModuleSpec extends Specification {
       Module('Module3) must beEqualTo(Some(Module3))
     }
   }
+
+
 }

@@ -31,7 +31,8 @@ needed for the database significantly.
 Commensurate with the switch to MongoDB, it was decided that BSON was a competent and efficient data structure for all
 inter-process communication and so BSON Documents became integrated throughout Scrupal's API. About the same time, late
 in 2014, it was decided that Play had significant infrastructural overheads of which Scrupal only used a small fraction.
-Since Play's designers had been kind enough to break out libraries for Twirl, sbt-web, and iteratee/enumerator, it made
+Since Play's designers had been kind enough to break out libraries for sbt-web, iteratee/enumerator, and others, it made
 sense to look for a high performance HTTP engine. At that time the Akka project was nearing completion of the
 integration of Spray into akka as the akka-http module. The decision was made to use spray-can, spray-http and
-spray-routing as an interim measure until akka-http was released.
+spray-routing as an interim measure until akka-http was released. Additionally, Play Templates (Twirl) were replaced
+by Li Haoyi's Scalatags as they integrate with Scala better and have better performance and reusability.

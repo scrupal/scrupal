@@ -29,11 +29,9 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.6:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.6:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe.play:twirl-api_2.11:1.0.3:jar" level="project" />
     <orderEntry type="library" name="SBT: io.github.nremond:pbkdf2-scala_2.11:0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final:jar" level="project" />
     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.clapper:grizzled-slf4j_2.11:1.0.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
     <orderEntry type="library" name="SBT: org.mindrot:jbcrypt:0.3m:jar" level="project" />

@@ -17,10 +17,13 @@
 
 package scrupal.api
 
-import play.twirl.api._
 import reactivemongo.bson.{BSONString, BSONHandler}
+import scrupal.api.Html._
+import scrupal.api.html.{BasicPage, DefaultLayout}
 import scrupal.utils.{Registry, Registrable}
 import spray.http.{MediaTypes, MediaType}
+
+import scalatags.Text.all._
 
 /** Arranger Function.
   *
@@ -29,7 +32,7 @@ import spray.http.{MediaTypes, MediaType}
   * can be used to perform the arranging.
   *
   */
-trait Arranger extends ( (Map[String,(Node,Result[_])], Context) => Array[Byte] )
+trait Arranger extends ( (Map[String,Fragment], Context) => Array[Byte] )
 
 /** Abstract Layout
   *
@@ -41,25 +44,14 @@ trait Layout extends Registrable[Layout] with Describable with Arranger {
   def asT : this.type = this
 }
 
-case class TwirlHtmlLayout(
+case class HtmlLayout(
   id : Symbol,
   description : String = "",
-  template: Layout.TwirlHtmlLayoutFunction
+  template: Html.Template
 ) extends Layout {
   val mediaType = MediaTypes.`text/html`
-  def apply(args: Map[String,(Node,Result[_])], context: Context) : Array[Byte] = {
-    template(args)(context).body.getBytes(utf8)
-  }
-}
-
-case class TwirlTxtLayout(
-  id : Symbol,
-  description : String = "",
-  template: Layout.TwirlTxtLayoutFunction
-) extends Layout {
-  val mediaType = MediaTypes.`text/plain`
-  def apply(args: Map[String,(Node,Result[_])], context: Context) : Array[Byte] = {
-    template(args)(context).body.getBytes(utf8)
+  def apply(args: Map[String,Fragment], context: Context) : Array[Byte] = {
+    template.render(context,args).getBytes(utf8)
   }
 }
 
@@ -67,16 +59,25 @@ object Layout extends Registry[Layout] {
   def registryName = "Layouts"
   def registrantsName = "layout"
 
-  type TwirlHtmlLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Html }
-  type TwirlTxtLayoutFunction = { def apply(args: Map[String,(Node,Result[_])])(implicit ctxt: Context):Txt }
+  object DefaultLayoutTemplate extends Html.Template('DefaultLayoutTemplate,
+      "Default layout page used when the expected layout could not be found") ( new TemplateGenerator {
+    def apply(context: Context, args: Map[String,Fragment]) : Contents =
+      Seq(
+        p(
+          """A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout
+            |which just lists the tag content down the page. This probably isn't what you want, but it's what you've got
+            |until you create a defaultLayout for your pages.
+          """.stripMargin),
+        for ( (key, frag) ← args) {
+          Seq( h1(key, " - ", frag.id.name, " - ", frag.description), div(frag(context)) )
+        }
+      )
+    })
 
-  lazy val default = TwirlHtmlLayout('default, "Default Layout", scrupal.api.views.html.defaults.defaultLayout)
+  lazy val default = HtmlLayout('default, "Default Layout", DefaultLayoutTemplate)
 
   class BSONHandlerForLayout[T <: Layout] extends BSONHandler[BSONString,T] {
     override def write(t: T): BSONString = BSONString(t.id.name)
     override def read(bson: BSONString): T = Layout.as(Symbol(bson.value))
   }
-
 }
-
-

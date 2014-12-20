@@ -139,7 +139,7 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] {
   def as[U <: Registrable[U]](id: Symbol) : U = {
     this(id) match {
       case Some(typ) => typ.asInstanceOf[U]
-      case None => toss(s"Could not find type named '$id'")
+      case None => toss(s"Could not find $registrantsName named '$id'")
     }
   }
 

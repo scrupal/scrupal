@@ -17,20 +17,16 @@
 
 package scrupal.api
 
-import java.io.{FileInputStream, File}
-import java.net.URL
-
 import org.joda.time.DateTime
 import play.api.libs.iteratee.Enumerator
-import play.twirl.api.{Html, Txt}
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.api.BSONHandlers._
 import scrupal.api.Node.NodeDAO
-import scrupal.api.HtmlHelpers._
+import scrupal.api.nodes._
 import scrupal.db._
-import spray.http.{ContentType, MediaType, MediaTypes}
+import spray.http.{MediaType, MediaTypes}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
@@ -66,6 +62,35 @@ trait Node extends VariantStorable[BSONObjectID]
   }
 }
 
+object Node {
+
+  lazy val Empty = MessageNode("Empty Node", "text-danger", "This node is completely empty.")
+
+  object variants extends VariantRegistry[Node]("Node")
+
+  implicit lazy val NodeReader : VariantBSONDocumentReader[Node] = new VariantBSONDocumentReader[Node] {
+    def read(doc: BSONDocument) : Node = variants.read(doc)
+  }
+
+  implicit val NodeWriter : VariantBSONDocumentWriter[Node] = new VariantBSONDocumentWriter[Node] {
+    def write(node: Node) : BSONDocument = variants.write(node)
+  }
+
+  case class NodeDAO(db: DefaultDB) extends VariantDataAccessObject[Node,BSONObjectID] {
+    final def collectionName: String = "nodes"
+    implicit val writer = new Writer(variants)
+    implicit val reader = new Reader(variants)
+    implicit val converter = BSONObjectIDConverter
+
+    override def indices : Traversable[Index] = super.indices ++ Seq(
+      Index(key = Seq("mediaType" -> IndexType.Ascending), name = Some("mediaType")),
+      Index(key = Seq("kind" -> IndexType.Ascending), name = Some("kind"))
+    )
+  }
+}
+
+
+
 abstract class CompoundNode extends Node {
   def subordinates : Map[String, Either[NodeRef,Node]]
   def resolve(ctxt: Context, tagged_data: Map[String, (Node,EnumeratorResult)]) : EnumeratorResult
@@ -100,249 +125,17 @@ abstract class CompoundNode extends Node {
   }
 }
 
-case class URLNode(
-  description: String,
-  url: URL,
-  mediaType: MediaType = MediaTypes.`text/html`,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind : Symbol = URLNode.kind
-) extends Node {
-  def apply(ctxt: Context) : Future[Result[_]] = Future.successful {
-    StreamResult(url.openStream(), mediaType)
-  }
-}
-
-object URLNode {
-  final val kind = 'URL
-  object URLNodeVRW extends VariantReaderWriter[Node,URLNode] {
-    implicit val URLNodeHandler : BSONHandler[BSONDocument,URLNode] = Macros.handler[URLNode]
-    override def fromDoc(doc: BSONDocument): URLNode = URLNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = URLNodeHandler.write(obj.asInstanceOf[URLNode])
-  }
-  Node.variants.register(kind, URLNodeVRW)
-}
-
-case class StringNode(
-  description: String,
-  text: String,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind : Symbol = StringNode.kind
-) extends Node {
-  final val mediaType = MediaTypes.`text/plain`
-  def apply(ctxt: Context) : Future[Result[_]] = Future.successful { StringResult(text) }
-}
-
-object StringNode {
-  final val kind = 'String
-  object StringNodeVRW extends VariantReaderWriter[Node,StringNode] {
-    implicit val StringNodeHandler : BSONHandler[BSONDocument,StringNode] = Macros.handler[StringNode]
-    override def fromDoc(doc: BSONDocument): StringNode = StringNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = StringNodeHandler.write(obj.asInstanceOf[StringNode])
-  }
-  Node.variants.register(kind, StringNodeVRW)
-}
-
-case class StaticNode(
-  description: String,
-  body: Html,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = StaticNode.kind
-) extends Node {
-  val mediaType: MediaType = MediaTypes.`text/html`
-  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
-    HtmlResult(body, Successful)
-  }
-}
-
-object StaticNode {
-  final val kind = 'Static
-  object StaticNodeVRW extends VariantReaderWriter[Node,StaticNode] {
-    implicit val StaticNodeHandler : BSONHandler[BSONDocument,StaticNode] = Macros.handler[StaticNode]
-    override def fromDoc(doc: BSONDocument): StaticNode = StaticNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = StaticNodeHandler.write(obj.asInstanceOf[StaticNode])
-  }
-  Node.variants.register(kind, StaticNodeVRW)
-}
-
-/** Message Node
-  *
-  * This is a very simple node that simply renders a standard Boostrap message. It is used for generating error messages
-  * during node substitution so the result is visible to the end user.
-  */
-case class MessageNode(
-  description: String,
-  css_class: String,
-  message: Html,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind : Symbol = MessageNode.kind
-) extends Node {
-  final val mediaType: MediaType = MediaTypes.`text/html`
-  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
-    val text = <div class={css_class}>{message.body}</div>
-    HtmlResult(text toHtml, Successful)
-  }
-}
-
-object MessageNode {
-  final val kind = 'Message
-  object MessageNodeVRW extends VariantReaderWriter[Node,MessageNode] {
-    implicit val MessageNodeHandler : BSONHandler[BSONDocument,MessageNode] = Macros.handler[MessageNode]
-    override def fromDoc(doc: BSONDocument): MessageNode = MessageNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = MessageNodeHandler.write(obj.asInstanceOf[MessageNode])
-  }
-  Node.variants.register(kind, MessageNodeVRW)
-}
-
 abstract class AbstractHtmlNode extends Node {
   final val mediaType: MediaType = MediaTypes.`text/html`
-  def content(context: Context)(implicit ec: ExecutionContext) : Future[Html]
+  def content(context: Context)(implicit ec: ExecutionContext) : Future[Html.Contents]
   def apply(context: Context) : Future[Result[_]] = {
     context.withExecutionContext { implicit ec: ExecutionContext ⇒
-      content(context)(ec).map { html ⇒ HtmlResult(html, Successful) }
+      content(context)(ec).map { html ⇒ HtmlResult(Html.renderContents(html), Successful) }
     }
   }
 }
 
-
-
-/** Twirl Html Node
-  * This is a node that simply contains a static blob of data that it produces faithly. The data can be any type
-  * but is typically html which is why its mediaType
-  * @param description
-  * @param modified
-  * @param created
-  *
-  */
-case class HtmlNode (
-  description: String,
-  template: TwirlHtmlTemplate,
-  args: Map[String, Html],
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = HtmlNode.kind
-) extends AbstractHtmlNode {
-  def content(context: Context)(implicit ec: ExecutionContext) : Future[Html] = {
-    Future.successful(template(args,context))
-  }
-}
-
-object HtmlNode {
-  import BSONHandlers._
-  final val kind = 'Html
-  object HtmlNodeVRW extends VariantReaderWriter[Node,HtmlNode] {
-    implicit val HtmlNodeHandler : BSONHandler[BSONDocument,HtmlNode] = Macros.handler[HtmlNode]
-    override def fromDoc(doc: BSONDocument): HtmlNode = HtmlNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = HtmlNodeHandler.write(obj.asInstanceOf[HtmlNode])
-  }
-  Node.variants.register(kind, HtmlNodeVRW)
-}
-
-case class TxtNode (
-  description: String,
-  template: TwirlTxtTemplate,
-  args: Map[String, Txt],
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = TxtNode.kind
-) extends Node {
-  final val mediaType: MediaType = MediaTypes.`text/html`
-  def apply(context: Context): Future[Result[_]] = {
-    val txt : Txt = template(args,context)
-    Future.successful(TxtResult(txt, Successful))
-  }
-}
-
-object TxtNode {
-  final val kind = 'Txt
-  object TxtNodeVRW extends VariantReaderWriter[Node,TxtNode] {
-    implicit val TxtNodeHandler : BSONHandler[BSONDocument,TxtNode] = Macros.handler[TxtNode]
-    override def fromDoc(doc: BSONDocument): TxtNode = TxtNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = TxtNodeHandler.write(obj.asInstanceOf[TxtNode])
-  }
-  Node.variants.register(kind, TxtNodeVRW)
-}
-
-/** File Node
-  * This node type generates the content of an asset from a file typically bundled with the module. This is not
-  * intended for use with delivering files uploaded to the server. Those should be handled by generating a link
-  * and allowing CDN to deliver the content. You want to use a LinkNode for that.
-  * @param description
-  * @param file
-  * @param modified
-  * @param created
-  */
-case class FileNode (
-  description: String,
-  file: File,
-  override val mediaType: MediaType = MediaTypes.`text/html`,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = FileNode.kind
-) extends Node {
-  def apply(ctxt: Context): Future[Result[_]] = {
-    val extension = {
-      val name = file.getName
-      name.lastIndexOf(".") match {
-        case i: Int if i >= 0 ⇒ file.getName.substring(i + 1)
-        case _ ⇒ ""
-      }
-    }
-    val mediaType = MediaTypes.forExtension(extension) match {
-      case Some(mt) ⇒ mt
-      case None ⇒ MediaTypes.`application/octet-stream`
-    }
-    Future.successful( StreamResult(new FileInputStream(file), mediaType) )
-  }
-}
-
-object FileNode {
-  final val kind = 'File
-  object FileNodeVRW extends VariantReaderWriter[Node,FileNode] {
-    implicit val FileNodeHandler : BSONHandler[BSONDocument,FileNode] = Macros.handler[FileNode]
-    override def fromDoc(doc: BSONDocument): FileNode = FileNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = FileNodeHandler.write(obj.asInstanceOf[FileNode])
-  }
-  Node.variants.register(kind, FileNodeVRW)
-}
-
-/** Link Node
-  * This node type contains a URL to a resource and generates a link to it.
-  */
-case class LinkNode (
-  description: String,
-  url: URL,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = LinkNode.kind
-) extends Node {
-  override val mediaType: MediaType = MediaTypes.`text/html`
-  def apply(ctxt: Context): Future[Result[_]] = Future.successful {
-    HtmlResult(<a href={url.toString}>{description}</a> toHtml,Successful)
-  }
-}
-
-object LinkNode {
-  final val kind = 'Link
-  object LinkNodeVRW extends VariantReaderWriter[Node,LinkNode] {
-    implicit val LinkNodeHandler : BSONHandler[BSONDocument,LinkNode] = Macros.handler[LinkNode]
-    override def fromDoc(doc: BSONDocument): LinkNode = LinkNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = LinkNodeHandler.write(obj.asInstanceOf[LinkNode])
-  }
-  Node.variants.register(kind, LinkNodeVRW)
-}
-
+/* FIXME: Reinstate  when we want generalized Layout
 case class LayoutProducer (
   template: Array[Byte],
   tags: Map[String,(Node,EnumeratorResult)]
@@ -435,7 +228,7 @@ case class LayoutProducer (
   */
 case class LayoutNode (
   description: String,
-  subordinates: Map[String, Either[NodeRef,Node]],
+  subordinates: Map[String,Html.Fragment],
   layout: Layout,
   modified: Option[DateTime] = Some(DateTime.now),
   created: Option[DateTime] = Some(DateTime.now),
@@ -443,7 +236,7 @@ case class LayoutNode (
   final val kind: Symbol = LayoutNode.kind
 ) extends CompoundNode {
   final val mediaType = layout.mediaType
-  def resolve(ctxt: Context, tags: Map[String,(Node,EnumeratorResult)]) : EnumeratorResult = {
+  def resolve(ctxt: Context, tags: Map[String,Html.Fragment]) : EnumeratorResult = {
     // val layout = Layout(layoutId).getOrElse(Layout.default)
     val template: Array[Byte] = layout(tags, ctxt)
     EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
@@ -451,6 +244,7 @@ case class LayoutNode (
 }
 
 object LayoutNode {
+  import BSONHandlers._
   final val kind = 'Layout
   object LayoutNodeVRW extends VariantReaderWriter[Node,LayoutNode] {
     implicit val LayoutNodeHandler : BSONHandler[BSONDocument,LayoutNode] = Macros.handler[LayoutNode]
@@ -460,31 +254,4 @@ object LayoutNode {
   Node.variants.register(kind, LayoutNodeVRW)
 }
 
-
-object Node {
-
-  lazy val Empty = MessageNode("Empty Node", "text-danger", Html("This node is completely empty."))
-
-  object variants extends VariantRegistry[Node]("Node")
-
-  implicit lazy val NodeReader : VariantBSONDocumentReader[Node] = new VariantBSONDocumentReader[Node] {
-    def read(doc: BSONDocument) : Node = variants.read(doc)
-  }
-
-  implicit val NodeWriter : VariantBSONDocumentWriter[Node] = new VariantBSONDocumentWriter[Node] {
-    def write(node: Node) : BSONDocument = variants.write(node)
-  }
-
-  case class NodeDAO(db: DefaultDB) extends VariantDataAccessObject[Node,BSONObjectID] {
-    final def collectionName: String = "nodes"
-    implicit val writer = new Writer(variants)
-    implicit val reader = new Reader(variants)
-    implicit val converter = BSONObjectIDConverter
-
-    override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("mediaType" -> IndexType.Ascending), name = Some("mediaType")),
-      Index(key = Seq("kind" -> IndexType.Ascending), name = Some("kind"))
-    )
-  }
-}
-
+*/

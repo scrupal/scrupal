@@ -1,9 +1,0 @@
-@(id: String, what: Seq[String], fields: reactivemongo.bson.BSONDocument)(implicit ctxt: scrupal.api.Context)
-@import scrupal.api.views.html._
-@import scrupal.api.views.html.utils._
-@pages.plainPage("Retrieve - " + id) {
-<h1>Update - @id</h1>
-<h3>Facet ID: @{what.mkString("/")}</h3>
-@bson_document_panel("Updated Fields", fields)
-@display_context
-}

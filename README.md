@@ -40,7 +40,7 @@ new technologies develop. Some of the technologies Scrupal utilizes are:
 
 - [Spray](http://spray.io/) - An efficient HTTP request/response router and processor
 
-- [Twirl](https://github.com/playframework/twirl) - A templating system integrated with Scala
+- [Scalatags](https://github.com/lihaoyi/scalatags) - A templating system integrated with Scala
 
 - [MongoDB](http://www.mongodb.org/) - A NoSQL Database
 

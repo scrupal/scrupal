@@ -17,13 +17,15 @@
 
 package scrupal.api.html
 
-import scrupal.api.{Feature, Context, PathOf}
+import scrupal.api.Html.Contents
 
 import scalatags.Text.all._
+import scrupal.api._
+import scrupal.api.Html._
 
-abstract class BasicPage(the_title: String, the_description: String) extends Page(the_title, the_description) {
-  def headSuffix(context: Context): Seq[Modifier] = {
-    implicit val ctxt = context
+abstract class BasicPage(the_title: String, the_description: String) extends Html.Page(the_title, the_description) {
+  def headSuffix(context: Context) : Html.Contents = {
+    implicit val ctxt : Context = context
     Seq(
       link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
       link(rel := "stylesheet", href := PathOf.lib("font-awesome", "css/font-awesome.css"), media := "screen"),
@@ -33,18 +35,18 @@ abstract class BasicPage(the_title: String, the_description: String) extends Pag
     )
   }
 
-  def bodyPrefix(context: Context): Seq[Modifier] = { display_alerts.contents(context) }
+  def bodyPrefix(context: Context): Html.Contents = { display_alerts(context) }
 
-  def bodySuffix(context: Context): Seq[Modifier] = {
+  def bodySuffix(context: Context): Html.Contents = {
     if(Feature.enabled('DebugFooter, context.scrupal)){
-      Seq(display_context_table.contents(context))
+      display_context_table(context)
     } else {
-      Seq.empty[Modifier]
+      Html.emptyContents
     }
   }
 }
 
-case class MarkedPage(the_title: String, the_description: String, bodyContent: (Context) ⇒ Seq[Modifier])
+abstract class MarkedPage(the_title: String, the_description: String)
   extends BasicPage(the_title, the_description)
 {
   override def headSuffix(context: Context) = {
@@ -53,11 +55,13 @@ case class MarkedPage(the_title: String, the_description: String, bodyContent: (
     )
   }
 
-  override def bodyMain(context: Context) = {
-    Seq(div(id:="marked", bodyContent(context)))
+  def body_content(context: Context) : Contents = Seq(span("**Oops** You forgot to override body_content"))
+
+  override def bodyMain(context: Context) : Contents = {
+    Seq(div(scalatags.Text.all.id:="marked", body_content(context)))
   }
 
-  override def bodySuffix(context: Context) = {
+  override def bodySuffix(context: Context) :Contents = {
     Seq(js(
       """marked.setOptions({
         |  renderer: new marked.Renderer(),
@@ -81,13 +85,13 @@ case class OPAPage(the_title: String, the_description: String, module: String)
   val data_main : Attr = "data-main".attr
   val media: Attr = "media".attr
 
-  def bodyMain(context: Context) : Seq[Modifier] = Seq(
+  def bodyMain(context: Context) : Contents = Seq(
     div(`class`:="container",
-      div(id := module)
+      div(scalatags.Text.all.id := module)
     )
   )
 
-  override def bodyTag(context: Context) : TagContent = {
+  override def bodyTag(context: Context) : Html.TagContent = {
     body(ng.controller := "scrupal", ng.show:= "page_is_ready",
       bodyPrefix(context),
       bodyMain(context),
@@ -100,36 +104,50 @@ case class OPAPage(the_title: String, the_description: String, module: String)
   }
 }
 
-class ForbiddenPage(what: String, why: String)
-  extends BasicPage("Forbidden - " + what, "Forbidden Error Page")
-{
-  def bodyMain(context: Context) : Modifiers = Seq(
-    danger(Tags(Seq(
+case class ForbiddenPage(what: String, why: String)
+  extends BasicPage("Forbidden - " + what, "Forbidden Error Page") {
+  val description = "A page for displaying an HTTP Forbidden error"
+
+  def bodyMain(context: Context): Html.Contents = {
+    danger(Seq(
       h1("Nuh Uh! I Can't Do That!"),
       p(em("Drat!"), s"Because $why, you can't $what. That's just the way it is."),
       p("You should try one of these options:"),
       ul(li("Type in another URL, or"), li("Try to get lucky with ",
-        a(href:=context.suggestURL.toString,"this suggestion")))
-    ))).contents(context)
-  )
+        a(href := context.suggestURL.toString, "this suggestion")))
+    ))()
+  }
 }
 
-class NotFoundPage(what: String, causes: Seq[String] = Seq(), suggestions: Seq[String] = Seq())
-  extends BasicPage("Not Found - " + what, "Not Found Error Page")
-{
-  def bodyMain(context: Context) : Modifiers = Seq(
-    warning(Tags(Seq(
+case class NotFoundPage(
+  what: String,
+  causes: Seq[String] = Seq(),
+  suggestions: Seq[String] =Seq()
+) extends BasicPage("Not Found - " + what, "Not Found Error Page") {
+  def bodyMain(context: Context) : Contents = {
+    warning(Seq(
       h1("There's A Hole In THe Fabrice Of The InterWebz!"),
       p(em("Oops!"), "We couldn't find ", what, ". That might be because:"),
-      ul({ for (c ← causes) yield { li(c) } },
+      ul({for (c ← causes) yield {li(c)}},
         li("you used an old bookmark for which the resource is no longer available"),
         li("you mis-typed the web address.")
       ),
       p("You can try one of these options:"),
-      ul( { for (s ← suggestions) yield { li(s) } },
+      ul({for (s ← suggestions) yield {li(s)}},
         li("type in another URL, or "),
-        li("Try to get lucky with ", a(href:=context.suggestURL.toString,"this suggestion"))
+        li("Try to get lucky with ", a(href := context.suggestURL.toString, "this suggestion"))
       )
-    ))).contents(context)
+    ))()
+  }
+}
+
+abstract class GenericPlainPage(title: String, description: String) extends BasicPage(title, description) {
+  def content(context: Context) : Html.Contents
+  def bodyMain(context: Context) : Contents = Seq(
+    div(cls:="container", content(context), debug_footer(context))
   )
+}
+case class PlainPage(title: String, description: String, the_content: Html.Contents)
+  extends GenericPlainPage(title, description) {
+  def content(context: Context) : Html.Contents = the_content
 }

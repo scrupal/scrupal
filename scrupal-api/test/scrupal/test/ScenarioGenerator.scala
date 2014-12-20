@@ -17,7 +17,9 @@
 
 package scrupal.test
 
-import scrupal.api.HtmlHelpers._
+import scrupal.api.types.StringType
+
+import scalatags.Text.all._
 import scrupal.api._
 
 /**
@@ -38,13 +40,13 @@ case class ScenarioGenerator(dbName: String, sites: Int = 1, apps: Int = 1, mods
       s"Field-$i" → AnyString
     }
     val ty_name = s"FieldsForEntity-$id"
-    val ty = BundleType(Symbol(ty_name),ty_name,fields.toMap)
+    val ty = types.BundleType(Symbol(ty_name),ty_name,fields.toMap)
     FakeEntity(s"Entity-$id",ty)
   }
 
   def genNode(id: Int) : Node = {
     val name = s"Node-$id"
-    MessageNode(name,"text-success", s"This is node $name".toHtml)
+    nodes.MessageNode(name,"text-success", s"This is node $name")
   }
 
   def genFeature(id: Int, mod: Module) : Feature = {

@@ -1,9 +1,0 @@
-@(apps: Seq[scrupal.api.Application])(implicit ctxt: scrupal.api.Context)
-<div class="well">
-  <p>Applications:</p>
-  <ul>
-    @for(app ← apps) {
-      <li>@{app.name} - @{app.pathsToActions}</li>
-    }
-  </ul>
-</div>

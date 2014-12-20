@@ -56,10 +56,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
   val text_ct = ContentType(MediaTypes.`text/plain`, HttpCharsets.`UTF-8`)
 
   implicit val html_marshaller: ToResponseMarshaller[HtmlResult] =
-    ToResponseMarshaller.delegate[HtmlResult, String](html_ct) { h ⇒ h.payload.body }
-
-  implicit val txt_marshaller: ToResponseMarshaller[TxtResult] =
-    ToResponseMarshaller.delegate[TxtResult, String](text_ct) { h ⇒ h.payload.body }
+    ToResponseMarshaller.delegate[HtmlResult, String](html_ct) { h ⇒ h.payload.toString() }
 
   implicit val string_marshaller: ToResponseMarshaller[StringResult] =
     ToResponseMarshaller.delegate[StringResult, String](text_ct) { h ⇒ h.payload }
@@ -187,7 +184,6 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
         value match {
           case h: HtmlResult ⇒ html_marshaller(h, trmc)
           case s: StringResult ⇒ string_marshaller(s, trmc)
-          case t: TxtResult ⇒ txt_marshaller(t, trmc)
           case e: ErrorResult ⇒ error_marshaller(e, trmc)
           case x: ExceptionResult ⇒ exception_marshaller(x, trmc)
           case o: OctetsResult ⇒

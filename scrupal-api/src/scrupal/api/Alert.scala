@@ -18,7 +18,6 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-import play.twirl.api.Html
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.Macros._
@@ -72,14 +71,7 @@ case class Alert (
           AlertKind.toCss(alertKind), AlertKind.toExpiry(alertKind), None, None)
   }
 
-  def iconHtml : TypedTag[String] = Icons.html(iconKind)
-
-  implicit def Elem2Html(e : Elem) : Html = Html(e.buildString(stripComments = true))
-  implicit def Node2Html(n : scala.xml.Node) : Html = Html(n.buildString(stripComments = true))
-  implicit def NodeSeq2Html(ns : NodeSeq) : Html = {
-    Html(ns.foldLeft[StringBuilder](new StringBuilder) { (s,n) => s.append( n.buildString(stripComments=true))}.toString())
-  }
-
+  def iconHtml : Html.TagContent = Icons.html(iconKind)
 }
 
 object Alert {
@@ -96,6 +88,4 @@ object Alert {
       Index(key = Seq("_id" -> IndexType.Ascending), name = Some("UniqueId"))
     )
   }
-
-
 }

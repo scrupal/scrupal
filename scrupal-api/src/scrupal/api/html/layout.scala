@@ -17,9 +17,28 @@
 
 package scrupal.api.html
 
-import scrupal.api.Context
+import scrupal.api.Html._
+import scrupal.api.{Html, Context}
 
-trait Layout extends TagFragment {
+import scalatags.Text.all._
+
+trait Layout extends Fragment {
   def compose(context: Context)
 
+}
+
+case class DefaultLayout(args: Map[String,Html.Fragment])
+  extends BasicPage("DefaultLayout", "Default Layout Page")
+{
+  val description = "Default layout page used when the expected layout could not be found"
+  def bodyMain(context: Context) : Contents = Seq(
+    p(
+      """A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout
+        |which just lists the tag content down the page. This probably isn't what you want, but it's what you've got
+        |until you create a defaultLayout for your pages.
+      """.stripMargin),
+    for ( (key, frag) ← args) {
+      Seq( h1(key, " - ", frag.id.name, " - ", frag.description), div(frag(context)) )
+    }
+  )
 }

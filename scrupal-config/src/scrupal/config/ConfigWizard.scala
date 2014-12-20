@@ -23,7 +23,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
 import scrupal.core._
 import scrupal.api.Forms.{Input, Section, Page, Form}
-import scrupal.api._
+import scrupal.api.types._
 import scrupal.db.{DBContext, Schema}
 import scrupal.utils.{ScrupalComponent, ConfigHelper, Configuration}
 
@@ -38,7 +38,7 @@ import scala.util.{Failure, Success, Try}
   */
 object ConfigWizard extends ScrupalComponent {
 
-  val cw = CoreFeatures.ConfigWizard
+  val cw = CoreModule.ConfigWizard
 
   type SiteMap = Map[Symbol,String]
 

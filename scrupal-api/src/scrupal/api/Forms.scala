@@ -17,8 +17,8 @@
 
 package scrupal.api
 
-import play.twirl.api.Html
 import reactivemongo.bson._
+import scrupal.api.types.BooleanType
 import scrupal.db.Storable
 
 /** Scrupal Forms
@@ -31,10 +31,6 @@ object Forms {
 
   type FormOptions = Map[Symbol, String]
   val EmptyOptions = Map.empty[Symbol,String]
-
-  trait FormThing extends Storable[String] with BSONValidator[BSONValue] {
-    val default: BSONValue
-  }
 
   object opts {
     def apply(opts: Seq[(Symbol, String)]): FormOptions = opts.toMap
@@ -64,13 +60,28 @@ object Forms {
     }
   }
 
+  trait FormItem extends Storable[String] with BSONValidator[BSONValue] {
+    def default: BSONValue
+  }
+
+
+  /** A Description of a Single Input Item.
+    *
+    * This wraps a name and a description around a Type, a default BSONValue for that Type, and options for the
+    * type.
+    * @param _id
+    * @param description
+    * @param typ
+    * @param default
+    * @param opts
+    */
   case class Input(
     _id: String,
     description: String,
     typ: Type,
     default: BSONValue = BSONNull,
     opts: FormOptions = EmptyOptions
-  ) extends FormThing {
+  ) extends FormItem {
     require(typ.nonTrivial)
 
     def apply(value: BSONValue): ValidationResult = typ(value)
@@ -85,7 +96,7 @@ object Forms {
     description: String,
     inputs: Seq[Input],
     default: BSONValue = BSONNull
-  ) extends FormThing {
+  ) extends FormItem {
     require(inputs.length > 0)
 
     def apply(value: BSONValue): ValidationResult = {
@@ -105,7 +116,7 @@ object Forms {
     description: String,
     sections: Seq[Section],
     default: BSONValue = BSONNull
-  ) extends FormThing {
+  ) extends FormItem {
     require(sections.length > 0)
 
     def apply(value: BSONValue): ValidationResult = {
@@ -129,7 +140,7 @@ object Forms {
     submit: SubmitAction,
     pages: Seq[Page],
     default: BSONValue = BSONNull
-  ) extends FormThing {
+  ) extends FormItem {
     require(pages.length > 0)
 
     def apply(value: BSONValue): ValidationResult = {
@@ -159,6 +170,6 @@ object Forms {
     def fill[T](t: T): Input = ???
   }
 
-  type InputGenerator = (Input) ⇒ Html
-  type InputWrapper = (Input,Html) ⇒ Html
+  // type InputGenerator = (Input) ⇒ Html
+  // type InputWrapper = (Input,Html) ⇒ Html
 }

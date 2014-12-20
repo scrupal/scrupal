@@ -18,12 +18,11 @@
 import com.typesafe.sbt.web.SbtWeb
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import play.twirl.sbt.SbtTwirl
 import sbt._
 import sbt.Keys._
 
 object ScrupalBuild extends Build
-  with BuildSettings with AssetsSettings with TwirlSettings with SbtWebSettings with LessSettings with Dependencies {
+  with BuildSettings with AssetsSettings with SbtWebSettings with LessSettings with Dependencies {
 
   import sbtunidoc.{ Plugin => UnidocPlugin }
   import spray.revolver.RevolverPlugin._
@@ -44,11 +43,9 @@ object ScrupalBuild extends Build
   lazy val db_deps = db % "compile->compile;test->test"
 
   lazy val api = Project(base_name + "-api", file("./scrupal-api"))
-    .enablePlugins(SbtTwirl)
     .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(twirlSettings_api:_*)
     .settings(sbt_web_settings:_*)
     .settings(api_pipeline_settings:_*)
     .settings(libraryDependencies ++= api_dependencies)
@@ -56,11 +53,9 @@ object ScrupalBuild extends Build
   lazy val api_deps = api % "compile->compile;test->test"
 
   lazy val core = Project(base_name + "-core", file("./scrupal-core"))
-    .enablePlugins(SbtTwirl)
     .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(twirlSettings_core:_*)
     .settings(sbt_web_settings:_*)
     .settings(core_pipeline_settings:_*)
     .settings(less_settings:_*)
@@ -69,10 +64,8 @@ object ScrupalBuild extends Build
   lazy val core_deps = core % "compile->compile;test->test"
 
   lazy val http = Project(base_name + "-http", file("./scrupal-http"))
-    .enablePlugins(SbtTwirl)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(twirlSettings_http:_*)
     .settings(libraryDependencies ++= http_dependencies)
     .dependsOn(utils_deps, db_deps, api_deps, core_deps)
   lazy val http_deps = http % "compile->compile;test->test"
@@ -85,12 +78,10 @@ object ScrupalBuild extends Build
   lazy val config_deps = config_proj % "compile->compile;test->test"
 
   lazy val opa = Project(base_name + "-opa", file("./scrupal-opa"))
-    .enablePlugins(SbtTwirl)
     .enablePlugins(SbtWeb)
     .enablePlugins(ScalaJSPlugin)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(twirlSettings_opa:_*)
     .settings(sbt_web_settings:_*)
     .settings(opa_pipeline_settings:_*)
     .settings(less_settings:_*)
@@ -104,10 +95,8 @@ object ScrupalBuild extends Build
   val opa_deps = opa % "compile->compile;test->test"
 
   lazy val root = Project(base_name, file("."))
-    .enablePlugins(SbtTwirl)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
-    .settings(twirlSettings_top:_*)
     .settings(Revolver.settings:_*)
     .settings(docSettings:_*)
     .settings(

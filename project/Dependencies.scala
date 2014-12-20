@@ -53,8 +53,6 @@ trait Dependencies
   val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
   val play                    = "com.typesafe.play"   %% "play"                   % playV
 
-  // Twirl template compiler and api
-  val twirl_api		            = "com.typesafe.play"   %% "twirl-api"		          % "1.0.3"
   val scalatags               = "com.scalatags"       %% "scalatags"              % "0.4.3-M1"
 
   // Spray Stuff
@@ -107,6 +105,7 @@ trait Dependencies
   val joda_convert            = "org.joda"            % "joda-convert"            % "1.2"
   val mailer_plugin     = "com.typesafe.play.plugins" %% "play-plugins-mailer"    % "2.3.0"
   val config                  =  "com.typesafe"       %  "config"                 % "1.2.1"
+  val commons_lang3           = "org.apache.commons"  % "commons-lang3"           % "3.3.2"
 
   // Test Libraries
 
@@ -146,7 +145,7 @@ trait Dependencies
   )
 
   val utils_dependencies : Seq[ModuleID] = Seq(
-    scalatags, pbkdf2, bcrypt, scrypt, twirl_api, joda_time, joda_convert, config
+    scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config
   ) ++ common_dependencies
 
   val db_dependencies : Seq[ModuleID] = Seq(
@@ -154,12 +153,12 @@ trait Dependencies
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(
-    scalatags, spray_http, spray_routing, marked, fontawesome,
+    scalatags, spray_http, spray_routing, marked, fontawesome, commons_lang3,
     Test.commons_io
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
-    spray_http, spray_routing, scala_arm, twirl_api, marked, fontawesome
+    spray_http, spray_routing, scala_arm, marked, fontawesome
   ) ++ common_dependencies
 
   val http_dependencies : Seq[ModuleID] = Seq(

@@ -19,6 +19,7 @@ package scrupal.api
 
 import reactivemongo.bson.Subtype.GenericBinarySubtype
 import reactivemongo.bson._
+import scrupal.api.types._
 import scrupal.test.{ScrupalSpecification, FakeContext}
 import scrupal.utils.Patterns._
 
@@ -297,6 +298,67 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "have some test cases" in { pending }
   }
 
+
+  "DomainName_t" should {
+    "accept scrupal.org" in {
+      DomainName_t.validate(BSONString("scrupal.org")).isDefined must beFalse
+    }
+    "reject ###.999" in {
+      DomainName_t.validate(BSONString("###.999")).isDefined must beTrue
+    }
+  }
+
+  "URI_t" should {
+    "accept http://user:pw@scrupal.org/path?q=where#extra" in {
+      URL_t.validate(BSONString("http://user:pw@scrupal.org/path?q=where#extra")).isDefined must beFalse
+    }
+    "reject Not\\A@URI" in {
+      URL_t.validate(BSONString("Not\\A@URI")).isDefined must beTrue
+    }
+  }
+
+  "IPv4Address_t" should {
+    "accept 1.2.3.4" in {
+      IPv4Address_t.validate(BSONString("1.2.3.4")).isDefined must beFalse
+    }
+    "reject 1.2.3.400" in {
+      IPv4Address_t.validate(BSONString("1.2.3.400")).isDefined must beTrue
+    }
+  }
+
+  "TcpPort_t" should {
+    "accept 8088" in {
+      TcpPort_t.validate(BSONInteger(8088)).isDefined must beFalse
+    }
+    "reject 65537" in {
+      TcpPort_t.validate(BSONString("65537")).isDefined must beTrue
+    }
+  }
+
+  "EmailAddress_t" should {
+    "accept someone@scrupal.org" in {
+      // println("Email Regex: " + EmailAddress_t.regex.pattern.pattern)
+      EmailAddress_t.validate(BSONString("someone@scrupal.org")).isDefined must beFalse
+    }
+    "reject white space" in {
+      EmailAddress_t.validate(BSONString(" \t\r\n")).isDefined must beTrue
+    }
+    "reject nobody@ scrupal dot org" in {
+      EmailAddress_t.validate(BSONString("nobody@ 24 dot com")).isDefined must beTrue
+    }
+    "reject no body@scrupal.org" in {
+      EmailAddress_t.validate(BSONString("no body@scrupal.org")).isDefined must beTrue
+    }
+  }
+
+  "LegalName_t" should {
+    "accept 'My Legal Name'" in {
+      LegalName_t.validate(BSONString("My Legal Name")).isDefined must beFalse
+    }
+    "reject tab char" in {
+      LegalName_t.validate(BSONString("\t")).isDefined must beTrue
+    }
+  }
 
   "Types" should {
     "not spoof registration in a module via Type.moduleof" in TestTypes() { t: TestTypes ⇒

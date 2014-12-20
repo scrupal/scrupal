@@ -1,7 +1,0 @@
-@(array: reactivemongo.bson.BSONArray)
-@import scrupal.api.views.html.utils.bson_value
-<div>Array(@{array.length}) {</div>
-@for(e ← array.values) {
-  <div>@bson_value(e)</div>
-}
-<div>}</div>

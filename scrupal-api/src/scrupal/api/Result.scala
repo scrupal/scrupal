@@ -20,10 +20,13 @@ package scrupal.api
 import java.io.InputStream
 
 import play.api.libs.iteratee.Enumerator
-import play.twirl.api.{Html, Txt}
 import reactivemongo.api.BSONSerializationPack
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONString}
+import scrupal.api.Html.TagContent
+import scrupal.api.html.display_exception_result
 import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
+
+import scalatags.Text.TypedTag
 
 trait Resolvable extends ( () ⇒ EnumeratorResult)
 
@@ -116,7 +119,7 @@ case class OctetsResult (
   contentType: ContentType,
   disposition: Disposition = Successful
 ) extends ContainedResult[Array[Byte]] {
-  def body = payload
+  val body = payload
 }
 
 /** Result with a simple text string.
@@ -133,37 +136,26 @@ case class StringResult (
   disposition: Disposition = Successful
 ) extends ContainedResult[String] {
   val contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
-  def body = payload.getBytes(utf8)
-}
-
-/** Result with a Twirl TxtFormat paylaod.
-  *
-  * This kind of result just encapsulates a Twirl Txt and defaults its ContentType to text/plain(UTF-8).
-  *
-  * @param payload The data of the result
-  * @param disposition The disposition of the result.
-  */
-case class TxtResult (
-  payload: Txt,
-  disposition: Disposition = Successful
-) extends ContainedResult[Txt] {
-  val contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
-  def body = payload.body.getBytes(utf8)
+  val body = payload.getBytes(utf8)
 }
 
 /** Result with an HTMLFormat payload.
   *
-  * This kind of result just encapsulates a Twirl Html result and defaults its ContentType to text/html.
+  * This kind of result just encapsulates a Scalatags Html result and defaults its ContentType to text/html.
   *
   * @param payload The Html payload of the result.
   * @param disposition The disposition of the result.
   */
 case class HtmlResult(
-  payload: Html,
+  payload: String,
   disposition: Disposition = Successful
-) extends ContainedResult[Html] {
+) extends ContainedResult[String] {
   val contentType: ContentType = MediaTypes.`text/html`
-  def body = payload.body.getBytes(utf8)
+  val body = payload.getBytes(utf8)
+}
+
+object HtmlResult {
+  def apply(tag: TagContent, disposition: Disposition) = new HtmlResult(tag.toString(), disposition)
 }
 
 /** Result with a BSONDocument payload.
@@ -210,19 +202,11 @@ case class ExceptionResult(
     )
   }
 
-  def toHtmlResult : HtmlResult = {
-    HtmlResult(scrupal.api.views.html.errors.ExceptionResult(this), disposition)
+  def toHtmlResult(context: Context) : HtmlResult = {
+    HtmlResult(display_exception_result(this).render(), disposition)
  }
 
-  def toTxtResult : TxtResult = {
-    TxtResult(scrupal.api.views.txt.errors.ExceptionResult(this), disposition)
-  }
-
-  def toStringResult : StringResult = {
-    StringResult(scrupal.api.views.txt.errors.ExceptionResult(this).body, disposition)
-  }
-
-  def body = scrupal.api.views.txt.errors.ExceptionResult(this).body.getBytes(utf8)
+  val body = display_exception_result(this)().toString().getBytes(utf8)
 }
 
 /** Result with a simple error payload.
