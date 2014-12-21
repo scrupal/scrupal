@@ -44,14 +44,10 @@ trait Dependencies
   )
 
   // Things we borrow from Play Framework
-  val playV = "2.3.6"
-  val play_cache              = "com.typesafe.play"   %% "play-cache"             % playV
-  val play_docs               = "com.typesafe.play"   %% "play-docs"              % playV
-  val play_filters            = "com.typesafe.play"   %% "filters-helpers"        % playV
+  val playV = "2.3.7"
   val play_iteratees          = "com.typesafe.play"   %% "play-iteratees"         % playV
   val play_json               = "com.typesafe.play"   %% "play-json"              % playV
   val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
-  val play                    = "com.typesafe.play"   %% "play"                   % playV
 
   val scalatags               = "com.scalatags"       %% "scalatags"              % "0.4.3-M1"
 
@@ -63,7 +59,6 @@ trait Dependencies
   val spray_http              = "io.spray"            %%  "spray-http"            % sprayV
   val spray_httpx             = "io.spray"            %%  "spray-httpx"           % sprayV
   val spray_caching           = "io.spray"            %%  "spray-caching"         % sprayV
-  //val spray_json              = "io.spray"            %%  "spray-json"            % "1.3.1"
 
   // Akka Stuff
   val akka_actor              = "com.typesafe.akka"   %%  "akka-actor"            % akkaV
@@ -75,17 +70,17 @@ trait Dependencies
   // Databass, Caches, Data Storage stuff
   // val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
   val reactivemongo           = "org.reactivemongo"   %% "reactivemongo"          % "0.11.0-SNAPSHOT"
-  val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.5"
+  val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.6"
 
   // WebJars based UI components
   val requirejs               = "org.webjars"         % "requirejs"               % "2.1.15"
   val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1-2"
-  val angularjs               = "org.webjars"         % "angularjs"               % "1.3.6"
-  val angular_drag_drop       = "org.webjars"         % "angular-dragdrop"        % "1.0.3"
+  val angularjs               = "org.webjars"         % "angularjs"               % "1.3.8"
+  val angular_drag_drop       = "org.webjars"         % "angular-dragdrop"        % "1.0.6"
   val angular_multi_select    = "org.webjars"         % "angular-multi-select"    % "2.0.1"
   val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-3"
-  val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.11.2"
-  val angular_ui_router       = "org.webjars"         % "angular-ui-router"       % "0.2.11-1"
+  val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.12.0"
+  val angular_ui_router       = "org.webjars"         % "angular-ui-router"       % "0.2.13"
   val angular_ui_utils        = "org.webjars"         % "angular-ui-utils"        % "47ff7ef35c"
   val angular_ui_calendar     = "org.webjars"         % "angular-ui-calendar"     % "0.9.0-beta.1"
   val angualr_ckeditor        = "org.webjars"         % "angular-ckeditor"        % "0.2.0"
@@ -135,7 +130,6 @@ trait Dependencies
   }
 
   val root_dependencies : Seq[ModuleID] = Seq(
-    play
   )
 
   val common_dependencies : Seq[ModuleID] = Seq(
@@ -154,7 +148,7 @@ trait Dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
     scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
-    commons_lang3, scala_arm, livestream_scredis, akka_actor,
+    commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
     Test.spray_testkit, Test.akka_testkit, Test.commons_io
   ) ++ common_dependencies
 
