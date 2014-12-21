@@ -16,7 +16,7 @@ resolvers += "Sonatype respository" at "https://oss.sonatype.org/content/reposit
 
 resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
 
-resolvers += Resolver.url("scala-js-releases",url("http://dl.bintray.com/scala-js/scala-js-releases/"))(Resolver.ivyStylePatterns)
+// resolvers += Resolver.url("scala-js-releases",url("http://dl.bintray.com/scala-js/scala-js-releases/"))(Resolver.ivyStylePatterns)
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.0-M3")
 

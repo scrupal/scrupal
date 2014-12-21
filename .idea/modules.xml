@@ -10,7 +10,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-js-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-js-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-opa.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-opa.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-opa-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-opa-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" />

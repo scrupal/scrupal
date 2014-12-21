@@ -25,10 +25,6 @@
     <orderEntry type="library" name="SBT: com.scalatags:scalatags_2.11:0.4.3-M1:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe:config:1.2.1:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.akka:akka-actor_2.11:2.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.6:jar" level="project" />
     <orderEntry type="library" name="SBT: io.github.nremond:pbkdf2-scala_2.11:0.4:jar" level="project" />
     <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final:jar" level="project" />
     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5:jar" level="project" />
@@ -38,9 +34,7 @@
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson-macros_2.11:0.11.0-SNAPSHOT:jar" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson_2.11:0.11.0-SNAPSHOT:jar" level="project" />
     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo_2.11:0.11.0-SNAPSHOT:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.4:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-stm:scala-stm_2.11:0.7:jar" level="project" />
@@ -51,5 +45,11 @@
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-common_2.11:2.3.11:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
   </component>
 </module>

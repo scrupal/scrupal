@@ -19,11 +19,9 @@
       <parameter value="utf8" />
       <parameter value="-Ywarn-adapted-args" />
       <parameter value="-J-Xss8m" />
-      <parameter value="-J-Xmx1024m" />
+      <parameter value="-J-Xmx2048m" />
       <parameter value="-target:jvm-1.7" />
+      <parameter value="-J-Xmx1024m" />
     </parameters>
-    <plugins>
-      <plugin path="$USER_HOME$/.ivy2/cache/org.scala-js/scalajs-compiler_2.11.4/jars/scalajs-compiler_2.11.4-0.6.0-M2.jar" />
-    </plugins>
   </component>
 </project>

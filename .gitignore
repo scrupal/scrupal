@@ -24,4 +24,5 @@ tmp
 .idea/dictionaries
 .idea/workspace.xml
 .idea/tasks.xml
+.idea/rebel_project.xml
 .DS_Store
