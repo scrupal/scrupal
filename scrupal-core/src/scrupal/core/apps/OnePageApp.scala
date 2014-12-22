@@ -49,8 +49,8 @@ case class OnePageApp(
     def apply(context: Context) : Future[Result[_]] = {
       context.withExecutionContext { implicit ec: ExecutionContext ⇒
         Future {
-          val page = opaPage(context)
-          OctetsResult(page.toString().getBytes(utf8), MediaTypes.`text/html`, Successful)
+          val page = opaPage.render(context)
+          OctetsResult(page.getBytes(utf8), MediaTypes.`text/html`, Successful)
         }
       }
     }

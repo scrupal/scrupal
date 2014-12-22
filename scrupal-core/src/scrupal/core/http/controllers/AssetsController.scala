@@ -41,25 +41,29 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
           path("favicon") {
             favicon(/*theSite*/)
           } ~
-            path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
-              lib(library, rest_of_path)
-            } ~
-            path("themes" / Segment / RestPath) { case (provider, rest_of_path) ⇒
-              theme(provider, rest_of_path)
-            } ~
-            path("stylesheets" / RestPath) { rest_of_path: Uri.Path ⇒
-              stylesheets(rest_of_path)
-            } ~
-            path("javascripts" / RestPath) { rest_of_path: Uri.Path ⇒
-              javascripts(rest_of_path)
-            } ~
-            path("images" / RestPath) { rest_of_path: Uri.Path ⇒
-              images(rest_of_path)
-            } ~
-            path(RestPath) { rest_of_path: Uri.Path ⇒
-              val r = (StatusCodes.NotFound, s"Asset '$rest_of_path' was not found.")
-              complete(r)
-            }
+          path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
+            lib(library, rest_of_path)
+          } ~
+          path("themes" / Segment / RestPath) { case (provider, rest_of_path) ⇒
+            theme(provider, rest_of_path)
+          } ~
+          path("stylesheets" / RestPath) { rest_of_path: Uri.Path ⇒
+            stylesheets(rest_of_path)
+          } ~
+          path("javascripts" / RestPath) { rest_of_path: Uri.Path ⇒
+            javascripts(rest_of_path)
+          } ~
+          path("images" / RestPath) { rest_of_path: Uri.Path ⇒
+            images(rest_of_path)
+          } ~
+          path(RestPath) { rest_of_path: Uri.Path ⇒
+            val r = (StatusCodes.NotFound, s"Asset '$rest_of_path' was not found.")
+            complete(r)
+          } ~ reject
+        } ~ pathPrefix("webjars") {
+          path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
+            lib(library, rest_of_path)
+          } ~ reject
         }
       }
     }

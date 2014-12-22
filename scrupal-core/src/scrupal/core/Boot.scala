@@ -26,6 +26,8 @@ import scala.concurrent.Future
 
 object Boot extends Scrupal with App {
 
+  val http = scrupal.core.http.Boot(this)
+
   override def open() = {
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require(CoreModule.id == 'Core)

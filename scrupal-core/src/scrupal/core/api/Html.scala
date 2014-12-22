@@ -50,7 +50,8 @@ object Html {
     def render() : String = { renderContents(apply()) }
   }
 
-  def js(javascript: String) = script(`type`:="text/javascript", javascript)
+  def js(javascript: String) = script(`type`:="application/javascript", javascript)
+  def jslib(lib: String, path: String) = script(`type`:="application/javascript", src:=s"/assets/lib/$lib/$path")
 
   object ng {
     val app = "ng-app".attr

@@ -46,7 +46,8 @@ trait BuildSettings extends CompilerSettings
     logBuffered in Test := false,
     shellPrompt     := BuildCommands.buildShellPrompt,
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-    BuildCommands.printClasspath <<= BuildCommands.print_class_path
+    BuildCommands.printClasspath <<= BuildCommands.print_class_path,
+    BuildCommands.printRuntimeClasspath <<= BuildCommands.print_runtime_class_path
   )
 
   val docSettings : Seq[Def.Setting[_]] = Seq(

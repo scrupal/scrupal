@@ -29,9 +29,8 @@ abstract class BasicPage(the_title: String, the_description: String) extends Htm
     Seq(
       link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
       link(rel := "stylesheet", href := PathOf.lib("font-awesome", "css/font-awesome.css"), media := "screen"),
-      link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen"),
-      script(`type` := "text/javascript", src := PathOf.lib("jquery", "jquery.min.js")),
-      script(`type` := "text/javascript", src := PathOf.lib("bootstrap", "js/bootstrap.min.js"))
+      link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen")
+      //,      script(`type` := "text/javascript", src := PathOf.lib("bootstrap", "js/bootstrap.min.js"))
     )
   }
 
@@ -92,14 +91,17 @@ case class OPAPage(the_title: String, the_description: String, module: String)
   )
 
   override def bodyTag(context: Context) : Html.TagContent = {
-    body(ng.controller := "scrupal", ng.show:= "page_is_ready",
+    body(// ng.controller := "scrupal", ng.show:= "page_is_ready",
       bodyPrefix(context),
       bodyMain(context),
-      script(lang := "javascript", "var scrupal_module_to_load='" + module + "';"),
-      script(data("main"):="require-data-main.js", `type`:="text/javascript",
+      js("var scrupal_module_to_load='" + module + "';"),
+      script(`type`:="text/javascript", data("main"):="/assets/javascripts/require-data-main.js",
         src:=PathOf.lib("requirejs","require.js")(context)),
-      script(`type` := "text/javascript", src := PathOf.lib("angularjs", "angular.js")(context)),
+      jslib("angularjs", "angular.js"),
+      jslib("scrupal", "scrupal-opa-fastOpt.js"),
+      jslib("scrupal", "scrupal-opa-launcher.js"),
       bodySuffix(context)
+      // , js("var s = scrupal.opa.ScrupalApp(); s.doit('World');")
     )
   }
 }

@@ -121,7 +121,7 @@ trait Dependencies
   )
   */
 
-  object Test {
+  private object Test {
     val spray_testkit        = "io.spray"            %% "spray-testkit"         % sprayV       % "test"
     val akka_testkit         = "com.typesafe.akka"   %% "akka-testkit"          % akkaV        % "test"
     val logback_classic      = "ch.qos.logback"      %  "logback-classic"       % "1.1.2"      % "test"
@@ -152,10 +152,10 @@ trait Dependencies
     Test.spray_testkit, Test.akka_testkit, Test.commons_io
   ) ++ common_dependencies
 
-  val opa_dependencies : Seq[ModuleID] = core_dependencies ++ Seq(
-    scalatags, requirejs, requirejs_domready, angularjs
+  val opa_dependencies : Seq[ModuleID] = Seq(
+    scalatags, requirejs, requirejs_domready, angularjs, angular_ui_bootstrap
     // angular_drag_drop, angular_multi_select,
     // angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
-  ) ++ common_dependencies
+  )
 
 }

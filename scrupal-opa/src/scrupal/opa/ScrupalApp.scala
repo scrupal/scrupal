@@ -15,16 +15,31 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-import com.typesafe.sbt.less.Import.LessKeys
-import com.typesafe.sbt.web.Import._
-import sbt._
-import sbt.Keys._
+package scrupal.opa
 
-trait LessSettings {
+import org.scalajs.dom
+import dom.document
 
-  lazy val less_settings = Seq[Setting[_]](
-    includeFilter in (Assets, LessKeys.less) := "*.less",
-    excludeFilter in (Assets, LessKeys.less) := "_*.less",
-    LessKeys.compress in Assets := true
-  )
+import scala.scalajs.js.JSApp
+import scala.scalajs.js.annotation.JSExport
+
+object ScrupalApp extends JSApp {
+
+  def main(): Unit = {
+    doit("World")
+  }
+
+  @JSExport
+  def doit(name: String): Unit = {
+    println("Hello world!")
+    appendPar(document.body, "Hello, " + name + "!")
+  }
+
+  def appendPar(targetNode: dom.Node, text: String): Unit = {
+    val parNode = document.createElement("p")
+    val textNode = document.createTextNode(text)
+    parNode.appendChild(textNode)
+    targetNode.appendChild(parNode)
+  }
+
 }

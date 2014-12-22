@@ -32,14 +32,24 @@ object BuildCommands
 
   val printClasspath = TaskKey[File]("print-class-path", "Print the project's class path line by line.")
 
+  val printRuntimeClasspath = TaskKey[File]("print-runtime-class-path", "Print the project's runtime class path.")
+
   def print_class_path = (target, fullClasspath in Compile, compile in Compile) map { (out, cp, analysis) =>
+    println("----- " + out.getCanonicalPath + ": FILES:")
     println(cp.files.map(_.getCanonicalPath).mkString("\n"))
-    println("----")
+    println("----- " + out.getCanonicalPath + ": All Binary Dependencies:")
     println(analysis.relations.allBinaryDeps.toSeq.mkString("\n"))
-    println("----")
-    println(out)
+    println("----- END")
     out
   }
+
+  def print_runtime_class_path = (target, fullClasspath in Runtime).map { (out, cp) =>
+    println("----- " + out.getCanonicalPath + ": FILES:")
+    println(cp.files.map(_.getCanonicalPath).mkString("\n"))
+    println("----- END")
+    out
+  }
+
 
   val buildShellPrompt = {
     (state: State) => {

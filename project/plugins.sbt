@@ -10,17 +10,11 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "Sonatype respository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-// resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
-
-// resolvers += "Bintray releases" at "http://dl.bintray.com/scala-js/scala-js-releases"
-
 resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
-
-// resolvers += Resolver.url("scala-js-releases",url("http://dl.bintray.com/scala-js/scala-js-releases/"))(Resolver.ivyStylePatterns)
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.0-M3")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.0-M2" )
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.0-M3" )
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
 
