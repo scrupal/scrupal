@@ -16,9 +16,7 @@
  **********************************************************************************************************************/
 
 import com.typesafe.sbt.web.SbtWeb
-import com.typesafe.sbt.web.Import.Assets
 import org.scalajs.sbtplugin.ScalaJSPlugin
-import org.scalajs.sbtplugin.ScalaJSPlugin.AutoImport._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt._
 import sbt.Keys._
@@ -30,20 +28,20 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
 
   val base_name = BuildInfo.projectName
 
-  lazy val utils = Project(base_name + "-utils", file("./scrupal-utils"))
+  lazy val utils_proj = Project(base_name + "-utils", file("./scrupal-utils"))
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(libraryDependencies ++= utils_dependencies)
-  lazy val utils_deps = utils % "compile->compile;test->test"
+  lazy val utils_deps = utils_proj % "compile->compile;test->test"
 
-  lazy val db = Project(base_name + "-db", file("./scrupal-db"))
+  lazy val db_proj = Project(base_name + "-db", file("./scrupal-db"))
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
     .settings(libraryDependencies ++= db_dependencies)
     .dependsOn(utils_deps)
-  lazy val db_deps = db % "compile->compile;test->test"
+  lazy val db_deps = db_proj % "compile->compile;test->test"
 
-  lazy val opa = Project(base_name + "-opa", file("./scrupal-opa"))
+  lazy val opa_proj = Project(base_name + "-opa", file("./scrupal-opa"))
     .enablePlugins(SbtWeb)
     .enablePlugins(ScalaJSPlugin)
     .settings(buildSettings:_*)
@@ -53,7 +51,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .settings(less_settings:_*)
     .settings(libraryDependencies ++= opa_dependencies)
     .settings(libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.7.0")
-    //.settings(libraryDependencies += "com.greencatsoft" %%% "scalajs-angular" % "0.3-SNAPSHOT")
+    .settings(libraryDependencies += "com.greencatsoft" %%% "scalajs-angular" % "0.3-SNAPSHOT")
     .settings(
       emitSourceMaps := true,
       persistLauncher := true,
@@ -66,10 +64,10 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
       artifactPath in (Compile, fastOptJS) := (
         target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-fastOpt.js")
     )
-  val opa_deps = opa % "compile->compile;test->test"
+  val opa_deps = opa_proj % "compile->compile;test->test"
 
 
-  lazy val core = Project(base_name + "-core", file("./scrupal-core"))
+  lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtWeb)
     .settings(buildSettings:_*)
     .settings(resolver_settings:_*)
@@ -77,13 +75,10 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .settings(less_settings:_*)
     .settings(core_pipeline_settings:_*)
     .settings(
-      // unmanagedResourceDirectories in Assets += (crossTarget in opa).value,
-      // artifactPath in (opa, Compile, fastOptJS) := (crossTarget.value / "scrupal-opa-opt.js"),
       libraryDependencies ++= core_dependencies
     )
-
     .dependsOn(utils_deps, db_deps, opa_deps)
-  lazy val core_deps = core % "compile->compile;test->test"
+  lazy val core_deps = core_proj % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
     .settings(buildSettings:_*)
@@ -102,8 +97,8 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
       libraryDependencies ++= root_dependencies
     )
     .settings(UnidocPlugin.unidocSettings: _*)
-    .dependsOn(config_deps, core_deps, db_deps, utils_deps)
-    .aggregate(config_proj, opa, core, db, utils)
+    .dependsOn(config_deps, opa_deps, core_deps, db_deps, utils_deps)
+    .aggregate(config_proj, opa_proj, core_proj, db_proj, utils_proj)
 
   override def rootProject = Some(root)
 }
