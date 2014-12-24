@@ -25,7 +25,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scrupal.core.api.{Scrupal, Site}
 import scrupal.core.http.actors.ScrupalServiceActor
-import scrupal.utils.{ScrupalComponent, DateTimeHelpers}
+import scrupal.utils.{Configuration, ScrupalComponent, DateTimeHelpers}
 import spray.can.Http
 
 import scala.compat.Platform
@@ -37,33 +37,32 @@ import scala.concurrent.duration._
   * Since we are Spray based that only consists of creating the actor system, the top level Actor, and binding that
   * actor to the correct HTTP interface and port.
   */
-case class Boot(scrupal: Scrupal) extends ScrupalComponent
+case class Boot(scrupal: Scrupal, config: Configuration) extends ScrupalComponent
 {
-  // Ask Scrupal to do its initialization .. lots of things can go wrong ;)
-  val (config,dbContext) = scrupal.open()
-
-  // Check to make sure everything is ready to run.
-  checkReady()
-
-  // we need an ActorSystem to host our application in
-  implicit val system = ActorSystem("Scrupal-Http")
-
-  implicit val timeout = Timeout(config.getMilliseconds("scrupal.timeout").getOrElse(8000), TimeUnit.MILLISECONDS)
-
-  // create and start our service actor
-  val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal, timeout), ScrupalServiceActor.name)
-
-  val interface = config.getString("scrupal.http.interface").getOrElse("0.0.0.0")
-  val port = config.getInt("scrupal.http.port").getOrElse(8888)
-
-  log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout}ms")
-
   val executionStart = Platform.currentTime
 
-  // start a new HTTP server on port 8080 with our service actor as the handler
-  IO(Http) ? Http.Bind(service, interface, port)
+  def run() = {
+    // Check to make sure everything is ready to run.
+    checkReady()
 
-  scrupal.onStart()
+    // we need an ActorSystem to host our application in
+    implicit val system = ActorSystem("Scrupal-Http")
+
+    implicit val timeout = Timeout(config.getMilliseconds("scrupal.timeout").getOrElse(8000), TimeUnit.MILLISECONDS)
+
+    // create and start our service actor
+    val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal, timeout), ScrupalServiceActor.name)
+
+    val interface = config.getString("scrupal.http.interface").getOrElse("0.0.0.0")
+    val port = config.getInt("scrupal.http.port").getOrElse(8888)
+
+    log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout}ms")
+
+    // start a new HTTP server on port 8080 with our service actor as the handler
+    IO(Http) ? Http.Bind(service, interface, port)
+
+    scrupal.onStart()
+  }
 
   def runDuration = {
     val run_time = Platform.currentTime - executionStart
