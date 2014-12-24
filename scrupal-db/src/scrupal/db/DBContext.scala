@@ -51,7 +51,7 @@ import scala.util.{Failure, Success, Try}
   * context, connection and database.
   *
   */
-case class DBContext(val id: Symbol, mongo_uri: String, driver: MongoDriver,
+case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
                      user: Option[String] = None, pass: Option[String] = None) extends Registrable[DBContext] with ScrupalComponent {
   def registry = DBContext
   def asT = this
@@ -149,8 +149,7 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
         log.debug("The mongoDB driver initialized " + startCount + " times.")
       case None =>
         val full_config = ConfigFactory.load()
-        val config = full_config.getConfig("mongo-async-driver")
-        val driver = MongoDriver(config)
+        val driver = MongoDriver(full_config)
         val s = State(driver)
         state = Some(State(driver))
     }
