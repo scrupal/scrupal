@@ -34,7 +34,7 @@ case class TimestampType (
   id : Identifier,
   description: String,
   min: DateTime = new DateTime(0L),
-  max: DateTime = new DateTime(Long.MaxValue)
+  max: DateTime = new DateTime(Long.MaxValue/2)
 ) extends Type {
   override type ScalaValueType = Duration
   assert(min.getMillis <= max.getMillis)

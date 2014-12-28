@@ -17,11 +17,10 @@
 
 package scrupal.core.html
 
-import java.text.DateFormat
-import java.util.{Locale, Date}
 
 import org.joda.time._
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormatter}
+import org.joda.time.format.{ISODateTimeFormat}
+import scrupal.core.api.Html.TagContent
 
 import scalatags.Text.all._
 
@@ -162,9 +161,13 @@ object Forms {
 
   def select(fld_name: String, fld_value: Option[String], options: Map[String,String],
               attributes: AttrList = EmptyAttrList) = {
-    scalatags.Text.tags.select(name:=fld_name, id:=fld_name, with_value(fld_value), attributes,
-      for ((the_value, label) ← options) { option(value:=the_value, label) }
-    )
+    val opts : Seq[TagContent] = {
+      for (key ← options.keys.toSeq.sorted) yield {
+        val valu : String = options.getOrElse(key, key)
+        option(value:=valu, key)
+      }
+    }.toSeq
+    scalatags.Text.tags.select(name:=fld_name, with_value(fld_value), attributes, opts )
   }
 
   def multiselect(fld_name: String, fld_value: Seq[String], options: Map[String,String],

@@ -17,13 +17,13 @@
 
 package scrupal.core.api
 
-import org.joda.time.DateTime
 import reactivemongo.bson._
 import scrupal.core.api.Html._
 import scrupal.core.html.Forms._
 import scrupal.core.types._
 import scrupal.db.Storable
 import scalatags.Text.all._
+import scalatags.Text.attrs
 
 /** Scrupal Forms
   * This object just contains the form related things. Note that this is a very general notion of forms and not
@@ -207,9 +207,9 @@ object Forms {
     def apply(value: BSONValue): ValidationResult = None // TODO: Implement this
   }
 
-  trait AbstractForm extends FormItem {
+  trait Form extends FormItem with Nameable with Describable {
     def submit: SubmitAction
-    def fields: Seq[FormItem]
+    def fields: Seq[FieldItem]
     def values: Settings
     def defaults: Settings
 
@@ -236,24 +236,45 @@ object Forms {
       }
     }
 
+    /**
+     * Wrap a field's rendered element with an appropriate label and other formatting.
+     * @param form The form that specifies how to wrap the field
+     * @param field The field whose rendered output should be wrapped
+     * @return The TagContent for the final markup for the field
+     */
+    def wrap(form: Form, field: FieldItem) : TagContent = {
+      // TODO: Implement field wrapping in AbstractForm
+      field.render(form)
+    }
+
     def render(form: Form) : TagContent = {
-      scalatags.Text.tags.form()
+      scalatags.Text.tags.form(action:="", method:="POST", attrs.name:=name,
+                               "enctype".attr:="application/x-www-form-urlencoded",
+        fields.map { field ⇒ wrap(form, field) }
+      )
     }
   }
 
-  case class Form(
+  case class SimpleForm(
     _id: String,
+    name: String,
+    description: String,
     submit: SubmitAction,
     fields: Seq[FieldItem],
     values: Settings = Settings.Empty,
     defaults: Settings = Settings.Empty
-  ) extends AbstractForm {
+  ) extends Form {
     require(fields.length > 0)
     def render : String = render(this).toString()
     def renderField(fieldContent: TagContent, field_label: TagContent, field_help: String) = {
     }
   }
 
-  // type InputGenerator = (Input) ⇒ Html
-  // type InputWrapper = (Input,Html) ⇒ Html
+  object emptyForm extends Form {
+    val _id = ""; val name = ""; val description = ""
+    val submit = SubmitAction("none", None)
+    val fields = Seq.empty[FieldItem]
+    val values = Settings.Empty
+    val defaults = Settings.Empty
+  }
 }
