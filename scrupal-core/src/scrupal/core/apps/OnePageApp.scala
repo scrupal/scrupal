@@ -23,7 +23,7 @@ import scrupal.core.api._
 import scrupal.core.html.OPAPage
 import shapeless.HList
 import spray.http.MediaTypes
-import spray.routing.PathMatchers.RestPath
+import spray.routing.PathMatchers.PathEnd
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -59,7 +59,7 @@ case class OnePageApp(
   val theOnePage: Node = OPANode(description, Some(DateTime.now()), Some(DateTime.now()))
 
   override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
-    PathToNodeAction(RestPath, theOnePage)
+    PathToNodeAction(PathEnd, theOnePage)
   )
 
 }

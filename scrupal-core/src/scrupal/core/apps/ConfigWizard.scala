@@ -15,19 +15,13 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.config
+package scrupal.core.apps
 
-import java.io.File
-
-import com.typesafe.config.{Config, ConfigFactory}
-import reactivemongo.bson.{BSONDocument, BSONInteger, BSONString}
+import reactivemongo.bson.{BSONLong, BSONInteger, BSONString}
 import scrupal.core._
-import scrupal.core.api.Forms.{Input, Section, Page, Form}
+import scrupal.core.api.Forms._
 import scrupal.core.types._
-import scrupal.db.{DBContext, Schema}
-import scrupal.utils.{ScrupalComponent, ConfigHelper, Configuration}
-
-import scala.util.{Failure, Success, Try}
+import scrupal.utils.ScrupalComponent
 
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -495,32 +489,35 @@ object ConfigWizard extends ScrupalComponent {
     def uri = { "mongodb://" + host + ":" + port + "/" + name }
   }
 
-  val databaseSection = Section("Site", "Site", Seq(
-    Input("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
-    Input("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONInteger(27172)),
-    Input("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
-    Input("User", "The user name for the MongoDB server authentication", Identifier_t),
-    Input("Password", "The password for the MongoDB server authentication", Password_t)
+  val databaseSection = FieldSet("Site", "Site", "Description", "Title", Seq(
+    StringField("Host", "Host", "The hostname where your MongoDB server is running",
+              DomainName_t, BSONString("localhost")),
+    IntegerField("Port", "Port", "The port number at which your MongoDB server is running",
+                  TcpPort_t, BSONLong(27172)),
+    StringField("Name", "Name", "The name of the database you want to connect to",
+              Identifier_t, BSONString("scrupal")),
+    StringField("User", "User", "The user name for the MongoDB server authentication", Identifier_t),
+    PasswordField("Password", "Password", "The password for the MongoDB server authentication", Password_t)
   ))
 
   case class SiteInfo(name:String="", description: String="", host:String="", requiresHttps: Boolean=false)
 
-  val siteSection = Section("Site", "Site", Seq(
-    Input("Name", "The name of the site you want to create", Identifier_t),
-    Input("Description", "A description of your site", NonEmptyString_t),
-    Input("Host", "The host name or IP address from which your site will be served", DomainName_t),
-    Input("HttpsRequired", "Check whether HTTPS is required or not", Boolean_t)
+  val siteSection = FieldSet("Site", "Site", "Description", "Title", Seq(
+    StringField("Name", "Name", "The name of the site you want to create", Identifier_t),
+    StringField("Description", "Description", "A description of your site", NonEmptyString_t),
+    StringField("Host", "Host", "The host name or IP address from which your site will be served", DomainName_t),
+    BooleanField("HttpsRequired", "HttpsRequired", "Check whether HTTPS is required or not", Boolean_t)
   ))
 
-  def makeSiteForm = siteSection.fill(SiteInfo())
+  // def makeSiteForm = siteSection.fill(SiteInfo())
 
   case class PageInfo(name: String="", description: String="", body: String="")
-  val pageSection = Section("Page", "Page", Seq(
-    Input("Name", "The name of the page you want to create", Identifier_t),
-    Input("Description", "A description or summary of your page", NonEmptyString_t),
-    Input("Body", "The body of your page in markdown format", Markdown_t)
+  val pageSection = FieldSet("Page", "Page", "Description", "Title", Seq(
+    StringField("Name", "Name", "The name of the page you want to create", Identifier_t),
+    StringField("Description", "Description",  "A description or summary of your page", NonEmptyString_t),
+    TextAreaField("Body", "Body", "The body of your page in markdown format", Markdown_t)
   ))
 
-  def makePageForm = pageSection.fill(PageInfo())
+  // def makePageForm = pageSection.fill(PageInfo())
 
 }

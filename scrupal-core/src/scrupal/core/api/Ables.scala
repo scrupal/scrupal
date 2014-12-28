@@ -79,14 +79,17 @@ trait Settingsable extends SettingsInterface {
   def validate(path: String) : ValidationResult = settings.validate(path)
   def getString(path: String) : Option[String] = settings.getString(path)
   def getBoolean(path: String) : Option[Boolean] = settings.getBoolean(path)
+  def getByte(path: String): Option[Byte] = settings.getByte(path)
   def getInt(path: String) : Option[Int] = settings.getInt(path)
   def getLong(path: String) : Option[Long] = settings.getLong(path)
   def getDouble(path: String) : Option[Double] = settings.getDouble(path)
   def getNumber(path: String) : Option[Number] = settings.getNumber(path)
+  def getInstant(path: String): Option[org.joda.time.Instant] = settings.getInstant(path)
   def getDuration(path: String) : Option[Duration] = settings.getDuration(path)
   def getMilliseconds(path: String) : Option[Long] = settings.getMilliseconds(path)
+  def getMicroseconds(path: String): Option[Long] = settings.getMicroseconds(path)
   def getNanoseconds(path: String) : Option[Long] = settings.getNanoseconds(path)
-  def setBoolean(path: String, value: Boolean) : Unit = settings.setBoolean(path, value)
+  override def setBoolean(path: String, value: Boolean) : Unit = settings.setBoolean(path, value)
 }
 
 /** Something that contains a path component for a URL */

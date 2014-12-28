@@ -40,10 +40,14 @@ case class StringType (
   override type ScalaValueType = String
   require(maxLen >= 0)
   def apply(value: BSONValue) = single(value) {
-    case BSONString(bs) if bs.length > maxLen => Some(s"String of length ${bs.length} exceeds maximum of $maxLen")
-    case BSONString(bs) if !regex.pattern.matcher(bs).matches() => Some(s"String '${bs}' does not match pattern '${regex.pattern.pattern()}")
-    case BSONString(bs) ⇒ None
-    case x: BSONValue => wrongClass("BSONString", x)
+    case bs: BSONString if bs.value.length > maxLen =>
+      Some(s"String of length ${bs.value.length} exceeds maximum of $maxLen")
+    case bs: BSONString if !regex.pattern.matcher(bs.value).matches() =>
+      Some(s"String '${bs}' does not match pattern '${regex.pattern.pattern()}")
+    case bs: BSONString ⇒
+      None
+    case x: BSONValue =>
+      wrongClass("BSONString", x)
   }
   override def kind = 'String
 }

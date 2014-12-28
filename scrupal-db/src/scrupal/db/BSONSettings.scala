@@ -23,6 +23,8 @@ package scrupal.db
 
 import java.util.concurrent.TimeUnit
 
+import org.joda.time.Instant
+
 import scala.concurrent.duration.Duration
 
 import reactivemongo.bson._
@@ -37,43 +39,51 @@ trait BSONSettingsInterface {
 
   def getString(path: String) : Option[String]
   def getBoolean(path: String) : Option[Boolean]
+  def getByte(path: String) : Option[Byte]
   def getInt(path: String) : Option[Int]
   def getLong(path: String) : Option[Long]
   def getDouble(path: String) : Option[Double]
   def getNumber(path: String) : Option[Number]
+  def getInstant(path: String) : Option[Instant]
   def getDuration(path: String) : Option[Duration]
   def getMilliseconds(path: String) : Option[Long]
+  def getMicroseconds(path: String) : Option[Long]
   def getNanoseconds(path: String) : Option[Long]
 
   def keySet : Set[String] = ???
   def entrySet: Set[BSONValue] = ???
 
-  def getConfiguration(path: String): Option[BSONSettings] = ???
-  def getConfigurations(path: String): Option[Seq[BSONSettings]] = ???
+  def getSettings(path: String): Option[BSONSettings] = ???
 
+  def getStrings(path: String): Option[Seq[String]] = ???
   def getBooleans(path: String): Option[Seq[Boolean]] = ???
   def getBytes(path: String) : Option[Seq[Long]] = ???
-  def getDoubles(path: String): Option[Seq[Double]] = ???
   def getInts(path: String): Option[Seq[Int]] = ???
   def getLongs(path: String): Option[Seq[Long]] = ???
+  def getDoubles(path: String): Option[Seq[Double]] = ???
   def getNumbers(path: String): Option[Seq[Number]] = ???
-  def getStrings(path: String): Option[Seq[String]] = ???
+  def getInstants(path: String): Option[Seq[Instant]] = ???
+  def getDurations(path: String): Option[Seq[Duration]] = ???
 
   def setString(path: String, value: String) : Unit = ???
-  def setBoolean(path: String, value: Boolean) : Unit
+  def setBoolean(path: String, value: Boolean) : Unit = ???
+  def setByte(path: String, value: Byte) : Unit = ???
   def setInt(path: String, value: Int) : Unit = ???
   def setLong(path: String, value: Long) : Unit = ???
   def setDouble(path: String, value: Double) : Unit = ???
   def setNumber(path: String, value: Number) : Unit = ???
+  def setInstance(path: String, value: Instant) : Unit = ???
   def setDuration(path: String, value: Duration) : Unit = ???
 
+  def setStrings(path: String, value: Seq[String]) : Unit = ???
   def setBooleans(path: String, value: Seq[Boolean]) : Unit = ???
   def setBytes(path: String, value: Seq[Byte]) : Unit = ???
   def setDoubles(path: String, value: Seq[Double]) : Unit = ???
   def setInts(path: String, value: Seq[Int]) : Unit = ???
   def setLongs(path: String, value: Seq[Long]) : Unit = ???
   def setNumbers(path: String, value: Seq[Number]) : Unit = ???
-  def setStrings(path: String, value: Seq[String]) : Unit = ???
+  def setInstants(path: String, value: Seq[Instant]) : Unit = ???
+  def setDurations(path: String, value: Seq[Duration]) : Unit = ???
 
   def toConfig : com.typesafe.config.Config = ???
 }
@@ -90,6 +100,10 @@ class BSONSettings(
 
   def getString(path: String) : Option[String] = BSONPathWalker(path,values).map{ s ⇒ s.asInstanceOf[BSONString].as[String] }
   def getBoolean(path: String) : Option[Boolean] = BSONPathWalker(path, values).map { b ⇒ b.asInstanceOf[BSONBoolean].as[Boolean] }
+  def getByte(path: String) : Option[Byte] = BSONPathWalker(path, values).map { b ⇒
+    b.asInstanceOf[BSONInteger].value.toByte
+  }
+
   def getInt(path: String) : Option[Int] = BSONPathWalker(path,values).map { i ⇒ i.asInstanceOf[BSONInteger].as[Int] }
   def getLong(path: String) : Option[Long] = BSONPathWalker(path, values).map { l ⇒ l.asInstanceOf[BSONLong].as[Long] }
   def getDouble(path: String) : Option[Double] = BSONPathWalker(path, values).map { l ⇒ l.asInstanceOf[BSONDouble].as[Double] }
@@ -99,7 +113,12 @@ class BSONSettings(
     case BSONDouble(d) ⇒ java.lang.Double.valueOf(d)
     case BSONBoolean(b) ⇒ java.lang.Integer.valueOf(if (b) 1 else 0)
   }
-  def getDuration(path: String) : Option[Duration] = BSONPathWalker(path, values).map { d ⇒ Duration(d.asInstanceOf[BSONLong].value, TimeUnit.NANOSECONDS)  }
+  def getInstant(path: String) : Option[Instant] = BSONPathWalker(path, values).map { i ⇒
+    new Instant(i.asInstanceOf[BSONLong].value)
+  }
+  def getDuration(path: String) : Option[Duration] = BSONPathWalker(path, values).map { d ⇒
+    Duration(d.asInstanceOf[BSONLong].value, TimeUnit.NANOSECONDS)
+  }
   def getMilliseconds(path: String) : Option[Long] = getDuration(path).map { d ⇒ d.toMillis }
   def getMicroseconds(path: String) : Option[Long] = getDuration(path).map { d ⇒ d.toMicros }
   def getNanoseconds(path: String) : Option[Long] = getDuration(path).map { d ⇒ d.toNanos }
@@ -108,10 +127,7 @@ class BSONSettings(
   override def keySet : Set[String] = values.elements.map { x ⇒ x._1 } toSet
   override def entrySet: Set[BSONValue] = values.elements.map { x ⇒ x._2 } toSet
 
-  // TODO: Implement remaining methods of the ConfigurationInterface in the Configuration class
-
-  def setBoolean(path: String, value: Boolean) : Unit = ???
-
+  // TODO: Implement remaining methods of the BSONSettingsInterface trait
 }
 
 object BSONPathWalker extends PathWalker[BSONDocument,BSONArray,BSONValue] {

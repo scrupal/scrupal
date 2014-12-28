@@ -55,7 +55,7 @@ case class WelcomeSite() extends Site('WelcomeToScrupal) {
 
   override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
     DocPathToDocs,
-    PathToNodeAction(RestPath, siteRoot)
+    PathToNodeAction(PathMatcher("index.html") | Slash | spray.routing.PathMatchers.PathEnd, siteRoot)
   )
 
   CoreModule.enable(this)

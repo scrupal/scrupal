@@ -27,49 +27,60 @@ class FormsSpec extends Specification {
 
   def throwRequirementFailed = throwA[IllegalArgumentException]("requirement failed")
 
-  "Forms.Input" should {
-    "reject NotAType, UnFoundType, and AnyType" in {
-      Input("foo", "Foo", Type.NotAType) must throwRequirementFailed
-      Input("foo", "Foo", UnfoundType('unfound)) must throwRequirementFailed
-      Input("foo", "Foo", AnyType_t) must throwRequirementFailed
+  "Forms.TextField" should {
+    "accept an AnyString_t" in {
+      StringField("foo", "Foo", "Description", AnyString_t)(BSONString("foo")) must beEqualTo(None)
     }
+    "accept an empty string" in {
+      StringField("foo", "Foo", "Description", AnyString_t)(BSONString("")) must beEqualTo(None)
+    }
+    "reject an invalid string" in {
+      val str = BSONString("###")
+      val field = StringField("foo", "Foo", "Description", DomainName_t)
+      val result = field(str)
+      result.isDefined must beTrue
+      result.get.size must beEqualTo(1)
+      result.get(0) must contain("does not match pattern")
+    }
+  }
+
+  "Forms.IntegerField" should {
     "accept a valid number" in {
-      Input("foo", "Foo", AnyInteger_t)(BSONInteger(42)) must beEqualTo(None)
+      IntegerField("foo", "Foo", "Description", AnyInteger_t)(BSONInteger(42)) must beEqualTo(None)
     }
     "reject an invalid number" in {
-      val result = Input("f", "F", AnyInteger_t)(BSONString("Foo"))
+      val result = IntegerField("f", "F", "Description", AnyInteger_t)(BSONString("Foo"))
       result.isDefined must beTrue
       result.get.size must beEqualTo(1)
       result.get(0) must contain("Expected value of type BSONInteger")
     }
+    "reject an out of range number" in {
+      val result = IntegerField("f", "F", "Description", TcpPort_t)(BSONLong(-42))
+      result.isDefined must beTrue
+      result.get.size must beEqualTo(1)
+      result.get(0) must contain("is out of range, below minimum of")
+    }
   }
 
   "Forms" should {
-    "reject an empty Section" in {
-      Section("foo", "Foo", Seq.empty[Input]) must throwRequirementFailed
-    }
-    "reject an empty Page" in {
-      Page("foo", "foo", Seq.empty[Section]) must throwRequirementFailed
+    "reject an empty FieldSet" in {
+      FieldSet("foo", "Foo", "description", "title", Seq.empty[Forms.Field]) must throwRequirementFailed
     }
     "reject an empty Form" in {
-      Form("foo",SubmitAction("foo",None), Seq.empty[Page]) must throwRequirementFailed
+      Form("foo", SubmitAction("foo",None), Seq.empty[FieldItem], Settings.Empty) must throwRequirementFailed
     }
     "accept a valid complex form" in {
       val form =
         Form("foo", SubmitAction("foo",None), Seq(
-          Page("one", "One", Seq(
-            Section("this","This", Seq(
-              Input("a", "An A", Identifier_t)
-            ))
-          ))
+          FieldSet("this","This", "Description", "title", Seq(StringField("a", "A", "An A", Identifier_t)))
+        ), Settings.Empty)
+
+      form(BSONDocument("_id" → "foo", "submit" → BSONDocument("_id" → "foo"), "fields" → BSONArray(
+        BSONDocument("_id" → "this", "name" → "This", "description" → "Description", "title" → "Title",
+          "inputs" → BSONArray(
+            BSONDocument("_id" → "a", "name" → "A", "description" → "An A", "typ" → "Identifier")
         ))
-      form(BSONDocument("_id" → "foo", "submit" → BSONDocument("_id" → "foo"), "pages" → BSONArray(
-        BSONDocument("_id" → "one", "description" → "one", "sections" → BSONArray(
-          BSONDocument("_id" → "this", "description" → "This", "inputs" → BSONArray(
-            BSONDocument("_id" → "a", "description" → "An A", "typ" → "Identifier")
-          ))
-        ))
-      ), "default" → BSONNull )) must beEqualTo(None)
+      ), "defaults" → BSONDocument() )) must beEqualTo(None)
     }
   }
 }

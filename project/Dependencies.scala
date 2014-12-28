@@ -49,7 +49,7 @@ trait Dependencies
   val play_json               = "com.typesafe.play"   %% "play-json"              % playV
   val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
 
-  val scalatags               = "com.scalatags"       %% "scalatags"              % "0.4.3-M1"
+  val scalatags               = "com.scalatags"       %% "scalatags"              % "0.5.0-SNAPSHOT"
 
   // Spray Stuff
   val akkaV = "2.3.6"

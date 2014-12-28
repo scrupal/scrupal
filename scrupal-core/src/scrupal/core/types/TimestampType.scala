@@ -17,8 +17,7 @@
 
 package scrupal.core.types
 
-import java.util.Date
-
+import org.joda.time.DateTime
 import reactivemongo.bson.{BSONLong, BSONValue}
 import scrupal.core.api._
 
@@ -34,16 +33,20 @@ import scala.concurrent.duration.Duration
 case class TimestampType (
   id : Identifier,
   description: String,
-  min: Date = new Date(0L),
-  max: Date = new Date(Long.MaxValue)
-  ) extends Type {
+  min: DateTime = new DateTime(0L),
+  max: DateTime = new DateTime(Long.MaxValue)
+) extends Type {
   override type ScalaValueType = Duration
-  assert(min.getTime <= max.getTime)
+  assert(min.getMillis <= max.getMillis)
   def apply(value: BSONValue) = single(value) {
-    case BSONLong(l) if l < min.getTime => Some(s"Timestamp $l is out of range, below minimum of $min")
-    case BSONLong(l) if l > max.getTime => Some(s"Timestamp $l is out of range, above maximum of $max")
-    case BSONLong(l) => None
-    case x: BSONValue => wrongClass("BSONLong",x)
+    case BSONLong(l) if l < min.getMillis =>
+      Some(s"Timestamp $l is out of range, below minimum of $min")
+    case BSONLong(l) if l > max.getMillis =>
+      Some(s"Timestamp $l is out of range, above maximum of $max")
+    case BSONLong(l) =>
+      None
+    case x: BSONValue =>
+      wrongClass("BSONLong",x)
   }
 }
 
