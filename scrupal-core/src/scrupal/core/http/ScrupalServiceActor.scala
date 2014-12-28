@@ -15,21 +15,18 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.actors
+package scrupal.core.http
 
-import akka.actor.{Props, Actor}
+import akka.actor.{Actor, Props}
 import akka.util.Timeout
-import scalatags.Text.all._
 import scrupal.core.api._
 import scrupal.core.html.PlainPage
-import scrupal.core.http.controllers._
-import scrupal.core.http.directives.SiteDirectives
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
-import spray.routing.Route
-import spray.routing._
+import spray.routing.{Route, _}
 
 import scala.util.{Failure, Success, Try}
+import scalatags.Text.all._
 
 object ScrupalServiceActor {
   def props(scrupal: Scrupal)(implicit askTimeout: Timeout): Props = Props(classOf[ScrupalServiceActor], scrupal)

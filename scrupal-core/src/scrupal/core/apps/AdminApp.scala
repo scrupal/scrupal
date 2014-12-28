@@ -18,10 +18,11 @@
 package scrupal.core.apps
 
 import org.joda.time.DateTime
+import scrupal.core.api.Forms._
 import scrupal.core.api.Html.{ContentsGenerator, TemplateGenerator, Contents}
 import scrupal.core.api._
 import scrupal.core.nodes.HtmlNode
-import scrupal.core.types.BundleType
+import scrupal.core.types.{Site_t, BundleType}
 import shapeless.HList
 import spray.routing.PathMatchers.PathEnd
 
@@ -37,9 +38,18 @@ object AdminApp extends Application('admin) {
   def modified: Option[DateTime] = timestamp
 
   object StatusBar extends Html.Fragment('AdminStatusBar, "Lists the Sites") ( new ContentsGenerator {
+    object SiteSelectionForm extends SimpleForm(
+      "SiteSeleciton", "SiteSelection", "A form for selecting the site to administrate",
+      SubmitAction("SelectSite", None), Seq(
+        SelectionField("Site", "Site", "Select a site to administrate", Site_t)
+      )
+    )
+
     def apply(context: Context): Contents = {
-      Seq(span("Scrupal Administration For ", u(context.siteName), " By ", em(context.user)
-      ))
+      Seq(
+        span("Scrupal Administration For ", u(context.siteName), " By ", em(context.user)),
+        SiteSelectionForm.render(SiteSelectionForm)
+      )
     }
   })
 

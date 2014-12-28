@@ -14,30 +14,40 @@
  * You should have received a copy of the GNU General Public License along with Scrupal.                              *
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
+import java.io.File
 
-package scrupal.core.http.controllers
+import com.typesafe.config.ConfigFactory
+import sbt._
 
-class UserController {
-// TODO: Implement a controller for user authentication, signup, reset, password change, etc.
-  /*
-# Login page
-# User Signup, Login, Password Reset, Greeting and Logout
-#GET    /login                                  scrupal.controllers.Authentication.login
-#GET    /logout                                 scrupal.controllers.Authentication.logout
-#GET    /not-authorized                         scrupal.controllers.Authentication.notAuthorized
-#GET    /goodbye                                scrupal.controllers.Authentication.goodbye
+import scala.language.postfixOps
 
-#GET    /signup                                 scrupal.controllers.Signup.startSignUp
-#POST   /signup                                 scrupal.controllers.Signup.handleStartSignUp
-#GET    /signup/:token                          scrupal.controllers.Signup.signUp(token)
-#POST   /signup/:token                          scrupal.controllers.Signup.handleSignUp(token)
-#GET    /reset                                  scrupal.controllers.Signup.startResetPassword
-#POST   /reset                                  scrupal.controllers.Signup.handleStartResetPassword
-#GET    /reset/:token                           scrupal.controllers.Signup.resetPassword(token)
-#POST   /reset/:token                           scrupal.controllers.Signup.handleResetPassword(token)
-#GET    /password                               scrupal.controllers.Password.changePassword
-#POST   /password                               scrupal.controllers.Password.handlePasswordChange
+/** Build Information
+ * Capture basic information about the build that is configured in the project/build_info.conf file
+ */
+object BuildInfo {
+  val project_conf = new File("project/project.conf")
+  val conf = ConfigFactory.parseFile(project_conf).resolve()
+  val buildNumber = conf.getInt("build.number")
+  val buildIdentifier = conf.getString("build.id")
+  val buildUrl = conf.getString("build.url")
+  val projectName = conf.getString("project.name")
+  val projectBaseVersion = conf.getString("project.version")
+  val projectVersion = if (buildNumber==0) projectBaseVersion + "-SNAPSHOT" else projectBaseVersion
 
+  object devnull extends ProcessLogger {
+    def info (s: => String) {}
+    def error (s: => String) { }
+    def buffer[T] (f: => T): T = f
+  }
 
-   */
+  val currentBranchPattern = """\*\s+([^\s]+)""".r
+
+  def gitBranches = "git branch --no-color" lines_! devnull mkString
+
+  def currBranch = ("git status -sb" lines_! devnull headOption) getOrElse "-" stripPrefix "## "
+
+  def currentGitBranch = currentBranchPattern findFirstMatchIn gitBranches map (_ group 1) getOrElse "-"
+
+  def currentProject(state: State) = Project.extract (state).currentProject.id
+
 }

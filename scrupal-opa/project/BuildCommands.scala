@@ -14,32 +14,57 @@
  * You should have received a copy of the GNU General Public License along with Scrupal.                              *
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
+import sbt.Keys._
+import sbt._
+import sbt.complete.Parsers._
 
-package scrupal.core
+import scala.language.postfixOps
 
-import scrupal.core.api.Scrupal
-import scrupal.core.apps.AdminApp
-import scrupal.utils.Configuration
+/**
+ * Augment the Play shell prompt with the Shell prompt which show the current project,
+ * git branch and build version
+ */
+object BuildCommands
+{
+  addCommandAlias("tq", "test-quick")
+  addCommandAlias("tm", "test-only scrupal.models")
+  addCommandAlias("tu", "test-only scrupal.utils")
+  addCommandAlias("tc", "test-only scrupal.controllers")
 
-object Boot extends Scrupal with App {
+  val printClasspath = TaskKey[File]("print-class-path", "Print the project's class path line by line.")
 
-  val (config, dbc) = open()
+  val printRuntimeClasspath = TaskKey[File]("print-runtime-class-path", "Print the project's runtime class path.")
 
-  val http = scrupal.core.http.Boot(this, config)
-
-  http.run()
-
-  override def open() = {
-    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
-    require(CoreModule.id == 'Core)
-    require(AdminApp.id == 'admin)
-    super.open()
+  def print_class_path = (target, fullClasspath in Compile, compile in Compile) map { (out, cp, analysis) =>
+    println("----- " + out.getCanonicalPath + ": FILES:")
+    println(cp.files.map(_.getCanonicalPath).mkString("\n"))
+    println("----- " + out.getCanonicalPath + ": All Binary Dependencies:")
+    println(analysis.relations.allBinaryDeps.toSeq.mkString("\n"))
+    println("----- END")
+    out
   }
 
-  override def onLoadConfig(config: Configuration): Configuration = {
-    val new_config = super.onLoadConfig(config)
-    CoreModule.bootstrap(new_config)
-    new_config
+  def print_runtime_class_path = (target, fullClasspath in Runtime).map { (out, cp) =>
+    println("----- " + out.getCanonicalPath + ": FILES:")
+    println(cp.files.map(_.getCanonicalPath).mkString("\n"))
+    println("----- END")
+    out
   }
 
+
+  val buildShellPrompt = {
+    (state: State) => {
+      "%s - %s - %s> ".format (BuildInfo.currentProject(state), BuildInfo.currentGitBranch, BuildInfo.projectVersion)
+    }
+  }
+
+  // FIXME: Trying to do something like "testOnly"
+  // SEE: https://github.com/sbt/sbt/blob/0.13/main/src/main/scala/sbt/Defaults.scala
+
+  val compileOnly = inputKey[Unit]("Compile just the specified files")
+
+  compileOnly := {
+    val args: Seq[String] = spaceDelimited("<arg>").parsed
+    args foreach println
+  }
 }

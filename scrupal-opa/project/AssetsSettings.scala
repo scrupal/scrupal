@@ -17,12 +17,11 @@
 
 import com.typesafe.sbt.digest.Import._
 import com.typesafe.sbt.gzip.Import._
-import com.typesafe.sbt.rjs.Import._
-import sbt._
-import sbt.Keys._
-
 import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.rjs.Import._
 import com.typesafe.sbt.web.Import._
+import sbt.Keys._
+import sbt._
 
 import scala.language.postfixOps
 
@@ -43,8 +42,15 @@ trait AssetsSettings {
     DigestKeys.algorithms := Seq("md5")
   )
 
-  lazy val core_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
-    pipelineStages := Seq(digest, gzip)
+  lazy val opa_pipeline_settings = general_pipeline_settings ++ Seq[Setting[_]](
+    pipelineStages := Seq(rjs, digest, gzip)
+  )
+
+  lazy val opa_sbt_web_settings = sbt_web_settings ++ Seq(
+    managedResources in Assets += crossTarget.value / "scrupal-opa-opt.js",
+    fileMappings in Assets := (crossTarget.value / "scrupal-opa-opt.js" get).map {
+      x => x -> target.value  / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa.js"
+    }
   )
 
   lazy val less_settings = Seq[Setting[_]](

@@ -32,14 +32,10 @@
  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
  **********************************************************************************************************************/
 
-package scrupal.core.http.controllers
+package scrupal.core.http
 
-import scrupal.core.api.{Scrupal, Module}
-import scrupal.utils.Pluralizer
+import scrupal.core.api.Scrupal
 import spray.routing._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 /** One line sentence description here.
   * Further description here.

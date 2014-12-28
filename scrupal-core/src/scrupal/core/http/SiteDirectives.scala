@@ -15,31 +15,63 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.core.http
 
-import scrupal.core.api.Scrupal
-import scrupal.core.apps.AdminApp
-import scrupal.utils.Configuration
+import scrupal.core.api.{Scrupal, Site}
+import spray.routing.Directives._
+import spray.routing._
 
-object Boot extends Scrupal with App {
 
-  val (config, dbc) = open()
+/** Spray Routing Directives For Scrupal Sites
+  * This provides a few routing directives that deal with sites being enabled and requiring a certain scheme
+  */
+trait SiteDirectives {
 
-  val http = scrupal.core.http.Boot(this, config)
-
-  http.run()
-
-  override def open() = {
-    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
-    require(CoreModule.id == 'Core)
-    require(AdminApp.id == 'admin)
-    super.open()
+  def siteScheme(site: Site) = {
+    scheme("http").hrequire { hnil => !site.requireHttps } |
+      scheme("https").hrequire { hnil => site.requireHttps }
   }
 
-  override def onLoadConfig(config: Configuration): Configuration = {
-    val new_config = super.onLoadConfig(config)
-    CoreModule.bootstrap(new_config)
-    new_config
+  def siteEnabled(site: Site, scrupal: Scrupal) = {
+    validate(site.isEnabled(scrupal),s"Site '${site.name}' is disabled.")
   }
 
+  def scrupalIsReady(scrupal: Scrupal) = {
+    validate(scrupal.isReady, s"Scrupal is not configured!")
+  }
+
+  /*
+
+  schemeName { scheme =>
+    reject(ValidationRejection(s"Site '${site._id.name}' does not support scheme'$scheme'"))
+  }
 }
+
+    require
+    validate(!site.requireHttps, s"Site '${site._id.name}' does not permit https.") {
+      extract (ctx => provide(site) )
+    }
+  } ~
+    scheme("https") {
+      validate(site.requireHttps, s"Site '${site._id.name}' requires https.") { hnil =>
+        extract(ctx => site)
+      }
+    } ~
+}
+*/
+
+  def site(scrupal: Scrupal): Directive1[Site] = {
+    hostName.flatMap { host:String ⇒
+      val sites = Site.forHost(host)
+      if (sites.isEmpty)
+        reject(ValidationRejection(s"No site defined for host '$host'."))
+      else {
+        val site = sites.head
+        siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx => site)
+      }
+    }
+  }
+}
+
+
+

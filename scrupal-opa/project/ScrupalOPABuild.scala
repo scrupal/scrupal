@@ -15,28 +15,47 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.controllers
+import com.typesafe.sbt.web.SbtWeb
+import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import sbt.Keys._
+import sbt._
 
-import scrupal.core.api.Context
+object ScrupalOPABuild extends Build with BuildSettings with AssetsSettings with Dependencies {
 
-/** Simple Reverse Routing For Scrupal
-  *
-  * Reverse Routing is the process of generating a URI path for a certain resource. In Scrupal, paths are not arbitrary
-  * but highly structured and regular. Because of this regularity, the corresponding path can be constructed quite
-  * easily especially from a given context. Every operation in Scrupal has a context in which that operation occurs.
-  * The context provides the site, application, request context, and other details of the operation that is
-  * requesting a reverse route. Because the context is present, the reverse route can be generated easily by simply
-  * substituting context and requested elements.
-  *
-  * Each controller must provide the ReverseRoute objects that it serves. These ReverseRoute objects are really
-  * just patterns for constructing the path. When needed,
-  */
-trait ReverseRoute {
-  def kind : Symbol
-  def path(implicit context: Context) : String
-}
+  import sbtunidoc.{Plugin ⇒ UnidocPlugin}
+  import spray.revolver.RevolverPlugin._
 
-class ApplicationRoute(app: Symbol) {
-  def kind = 'Application
-  val path = s"/${app.name}"
+  val base_name = BuildInfo.projectName
+
+  lazy val opa_proj = Project(base_name , file("."))
+    .enablePlugins(SbtWeb)
+    .enablePlugins(ScalaJSPlugin)
+    .settings(UnidocPlugin.unidocSettings: _*)
+    .settings(Revolver.settings:_*)
+    .settings(buildSettings:_*)
+    .settings(resolver_settings:_*)
+    .settings(docSettings:_*)
+    .settings(opa_sbt_web_settings:_*)
+    .settings(opa_pipeline_settings:_*)
+    .settings(less_settings:_*)
+    .settings(libraryDependencies ++= opa_dependencies)
+    .settings(libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.7.0")
+    .settings(libraryDependencies += "com.greencatsoft" %%% "scalajs-angular" % "0.3-SNAPSHOT")
+    .settings(
+      mainClass in (Compile, run) := Some("scrupal.core.Boot"),
+      emitSourceMaps := true,
+      persistLauncher := true,
+      persistLauncher in (Test) := false,
+      jsDependencies += RuntimeDOM,
+      artifactPath in (Compile, packageScalaJSLauncher) := (
+        target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-launcher.js"),
+      artifactPath in (Compile, fullOptJS) := (
+        target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-fullOpt.js"),
+      artifactPath in (Compile, fastOptJS) := (
+        target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-fastOpt.js")
+    )
+  val opa_deps = opa_proj % "compile->compile;test->test"
+
+  override def rootProject = Some(opa_proj)
 }

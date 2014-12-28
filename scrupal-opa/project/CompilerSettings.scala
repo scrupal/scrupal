@@ -15,51 +15,35 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.apps
+import sbt.Def
+import sbt.Keys._
 
-import org.joda.time.DateTime
-import reactivemongo.bson.BSONObjectID
-import scrupal.core.api._
-import scrupal.core.html.OPAPage
-import shapeless.HList
-import spray.http.MediaTypes
-import spray.routing.PathMatchers.PathEnd
+trait CompilerSettings {
 
-import scala.concurrent.{ExecutionContext, Future}
-
-case class OnePageApp(
-  override val id : Identifier,
-  name: String,
-  description: String,
-  modified : Option[DateTime] = None,
-  created : Option[DateTime] = None
-) extends Application(id) {
-  final val kind = 'OnePageApp
-
-  val opaPage = new OPAPage(name, description, "scrupal" )
-
-  case class OPANode(
-    description: String,
-    modified: Option[DateTime] = Some(DateTime.now),
-    created: Option[DateTime] = Some(DateTime.now),
-    _id: BSONObjectID = BSONObjectID.generate,
-    final val kind : Symbol = 'OPANode
-  ) extends Node {
-    final val mediaType = MediaTypes.`text/html`
-    def apply(context: Context) : Future[Result[_]] = {
-      context.withExecutionContext { implicit ec: ExecutionContext ⇒
-        Future {
-          val page = opaPage.render(context)
-          OctetsResult(page.getBytes(utf8), MediaTypes.`text/html`, Successful)
-        }
-      }
-    }
-  }
-
-  val theOnePage: Node = OPANode(description, Some(DateTime.now()), Some(DateTime.now()))
-
-  override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
-    PathToNodeAction(PathEnd, theOnePage)
+  lazy val compilerSettings : Seq[Def.Setting[_]] = Seq (
+    // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    // publishTo := Some(Resolvers.MyArtifactHost),
+    scalaVersion    := "2.11.4",
+    javacOptions ++= Seq(
+      "-encoding", "utf8",
+      "-g",
+      // "-J-Xmx1024m",
+      "-Xlint"
+    ),
+    javacOptions in doc ++= Seq ("-source", "1.7"),
+    scalacOptions   ++= Seq(
+      "-J-Xss8m",
+      "-J-Xmx1024m",
+      "-feature",
+      "-Xlint",
+      "-unchecked",
+      "-deprecation",
+      "-language:implicitConversions",
+      "-language:postfixOps",
+      "-language:reflectiveCalls",
+      "-encoding", "utf8",
+      "-Ywarn-adapted-args",
+      "-target:jvm-1.7"
+    )
   )
-
 }

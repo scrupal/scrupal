@@ -17,7 +17,7 @@
 
 package scrupal.core.http.controllers
 
-import scrupal.core.http.directives.SiteDirectives
+import scrupal.core.http.SiteDirectives
 import scrupal.test.{ScenarioGenerator, ScrupalSpecification}
 import spray.routing.HttpService
 import spray.testkit.Specs2RouteTest

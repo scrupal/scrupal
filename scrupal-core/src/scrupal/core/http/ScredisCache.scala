@@ -15,20 +15,17 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.cache
+package scrupal.core.http
 
 import akka.actor.ActorSystem
-import scrupal.core.api.Scrupal
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.Duration
-
+import reactivemongo.bson.{BSONDocument, BSONHandler}
 import scredis._
-
+import scrupal.core.api.Scrupal
 import spray.caching.Cache
 import spray.http.MediaType
 
-import reactivemongo.bson.{Macros, BSONHandler, BSONDocument}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait Cacheable[PT] {

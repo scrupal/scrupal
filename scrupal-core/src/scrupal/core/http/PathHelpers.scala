@@ -15,12 +15,12 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.directives
+package scrupal.core.http
 
 import shapeless.{HList, HNil}
 import spray.http.Uri.Path
-import spray.routing._
 import spray.routing.Directives._
+import spray.routing._
 
 /**
  * Created by reidspencer on 11/10/14.

@@ -37,6 +37,8 @@ case class SelectionType(
 
 object Theme_t extends SelectionType('Theme, "Choice of themes", DataCache.themes)
 
+object Site_t extends SelectionType('Site, "Choice of sites", DataCache.sites)
+
 object UnspecificQuantity_t extends SelectionType('UnspecificQuantity,
   "A simple choice of quantities that do not specifically designate a number",
   Seq("None", "Some", "Any", "Both", "Few", "Several", "Most", "Many", "All")

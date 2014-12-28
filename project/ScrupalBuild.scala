@@ -41,31 +41,6 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .dependsOn(utils_deps)
   lazy val db_deps = db_proj % "compile->compile;test->test"
 
-  lazy val opa_proj = Project(base_name + "-opa", file("./scrupal-opa"))
-    .enablePlugins(SbtWeb)
-    .enablePlugins(ScalaJSPlugin)
-    .settings(buildSettings:_*)
-    .settings(resolver_settings:_*)
-    .settings(opa_sbt_web_settings:_*)
-    .settings(opa_pipeline_settings:_*)
-    .settings(less_settings:_*)
-    .settings(libraryDependencies ++= opa_dependencies)
-    .settings(libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.7.0")
-    .settings(libraryDependencies += "com.greencatsoft" %%% "scalajs-angular" % "0.3-SNAPSHOT")
-    .settings(
-      emitSourceMaps := true,
-      persistLauncher := true,
-      persistLauncher in (Test) := false,
-      jsDependencies += RuntimeDOM,
-      artifactPath in (Compile, packageScalaJSLauncher) := (
-        target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-launcher.js"),
-      artifactPath in (Compile, fullOptJS) := (
-        target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-fullOpt.js"),
-      artifactPath in (Compile, fastOptJS) := (
-        target.value / "web" / "classes" / "main" / "lib" / "scrupal" / "scrupal-opa-fastOpt.js")
-    )
-  val opa_deps = opa_proj % "compile->compile;test->test"
-
 
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtWeb)
@@ -77,7 +52,7 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .settings(
       libraryDependencies ++= core_dependencies
     )
-    .dependsOn(utils_deps, db_deps, opa_deps)
+    .dependsOn(utils_deps, db_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
@@ -97,8 +72,8 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
       libraryDependencies ++= root_dependencies
     )
     .settings(UnidocPlugin.unidocSettings: _*)
-    .dependsOn(config_deps, opa_deps, core_deps, db_deps, utils_deps)
-    .aggregate(config_proj, opa_proj, core_proj, db_proj, utils_proj)
+    .dependsOn(config_deps, core_deps, db_deps, utils_deps)
+    .aggregate(config_proj, core_proj, db_proj, utils_proj)
 
   override def rootProject = Some(root)
 }

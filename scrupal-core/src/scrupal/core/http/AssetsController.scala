@@ -15,10 +15,9 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.controllers
+package scrupal.core.http
 
 import scrupal.core.api._
-import scrupal.core.http.ScrupalMarshallers
 import spray.http.{MediaTypes, StatusCodes, Uri}
 import spray.routing._
 

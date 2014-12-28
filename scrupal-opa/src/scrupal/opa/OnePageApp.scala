@@ -15,28 +15,46 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.directives
+package scrupal.opa
 
-import scrupal.core.api.Feature
-import scrupal.utils.Enablement
-import spray.routing._
-import spray.routing.Directives._
+import scrupal.core.api._
+import org.joda.time.DataTime
 
-/** Spray Directives For Scrupal Features
- *
- */
-trait FeatureDirectives {
+import scala.concurrent.{ExecutionContext, Future}
 
-  def feature(theFeature: Feature, scope: Enablement[_]) : Directive0 = {
-    if (theFeature.implemented) {
-      if (theFeature.isEnabled(scope)) {
-        pass
-      } else {
-        reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not enabled."))
+case class OnePageApp(
+  override val id : Identifier,
+  name: String,
+  description: String,
+  modified : Option[DateTime] = None,
+  created : Option[DateTime] = None
+) extends Application(id) {
+  final val kind = 'OnePageApp
+
+  val opaPage = new OPAPage(name, description, "scrupal" )
+
+  case class OPANode(
+    description: String,
+    modified: Option[DateTime] = Some(DateTime.now),
+    created: Option[DateTime] = Some(DateTime.now),
+    _id: BSONObjectID = BSONObjectID.generate,
+    final val kind : Symbol = 'OPANode
+  ) extends Node {
+    final val mediaType = MediaTypes.`text/html`
+    def apply(context: Context) : Future[Result[_]] = {
+      context.withExecutionContext { implicit ec: ExecutionContext ⇒
+        Future {
+          val page = opaPage.render(context)
+          OctetsResult(page.getBytes(utf8), MediaTypes.`text/html`, Successful)
+        }
       }
-    } else {
-      reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not implemented."))
     }
   }
+
+  val theOnePage: Node = OPANode(description, Some(DateTime.now()), Some(DateTime.now()))
+
+  override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
+    PathToNodeAction(PathEnd, theOnePage)
+  )
 
 }

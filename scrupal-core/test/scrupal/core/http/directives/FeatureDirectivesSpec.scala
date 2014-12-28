@@ -18,6 +18,7 @@
 package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
+import scrupal.core.http.FeatureDirectives
 import spray.routing.HttpService
 import spray.testkit.Specs2RouteTest
 

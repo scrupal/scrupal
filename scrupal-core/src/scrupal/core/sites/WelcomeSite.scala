@@ -21,7 +21,7 @@ import org.joda.time.DateTime
 import scrupal.core.CoreModule
 import scrupal.core.api.Html.{Contents, TemplateGenerator}
 import scrupal.core.api._
-import scrupal.core.apps.{AdminApp, OnePageApp}
+import scrupal.core.apps.AdminApp
 import scrupal.core.entities.EchoEntity
 import scrupal.core.html.PlainPage
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
@@ -63,10 +63,6 @@ case class WelcomeSite() extends Site('WelcomeToScrupal) {
   AdminApp.enable(this)
   CoreModule.enable(EchoEntity)
   CoreModule.enable(AdminApp)
-
-  val opa = OnePageApp('opa, "OnePageApp", "One Page App")
-  CoreModule.enable(opa)
-  opa.enable(this)
 }
 
 object WelcomeSite {

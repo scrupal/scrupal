@@ -25,6 +25,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
+import scrupal.core.sites.WelcomeSite
 
 import scrupal.db.DBContext
 import scrupal.utils._
@@ -190,20 +191,30 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
     */
   protected def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
     withSchema { (dbc, schema) =>
-      DataCache.update(this, schema)
-      schema.validateSchema(_executionContext).map {
+      val result = schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
-          for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
-            log.debug(s"Loading site '${s._id.name }' for host ${s.host }, enabled=${s.isEnabled(this)}")
-            s.enable(this)
-            s.host → s
+          val mapResult = {
+            for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
+              log.debug(s"Loading site '${s._id.name}' for host ${s.host}, enabled=${s.isEnabled(this)}")
+              s.enable(this)
+              s.host → s
+            }
+          }.toMap
+          if (mapResult.isEmpty) {
+            val site = new WelcomeSite()
+            site.enable(this)
+            Map(site.host → site )
+          } else {
+            mapResult
           }
-        }.toMap
+        }
       }.recover {
         case x: Throwable ⇒
           log.warn(s"Attempt to validate API Schema failed.", x)
           Map.empty[String, Site]
       }
+      DataCache.update(this, schema)
+      result
     }
   }
 

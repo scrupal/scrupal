@@ -15,21 +15,15 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.controllers
-
-import reactivemongo.bson.{BSONString, BSONDocument}
-import scrupal.core.api._
-import scrupal.core.http.ScrupalMarshallers
-import scrupal.core.http.directives.PathHelpers
-import scrupal.utils.{Registrable, Registry}
-import spray.http.StatusCodes.NotFound
-import spray.http.{HttpResponse, HttpRequest}
-import spray.routing._
-import spray.routing.directives.LogEntry
-import spray.http._
-import StatusCodes._
+package scrupal.core.http
 
 import akka.event.Logging._
+import scrupal.core.api._
+import scrupal.utils.{Registrable, Registry}
+import spray.http.StatusCodes.{NotFound, _}
+import spray.http.{HttpRequest, HttpResponse, _}
+import spray.routing._
+import spray.routing.directives.LogEntry
 
 /** Abstract Controller
   *

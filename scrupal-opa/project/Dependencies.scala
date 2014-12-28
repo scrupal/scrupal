@@ -129,26 +129,17 @@ trait Dependencies
     val commons_io           = "commons-io"          %  "commons-io"            % "2.4"        % "test"
   }
 
-  val root_dependencies : Seq[ModuleID] = Seq(
-  )
-
   val common_dependencies : Seq[ModuleID] = Seq(
     // mango,
     grizzled_slf4j, akka_slf4j, logback_classic,
     Test.specs2
   )
 
-  val utils_dependencies : Seq[ModuleID] = Seq(
-    scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config
+  val opa_dependencies : Seq[ModuleID] = Seq(
+    scalatags, requirejs, requirejs_domready, angularjs, angular_ui_bootstrap, spray_http, reactivemongo,
+    joda_time
+    // angular_drag_drop, angular_multi_select,
+    // angular_ui, angular_ui_bootstrap, angular_ui_router, angular_ui_utils, angular_ui_calendar
   ) ++ common_dependencies
 
-  val db_dependencies : Seq[ModuleID] = Seq(
-    reactivemongo, play_iteratees, play_json
-  ) ++ common_dependencies
-
-  val core_dependencies : Seq[ModuleID] = Seq(
-    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
-    commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
-    Test.spray_testkit, Test.akka_testkit, Test.commons_io
-  ) ++ common_dependencies
 }

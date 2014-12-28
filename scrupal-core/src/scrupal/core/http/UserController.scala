@@ -15,63 +15,29 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core.http.directives
+package scrupal.core.http
 
-import scrupal.core.api.{Scrupal, Site}
-import spray.routing._
-import spray.routing.Directives._
-
-
-/** Spray Routing Directives For Scrupal Sites
-  * This provides a few routing directives that deal with sites being enabled and requiring a certain scheme
-  */
-trait SiteDirectives {
-
-  def siteScheme(site: Site) = {
-    scheme("http").hrequire { hnil => !site.requireHttps } |
-      scheme("https").hrequire { hnil => site.requireHttps }
-  }
-
-  def siteEnabled(site: Site, scrupal: Scrupal) = {
-    validate(site.isEnabled(scrupal),s"Site '${site.name}' is disabled.")
-  }
-
-  def scrupalIsReady(scrupal: Scrupal) = {
-    validate(scrupal.isReady, s"Scrupal is not configured!")
-  }
-
+class UserController {
+// TODO: Implement a controller for user authentication, signup, reset, password change, etc.
   /*
+# Login page
+# User Signup, Login, Password Reset, Greeting and Logout
+#GET    /login                                  scrupal.controllers.Authentication.login
+#GET    /logout                                 scrupal.controllers.Authentication.logout
+#GET    /not-authorized                         scrupal.controllers.Authentication.notAuthorized
+#GET    /goodbye                                scrupal.controllers.Authentication.goodbye
 
-  schemeName { scheme =>
-    reject(ValidationRejection(s"Site '${site._id.name}' does not support scheme'$scheme'"))
-  }
+#GET    /signup                                 scrupal.controllers.Signup.startSignUp
+#POST   /signup                                 scrupal.controllers.Signup.handleStartSignUp
+#GET    /signup/:token                          scrupal.controllers.Signup.signUp(token)
+#POST   /signup/:token                          scrupal.controllers.Signup.handleSignUp(token)
+#GET    /reset                                  scrupal.controllers.Signup.startResetPassword
+#POST   /reset                                  scrupal.controllers.Signup.handleStartResetPassword
+#GET    /reset/:token                           scrupal.controllers.Signup.resetPassword(token)
+#POST   /reset/:token                           scrupal.controllers.Signup.handleResetPassword(token)
+#GET    /password                               scrupal.controllers.Password.changePassword
+#POST   /password                               scrupal.controllers.Password.handlePasswordChange
+
+
+   */
 }
-
-    require
-    validate(!site.requireHttps, s"Site '${site._id.name}' does not permit https.") {
-      extract (ctx => provide(site) )
-    }
-  } ~
-    scheme("https") {
-      validate(site.requireHttps, s"Site '${site._id.name}' requires https.") { hnil =>
-        extract(ctx => site)
-      }
-    } ~
-}
-*/
-
-  def site(scrupal: Scrupal): Directive1[Site] = {
-    hostName.flatMap { host:String ⇒
-      val sites = Site.forHost(host)
-      if (sites.isEmpty)
-        reject(ValidationRejection(s"No site defined for host '$host'."))
-      else {
-        val site = sites.head
-        siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx => site)
-      }
-    }
-  }
-}
-
-
-

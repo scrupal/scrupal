@@ -15,31 +15,28 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.core.http
 
-import scrupal.core.api.Scrupal
-import scrupal.core.apps.AdminApp
-import scrupal.utils.Configuration
+import scrupal.core.api.Feature
+import scrupal.utils.Enablement
+import spray.routing.Directives._
+import spray.routing._
 
-object Boot extends Scrupal with App {
+/** Spray Directives For Scrupal Features
+ *
+ */
+trait FeatureDirectives {
 
-  val (config, dbc) = open()
-
-  val http = scrupal.core.http.Boot(this, config)
-
-  http.run()
-
-  override def open() = {
-    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
-    require(CoreModule.id == 'Core)
-    require(AdminApp.id == 'admin)
-    super.open()
-  }
-
-  override def onLoadConfig(config: Configuration): Configuration = {
-    val new_config = super.onLoadConfig(config)
-    CoreModule.bootstrap(new_config)
-    new_config
+  def feature(theFeature: Feature, scope: Enablement[_]) : Directive0 = {
+    if (theFeature.implemented) {
+      if (theFeature.isEnabled(scope)) {
+        pass
+      } else {
+        reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not enabled."))
+      }
+    } else {
+      reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not implemented."))
+    }
   }
 
 }
