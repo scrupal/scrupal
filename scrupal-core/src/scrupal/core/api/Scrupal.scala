@@ -153,7 +153,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
 
     // Load the configuration and wait at most 10 seconds for it
     val load_result = Await.result(load(config, dbc), 10.seconds)
-    /* TODO: IMplement this so it doesn't thwart startup and test failures
+    /* TODO: Implement this so it doesn't thwart startup and test failures
     if (load_result.isEmpty)
       toss("Refusing to start because of load errors. Check logs for details.")
     else {
@@ -193,28 +193,27 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
     withSchema { (dbc, schema) =>
       val result = schema.validateSchema(_executionContext).map {
         strings: Seq[String] ⇒ {
-          val mapResult = {
-            for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
-              log.debug(s"Loading site '${s._id.name}' for host ${s.host}, enabled=${s.isEnabled(this)}")
-              s.enable(this)
-              s.host → s
-            }
-          }.toMap
-          if (mapResult.isEmpty) {
-            val site = new WelcomeSite()
-            site.enable(this)
-            Map(site.host → site )
-          } else {
-            mapResult
+          for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
+            log.debug(s"Loading site '${s._id.name}' for host ${s.host}, enabled=${s.isEnabled(this)}")
+            s.enable(this)
+            s.host → s
           }
-        }
+        }.toMap
       }.recover {
         case x: Throwable ⇒
           log.warn(s"Attempt to validate API Schema failed.", x)
           Map.empty[String, Site]
       }
       DataCache.update(this, schema)
-      result
+      result.map { sites ⇒
+        if (sites.isEmpty) {
+          val site = new WelcomeSite()
+          site.enable(this)
+          Map(site.host → site )
+        } else {
+          sites
+        }
+      }
     }
   }
 
