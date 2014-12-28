@@ -78,34 +78,6 @@ abstract class MarkedPage(the_title: String, the_description: String)
   }
 }
 
-case class OPAPage(the_title: String, the_description: String, module: String)
-  extends BasicPage(the_title, the_description)
-{
-  val data_main : Attr = "data-main".attr
-  val media: Attr = "media".attr
-
-  def bodyMain(context: Context) : Contents = Seq(
-    div(`class`:="container",
-      div(scalatags.Text.all.id := module)
-    )
-  )
-
-  override def bodyTag(context: Context) : Html.TagContent = {
-    body(// ng.controller := "scrupal", ng.show:= "page_is_ready",
-      bodyPrefix(context),
-      bodyMain(context),
-      js("var scrupal_module_to_load='" + module + "';"),
-      script(`type`:="text/javascript", data("main"):="/assets/javascripts/require-data-main.js",
-        src:=PathOf.lib("requirejs","require.js")(context)),
-      jslib("angularjs", "angular.js"),
-      jslib("scrupal", "scrupal-opa-fastOpt.js"),
-      jslib("scrupal", "scrupal-opa-launcher.js"),
-      bodySuffix(context)
-      // , js("var s = scrupal.opa.ScrupalApp(); s.doit('World');")
-    )
-  }
-}
-
 case class ForbiddenPage(what: String, why: String)
   extends BasicPage("Forbidden - " + what, "Forbidden Error Page") {
   val description = "A page for displaying an HTTP Forbidden error"

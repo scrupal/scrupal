@@ -15,41 +15,14 @@
  * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
  **********************************************************************************************************************/
 
-/** Configure requireJs
- * See [http://requirejs.org/docs/api.html#config] for details
- */
-require.config({
-    baseUrl : '/assets/javascripts',
+package scrupal.opa
 
-    paths: {
-        'domReady'              : [ '/assets/lib/requirejs-domready/domReady'],
-        'requirejs'             : [ '/assets/lib/requirejs/require' ],
-        'marked'                : [ '/assets/lib/marked/marked' ],
-        'angular'               : [ '/assets/lib/angularjs/angular' ],
-        'ngRoute'               : [ '/assets/lib/angularjs/angular-route'],
-        'ng.ui'                 : [ '/assets/lib/angular-ui/angular-ui'],
-        'ng.DragAndDrop'        : [ '/assets/lib/angular-dragdrop/draganddrop' ],
-        'ng.MultiSelect'        : [ '/assets/lib/angular-multi-select/angular-multi-select'],
-        'ng.ui.bootstrap'       : [ '/assets/lib/angular-ui-bootstrap/ui-bootstrap'] ,
-        'ng.ui.bootstrap.tpls'  : [ '/assets/lib/angular-ui-bootstrap/ui-bootstrap-tpls'] ,
-        'ng.ui.calendar'        : [ '/assets/lib/angular-ui-calendar/calendar'],
-        'ng.ui.router'          : [ '/assets/lib/angular-ui-router/angular-ui-router'],
-        'ng.ui.Utils'           : [ '/assets/lib/angular-ui-utils/ui-utils'],
-        'jqueryUI'              : [ '/assets/lib/jquery-ui/ui/jquery-ui'],
-        'scrupal'               : [ 'scrupal'],
-        'apidoc'                : [ 'apidoc' ],
-        'admin'                 : [ 'admin' ]
-    },
+import scala.scalajs.js
 
-    /**
-     * Shims are dependency settings for things that don't grok requirejs.
-     */
-    shim: {
-        'jquery'    : { exports: '$' },
-        'marked'    : { exports: 'marked' },
-        'angular'   : { exports: 'ng' },
-        'ngRoute'   : { exports: 'ngRoute' }
-    }
-});
+trait DOMReady extends js.Object {
+  def apply(onReady: js.Function0[Any]): Unit = js.native
+}
 
-
+object RequireJS extends js.GlobalScope {
+  def require(moduleNames: js.Array[String], callback: js.Function): Unit = js.native
+}
