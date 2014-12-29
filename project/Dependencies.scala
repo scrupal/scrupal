@@ -73,17 +73,6 @@ trait Dependencies
   val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.6"
 
   // WebJars based UI components
-  val requirejs               = "org.webjars"         % "requirejs"               % "2.1.15"
-  val requirejs_domready      = "org.webjars"         % "requirejs-domready"      % "2.0.1-2"
-  val angularjs               = "org.webjars"         % "angularjs"               % "1.3.8"
-  val angular_drag_drop       = "org.webjars"         % "angular-dragdrop"        % "1.0.6"
-  val angular_multi_select    = "org.webjars"         % "angular-multi-select"    % "2.0.1"
-  val angular_ui              = "org.webjars"         % "angular-ui"              % "0.4.0-3"
-  val angular_ui_bootstrap    = "org.webjars"         % "angular-ui-bootstrap"    % "0.12.0"
-  val angular_ui_router       = "org.webjars"         % "angular-ui-router"       % "0.2.13"
-  val angular_ui_utils        = "org.webjars"         % "angular-ui-utils"        % "47ff7ef35c"
-  val angular_ui_calendar     = "org.webjars"         % "angular-ui-calendar"     % "0.9.0-beta.1"
-  val angualr_ckeditor        = "org.webjars"         % "angular-ckeditor"        % "0.2.0"
   val marked                  = "org.webjars"         % "marked"                  % "0.3.2-1"
   val fontawesome             = "org.webjars"         % "font-awesome"            % "4.2.0"
 

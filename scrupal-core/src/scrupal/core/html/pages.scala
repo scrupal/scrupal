@@ -30,7 +30,6 @@ abstract class BasicPage(the_title: String, the_description: String) extends Htm
       link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
       link(rel := "stylesheet", href := PathOf.lib("font-awesome", "css/font-awesome.css"), media := "screen"),
       link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen")
-      //,      script(`type` := "text/javascript", src := PathOf.lib("bootstrap", "js/bootstrap.min.js"))
     )
   }
 
@@ -45,12 +44,23 @@ abstract class BasicPage(the_title: String, the_description: String) extends Htm
   }
 }
 
-abstract class MarkedPage(the_title: String, the_description: String)
+abstract class BootstrapPage(the_title: String, the_description: String)
   extends BasicPage(the_title, the_description)
+{
+  override def headSuffix(context: Context) : Html.Contents = {
+    super.headSuffix(context) ++ Seq(
+      jslib("jquery", "jquery.js"),
+      jslib("bootstrap", "js/bootstrap.js")
+    )
+  }
+}
+
+abstract class MarkedPage(the_title: String, the_description: String)
+  extends BootstrapPage(the_title, the_description)
 {
   override def headSuffix(context: Context) = {
     super.headSuffix(context) ++ Seq(
-      script(src:=PathOf.lib("marked","marked.js")(context))
+      jslib("marked","marked.js")
     )
   }
 

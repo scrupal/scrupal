@@ -16,8 +16,6 @@
  **********************************************************************************************************************/
 
 import com.typesafe.sbt.web.SbtWeb
-import org.scalajs.sbtplugin.ScalaJSPlugin
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt._
 import sbt.Keys._
 
@@ -40,7 +38,6 @@ object ScrupalBuild extends Build with BuildSettings with AssetsSettings with De
     .settings(libraryDependencies ++= db_dependencies)
     .dependsOn(utils_deps)
   lazy val db_deps = db_proj % "compile->compile;test->test"
-
 
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(SbtWeb)

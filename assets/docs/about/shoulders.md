@@ -271,7 +271,6 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.11.2")
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.1")
 addSbtPlugin("com.github.mpeltonen" %% "sbt-idea" % "1.6.0")
-addSbtPlugin("org.scala-lang.modules.scalajs" % "scalajs-sbt-plugin" % "0.5.5")
 val play_iteratees          = "com.typesafe.play"   %% "play-iteratees"         % playV
 val play_json               = "com.typesafe.play"   %% "play-json"              % playV
 val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
