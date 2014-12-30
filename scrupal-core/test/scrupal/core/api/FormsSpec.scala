@@ -32,21 +32,21 @@ class FormsSpec extends Specification {
 
   "Forms.TextField" should {
     "accept an AnyString_t" in {
-      StringField("foo", "Foo", "Description", AnyString_t)(BSONString("foo")) must beEqualTo(None)
+      StringField("Foo", "Description", AnyString_t)(BSONString("foo")) must beEqualTo(None)
     }
     "accept an empty string" in {
-      StringField("foo", "Foo", "Description", AnyString_t)(BSONString("")) must beEqualTo(None)
+      StringField("Foo", "Description", AnyString_t)(BSONString("")) must beEqualTo(None)
     }
     "reject an invalid string" in {
       val str = BSONString("###")
-      val field = StringField("foo", "Foo", "Description", DomainName_t)
+      val field = StringField("Foo", "Description", DomainName_t)
       val result = field(str)
       result.isDefined must beTrue
       result.get.size must beEqualTo(1)
       result.get(0) must contain("does not match pattern")
     }
     "render correctly" in {
-      val field = StringField("foo", "Foo", "Description", AnyString_t)
+      val field = StringField("Foo", "Description", AnyString_t)
       val content = field.render(Forms.emptyForm).render
       content must beEqualTo("""<input type="text" name="Foo" />""")
     }
@@ -54,22 +54,22 @@ class FormsSpec extends Specification {
 
   "Forms.IntegerField" should {
     "accept a valid number" in {
-      IntegerField("foo", "Foo", "Description", AnyInteger_t)(BSONInteger(42)) must beEqualTo(None)
+      IntegerField("Foo", "Description", AnyInteger_t)(BSONInteger(42)) must beEqualTo(None)
     }
     "reject an invalid number" in {
-      val result = IntegerField("f", "F", "Description", AnyInteger_t)(BSONString("Foo"))
+      val result = IntegerField("F", "Description", AnyInteger_t)(BSONString("Foo"))
       result.isDefined must beTrue
       result.get.size must beEqualTo(1)
       result.get(0) must contain("Expected value of type BSONInteger")
     }
     "reject an out of range number" in {
-      val result = IntegerField("f", "F", "Description", TcpPort_t)(BSONLong(-42))
+      val result = IntegerField("F", "Description", TcpPort_t)(BSONLong(-42))
       result.isDefined must beTrue
       result.get.size must beEqualTo(1)
       result.get(0) must contain("is out of range, below minimum of")
     }
     "render correctly" in {
-      val field = IntegerField("f", "F", "Description", TcpPort_t, minVal = 0, maxVal = 100)
+      val field = IntegerField("F", "Description", TcpPort_t, minVal = 0, maxVal = 100)
       val content = field.render(Forms.emptyForm).render
       content must beEqualTo("""<input type="number" name="F" min="0.0" max="100.0" />""")
     }
@@ -77,18 +77,16 @@ class FormsSpec extends Specification {
 
   "Forms" should {
     "reject an empty FieldSet" in {
-      FieldSet("foo", "Foo", "description", "title", Seq.empty[Forms.Field]) must throwRequirementFailed
+      FieldSet("Foo", "description", "title", Seq.empty[Forms.Field]) must throwRequirementFailed
     }
     "reject an empty Form" in {
-      SimpleForm("foo", "Foo", "Description", SubmitAction("foo", None), Seq.empty[FieldItem]) must
+      SimpleForm('Foo, "Foo", "Description", "/foo", Seq.empty[FieldItem]) must
         throwRequirementFailed
     }
     "accept a valid complex form" in {
       val form =
-        SimpleForm("foo", "Foo", "Description", SubmitAction("foo",None), Seq(
-          FieldSet("this","This", "Description", "title", Seq(
-            StringField("a", "A", "An A", Identifier_t)
-          ))
+        SimpleForm('Foo2, "Foo", "Description", "/foo", Seq(
+          FieldSet("This", "Description", "title", Seq( StringField("A", "An A", Identifier_t) ))
         ))
 
       form(BSONDocument("_id" → "foo", "submit" → BSONDocument("_id" → "foo"), "fields" → BSONArray(
@@ -100,17 +98,17 @@ class FormsSpec extends Specification {
     }
     "render correctly" in {
       val form =
-        SimpleForm("foo", "Foo", "Description", SubmitAction("foo",None), Seq(
-          FieldSet("this","This", "Description", "title", Seq(
-            StringField("a", "A", "An A", Identifier_t),
-            PasswordField("p", "P", "A P", Password_t),
-            TextAreaField("ta", "TA", "A TA", AnyString_t),
-            BooleanField("b", "B", "A B", Boolean_t),
-            IntegerField("i", "I", "An I", AnyInteger_t, minVal = 0, maxVal = 100),
-            RangeField("rng", "Rng", "A Rng", AnyReal_t),
-            RealField("r", "R", "A R", AnyReal_t, minVal = 0.0, maxVal = 100.0),
-            SelectionField("s", "S", "A S", UnspecificQuantity_t),
-            TimestampField("t", "T", "A T", AnyTimestamp_t)
+        SimpleForm('Foo3, "Foo", "Description", "/foo", Seq(
+          FieldSet("This", "Description", "title", Seq(
+            StringField("A", "An A", Identifier_t),
+            PasswordField("P", "A P", Password_t),
+            TextAreaField("TA", "A TA", AnyString_t),
+            BooleanField("B", "A B", Boolean_t),
+            IntegerField("I", "An I", AnyInteger_t, minVal = 0, maxVal = 100),
+            RangeField("Rng", "A Rng", AnyReal_t),
+            RealField("R", "A R", AnyReal_t, minVal = 0.0, maxVal = 100.0),
+            SelectionField("S", "A S", UnspecificQuantity_t),
+            TimestampField("T", "A T", AnyTimestamp_t)
           ))
         ))
       val content = form.render

@@ -18,11 +18,13 @@
 package scrupal.core.apps
 
 import org.joda.time.DateTime
+import reactivemongo.bson.{BSONLong, BSONString}
 import scrupal.core.api.Forms._
 import scrupal.core.api.Html.{ContentsGenerator, TemplateGenerator, Contents}
 import scrupal.core.api._
+import scrupal.core.html.BootstrapPage
 import scrupal.core.nodes.HtmlNode
-import scrupal.core.types.{Site_t, BundleType}
+import scrupal.core.types._
 import shapeless.HList
 import spray.routing.PathMatchers.PathEnd
 
@@ -38,22 +40,20 @@ object AdminApp extends Application('admin) {
   def modified: Option[DateTime] = timestamp
 
   object StatusBar extends Html.Fragment('AdminStatusBar, "Lists the Sites") ( new ContentsGenerator {
-    object SiteSelectionForm extends SimpleForm(
-      "SiteSeleciton", "SiteSelection", "A form for selecting the site to administrate",
-      SubmitAction("SelectSite", None), Seq(
-        SelectionField("Site", "Site", "Select a site to administrate", Site_t)
+    object SiteSelectionForm
+      extends SimpleForm('SiteSelectionForm, "SiteSelection",
+        "A form for selecting the site to administrate", "/admin/siteselectionform",
+        Seq(
+          SelectionField("Site", "Select a site to administrate", Site_t, inline=true)
+        )
       )
-    )
 
     def apply(context: Context): Contents = {
-      Seq(
-        span("Scrupal Administration For ", u(context.siteName), " By ", em(context.user)),
-        SiteSelectionForm.render(SiteSelectionForm)
-      )
+      Seq(SiteSelectionForm.render(SiteSelectionForm))
     }
   })
 
-  object Configuration extends Html.Fragment('AdminConfiguration, "Configuration") ( new ContentsGenerator {
+  object SiteConfig extends Html.Fragment('AdminSite, "Configuration") ( new ContentsGenerator {
     def apply(context: Context) : Contents =
       Seq(div(cls:="well",
         for ( (enablee,enablement) <- context.site.get.getEnablementMap) {
@@ -63,11 +63,20 @@ object AdminApp extends Application('admin) {
     }
   )
 
+  val dbForm = Forms.SimpleForm('dbConfigForm, "Database", "Description", "/admin/database/form/submit", Seq(
+    StringField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
+    IntegerField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
+    StringField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
+    StringField("User", "The user name for the MongoDB server authentication", Identifier_t),
+    PasswordField("Password", "The password for the MongoDB server authentication", Password_t),
+    SubmitField("Database", "Submit database configuration to Scrupal server.", "Configure")
+  ))
+
   object Database extends Html.Fragment('AdminDatabase, "Database Configuration") ( new ContentsGenerator {
     def apply(context: Context) : Contents =
       context.withSchema { (dbc, schema) ⇒
         Seq(
-          div(cls:="well",p("Database Configuration"))
+          div(cls:="well", dbForm.render )
         )
       }
     }
@@ -104,48 +113,54 @@ object AdminApp extends Application('admin) {
   )
 
   object TemplatePage extends Html.Template('ScrupalAdmin, "Scrupal Administration") ( new TemplateGenerator {
-    def apply(context: Context, args: Map[String, Html.Fragment]) : Contents =
-      Seq(
-        div(cls := "container",
-          div(cls := "panel panel-primary",
-            div(cls := "panel-heading", h1(cls := "panel-title", StatusBar(context)))),
-          div(cls := "panel-body",
-            div(role := "tabpanel",
-              ul(cls := "nav nav-pills", role := "tablist",
-                li(cls := "active", role := "presentation",
-                  a(href := "#database", aria.controls := "database", role := "tab", data("toggle") := "pill",
-                    "Database")),
-                li(role := "presentation",
-                  a(href := "#configuration", aria.controls := "configuration", role := "tab",
-                    data("toggle") := "pill", "Configuration")),
-                li(role := "presentation",
-                  a(href := "#modules", aria.controls := "modules", role := "tab",
-                    data("toggle") := "pill", "Modules")),
-                li(role := "presentation",
-                  a(href := "#applications", aria.controls := "applications", role := "tab",
-                    data("toggle") := "pill", "Applications"))
-              ),
-              div(cls := "tab-content",
-                div(role := "tabpanel", cls := "tab-pane active", scalatags.Text.all.id := "database", Database(context)),
-                div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "configuration",
-                  Configuration(context)),
-                div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "modules", Modules(context)),
-                div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "applications",
-                  Applications(context))
+    def apply(context: Context, args: Map[String, Html.Fragment]): Contents = {
+      val page = new BootstrapPage("ScrupalAdmin", "Scrupal Administration") {
+        override def body_content(context: Context): Contents = {
+          Seq(
+            div(cls := "container",
+              div(cls := "panel panel-primary",
+                div(cls := "panel-heading", h1(cls := "panel-title", StatusBar(context)))),
+              div(cls := "panel-body",
+                div(role := "tabpanel",
+                  ul(cls := "nav nav-pills", role := "tablist",
+                    li(cls := "active", role := "presentation",
+                      a(href := "#database", aria.controls := "database", role := "tab", data("toggle") := "pill",
+                        "Database")),
+                    li(role := "presentation",
+                      a(href := "#configuration", aria.controls := "configuration", role := "tab",
+                        data("toggle") := "pill", "Configuration")),
+                    li(role := "presentation",
+                      a(href := "#modules", aria.controls := "modules", role := "tab",
+                        data("toggle") := "pill", "Modules")),
+                    li(role := "presentation",
+                      a(href := "#applications", aria.controls := "applications", role := "tab",
+                        data("toggle") := "pill", "Applications"))
+                  ),
+                  div(cls := "tab-content",
+                    div(role := "tabpanel", cls := "tab-pane active", scalatags.Text.all.id := "database",
+                      Database(context)),
+                    div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "configuration",
+                      SiteConfig(context)),
+                    div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "modules", Modules(context)),
+                    div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "applications",
+                      Applications(context))
+                  )
+                )
               )
             )
           )
-        )
-      )
+        }
+      }
+      page.apply(context)
     }
-  )
+  })
 
   object adminLayout extends HtmlNode(
     description = "Layout for Admin application",
     template = TemplatePage,
     args = Map[String, Html.Fragment](
       "StatusBar" → StatusBar,
-      "Configuration" → Configuration,
+      "Configuration" → SiteConfig,
       "Database" → Database,
       "Modules" → Modules,
       "Applications" → Applications
@@ -155,6 +170,8 @@ object AdminApp extends Application('admin) {
   override val pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
     PathToNodeAction(PathEnd, adminLayout)
   )
+
+  dbForm.enable(this)
 }
 
 object SiteAdminEntity extends Entity('SiteAdmin) {

@@ -53,6 +53,14 @@ abstract class BootstrapPage(the_title: String, the_description: String)
       jslib("bootstrap", "js/bootstrap.js")
     )
   }
+
+  def body_content(context: Context) : Contents = {
+    Seq(span(em("OOPS!"), " You forgot to override body_content!"))
+  }
+
+  override def bodyMain(context: Context) : Contents = {
+    Seq(div(cls:="container", body_content(context)))
+  }
 }
 
 abstract class MarkedPage(the_title: String, the_description: String)
@@ -63,8 +71,6 @@ abstract class MarkedPage(the_title: String, the_description: String)
       jslib("marked","marked.js")
     )
   }
-
-  def body_content(context: Context) : Contents = Seq(span("**Oops** You forgot to override body_content"))
 
   override def bodyMain(context: Context) : Contents = {
     Seq(div(scalatags.Text.all.id:="marked", body_content(context)))

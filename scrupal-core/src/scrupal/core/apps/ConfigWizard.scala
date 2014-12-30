@@ -489,33 +489,30 @@ object ConfigWizard extends ScrupalComponent {
     def uri = { "mongodb://" + host + ":" + port + "/" + name }
   }
 
-  val databaseSection = FieldSet("Site", "Site", "Description", "Title", Seq(
-    StringField("Host", "Host", "The hostname where your MongoDB server is running",
-              DomainName_t, BSONString("localhost")),
-    IntegerField("Port", "Port", "The port number at which your MongoDB server is running",
-                  TcpPort_t, BSONLong(27172)),
-    StringField("Name", "Name", "The name of the database you want to connect to",
-              Identifier_t, BSONString("scrupal")),
-    StringField("User", "User", "The user name for the MongoDB server authentication", Identifier_t),
-    PasswordField("Password", "Password", "The password for the MongoDB server authentication", Password_t)
+  val databaseSection = FieldSet("Database", "Description", "Database", Seq(
+    StringField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
+    IntegerField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
+    StringField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
+    StringField("User", "The user name for the MongoDB server authentication", Identifier_t),
+    PasswordField("Password", "The password for the MongoDB server authentication", Password_t)
   ))
 
   case class SiteInfo(name:String="", description: String="", host:String="", requiresHttps: Boolean=false)
 
-  val siteSection = FieldSet("Site", "Site", "Description", "Title", Seq(
-    StringField("Name", "Name", "The name of the site you want to create", Identifier_t),
-    StringField("Description", "Description", "A description of your site", NonEmptyString_t),
-    StringField("Host", "Host", "The host name or IP address from which your site will be served", DomainName_t),
-    BooleanField("HttpsRequired", "HttpsRequired", "Check whether HTTPS is required or not", Boolean_t)
+  val siteSection = FieldSet("Site", "Description", "Site", Seq(
+    StringField("Name", "The name of the site you want to create", Identifier_t),
+    StringField("Description", "A description of your site", NonEmptyString_t),
+    StringField("Host", "The host name or IP address from which your site will be served", DomainName_t),
+    BooleanField("HttpsRequired", "Check whether HTTPS is required or not", Boolean_t)
   ))
 
   // def makeSiteForm = siteSection.fill(SiteInfo())
 
   case class PageInfo(name: String="", description: String="", body: String="")
-  val pageSection = FieldSet("Page", "Page", "Description", "Title", Seq(
-    StringField("Name", "Name", "The name of the page you want to create", Identifier_t),
-    StringField("Description", "Description",  "A description or summary of your page", NonEmptyString_t),
-    TextAreaField("Body", "Body", "The body of your page in markdown format", Markdown_t)
+  val pageSection = FieldSet("Page", "Description", "Page", Seq(
+    StringField("Name", "The name of the page you want to create", Identifier_t),
+    StringField("Description",  "A description or summary of your page", NonEmptyString_t),
+    TextAreaField("Body", "The body of your page in markdown format", Markdown_t)
   ))
 
   // def makePageForm = pageSection.fill(PageInfo())
