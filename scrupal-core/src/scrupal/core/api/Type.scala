@@ -17,9 +17,6 @@
 package scrupal.core.api
 
 import reactivemongo.bson._
-import spray.http.{MediaTypes, MediaType}
-
-import scala.language.existentials
 import scala.util.{Success, Failure, Try}
 
 import scrupal.utils.{Registry, Pluralizer, Registrable}
@@ -176,7 +173,7 @@ trait DocumentType extends Type {
 
 
 trait StructuredType extends DocumentType {
-  val fields : Map[String, Type]
+  def fields : Map[String, Type]
   def validatorFor(id:String) : Option[Type] = fields.get(id)
   def fieldNames : Iterable[String] = fields.keys
   def size = fields.size
