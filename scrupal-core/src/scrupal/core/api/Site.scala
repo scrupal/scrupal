@@ -25,6 +25,7 @@ import reactivemongo.bson._
 import scrupal.db._
 import scrupal.utils._
 import spray.http.Uri
+import scrupal.core.actions.NodeAction
 
 import scala.util.matching.Regex
 

@@ -20,7 +20,7 @@ package scrupal.core.api
 import reactivemongo.bson.BSONObjectID
 import spray.routing._
 
-object PathMatchers {
+object ScrupalPathMatchers {
 
   /**
    * A PathMatcher that matches and extracts a BSONObjectID instance.

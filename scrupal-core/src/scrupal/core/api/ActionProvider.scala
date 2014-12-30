@@ -17,14 +17,12 @@
 
 package scrupal.core.api
 
-import reactivemongo.bson.{BSONObjectID, BSONString, BSONDocument}
+import scrupal.core.actions.{NodeAliasAction, NodeIdAction}
 import scrupal.utils._
 import shapeless.HList
 import spray.http.Uri
 import spray.routing.PathMatcher.{Unmatched, Matched}
 import spray.routing.PathMatchers._
-
-import scala.concurrent.{ExecutionContext, Future}
 
 /** Generic object that provides Actions
   *
@@ -83,25 +81,35 @@ trait ActionProvider extends Identifiable {
     * Given a path and a context, find the matching PathToAction and then invoke it to yield the corresponding Action.
     * A subclass must implement this method.
     *
-    * @param key The key used to select this ActionProvider
+    * @param keyUsed The key used to select this ActionProvider
     * @param path The path to use to match the PathToAction function
     * @param context The context to use to match the PathToAction function
     * @return
     */
-  def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action]
+  def actionFor(keyUsed: String, path: Uri.Path, context: Context) : Option[Action]
 
   /** Resolve An Action
     *
     * Same as the Uri.Path variant but takes a String path.
     *
-    * @param key The key used to select this ActionProvider
+    * @param keyUsed The key used to select this ActionProvider
     * @param path The path to use to match the PathToAction function
     * @param context The context to use to match the PathToAction function
     * @return
     */
-  def actionFor(key: String, path: String, context: Context) : Option[Action] = {
-    actionFor(key, Uri.Path(path), context)
+  def actionFor(keyUsed: String, path: String, context: Context) : Option[Action] = {
+    actionFor(keyUsed, Uri.Path(path), context)
   }
+}
+
+/** ActionProvider with no subordinates
+  *
+  * Classes mixing this trait in are leaf nodes in the hierarchy of action providers. They have no subordinates and
+  * return true for the isTerminal method.
+  */
+trait TerminalActionProvider extends ActionProvider {
+  final override val subordinates = Map.empty[String,ActionProvider]
+  override val isTerminal = true
 }
 
 trait DelegatingActionProvider extends ActionProvider {
@@ -125,16 +133,6 @@ trait DelegatingActionProvider extends ActionProvider {
       None
     }
   }
-}
-
-/** ActionProvider with no subordinates
-  *
-  * Classes mixing this trait in are leaf nodes in the hierarchy of action providers. They have no subordinates and
-  * return true for the isTerminal method.
-  */
-trait TerminalActionProvider extends ActionProvider {
-  final override val subordinates = Map.empty[String,ActionProvider]
-  override val isTerminal = true
 }
 
 trait EnablementActionProvider[T <: EnablementActionProvider[T]]
@@ -195,42 +193,11 @@ trait EnablementPathMatcherToActionProvider[T <: EnablementPathMatcherToActionPr
   }
 }
 
-case class NodeIdAction(id: BSONObjectID, context: Context) extends Action {
-  def apply() : Future[Result[_]] = {
-    context.withSchema { (dbc, schema) ⇒
-      context.withExecutionContext { implicit ec: ExecutionContext ⇒
-        schema.nodes.fetch(id).flatMap {
-          case Some(node) ⇒
-            node(context)
-          case None ⇒
-            Future.successful( ErrorResult(s"Node at id '${id.toString}' not found.", NotFound) )
-        }
-      }
-    }
-  }
-}
-
-case class NodeAliasAction(path: String, context: Context) extends Action {
-  def apply() : Future[Result[_]] = {
-    val selector = BSONDocument("$eq" → BSONDocument("pathAlias" → BSONString(path)))
-    context.withSchema { (dbc, schema) ⇒
-      context.withExecutionContext { implicit ec: ExecutionContext ⇒
-        schema.nodes.findOne(selector).flatMap {
-          case Some(node) ⇒
-            node(context)
-          case None ⇒
-            Future.successful( ErrorResult(s"Node at path '$path' not found.", NotFound) )
-        }
-      }
-    }
-  }
-}
-
 object NodeProvider extends { val id: Symbol = 'Node } with TerminalActionProvider {
   def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
     if (key == singularKey || key == pluralKey) {
       {
-        PathMatchers.BSONObjectIdentifier(path) match {
+        ScrupalPathMatchers.BSONObjectIdentifier(path) match {
           case Matched(pathRest, extractions) ⇒
             if (pathRest.isEmpty) {
               val id = extractions.head
