@@ -158,7 +158,7 @@ trait AssetLocator {
   def isFile(url: URL) = { url != null && url.getProtocol == "file" }
   def isJar(url: URL) =  { url != null && url.getProtocol == "jar" }
 
-  /**
+  /*
    * List directory contents for a resource folder. Not recursive.
    * This is basically a brute-force implementation.
    * Works for regular files and also JARs.

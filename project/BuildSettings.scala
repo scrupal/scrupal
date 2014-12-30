@@ -28,7 +28,7 @@ trait BuildSettings extends CompilerSettings
   val buildSettings : Seq[Def.Setting[_]] = compilerSettings ++ Seq (
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     // publishTo := Some(Resolvers.MyArtifactHost),
-    organization    := "scrupal.org",
+    organization    := "org.scrupal",
     version         := BuildInfo.projectVersion,
 
     sourceDirectories in Compile := Seq(baseDirectory.value / "src"),
@@ -66,13 +66,14 @@ trait BuildSettings extends CompilerSettings
           if module.name.startsWith(name)
           jarFile = entry.data
         } yield jarFile
-          ).head
+        ).head
       }
       Map(
         findManagedDependency("org.reactivemongo",  "reactivemongo") → url("http://reactivemongo.org/releases/0.10.5/api/"),
         findManagedDependency("org.scala-lang", "scala-library") → url(s"http://www.scala-lang.org/api/$scalaVersion/"),
         findManagedDependency("com.typesafe.akka", "akka-actor") → url(s"http://doc.akka.io/api/akka/"),
-        findManagedDependency("com.typesafe", "config") → url("http://typesafehub.github.io/config/latest/api/")
+        findManagedDependency("com.typesafe", "config") → url("http://typesafehub.github.io/config/latest/api/"),
+        findManagedDependency("joda-time", "joda-time") → url("http://joda-time.sourceforge.net/apidocs/")
       )
     }
   )

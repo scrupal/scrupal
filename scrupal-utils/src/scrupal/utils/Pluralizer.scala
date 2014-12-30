@@ -20,9 +20,13 @@ package scrupal.utils
 import java.util.regex.{Matcher, Pattern}
 
 /** Competently find the plural of most common English words.
+	*
   * In dealing with logged messages, error messages, and other output that people see,
   * it is always nice to have the correct plural form of nouns be used. This class attempts to get pretty good
-  * coverage for the english language based on a variety of pluralization rules.
+  * coverage for the english language based on a variety of pluralization rules. This is also used in URL
+	* path matching to distinguish between operations that act on an instance (singular) or a collection of instances
+	* (plural)
+	*
   * Inspired by: [[https://github.com/atteo/evo-inflector/blob/master/src/main/java/org/atteo/evo/inflector/TwoFormInflector.java]]
   * Rules from: [[http://www.barstow.edu/lrc/tutorserv/handouts/015%20Irregular%20Plural%20Nouns.pd]]
   * Oxford Rules: [[http://oxforddictionaries.com/words/plurals-of-nouns]]

@@ -79,7 +79,7 @@ trait BSONValueBuilder {
     */
   def $array(elements: Producer[BSONValue]*): BSONArray = BSONArray(elements: _*)
 
-  /** Explicitly create an [[BSONArray]] from a [[Traversable]] of its elements
+  /** Explicitly create an [[reactivemongo.bson.BSONArray]] from a [[Traversable]] of its elements
     *
     * @param elements
     * @return

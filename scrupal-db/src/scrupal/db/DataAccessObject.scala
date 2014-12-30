@@ -32,8 +32,8 @@ import play.api.libs.iteratee.Iteratee
 
 
 /** An Abstraction For Easier Access to MongoDB Collections
-  * Provides a variety of useful methods assuming that the collection holds instances of [[Model]] and those instances
-  * are indexed by [[Id]].
+  * Provides a variety of useful methods assuming that the collection holds instances of `Model` and those instances
+  * are indexed by `Id`.
  * A DAO defines how to work with a specific collection.
  *
  * @tparam Model The representation of a document in the collection, typically a case class that extends Storable[Id]

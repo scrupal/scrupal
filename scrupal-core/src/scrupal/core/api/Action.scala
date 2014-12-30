@@ -53,7 +53,7 @@ trait Action extends (() => Future[Result[_]]) {
     *
     * Every action executes within some context. The abstract Context class has many variants but a consistent interface
     * to allow actions to comprehend and manipulate the context in which they are executing.
-    * @see [[Context]]
+    * @see [[scrupal.core.api.Context]]
     * @return
     */
   def context : Context

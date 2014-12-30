@@ -46,6 +46,22 @@ object ActionProcessor {
   val dispatcher_config_name = "scrupal.dispatcher"
 
 
+  /** Supervision Strategy Decider
+    * This "Decider" determines what to do for a given exception type. For now, all exceptions cause restart of the
+    * actor.
+    * @return An Akka Decider object
+    */
+  def decider: Decider = { case t:Throwable => SupervisorStrategy.Restart }
+
+  /** Escalation Object
+    * We use a OneForOneStrategy so that failure decisions are done on an actor-by-actor basis.
+    */
+  val escalator = OneForOneStrategy(
+    maxNrOfRetries = -1,
+    withinTimeRange = Duration.Inf,
+    loggingEnabled = true)(decider = decider)
+
+
   /** Make The Dispatcher ActorRef
     *
     * This is a router behind a cadre of ActionProcessor actors. The number of actors can be huge but it should be
@@ -55,20 +71,6 @@ object ActionProcessor {
     * managed by them. The pool starts with the minimum number of actors and increases as needed to the upper bound.
     */
   def makeDispatcherRef(system: ActorSystem, min_actors: Int, max_actors: Int) : ActorRef = {
-    /** Supervision Strategy Decider
-      * This "Decider" determines what to do for a given exception type. For now, all exceptions cause restart of the
-      * actor.
-      * @return An Akka Decider object
-      */
-    def decider: Decider = { case t:Throwable => SupervisorStrategy.Restart }
-
-    /** Escalation Object
-      * We use a OneForOneStrategy so that failure decisions are done on an actor-by-actor basis.
-      */
-    val escalator = OneForOneStrategy(
-      maxNrOfRetries = -1,
-      withinTimeRange = Duration.Inf,
-      loggingEnabled = true)(decider = decider)
 
     val resizer = Some(DefaultResizer(min_actors, max_actors))
 

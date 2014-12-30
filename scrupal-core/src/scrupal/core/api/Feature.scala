@@ -28,8 +28,8 @@ abstract class AbstractFeature extends Describable with Enablee with ModuleOwned
 /** A Feature of a Module.
   * Features are things that can be enabled or disabled that affect how a Module does its work. Scrupal handles the
   * administration of features for the Module. Modules simply declare the list of features they have and Scrupal
-  * deals with the rest. To check for a feature being enabled, just use the [[Feature.apply]] method like so:
-  * ```if (Feature('FeatureName))``` Because the if-expression requires a Boolean, the implicit featureToBool will be
+  * deals with the rest. To check for a feature being enabled, just use the `apply` method like so:
+  * `if (Feature('FeatureName))` Because the if-expression requires a Boolean, the implicit featureToBool will be
   * used. This makes accessing the enabled state of a feature simple.
   */
 case class Feature(
