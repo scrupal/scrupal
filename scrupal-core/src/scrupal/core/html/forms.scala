@@ -17,9 +17,8 @@
 
 package scrupal.core.html
 
-
 import org.joda.time._
-import org.joda.time.format.{ISODateTimeFormat}
+import org.joda.time.format.ISODateTimeFormat
 import scrupal.core.api.Html.TagContent
 
 import scalatags.Text.all._
