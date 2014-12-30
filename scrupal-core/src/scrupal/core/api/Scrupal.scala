@@ -204,15 +204,16 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
           log.warn(s"Attempt to validate API Schema failed.", x)
           Map.empty[String, Site]
       }
-      DataCache.update(this, schema)
       result.map { sites ⇒
-        if (sites.isEmpty) {
-          val site = new WelcomeSite()
-          site.enable(this)
-          Map(site.host → site )
+        val final_result = if (sites.isEmpty) {
+          val ws = new WelcomeSite()
+          ws.enable(this)
+          Map(ws.host → ws )
         } else {
           sites
         }
+        DataCache.update(this, schema)
+        final_result
       }
     }
   }
