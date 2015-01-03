@@ -31,7 +31,7 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
   case class TestTypes() extends FakeContext[TestTypes] {
     /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
     object MiddlePeriod extends AnyType(sym("MiddlePeriod"), "A type for validating URI strings.") {
-      override def validate(value: BSONValue) = single(value) {
+      override def validate(value: BSONValue) = simplify(value, "BSONString") {
         case v: BSONString => {
           val a = v.value.split('.')
           if (a.size > 2)
@@ -43,7 +43,7 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
           else
             None
         }
-        case x: BSONValue => wrongClass("BSONString", x)
+        case x: BSONValue => Some("")
       }
     }
 
@@ -104,60 +104,60 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
   "MiddlePeriod" should {
     "accept 'foo.bar'" in TestTypes() { t : TestTypes ⇒
       val result = t.MiddlePeriod.validate(BSONString("foo.bar"))
-      result.isDefined must beFalse
+      result.isError must beFalse
     }
     "reject 'foo'" in TestTypes() { t: TestTypes ⇒
-      t.MiddlePeriod.validate(BSONString("foo")).isDefined must beTrue
+      t.MiddlePeriod.validate(BSONString("foo")).isError must beTrue
     }
     "reject 'foo.barbaz'" in TestTypes() { t: TestTypes ⇒
-      t.MiddlePeriod.validate(BSONString("foo.barbaz")).isDefined must beTrue
+      t.MiddlePeriod.validate(BSONString("foo.barbaz")).isError must beTrue
     }
   }
 
 
   "RangeType(10,20)" should {
     "accept 17" in TestTypes() { t: TestTypes ⇒
-      t.rangeTy.validate(BSONInteger(17)).isDefined must beFalse
+      t.rangeTy.validate(BSONInteger(17)).isError must beFalse
     }
     "accept 10" in TestTypes() { t: TestTypes ⇒
-      t.rangeTy.validate(BSONInteger(10)).isDefined must beFalse
+      t.rangeTy.validate(BSONInteger(10)).isError must beFalse
     }
     "accept 20" in TestTypes() { t: TestTypes ⇒
-      t.rangeTy.validate(BSONInteger(20)).isDefined must beFalse
+      t.rangeTy.validate(BSONInteger(20)).isError must beFalse
     }
     "reject 9" in TestTypes() { t: TestTypes ⇒
-      t.rangeTy.validate(BSONInteger(9)).isDefined must beTrue
+      t.rangeTy.validate(BSONInteger(9)).isError must beTrue
     }
     "reject 21" in TestTypes() { t: TestTypes ⇒
-      t.rangeTy.validate(BSONInteger(21)).isDefined must beTrue
+      t.rangeTy.validate(BSONInteger(21)).isError must beTrue
     }
   }
 
 
   "RangeType(10.1,20.9)" should {
     "accept 17.0" in TestTypes() { t: TestTypes ⇒
-      t.realTy.validate(BSONDouble(17.0)).isDefined must beFalse
+      t.realTy.validate(BSONDouble(17.0)).isError must beFalse
     }
     "accept 10.2" in TestTypes() { t: TestTypes ⇒
-      t.realTy.validate(BSONDouble(10.2)).isDefined must beFalse
+      t.realTy.validate(BSONDouble(10.2)).isError must beFalse
     }
     "accept 20.8" in TestTypes() { t: TestTypes ⇒
-      t.realTy.validate(BSONDouble(20.8)).isDefined must beFalse
+      t.realTy.validate(BSONDouble(20.8)).isError must beFalse
     }
     "reject 10.01" in TestTypes() { t: TestTypes ⇒
-      t.realTy.validate(BSONDouble(10.01)).isDefined must beTrue
+      t.realTy.validate(BSONDouble(10.01)).isError must beTrue
     }
     "reject 20.99" in TestTypes() { t: TestTypes ⇒
-      t.realTy.validate(BSONDouble(20.99)).isDefined must beTrue
+      t.realTy.validate(BSONDouble(20.99)).isError must beTrue
     }
   }
 
   "EnumType(fibonacci)" should {
     "accept 'five'" in TestTypes() { t: TestTypes ⇒
-      t.enumTy.validate(BSONString("five")).isDefined must beFalse
+      t.enumTy.validate(BSONString("five")).isError must beFalse
     }
     "reject 'seven'" in TestTypes() { t: TestTypes ⇒
-      t.enumTy.validate(BSONString("seven")).isDefined must beTrue
+      t.enumTy.validate(BSONString("seven")).isError must beTrue
     }
     "provide 13 for 'six' " in TestTypes() { t: TestTypes ⇒
       t.enumTy.valueOf("six").get must beEqualTo(13)
@@ -167,76 +167,78 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
   "BLOBType(4)" should {
     "reject a string that is too long" in TestTypes() { t: TestTypes ⇒
       val url = BSONString("http://foo.com/bar/baz.bin")
-      t.blobTy.validate(url).isDefined must beTrue
+      t.blobTy.validate(url).isError must beTrue
     }
     "accept a string that is short enough" in TestTypes() { t: TestTypes ⇒
       val url = BSONString("http")
-      t.blobTy.validate(url).isDefined must beFalse
+      t.blobTy.validate(url).isError must beFalse
     }
     "accept BSONBinary" in TestTypes() { t: TestTypes ⇒
       val url = BSONBinary(Array[Byte](0,3,2,1), GenericBinarySubtype)
-      t.blobTy.validate(url).isDefined must beFalse
+      t.blobTy.validate(url).isError must beFalse
     }
   }
 
   "ListType(enumTy)" should {
     "reject BSONArray(6,7)" in TestTypes() { t: TestTypes ⇒
       val js :BSONValue = BSONArray( 6, 7 )
-      t.listTy.validate(js).isDefined must beTrue
+      t.listTy.validate(js).isError must beTrue
     }
     "accept BSONArray('six')" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray("six")
-      t.listTy.validate(js).isDefined must beFalse
+      t.listTy.validate(js).isError must beFalse
     }
     "accept BSONArray()" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray()
-      t.listTy.validate(js).isDefined must beFalse
+      t.listTy.validate(js).isError must beFalse
     }
     "accept BSONArray(\"one\", \"three\", \"five\")" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray("one", "three", "five")
-      t.listTy.validate(js).isDefined must beFalse
+      t.listTy.validate(js).isError must beFalse
     }
     "reject BSONArray('nine')" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray("nine")
-      t.listTy.validate(js).isDefined must beTrue
+      t.listTy.validate(js).isError must beTrue
     }
   }
 
   "SetType(t.rangeTy)" should {
     "reject BSONArray(\"foo\")" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray(BSONString("foo"))
-      t.setTy.validate(js).isDefined must beTrue
+      t.setTy.validate(js).isError must beTrue
     }
     "accept BSONArray(17)" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray(BSONInteger(17))
-      t.setTy.validate(js).isDefined must beFalse
+      t.setTy.validate(js).isError must beFalse
     }
     "accept BSONArray(17,18)" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray(17, 18)
-      t.setTy.validate(js).isDefined must beFalse
+      t.setTy.validate(js).isError must beFalse
     }
     "accept BSONArray(17,17)" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray(17, 17)
-      t.setTy.validate(js).isDefined must beFalse
+      val result = t.setTy.validate(js)
+      result.isError must beTrue
+      result.message must contain("non-distinct")
     }
     "reject BSONArray(21)" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray(21)
-      t.setTy.validate(js).isDefined must beTrue
+      t.setTy.validate(js).isError must beTrue
     }
   }
 
   "MapType(realTy)" should {
     "reject JsObject('foo' -> 17)" in TestTypes() { t: TestTypes ⇒
       val js = BSONDocument("foo" -> 17L)
-      t.mapTy.validate(js).isDefined must beFalse
+      t.mapTy.validate(js).isError must beFalse
     }
     "accept JsObject('foo' -> 17.0)" in TestTypes() { t: TestTypes ⇒
       val js = BSONDocument("foo" -> 17.0)
-      t.mapTy.validate(js).isDefined must beFalse
+      t.mapTy.validate(js).isError must beFalse
     }
     "reject BSONArray('foo', 17.0)" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray("foo", 17.0)
-      t.mapTy.validate(js).isDefined must beTrue
+      t.mapTy.validate(js).isError must beTrue
     }
   }
 
@@ -244,26 +246,26 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "accept matching input" in TestTypes() { t: TestTypes ⇒
       val js = BSONDocument( "trait1" -> t.js1, "trait2" -> t.js2)
       val result = t.AnEntity.validate(js)
-      result.isDefined must beFalse
+      result.isError must beFalse
     }
     "reject mismatched input" in TestTypes() { t: TestTypes ⇒
       val js = BSONDocument( "trait1" -> t.js2, "trait2" -> t.js1)
       val result = t.AnEntity.validate(js)
-      result.isDefined must beTrue
+      result.isError must beTrue
     }
     "accept reversed input" in TestTypes() { t: TestTypes ⇒
       val js = BSONDocument( "trait2" -> t.js2, "trait1" -> t.js1)
       val result = t.AnEntity.validate(js)
-      result.isDefined must beFalse
+      result.isError must beFalse
     }
   }
 
   "Identifier_t" should {
     "accept ***My-Funky.1d3nt1f13r###" in {
-      Identifier_t.validate(BSONString("***My-Funky.1d3nt1f13r###")).isDefined must beFalse
+      Identifier_t.validate(BSONString("***My-Funky.1d3nt1f13r###")).isError must beFalse
     }
     "reject 'Not An Identifier'" in {
-      Identifier_t.validate(BSONString("Not An Identifier ")).isDefined must beTrue
+      Identifier_t.validate(BSONString("Not An Identifier ")).isError must beTrue
     }
   }
 
@@ -301,62 +303,62 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
 
   "DomainName_t" should {
     "accept scrupal.org" in {
-      DomainName_t.validate(BSONString("scrupal.org")).isDefined must beFalse
+      DomainName_t.validate(BSONString("scrupal.org")).isError must beFalse
     }
     "reject ###.999" in {
-      DomainName_t.validate(BSONString("###.999")).isDefined must beTrue
+      DomainName_t.validate(BSONString("###.999")).isError must beTrue
     }
   }
 
   "URI_t" should {
     "accept http://user:pw@scrupal.org/path?q=where#extra" in {
-      URL_t.validate(BSONString("http://user:pw@scrupal.org/path?q=where#extra")).isDefined must beFalse
+      URL_t.validate(BSONString("http://user:pw@scrupal.org/path?q=where#extra")).isError must beFalse
     }
     "reject Not\\A@URI" in {
-      URL_t.validate(BSONString("Not\\A@URI")).isDefined must beTrue
+      URL_t.validate(BSONString("Not\\A@URI")).isError must beTrue
     }
   }
 
   "IPv4Address_t" should {
     "accept 1.2.3.4" in {
-      IPv4Address_t.validate(BSONString("1.2.3.4")).isDefined must beFalse
+      IPv4Address_t.validate(BSONString("1.2.3.4")).isError must beFalse
     }
     "reject 1.2.3.400" in {
-      IPv4Address_t.validate(BSONString("1.2.3.400")).isDefined must beTrue
+      IPv4Address_t.validate(BSONString("1.2.3.400")).isError must beTrue
     }
   }
 
   "TcpPort_t" should {
     "accept 8088" in {
-      TcpPort_t.validate(BSONInteger(8088)).isDefined must beFalse
+      TcpPort_t.validate(BSONInteger(8088)).isError must beFalse
     }
     "reject 65537" in {
-      TcpPort_t.validate(BSONString("65537")).isDefined must beTrue
+      TcpPort_t.validate(BSONString("65537")).isError must beTrue
     }
   }
 
   "EmailAddress_t" should {
     "accept someone@scrupal.org" in {
       // println("Email Regex: " + EmailAddress_t.regex.pattern.pattern)
-      EmailAddress_t.validate(BSONString("someone@scrupal.org")).isDefined must beFalse
+      EmailAddress_t.validate(BSONString("someone@scrupal.org")).isError must beFalse
     }
     "reject white space" in {
-      EmailAddress_t.validate(BSONString(" \t\r\n")).isDefined must beTrue
+      EmailAddress_t.validate(BSONString(" \t\r\n")).isError must beTrue
     }
     "reject nobody@ scrupal dot org" in {
-      EmailAddress_t.validate(BSONString("nobody@ 24 dot com")).isDefined must beTrue
+      EmailAddress_t.validate(BSONString("nobody@ 24 dot com")).isError must beTrue
     }
     "reject no body@scrupal.org" in {
-      EmailAddress_t.validate(BSONString("no body@scrupal.org")).isDefined must beTrue
+      EmailAddress_t.validate(BSONString("no body@scrupal.org")).isError must beTrue
     }
   }
 
   "LegalName_t" should {
     "accept 'My Legal Name'" in {
-      LegalName_t.validate(BSONString("My Legal Name")).isDefined must beFalse
+      LegalName_t.validate(BSONString("My Legal Name")).isError must beFalse
     }
     "reject tab char" in {
-      LegalName_t.validate(BSONString("\t")).isDefined must beTrue
+      LegalName_t.validate(BSONString("\t")).isError must beTrue
     }
   }
 

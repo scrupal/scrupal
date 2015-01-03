@@ -18,7 +18,7 @@
 package scrupal.core.api
 
 import org.joda.time.DateTime
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONValue, BSONDocument}
 import scrupal.core.types.BundleType
 import scrupal.utils.{Configuration, OSSLicense, Patterns, Version}
 
@@ -75,8 +75,9 @@ trait Settingsable extends SettingsInterface {
   def settingsType : StructuredType = BundleType.Empty
   def settingsDefault : BSONDocument = BSONDocument()
   def settings : Settings = Settings(settingsType, settingsDefault, settingsDefault)
-  def validate(doc: BSONDocument) : ValidationResult = settings.apply(doc)
-  def validate(path: String) : ValidationResult = settings.validate(path)
+  def validate(doc: BSONValue) : BVR = settings.validate(doc)
+  def validate(path: String) : BVR = settings.validate(path)
+
   def getString(path: String) : Option[String] = settings.getString(path)
   def getBoolean(path: String) : Option[Boolean] = settings.getBoolean(path)
   def getByte(path: String): Option[Byte] = settings.getByte(path)

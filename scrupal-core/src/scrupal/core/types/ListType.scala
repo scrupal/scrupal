@@ -33,10 +33,10 @@ case class ListType  (
   ) extends IndexableType {
   override type ScalaValueType = Seq[elemType.ScalaValueType]
   override def kind = 'List
-  def apply(value: BSONValue) : ValidationResult = {
+  def validate(value: BSONValue) : BVR = {
     value match {
-      case a: BSONArray => validate(a.values, elemType)
-      case x: BSONValue => wrongClass("BSONArray", x).map { s => Seq(s)}
+      case a: BSONArray => validateArray(a, elemType)
+      case x: BSONValue => wrongClass(x, "Array")
     }
   }
 }

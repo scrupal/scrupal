@@ -29,16 +29,18 @@ case class BooleanType(
   def verity = List("true", "on", "yes", "confirmed")
   def falseness = List("false", "off", "no", "denied")
 
-  def apply(value: BSONValue) : ValidationResult = single(value) {
-    case BSONBoolean(b) => None
-    case BSONInteger(bi)if bi == 0 || bi == 1 => None
-    case BSONInteger(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")
-    case BSONLong(bi)   if bi == 0 || bi == 1 => None
-    case BSONLong(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")
-    case BSONString(bs) if verity.contains(bs.toLowerCase)  => None
-    case BSONString(bs) if falseness.contains(bs.toLowerCase) => None
-    case BSONString(bs) => Some(s"Value '$bs' could not be interpreted as a boolean")
-    case x: BSONValue => wrongClass("BSONBoolean, BSONInteger, BSONLong, BSONString", x)
+  def validate(value: BSONValue) : BVR = {
+    simplify(value, "Boolean, Integer, Long, or String") {
+      case b: BSONBoolean => None
+      case BSONInteger(bi) if bi == 0 || bi == 1 => None
+      case BSONInteger(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")
+      case BSONLong(bl) if bl == 0 || bl == 1 => None
+      case BSONLong(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")
+      case BSONString(bs) if verity.contains(bs.toLowerCase) => None
+      case BSONString(bs) if falseness.contains(bs.toLowerCase) => None
+      case BSONString(bs) => Some(s"Value '$bs' could not be interpreted as a boolean")
+      case _ ⇒ Some("")
+    }
   }
 }
 

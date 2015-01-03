@@ -28,10 +28,10 @@ import scrupal.utils.PathWalker
   *
   * FIXME: Extract the BSON Specific parts of the implementations and put in scrupal-db
   */
-trait SettingsInterface extends BSONSettingsInterface {
+trait SettingsInterface extends BSONSettingsInterface with BSONValidator {
 
-  def validate(doc: BSONDocument) : ValidationResult
-  def validate(path: String) : ValidationResult
+  def validate(doc: BSONValue) : BVR
+  def validate(path: String) : BVR
 }
 
 /** Settings For Anything That Needs Them
@@ -44,19 +44,18 @@ case class Settings(
   types: StructuredType,
   override val defaults: BSONDocument,
   override val values: BSONDocument
-) extends BSONSettings(values,defaults) with SettingsInterface with BSONValidator[BSONDocument] {
+) extends BSONSettings(values,defaults) with SettingsInterface {
   require(types.size == defaults.elements.size)
-  def apply(doc: BSONDocument) : ValidationResult = validateMaps(doc, types.fields, defaults)
+  def validate(doc: BSONValue) : BVR = validateMaps(doc, types.fields, defaults)
 
-  def validate(doc: BSONDocument) : ValidationResult = this.apply(doc)
-
-  def validate(path: String) : ValidationResult = {
+  def validate(path: String) : BVR = {
     BSONPathWalker(path,values) match {
-      case None ⇒ Some(Seq(s"Path '$path' was not found amongst the values."))
+      case None ⇒ ValidationError(values, s"Path '$path' was not found amongst the values.")
       case Some(bv) ⇒
         TypePathWalker(path,types) match {
-          case None ⇒ Some(Seq(s"Path '$path' exists in configuration but the configuration has no type for it"))
-          case Some(validator) ⇒ validator(bv)
+          case None ⇒ ValidationError(values,
+            s"Path '$path' exists in configuration but the configuration has no type for it")
+          case Some(validator) ⇒ validator.validate(bv)
         }
     }
   }

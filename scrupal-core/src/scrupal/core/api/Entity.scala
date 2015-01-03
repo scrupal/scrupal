@@ -194,7 +194,7 @@ abstract class Entity(sym: Symbol) extends {
   val id: Symbol = sym; val _id: Symbol = sym ; val segment : String = id.name
 }
   with EntityActionProvider with VariantStorable[Symbol] with Registrable[Entity] with ModuleOwned
-  with Describable with Enablee with BSONValidator[BSONDocument] with Bootstrappable
+  with Describable with Enablee with BSONValidator with Bootstrappable
 {
   def moduleOf = { Module.values.find(mod ⇒ mod.entities.contains(this)) }
 
@@ -204,7 +204,7 @@ abstract class Entity(sym: Symbol) extends {
 
   def registry = Entity
 
-  def apply(value: BSONDocument) : ValidationResult = instanceType(value)
+  def validate(value: BSONValue) : BVR = instanceType.validate(value)
 
   def create(context: Context, id: String, instance: BSONDocument)
     : Create = NoopCreate(context, id, instance)

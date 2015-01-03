@@ -35,14 +35,16 @@ case class RegexType (
   description: String
 ) extends Type {
   override type ScalaValueType = Regex
-  def apply(value: BSONValue) = single(value) {
-    case BSONString(bs) => Try {
-      Pattern.compile(bs)
-    } match {
-      case Success(x) ⇒ None
-      case Failure(x) ⇒ Some(s"Error in pattern: ${x.getClass.getName}: ${x.getMessage}" )
+  def validate(value: BSONValue) : BVR = {
+    simplify(value, "String") {
+      case BSONString(bs) => Try {
+        Pattern.compile(bs)
+      } match {
+        case Success(x) ⇒ None
+        case Failure(x) ⇒ Some(s"Error in pattern: ${x.getClass.getName}: ${x.getMessage}")
+      }
+      case _ ⇒ Some("")
     }
-    case x: BSONValue ⇒ wrongClass("BSONString", x)
   }
 }
 

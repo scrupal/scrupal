@@ -30,18 +30,23 @@ class FormsSpec extends Specification {
 
   "Forms.TextField" should {
     "accept an AnyString_t" in {
-      StringField("Foo", "Description", AnyString_t)(BSONDocument("Foo" → BSONString("foo"))) must beEqualTo(None)
+      val field = StringField("Foo", "Description", AnyString_t)
+      val doc = BSONString("foo")
+      field.validate(doc) must beEqualTo(ValidationSucceeded(doc))
     }
     "accept an empty string" in {
-      StringField("Foo", "Description", AnyString_t)(BSONDocument("Foo" → BSONString(""))) must beEqualTo(None)
+      val field = StringField("Foo", "Description", AnyString_t)
+      val doc = BSONString("")
+      field.validate(doc) must beEqualTo(ValidationSucceeded(doc))
     }
     "reject an invalid string" in {
-      val str = BSONDocument("Foo" → BSONString("###"))
+      val str = BSONString("###")
       val field = StringField("Foo", "Description", DomainName_t)
-      val result = field(str)
-      result.isDefined must beTrue
-      result.get.size must beEqualTo(1)
-      result.get(0) must contain("does not match pattern")
+      val result = field.validate(str)
+      result.isError must beTrue
+      result.isInstanceOf[TypeValidationError[_]] must beTrue
+      val error = result.asInstanceOf[TypeValidationError[_]]
+      error.message must contain("does not match pattern")
     }
     "render correctly" in {
       val field = StringField("Foo", "Description", AnyString_t)
@@ -52,19 +57,27 @@ class FormsSpec extends Specification {
 
   "Forms.IntegerField" should {
     "accept a valid number" in {
-      IntegerField("Foo", "Description", AnyInteger_t)(BSONDocument("Foo" → BSONInteger(42))) must beEqualTo(None)
+      val field = IntegerField("Foo", "Description", AnyInteger_t)
+      val doc = BSONInteger(42)
+      field.validate(doc) must beEqualTo(ValidationSucceeded(doc))
     }
     "reject an invalid number" in {
-      val result = IntegerField("F", "Description", AnyInteger_t)(BSONDocument("F" → BSONString("Foo")))
-      result.isDefined must beTrue
-      result.get.size must beEqualTo(1)
-      result.get(0) must contain("Expected value of type BSONInteger")
+      val field = IntegerField("F", "Description", AnyInteger_t)
+      val doc = BSONString("Foo")
+      val result = field.validate(doc)
+      result.isError must beTrue
+      result.isInstanceOf[TypeValidationError[_]] must beTrue
+      val error = result.asInstanceOf[TypeValidationError[_]]
+      error.message must contain("is not convertible to a numeric")
     }
     "reject an out of range number" in {
-      val result = IntegerField("F", "Description", TcpPort_t)(BSONDocument("F" → BSONLong(-42)))
-      result.isDefined must beTrue
-      result.get.size must beEqualTo(1)
-      result.get(0) must contain("is out of range, below minimum of")
+      val field = IntegerField("F", "Description", TcpPort_t)
+      val doc = BSONLong(-42)
+      val result = field.validate(doc)
+      result.isError must beTrue
+      result.isInstanceOf[TypeValidationError[_]] must beTrue
+      val error = result.asInstanceOf[TypeValidationError[_]]
+      error.message must contain("is out of range, below minimum of")
     }
     "render correctly" in {
       val field = IntegerField("F", "Description", TcpPort_t, minVal = 0, maxVal = 100)
@@ -75,24 +88,18 @@ class FormsSpec extends Specification {
 
   "Forms" should {
     "reject an empty FieldSet" in {
-      FieldSet("Foo", "description", "title", Seq.empty[Forms.Field]) must throwRequirementFailed
+      FieldSet("Foo", "description", "title", Seq.empty[Forms.FormItem]) must throwRequirementFailed
     }
     "reject an empty Form" in {
-      SimpleForm('Foo, "Foo", "Description", "/foo", Seq.empty[FieldItem]) must throwRequirementFailed
+      SimpleForm('Foo, "Foo", "Description", "/foo", Seq.empty[Forms.FormItem]) must throwRequirementFailed
     }
     "accept a valid complex form" in {
       val form =
         SimpleForm('Foo2, "Foo", "Description", "/foo", Seq(
           FieldSet("This", "Description", "title", Seq( StringField("A", "An A", Identifier_t) ))
         ))
-
-      form(
-        BSONDocument("action" → "/foo", "fields" →
-          BSONArray(
-            BSONDocument("This" → BSONArray( BSONDocument( "A" → BSONString("foo") ) ) )
-          )
-        )
-      ) must beEqualTo(None)
+      val doc = BSONDocument("This" →  BSONDocument( "A" → BSONString("foo")  ) )
+      form.validate( doc ) must beEqualTo(ValidationSucceeded(doc))
     }
     "render correctly" in {
       val form =

@@ -31,7 +31,7 @@ import scrupal.utils.{Registry, Pluralizer, Registrable}
   * Types are interned by the Registry[Type] utility. This means that types share a single global name space.
   * Modules must cooperate on defining types in such a way that their names do not conflict.
   */
-trait Type extends Registrable[Type] with Describable with BSONValidator[BSONValue] with Bootstrappable {
+trait Type extends Registrable[Type] with Describable with BSONValidator with Bootstrappable {
   def registry = Type
 
   type ScalaValueType
@@ -52,12 +52,14 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
   def trivial = false
   def nonTrivial = !trivial
 
-  /** Validate value of BSON type B against Scrupal Type T
-    *
-    * @param value the BSONValue to be validated
-    * @return None if there were no validation errors, otherwise Some(Seq[String]) containing the errors
-    */
-  def validate(value: BSONValue): Option[Seq[String]] = apply(value)
+  override protected def simplify(value: BSONValue, classes: String)(validator: (BSONValue) => Option[String]): BVR = {
+    validator(value) match {
+      case Some("") ⇒ wrongClass(value, classes)
+      case Some(msg: String) ⇒ TypeValidationError(value, this, msg)
+      case None ⇒ ValidationSucceeded(value)
+    }
+  }
+
 
   /** Convert the BSON value B into the Scala value of type S
     *
@@ -66,12 +68,12 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
     * @return
     */
   def convert[S <: ScalaValueType](value: BSONValue)(implicit reader: BSONReader[BSONValue,S]) : Try[S] = {
-    apply(value) match {
-      case Some(error) => Failure[S](new ValidationError(this, error, value))
-      case None => reader.readTry(value)
-    }
+    val result = validate(value)
+    if (result.isError)
+      Failure[S](new Exception(result.message))
+    else
+      reader.readTry(value)
   }
-
 
   /** Convert the Scala value of type S into the BSON value of type B
     * After applying the BSONWriter this validates that what was written can be converted back to an S and
@@ -82,10 +84,11 @@ trait Type extends Registrable[Type] with Describable with BSONValidator[BSONVal
     */
   def convert[S <: ScalaValueType](value: S)(implicit writer: BSONWriter[S,BSONValue]) : Try[BSONValue] = {
     writer.writeTry(value).flatMap { bson =>
-      apply(bson) match {
-        case Some(error) => Failure[BSONValue](new ValidationError(this, error, bson))
-        case None => Success[BSONValue](bson)
-      }
+      val result = validate(bson)
+      if (result.isError)
+        Failure[BSONValue](new Exception(result.message))
+      else
+        Success[BSONValue](bson)
     }
   }
 }
@@ -96,7 +99,7 @@ case class Not_A_Type() extends Type {
   override val trivial = true
   val description = "Not A Type"
   val module = 'NotAModule
-  def apply(value: BSONValue) = Some(Seq("NotAType is not valid"))
+  def validate(value: BSONValue) = TypeValidationError(value, this, "NotAType is not valid")
 }
 
 case class UnfoundType(id: Symbol) extends Type {
@@ -104,9 +107,9 @@ case class UnfoundType(id: Symbol) extends Type {
   override val trivial = true
   val description = "A type that was not loaded in memory"
   val module = 'NotAModule
-  def apply(value: BSONValue) =
-    Some(Seq(
-      s"Unfound type '${id.name}' cannot be used for validation. The module defining the type is not loaded."))
+  def validate(value: BSONValue) =
+    TypeValidationError(value, this,
+      s"Unfound type '${id.name}' cannot be used for validation. The module defining the type is not loaded.")
 }
 
 
@@ -124,18 +127,18 @@ trait DocumentType extends Type {
   def allowMissingFields : Boolean = false
   def allowExtraFields : Boolean = false
 
-  def apply(value: BSONValue) : ValidationResult = {
+  def validate(value: BSONValue) : BVR = {
     value match {
       case d: BSONDocument =>
-        def doValidate(name: String, value: BSONValue) : Option[Seq[String]]= {
+        def doValidate(name: String, value: BSONValue) : BVR = {
           validatorFor(name) match {
-            case Some(validator) ⇒ validator.apply(value)
+            case Some(validator) ⇒ validator.validate(value)
             case None ⇒ {
               if (!allowExtraFields)
-                Some(Seq(s"Field '$name' is spurious."))
+                ValidationError(value, s"Field '$name' is spurious.")
               else
               // Don't validate or anything, spurious field
-                None
+                ValidationSucceeded(value)
             }
           }
         }
@@ -144,28 +147,27 @@ trait DocumentType extends Type {
         val errors = {
           val field_results = for (
             field ← elements ;
-            result = doValidate(field._1, field._2) if result.isDefined ;
-            x ← result
-          ) yield x
+            result = doValidate(field._1, field._2) if result.isError
+          ) yield {
+            result
+          }
 
           val missing_results = if (!allowMissingFields) {
             for (
               fieldName ← fieldNames if !elements.contains(fieldName)
             ) yield {
-              Seq(s"Field '$fieldName' is missing")
+              ValidationError(value, s"Field '$fieldName' is missing")
             }
           } else {
-            Seq.empty[Seq[String]]
+            Seq.empty[ValidationError[BSONValue]]
           }
-
-          (field_results ++ missing_results).flatten.toSeq
+          field_results ++ missing_results
         }
         if (errors.isEmpty)
-          None
+          ValidationSucceeded(value)
         else
-          Some(errors)
-      case x: BSONValue =>
-        wrongClass("BSONDocument", x).map { s => Seq(s) }
+          ValidationFailed(value, errors.toSeq)
+      case x: BSONValue => wrongClass(x, "BSONDocument")
     }
   }
 

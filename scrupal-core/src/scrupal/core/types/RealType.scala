@@ -35,17 +35,19 @@ case class RealType (
   ) extends Type {
   override type ScalaValueType = Double
   require(min <= max)
-  def apply(value: BSONValue) =  single(value) {
-    case BSONDouble(d) if d < min => Some(s"Value $d is out of range, below minimum of $min")
-    case BSONDouble(d) if d > max => Some(s"Value $d is out of range, above maximum of $max")
-    case BSONDouble(d) => None
-    case BSONLong(l) if l < min => Some(s"Value $l is out of range, below minimum of $min")
-    case BSONLong(l) if l > max => Some(s"Value $l is out of range, above maximum of $max")
-    case BSONLong(l) => None
-    case BSONInteger(i) if i < min => Some(s"Value $i is out of range, below minimum of $min")
-    case BSONInteger(i) if i > max => Some(s"Value $i is out of range, above maximum of $max")
-    case BSONInteger(i) => None
-    case x: BSONValue => wrongClass("BSONDouble",x)
+  def validate(value: BSONValue) : BVR =  {
+    simplify(value, "Double, Long or Integer") {
+      case BSONDouble(d) if d < min => Some(s"Value $d is out of range, below minimum of $min")
+      case BSONDouble(d) if d > max => Some(s"Value $d is out of range, above maximum of $max")
+      case BSONDouble(d) => None
+      case BSONLong(l) if l < min => Some(s"Value $l is out of range, below minimum of $min")
+      case BSONLong(l) if l > max => Some(s"Value $l is out of range, above maximum of $max")
+      case BSONLong(l) => None
+      case BSONInteger(i) if i < min => Some(s"Value $i is out of range, below minimum of $min")
+      case BSONInteger(i) if i > max => Some(s"Value $i is out of range, above maximum of $max")
+      case BSONInteger(i) => None
+      case _ ⇒ Some("")
+    }
   }
   override def kind = 'Real
 }

@@ -35,59 +35,38 @@ import scalatags.Text.attrs
   */
 object Forms {
 
-  trait FormItem extends BSONValidator[BSONValue] {
+  trait FormItem extends Nameable with Describable with BSONValidator {
     def render(form: Form) : TagContent
+    def defaultValue : BSONValue
   }
 
-  trait FieldItem extends FormItem with Nameable with Describable {
-    def name : String
+  trait Container extends FormItem {
+    def fields: Seq[FormItem]
+    def validate(value: BSONValue): BVR = {
+      value match {
+        case x: BSONDocument ⇒
+          val fieldMap = fields.map { field ⇒ field.name → field }
+          validateMaps(x, fieldMap.toMap, defaultValue)
+        case x: BSONValue => wrongClass(x, "BSONDocument")
+      }
+    }
+
+    def defaultValue : BSONDocument = {
+      BSONDocument(
+        for (field <- fields) yield { field.name → field.defaultValue }
+      )
+    }
+  }
+
+  trait FieldItem extends FormItem {
     def inline : Boolean
     def prefix : Boolean
-    def defaultValue : BSONDocument
   }
 
-  trait Container extends FieldItem {
-    def fields: Seq[FieldItem]
-    def apply(value: BSONValue) : ValidationResult = {
-      value match {
-        case x: BSONDocument if x.get(name).isEmpty => Some(Seq(s"Document has no field named '$name'"))
-        case x: BSONDocument if !x.get(name).get.isInstanceOf[BSONArray] ⇒
-          Some(Seq(s"The field '$name' field must be an array"))
-        case x: BSONDocument ⇒
-          val fieldsVal = x.get(name).get
-          fieldsVal match {
-            case a: BSONArray if a.length != fields.length =>
-              Some(Seq(s"Number of fields (${a.length} doesn't match expected number (${fields.length}."))
-            case a: BSONArray => validateArray(a, fields)
-            case x: BSONValue => Some(Seq(wrongClass("BSONArray", x).getOrElse("")))
-          }
-        case x: BSONValue => single(value) { _ => wrongClass("BSONDocument", x)}
-      }
-    }
-    def defaultValue : BSONDocument = BSONDocument(
-      name → BSONArray(
-        for (field ← fields) yield { field.defaultValue }
-      )
-    )
-  }
-
-  trait Field extends FieldItem {
+  trait Field extends FieldItem  {
     def fieldType : Type
-    def default: BSONValue
     def attrs: AttrList
-
-    def apply(value: BSONValue) : ValidationResult = {
-      value match {
-        case x: BSONDocument if x.get(name).isEmpty ⇒ Some(Seq(s"Expected field '$name' is missing."))
-        case x: BSONDocument ⇒
-          val fieldValue : BSONValue = x.get(name).get
-          fieldType(fieldValue)
-        case x: BSONValue ⇒ single(value) { _ ⇒ wrongClass("BSONDocument", x) }
-      }
-    }
-
-    def defaultValue : BSONDocument = BSONDocument( name → default )
-
+    def validate(value: BSONValue) : BVR = { fieldType.validate(value) }
     require(fieldType.nonTrivial)
   }
 
@@ -103,7 +82,7 @@ object Forms {
     name: String,
     description: String,
     fieldType: StringType,
-    default: BSONString = BSONString(""),
+    defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
@@ -111,14 +90,13 @@ object Forms {
     def render(form: Form) : TagContent = {
       text(name, form.values.getString(name), attrs ++ Seq(title:=description))
     }
-    override def defaultValue : BSONDocument = BSONDocument( name → default )
   }
 
   case class PasswordField(
     name: String,
     description: String,
     fieldType: StringType = Password_t,
-    default: BSONString = BSONString(""),
+    defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
@@ -132,7 +110,7 @@ object Forms {
     name: String,
     description: String,
     fieldType: StringType,
-    default: BSONString = BSONString(""),
+    defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
@@ -146,7 +124,7 @@ object Forms {
     name: String,
     description: String,
     fieldType: BooleanType,
-    default: BSONBoolean = BSONBoolean(value=false),
+    defaultValue: BSONValue = BSONBoolean(value=false),
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
@@ -160,7 +138,7 @@ object Forms {
     name: String,
     description: String,
     fieldType : RangeType,
-    default: BSONLong = BSONLong(0L),
+    defaultValue: BSONValue = BSONLong(0L),
     attrs: AttrList = EmptyAttrList,
     minVal: Long = Long.MinValue,
     maxVal: Long = Long.MaxValue,
@@ -176,7 +154,7 @@ object Forms {
     name: String,
     description: String,
     fieldType : RealType,
-    default: BSONDouble = BSONDouble(0.0),
+    defaultValue: BSONValue = BSONDouble(0.0),
     attrs: AttrList = EmptyAttrList,
     minVal: Double = Double.MinValue,
     maxVal: Double = Double.MaxValue,
@@ -192,7 +170,7 @@ object Forms {
     name: String,
     description: String,
     fieldType : RealType,
-    default: BSONDouble = BSONDouble(0.0),
+    defaultValue: BSONValue = BSONDouble(0.0),
     attrs: AttrList = EmptyAttrList,
     minVal: Double = 0L,
     maxVal: Double = 100L,
@@ -208,7 +186,7 @@ object Forms {
     name: String,
     description: String,
     fieldType : SelectionType,
-    default: BSONString = BSONString(""),
+    defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
@@ -223,28 +201,13 @@ object Forms {
     name: String,
     description: String,
     fieldType : TimestampType,
-    default: BSONString = BSONString(""),
+    defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
   ) extends Field {
     def render(form: Form) : TagContent = {
       datetime(name, form.values.getInstant(name).map { i ⇒ i.toDateTime }, attrs ++ Seq(title:=description))
-    }
-  }
-
-  case class FieldSet(
-    name: String,
-    description: String,
-    title: String,
-    fields: Seq[Field],
-    attrs: AttrList = EmptyAttrList,
-    inline : Boolean = false,
-    prefix : Boolean = false
-  ) extends Container {
-    require(fields.nonEmpty)
-    def render(form: Form) : TagContent = {
-      fieldset(scalatags.Text.attrs.title:=description, legend(title), fields.map { field ⇒ form.renderField(field) } )
     }
   }
 
@@ -259,8 +222,8 @@ object Forms {
     def render(form: Form) : TagContent = {
       reset(name, Some(label), attrs ++ Seq(title:=description))
     }
-    def apply(value: BSONValue) : ValidationResult = None
-    def defaultValue : BSONDocument = BSONDocument( name → BSONNull )
+    override def validate(value: BSONValue) : BVR = ValidationSucceeded(value)
+    def defaultValue : BSONValue = BSONNull
   }
 
   case class SubmitField(
@@ -277,47 +240,33 @@ object Forms {
         (frmaction match { case Some(x) ⇒ Seq(formaction:=x); case _ ⇒ Seq.empty[AttrPair]} )
       )
     }
-    def apply(value: BSONValue) : ValidationResult = None
-    def defaultValue : BSONDocument = BSONDocument( name → BSONNull )
+    def validate(value: BSONValue) : BVR = ValidationSucceeded(value)
+    def defaultValue = BSONNull
   }
 
-  trait Form extends Enablee with FormItem with Nameable with Describable with TerminalActionProvider {
+  case class FieldSet(
+    name: String,
+    description: String,
+    title: String,
+    fields: Seq[FormItem],
+    attrs: AttrList = EmptyAttrList,
+    inline : Boolean = false,
+    prefix : Boolean = false
+    ) extends Container {
+    require(fields.nonEmpty)
+    def render(form: Form) : TagContent = {
+      fieldset(scalatags.Text.attrs.title:=description, legend(title), fields.map { field ⇒ form.renderItem(field) } )
+    }
+  }
+
+  trait Form extends Container with Enablee with TerminalActionProvider {
     lazy val segment : String = id.name
     def actionPath : String
-    def fields: Seq[FieldItem]
+    def fields: Seq[FormItem]
     def values: Settings
 
-    def hasErrors(field: FieldItem) : Boolean = false // TODO: Implement Form.hasErrors
-    def errorsOf(field: FieldItem) : Seq[String] = Seq.empty[String] // TODO: Implement Form.errorsOf
-
-    def apply(value: BSONValue): ValidationResult = {
-      value match {
-        case x: BSONDocument if x.get("action").isEmpty => Some(Seq("Document has no field named 'action'"))
-        case x: BSONDocument if x.get("fields").isEmpty => Some(Seq("Document has no field named 'fields'"))
-        case x: BSONDocument if !x.get("action").get.isInstanceOf[BSONString] ⇒
-          Some(Seq("The 'action' field must be a string"))
-        case x: BSONDocument if !x.get("fields").get.isInstanceOf[BSONArray] ⇒
-          Some(Seq("The 'fields' field must be an array"))
-        case x: BSONDocument ⇒
-          val fieldsVal = x.get("fields").get
-          fieldsVal match {
-            case a: BSONArray if a.length != fields.length =>
-              Some(Seq(s"Number of fields in document doesn't match expected number."))
-            case a: BSONArray => validateArray(a, fields)
-            case x: BSONValue => Some(Seq(wrongClass("BSONArray", x).getOrElse("")))
-          }
-        case x: BSONValue => single(value) { _ => wrongClass("BSONDocument", x)}
-      }
-    }
-
-    def defaultValue : BSONDocument = {
-      BSONDocument(
-        "action" → actionPath,
-        "fields" → BSONArray(
-          for (field <- fields) yield { field.defaultValue }
-        )
-      )
-    }
+    def hasErrors(field: FormItem) : Boolean = false // TODO: Implement Form.hasErrors
+    def errorsOf(field: FormItem) : Seq[String] = Seq.empty[String] // TODO: Implement Form.errorsOf
 
     /**
      * Wrap a field's rendered element with an appropriate label and other formatting. This default is aimed at
@@ -355,19 +304,22 @@ object Forms {
       )
     }
 
-    def renderField(field: FieldItem) : TagContent = wrap(field)
+    def renderItem(item: FormItem) : TagContent = {
+      item match {
+        case f: FieldSet ⇒ f.render(this)
+        case f: FieldItem ⇒ wrap(f)
+        case f: FormItem ⇒ f.render(this)
+      }
+    }
 
     def render(form: Form) : TagContent = {
-      scalatags.Text.tags.form(scalatags.Text.attrs.action:=actionPath, method:="POST", attrs.name:=name,
-                               "enctype".attr:="application/x-www-form-urlencoded",
-        fields.map { field ⇒
-          field match {
-            case f: FieldSet ⇒ field.render(this)
-            case _ ⇒ renderField(field)
-          }
-        }
+      scalatags.Text.tags.form(
+        scalatags.Text.attrs.action:=actionPath, method:="POST", attrs.name:=name,
+        "enctype".attr:="application/x-www-form-urlencoded",
+        fields.map { field ⇒ renderItem(field) }
       )
     }
+
 
     def render : TagContent = render(this)
 
@@ -384,8 +336,8 @@ object Forms {
     override def provideAction(matchingSegment: String, context: Context) : Option[Action] = {
       if (matchingSegment == singularKey && context.request.unmatchedPath.isEmpty) {
         context.request.request.method match {
-          case HttpMethods.GET ⇒ Some(DisplayFormAction(this, context))
-          case HttpMethods.POST ⇒ Some(AcceptFormAction(this, context))
+          case HttpMethods.GET  ⇒ provideRenderFormAction(matchingSegment, context)
+          case HttpMethods.POST ⇒ provideAcceptFormAction(matchingSegment, context)
           case _ ⇒ None
         }
       } else {
@@ -393,20 +345,46 @@ object Forms {
       }
     }
 
-    def acceptForm(context: Context) : Result[_] = {
-      ErrorResult("Form submission not implemented yet", Unimplemented)
+    def provideRenderFormAction(matchingSegment: String, context: Context) : Option[RenderFormAction] = {
+      Some(new RenderFormAction(this, context))
+    }
+
+    def provideAcceptFormAction(matchingSegment: String, context: Context) : Option[AcceptFormAction] = {
+      Some(new AcceptFormAction(this, context))
     }
   }
 
-  case class DisplayFormAction(form: Form, context: Context) extends Action {
+  class RenderFormAction(val form: Form, val context: Context) extends Action {
     def apply() : Future[Result[_]] = Future {
       HtmlResult(form.render.toString(), Successful)
     } (context.scrupal._executionContext)
   }
 
-  case class AcceptFormAction(form: Form, context: Context) extends Action {
+  class AcceptFormAction(val form: Form, val context: Context) extends Action {
+/*
+    def decodeFormData(r: HttpRequest) : BSONDocument = {
+      import spray.httpx.unmarshalling._
+      r.as[FormData] match {
+        case Right(formData) ⇒
+          formData.fields.map { pair ⇒
+
+          }
+        case Left(ContentExpected) ⇒
+        case Left(MalformedContent(msg,cause)) ⇒
+        case Left(UnsupportedContentType(msg) ⇒
+        case Left(x) ⇒ x.map BSONDocument()
+      }
+    } */
+
     def apply() : Future[Result[_]] = Future {
-      form.acceptForm(context)
+      /*val doc = decodeFormData(context.request.request)
+      form(doc) match {
+        case Some(errors) ⇒
+        case None
+      }*/
+
+
+      ErrorResult(s"Submission of form '${form.name}", Unimplemented)
     } (context.scrupal._executionContext)
   }
 
@@ -415,7 +393,7 @@ object Forms {
     name: String,
     description: String,
     actionPath: String,
-    fields: Seq[FieldItem],
+    fields: Seq[FormItem],
     values: Settings = Settings.Empty
   ) extends Form {
     require(fields.length > 0)
@@ -425,6 +403,5 @@ object Forms {
     val id = 'emptyForm; val name = ""; val description = ""; val actionPath = ""
     val fields = Seq.empty[FieldItem]
     val values = Settings.Empty
-    def action(context: Context) : Option[Action] = None
   }
 }

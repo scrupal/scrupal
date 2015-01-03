@@ -19,6 +19,7 @@ package scrupal.core.api
 
 import java.net.URL
 
+import reactivemongo.bson.{BSONNull, BSONValue}
 import scrupal.db.DBContext
 import scrupal.utils._
 
@@ -32,9 +33,9 @@ import scala.concurrent.ExecutionContext
   * such as Module, to make this possible. Everything else Scrupal provides is done as a module that extends the
   * functionality of the API.
   */
-trait Module extends Registrable[Module]
-                     with Authorable with Describable with Enablee with Enablement[Module] with Settingsable
-                     with Versionable with SelfValidator with Bootstrappable
+trait Module
+  extends Registrable[Module] with Authorable with Describable with Enablee
+  with Enablement[Module] with Settingsable with Versionable with Bootstrappable
 {
   /** The name of the database your module's schema is stored to
     *
@@ -140,11 +141,6 @@ trait Module extends Registrable[Module]
       require(node != null)    ; require(node._id.code == 0x07) ; node.bootstrap(config)
     }
     // FIXME: What about handlers and schemas?
-  }
-
-  def validate() : ValidationResult = {
-    // TODO: Write the module validator
-    None
   }
 }
 

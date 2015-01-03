@@ -38,15 +38,17 @@ case class TimestampType (
 ) extends Type {
   override type ScalaValueType = Duration
   assert(min.getMillis <= max.getMillis)
-  def apply(value: BSONValue) = single(value) {
-    case BSONLong(l) if l < min.getMillis =>
-      Some(s"Timestamp $l is out of range, below minimum of $min")
-    case BSONLong(l) if l > max.getMillis =>
-      Some(s"Timestamp $l is out of range, above maximum of $max")
-    case BSONLong(l) =>
-      None
-    case x: BSONValue =>
-      wrongClass("BSONLong",x)
+  def validate(value: BSONValue) = {
+    simplify(value, "Long") {
+      case BSONLong(l) if l < min.getMillis =>
+        Some(s"Timestamp $l is out of range, below minimum of $min")
+      case BSONLong(l) if l > max.getMillis =>
+        Some(s"Timestamp $l is out of range, above maximum of $max")
+      case BSONLong(l) =>
+        None
+      case x: BSONValue =>
+        Some("")
+    }
   }
 }
 

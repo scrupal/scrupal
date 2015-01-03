@@ -20,19 +20,18 @@ package scrupal.core.types
 import reactivemongo.bson._
 import scrupal.core.api._
 
-case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator[BSONValue] {
+case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator {
 
-  def apply(value: BSONValue): ValidationResult = single(value) {
-    case BSONInteger(x) if !enumerators.exists { y => y._2 == x} =>
-      Some(s"Value $x not valid for '$name'")
-    case BSONInteger(x) => None
-    case BSONLong(x) if !enumerators.exists { y => y._2 == x} =>
-      Some(s"Value $x not valid for '$name'")
-    case BSONLong(x) => None
-    case BSONString(x) if !enumerators.contains(Symbol(x)) =>
-      Some(s"Value '$x' not valid for '$name'")
-    case BSONString(x) => None
-    case x: BSONValue => wrongClass("BSONInteger, BSONLong or BSONString", x)
+  def validate(value: BSONValue): BVR = {
+    simplify(value, "Integer, Long or String") {
+      case BSONInteger(x) if !enumerators.exists { y => y._2 == x} => Some(s"Value $x not valid for '$name'")
+      case BSONInteger(x) => None
+      case BSONLong(x) if !enumerators.exists { y => y._2 == x} => Some(s"Value $x not valid for '$name'")
+      case BSONLong(x) => None
+      case BSONString(x) if !enumerators.contains(Symbol(x)) => Some(s"Value '$x' not valid for '$name'")
+      case BSONString(x) => None
+      case _ => Some("")
+    }
   }
 }
 
@@ -44,13 +43,12 @@ case class EnumType  (
   id : Identifier,
   description : String,
   enumerators : Map[Identifier, Int]
-  ) extends Type {
+) extends Type {
   override type ScalaValueType = Int
   require(enumerators.nonEmpty)
   val validator = EnumValidator(enumerators,label)
-  def apply(value: BSONValue) = validator(value)
+  def validate(value: BSONValue) = validator.validate(value)
   override def kind = 'Enum
-
   def valueOf(enum: Symbol) = enumerators.get(enum)
   def valueOf(enum: String) = enumerators.get(Symbol(enum))
 }
@@ -63,10 +61,10 @@ case class MultiEnumType(
   override type ScalaValueType = Seq[Int]
   require(enumerators.nonEmpty)
   val validator = EnumValidator(enumerators, label)
-  def apply(value: BSONValue) = {
+  def validate(value: BSONValue) : BVR = {
     value match {
-      case a: BSONArray => validate(a.values, validator )
-      case x: BSONValue => single(value) { _ => wrongClass("BSONArray", x) }
+      case a: BSONArray => validateArray(a, validator )
+      case x: BSONValue => wrongClass(x, "Array")
     }
   }
 }

@@ -56,6 +56,4 @@ package object api extends ScrupalComponent {
     */
   type Identifier = Symbol
 
-  type ValidationResult = Option[Seq[String]]
-
  }

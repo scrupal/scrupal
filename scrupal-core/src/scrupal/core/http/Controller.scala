@@ -52,42 +52,8 @@ trait Controller extends Registrable[Controller]
 
   /** Required method for registration */
   def registry: Registry[Controller] = Controller
-  def asT: Controller = this
-
-  def spaces2underscores(what: String) = what.replaceAll(" ","_")
-
-  def modules = Module.values
-  def moduleNames : Seq[String]  = Module.values map { module: Module => module.label }
-  def moduleTypeNames(mod:Module)  : Seq[String] = mod.types map { typ => typ.label }
-
-  def types       : Seq[Type]    = Module.values flatMap { module => module.types }
-  def typeNames   : Seq[String]  = types map { typ : Type => typ.label }
 
   def request_context = extract( rc ⇒ rc )
-
-  def context(scrupal: Scrupal): Directive1[Context] = {
-    hostName.flatMap { host: String ⇒
-      extract { ctxt: RequestContext ⇒
-        val sites = Site.forHost(host)
-        if (sites.isEmpty)
-          Context(scrupal, ctxt)
-        else {
-          val site = sites.head
-          if (site.isEnabled(scrupal)) {
-            if ((ctxt.request.uri.scheme == "https") == site.requireHttps)
-              scrupal.authenticate(ctxt) match {
-                case Some(principal: Principal) ⇒ Context(scrupal, ctxt, site, principal)
-                case None ⇒ Context(scrupal, ctxt, site)
-              }
-            else
-              Context(scrupal, ctxt)
-          } else {
-            Context(scrupal, ctxt)
-          }
-        }
-      }
-    }
-  }
 
   def site(scrupal: Scrupal): Directive1[Site] = {
     hostName.flatMap { host:String ⇒
@@ -117,14 +83,15 @@ abstract class BasicController(val id : Identifier, val priority: Int = 0) exten
   *
   * Scrupal API module provides the ActionProvider that can convert a path
   */
-class ActionProviderController extends Controller with PathHelpers {
-
-  def id = 'ActionProviderController
-  val priority = 0
+class ActionProviderController extends BasicController('ActionProviderController, 0) with PathHelpers {
 
   def routes(implicit scrupal: Scrupal): Route = {
     site(scrupal) { site: Site ⇒
       rawPathPrefix(Slash) {
+/*        val x = FormDataMarshaller
+        entity(as[FormData]){ emailData=>
+
+        } */
         request_context { ctxt: RequestContext ⇒
           implicit val context = Context(scrupal, ctxt, site)
           site.extractAction(context) match {
@@ -135,33 +102,6 @@ class ActionProviderController extends Controller with PathHelpers {
       }
     }
   }
-/*
-  def routes(implicit scrupal: Scrupal): Route = {
-    site(scrupal) { site: Site ⇒
-      rawPathPrefix(Slash) {
-        subordinate(site.singularKey, site) {
-          case (key: String, ap: ActionProvider) ⇒
-            request_context { ctxt: RequestContext ⇒
-              implicit val context = Context(scrupal, ctxt, site)
-              provideAction(ap, key, ctxt.unmatchedPath, context) { action ⇒
-                complete {
-                  makeMarshallable {
-                    action.dispatch
-                  }
-                }
-              }
-            }
-        } ~ request_context { ctxt: RequestContext ⇒
-          implicit val context = Context(scrupal, ctxt, site)
-          site.actionFor(site.singularKey,ctxt.unmatchedPath, Context(scrupal, ctxt, site)) match {
-            case Some(action) ⇒ complete { makeMarshallable { action.dispatch }}
-            case None ⇒ reject
-          }
-        }
-      }
-    }
-  }
-  */
 }
 
 trait RequestLoggers {
