@@ -47,7 +47,6 @@ trait Dependencies
   val playV = "2.3.7"
   val play_iteratees          = "com.typesafe.play"   %% "play-iteratees"         % playV
   val play_json               = "com.typesafe.play"   %% "play-json"              % playV
-  val play_ws                 = "com.typesafe.play"   %% "play-ws"                % playV
 
   val scalatags               = "com.scalatags"       %% "scalatags"              % "0.5.0-SNAPSHOT"
 
@@ -116,6 +115,7 @@ trait Dependencies
     val akka_testkit         = "com.typesafe.akka"   %% "akka-testkit"          % akkaV        % "test"
     val specs2               = "org.specs2"          %% "specs2-core"           % "2.3.11"     % "test"
     val commons_io           = "commons-io"          %  "commons-io"            % "2.4"        % "test"
+    val nu_validator         = "nu.validator.htmlparser" % "htmlparser"         % "1.4"        % "test"
   }
 
   val root_dependencies : Seq[ModuleID] = Seq(
@@ -138,6 +138,6 @@ trait Dependencies
   val core_dependencies : Seq[ModuleID] = Seq(
     scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
     commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
-    Test.spray_testkit, Test.akka_testkit, Test.commons_io
+    Test.spray_testkit, Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies
 }

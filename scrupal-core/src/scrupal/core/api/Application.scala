@@ -23,15 +23,16 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.db.{VariantIdentifierDAO, VariantStorable}
 import scrupal.utils._
-import shapeless.HList
+import spray.http.{HttpMethods, HttpMethod}
 
 /** A Scrupal Application
   * Applications are a fundamental unit of organization in Scrupal. A Site defines the set of applications that are to
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
  * Created by reid on 11/6/14.
  */
-abstract class Application(sym: Identifier) extends { val id: Symbol = sym; val _id : Identifier = sym }
-  with EnablementPathMatcherToActionProvider[Application]
+abstract class Application(sym: Identifier) extends {
+  val id: Symbol = sym; val _id : Identifier = sym; val segment : String = sym.name }
+  with EnablementActionProvider[Application]
   with VariantStorable[Identifier] with Registrable[Application] with Nameable with Describable with Modifiable {
 
   def registry: Registry[Application] = Application
@@ -51,16 +52,16 @@ abstract class Application(sym: Identifier) extends { val id: Symbol = sym; val 
 
   def isChildScope(e: Enablement[_]) : Boolean = entities.contains(e)
 
-  override def pathsToActions  = Seq.empty[PathMatcherToAction[_ <: HList]]
 }
 
 case class BasicApplication(
-  override val id : Identifier,
+  sym : Identifier,
   name: String,
   description: String,
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None
-) extends Application(id) {
+) extends Application(sym) {
+  final val method : HttpMethod = HttpMethods.GET
   final val kind = 'BasicApplication
 }
 

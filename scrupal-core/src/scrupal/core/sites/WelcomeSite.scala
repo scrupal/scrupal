@@ -25,20 +25,19 @@ import scrupal.core.apps.AdminApp
 import scrupal.core.entities.EchoEntity
 import scrupal.core.html.PlainPage
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
-import shapeless.{::, HList, HNil}
+import shapeless.{::, HNil}
 import spray.routing.PathMatcher
 import spray.routing.PathMatchers._
 
 import scalatags.Text.all._
 
-case class WelcomeSite() extends Site('WelcomeToScrupal) {
+case class WelcomeSite(sym: Identifier) extends Site(sym) {
   val name: String = "Welcome To Scrupal"
   val description: String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
   val modified: Option[DateTime] = Some(DateTime.now)
   val created: Option[DateTime] = Some(new DateTime(2014,11,18,17,40))
   override val themeName = "cyborg"
   def host: String = ".*"
-  final val key = ""
   val siteRoot: Node =
     HtmlNode (
       "Main index page for Welcome To Scrupal Site",
@@ -48,14 +47,14 @@ case class WelcomeSite() extends Site('WelcomeToScrupal) {
       created=Some(new DateTime(2014, 11, 18, 18, 0))
   )
 
-  object DocPathToDocs extends PathToNodeActionFunction(PathMatcher("doc")/Segments, {
-    (list: ::[List[String],HNil], rest, ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
+  object DocPathToDocs extends FunctionalNodeActionProducer(PathMatcher("doc")/Segments, {
+    (list: ::[List[String],HNil], ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
   }) {}
 
 
-  override def pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
+  override def delegates : Seq[ActionExtractor] = super.delegates ++ Seq(
     DocPathToDocs,
-    PathToNodeAction(PathMatcher("index.html") | Slash | spray.routing.PathMatchers.PathEnd, siteRoot)
+    NodeActionProducer(PathMatcher("index.html") | Slash | spray.routing.PathMatchers.PathEnd, siteRoot)
   )
 
   CoreModule.enable(this)

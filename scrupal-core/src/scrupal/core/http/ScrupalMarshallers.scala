@@ -124,51 +124,33 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
     }
   }
 
-  def handle_disposition(result: Result[_]) : Option[HttpResponse] = {
-    result.disposition match {
-      case Successful     => //"Action was successfully processed synchronously.")
-        None
-      case Received       => //"Action is processing asynchronously without response.")
-        None
-      case Pending        => //"Action is pending asynchronous processing without response.")
-        None
-      case Promise        => //"Action is pending asynchronous processing with a promise of future result.")
-        None
-      case Unspecified    => //"Action processing yielded An error of unspecified nature.")
-        Some(HttpResponse(StatusCodes.InternalServerError))
-      case TimedOut       => //"Action processing attempted but it timed out.")
-        Some(HttpResponse(StatusCodes.GatewayTimeout))
-      case Unintelligible => //"Action rejected because it could not be understood.")
-        Some(HttpResponse(StatusCodes.BadRequest))
-      case Unimplemented  => //"Action rejected because its has not been implemented yet.")
-        Some(HttpResponse(StatusCodes.NotImplemented))
-      case Unsupported    => //"Action rejected because its resource is no longer supported.")
-        Some(HttpResponse(StatusCodes.NotImplemented))
-      case Unauthorized   => //"Action rejected because requester is not authorized for it.")
-        Some(HttpResponse(StatusCodes.Unauthorized))
-      case Unavailable    => //"Action rejected because the resource is not currently available.")
-        Some(HttpResponse(StatusCodes.ServiceUnavailable))
-      case NotFound       => //"Action rejected because the resource was not found.")
-        Some(HttpResponse(StatusCodes.NotFound))
-      case Ambiguous      => //"Action rejected because of ambiguity on the resource requested.")
-        Some(HttpResponse(StatusCodes.Conflict))
-      case Conflict       => //"Action rejected because it would cause a conflict between resources.")
-        Some(HttpResponse(StatusCodes.Conflict))
-      case TooComplex     => //"Action rejected because it implies processing that is too complex.")
-        Some(HttpResponse(StatusCodes.Forbidden))
-      case Exhausted      => //"Action processing started but a computing resource became exhausted")
-        Some(HttpResponse(StatusCodes.ServiceUnavailable))
-      case Exception      => //"An exception occurred during the processing of the action")
-        None
+  def disposition2StatusCode(disposition: Disposition) : StatusCode = {
+    disposition match {
+      case Successful     => StatusCodes.OK
+      case Received       => StatusCodes.Accepted
+      case Pending        => StatusCodes.OK
+      case Promise        => StatusCodes.OK
+      case Unspecified    => StatusCodes.InternalServerError
+      case TimedOut       => StatusCodes.GatewayTimeout
+      case Unintelligible => StatusCodes.BadRequest
+      case Unimplemented  => StatusCodes.NotImplemented
+      case Unsupported    => StatusCodes.NotImplemented
+      case Unauthorized   => StatusCodes.Unauthorized
+      case Unavailable    => StatusCodes.ServiceUnavailable
+      case NotFound       => StatusCodes.NotFound
+      case Ambiguous      => StatusCodes.Conflict
+      case Conflict       => StatusCodes.Conflict
+      case TooComplex     => StatusCodes.Forbidden
+      case Exhausted      => StatusCodes.ServiceUnavailable
+      case Exception      => StatusCodes.InternalServerError
+      case _              ⇒ StatusCodes.InternalServerError
     }
   }
 
   implicit val error_marshaller: ToResponseMarshaller[ErrorResult] =
-    ToResponseMarshaller[ErrorResult] { (value,ctxt) ⇒
-      handle_disposition(value) match {
-        case Some(hr) ⇒ ctxt.marshalTo(hr)
-        case None ⇒ ctxt.marshalTo(HttpResponse(StatusCodes.OK,HttpEntity(value.contentType,value.formatted)))
-      }
+    ToResponseMarshaller[ErrorResult] { (value, context ) ⇒
+      val status_code = disposition2StatusCode(value.disposition)
+      context.marshalTo(HttpResponse(status_code, HttpEntity(value.contentType,value.formatted)))
     }
 
   implicit val exception_marshaller: ToResponseMarshaller[ExceptionResult] =

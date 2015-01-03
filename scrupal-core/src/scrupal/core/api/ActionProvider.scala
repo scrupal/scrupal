@@ -19,54 +19,21 @@ package scrupal.core.api
 
 import scrupal.core.actions.{NodeAliasAction, NodeIdAction}
 import scrupal.utils._
-import shapeless.HList
-import spray.http.Uri
 import spray.routing.PathMatcher.{Unmatched, Matched}
 import spray.routing.PathMatchers._
 
-/** Generic object that provides Actions
+/** An Object That Recursively Matches Paths And Provides And Action
   *
-  * This trait is mixed in to classes that provide actions in conjunction with a key, path and context triplet.
-  * ActionProviders participate in the routing process by finding the action that corresponds to a particular path
-  * and context. This generic action provider makes no assumptions about how the triplet is matches and defers that
-  * to its subclass.
+  * This trait is mixed in to classes that provide actions in conjunction with a singular or plural path segment by
+  * extending PluralActionExtractor. This trait provides a final implementation of
+  * [[scrupal.core.api.PluralActionExtractor.actionFor()]] that defers to `provideAction` method or, if that method
+  * returns None, defers to subordinate ActionProviders.
+  *
+  * Subclasses must provide the set of subordinates, if any, and implement the `provideAction` method to convert
+  * a context and the segment keyword that matched this object into an Action. If no action is provided then it is
+  * treated as if this ActionProvider was not a match for the context and alternatives are attempted.
   */
-trait ActionProvider extends Identifiable {
-
-  /** Key For Identifying This Provider
-    *
-    * When matching a path, it is helpful to quickly identify which ActionProvider to apply to a given path. To that
-    * end, the key provides a constant path segment value that identifies this ActionProvider. For example, if
-    * your path was /foo/bar/doit then foo and bar are potential keys as they might separately identify
-    * an ActionProvider "foo" that contains an ActionProvider "bar". The "doit" suffix is not a candidate for an
-    * ActionProvider's key because it is not / terminated. Keys are path segments and must occur only between slashes.
-    *
-    * Strings returned by key will be URL sanitized. They should therefore match the regular expression for URL
-    * path characters ( [-A-Za-z0-9_~]+ ).  Any characters not matching the regular expression will be converted
-    * to a dash.
-    *
-    * @return The constant string used to identify this ActionProvider
-    */
-
-  def makeKey(name: String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
-
-  lazy val singularKey = makeKey ( id.name )
-
-  lazy val pluralKey = makeKey( Pluralizer.pluralize(id.name) )
-
-  /** A mapping of key to ActionProvider
-    * This map type is used to select the ActionProvider that pertains to a particular key in the path.
-    */
-  type ActionProviderMap = Map[String,ActionProvider]
-
-  /** The suborindate ActionProviders of this one.
-    *
-    * Action providers form a hierarchy that correspond to the initial segments of the path they match. This member
-    * provides the next level in the hierarchy.
-    *
-    * @return
-    */
-  def subordinates: ActionProviderMap
+trait ActionProvider extends SingularActionExtractor with DelegatingActionExtractor {
 
   /** Indicates whether this ActionProvider is at the bottom of the hierarchy.
     *
@@ -74,7 +41,7 @@ trait ActionProvider extends Identifiable {
     * indicates whether this ActionProvider is at the leaf of the hierarchy (i.e. it has no subordinates).
     * @return
     */
-  def isTerminal : Boolean = subordinates.isEmpty
+  def isTerminal : Boolean = delegates.isEmpty
 
   /** Resolve an Action
     *
@@ -86,21 +53,17 @@ trait ActionProvider extends Identifiable {
     * @param context The context to use to match the PathToAction function
     * @return
     */
-  def actionFor(keyUsed: String, path: Uri.Path, context: Context) : Option[Action]
-
-  /** Resolve An Action
-    *
-    * Same as the Uri.Path variant but takes a String path.
-    *
-    * @param keyUsed The key used to select this ActionProvider
-    * @param path The path to use to match the PathToAction function
-    * @param context The context to use to match the PathToAction function
-    * @return
-    */
-  def actionFor(keyUsed: String, path: String, context: Context) : Option[Action] = {
-    actionFor(keyUsed, Uri.Path(path), context)
+  final def actionFor(matchingSegment: String, context: Context) : Option[Action] = {
+    provideAction(matchingSegment, context) match {
+      case Some(action) ⇒ Some(action)
+      case None ⇒ delegateAction(context)
+    }
   }
+
+  def provideAction(matchingSegment: String, context: Context) : Option[Action] = None
 }
+
+trait PluralActionProvider extends ActionProvider with PluralActionExtractor
 
 /** ActionProvider with no subordinates
   *
@@ -108,47 +71,31 @@ trait ActionProvider extends Identifiable {
   * return true for the isTerminal method.
   */
 trait TerminalActionProvider extends ActionProvider {
-  final override val subordinates = Map.empty[String,ActionProvider]
+  final override val delegates = Seq.empty[ActionExtractor]
   override val isTerminal = true
 }
 
-trait DelegatingActionProvider extends ActionProvider {
-  def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    if (key == pluralKey || key == singularKey) {
-      Segments(path) match {
-        case Matched(pathRest, extractions) ⇒
-          val segments = extractions.head
-          if (segments.isEmpty)
-            None
-          else {
-            val nextKey = segments.head
-            subordinates.get(nextKey).flatMap { ap: ActionProvider ⇒
-              val restOfPath = Uri.Path(segments.tail.mkString("/")) ++ pathRest
-              ap.actionFor(nextKey, restOfPath, context)
-            }
-          }
-        case Unmatched ⇒ None
-      }
-    } else {
-      None
-    }
+trait PluralTerminalActionProvider extends TerminalActionProvider with PluralActionExtractor
+
+trait EnablementActionExtractor[T <: EnablementActionExtractor[T]]
+  extends DelegatingActionExtractor with Enablement[T] with Enablee
+{
+  def delegates : Seq[ActionExtractor] = forEach[ActionExtractor] { e: Enablee ⇒
+    e.isInstanceOf[ActionExtractor] && isEnabled(e, this)
+  } { e: Enablee ⇒
+    e.asInstanceOf[ActionExtractor]
   }
+
+  def extractAction(context: Context) : Option[Action] = { delegateAction(context) }
 }
 
-trait EnablementActionProvider[T <: EnablementActionProvider[T]]
-  extends DelegatingActionProvider with Enablement[T] with Enablee
+trait EnablementActionProvider[T <: EnablementActionProvider[T]] extends ActionProvider with Enablement[T] with Enablee
 {
-  def actionProviders = forEach[ActionProvider] { e: Enablee ⇒
-    e.isInstanceOf[ActionProvider] && isEnabled(e, this)
+  def delegates : Seq[ActionExtractor] = forEach[ActionExtractor] { e: Enablee ⇒
+    e.isInstanceOf[ActionExtractor] && isEnabled(e, this)
   } { e: Enablee ⇒
-    e.asInstanceOf[ActionProvider]
+    e.asInstanceOf[ActionExtractor]
   }
-
-  def subordinates : ActionProviderMap = {
-    for (ap ← actionProviders ; name ← Seq(ap.singularKey, ap.pluralKey)) yield {
-      name → ap
-    }
-  }.toMap
 }
 
 /** An ActionProvider that uses PathMatcherToAction instances for its matching actions
@@ -157,8 +104,8 @@ trait EnablementActionProvider[T <: EnablementActionProvider[T]]
   * PathMatchersToAction use a PathMatcher to implement a matches method that matches a Path against a PathMatcher. If
   * the match succeeds, the corresponding Action is returned. Because the PathMatcherToAction instances are searched
   * sequentially, this is not highly performant and the order of the PathMatcherToAction instances matters.
-  */
-trait PathMatcherToActionProvider extends ActionProvider {
+
+trait ActionExtractorToActionProvider extends ActionProvider {
 
   /** The Acceptable Matches
     *
@@ -167,7 +114,7 @@ trait PathMatcherToActionProvider extends ActionProvider {
     * to match `/path/to/42` and `/path` then put the longer one first or else /path will get recognized first.
     * @return A Seq of PathMatcherToAction
     */
-  def pathsToActions: Seq[PathMatcherToAction[_ <: HList]] = Seq.empty[PathMatcherToAction[_ <: HList]]
+  def extractors: Seq[ActionExtractor] = Seq.empty[ActionExtractor]
 
   /** Resolve An Action
     *
@@ -180,22 +127,25 @@ trait PathMatcherToActionProvider extends ActionProvider {
     * @return
     */
   override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    for (p2a ← pathsToActions ; action = p2a.matches(path, context) if action != None) { return action }
+    for (p2a ← extractors ; action = p2a.matches(path, context) if action != None) { return action }
     None
   }
 }
 
-trait EnablementPathMatcherToActionProvider[T <: EnablementPathMatcherToActionProvider[T]]
-  extends EnablementActionProvider[T] with PathMatcherToActionProvider {
+trait EnablementActionExtractorToActionProvider[T <: EnablementActionExtractorToActionProvider[T]]
+  extends EnablementActionProvider[T] with ActionExtractorToActionProvider {
   override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    for (p2a ← pathsToActions ; action = p2a.matches(path, context) if action != None) { return action }
+    for (p2a ← extractors ; action = p2a.matches(path, context) if action != None) { return action }
     super.actionFor(key, path, context)
   }
 }
+*/
 
-object NodeProvider extends { val id: Symbol = 'Node } with TerminalActionProvider {
-  def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    if (key == singularKey || key == pluralKey) {
+object NodeProvider extends { val id: Symbol = 'Node ; val segment = id.name } with TerminalActionProvider {
+  override def provideAction(matchingSegment: String, context: Context) : Option[Action] = {
+    if (matchingSegment == singularKey) {
+      val path = context.request.unmatchedPath
+
       {
         ScrupalPathMatchers.BSONObjectIdentifier(path) match {
           case Matched(pathRest, extractions) ⇒

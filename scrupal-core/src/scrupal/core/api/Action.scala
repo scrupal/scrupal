@@ -17,10 +17,12 @@
 package scrupal.core.api
 
 import scrupal.core.actions.NodeAction
-import shapeless.HList
-import spray.http.Uri
+import scrupal.utils.{Pluralizer, Patterns}
+import shapeless.{::, HNil, HList}
+import spray.http.{HttpMethods, HttpMethod, Uri}
 import spray.routing.PathMatcher
 import spray.routing.PathMatcher.{Matched, Unmatched}
+import spray.routing.PathMatchers._
 
 import scala.concurrent.Future
 
@@ -60,7 +62,7 @@ trait Action extends (() => Future[Result[_]]) {
 
   /** Convenience function to dispatch the action
     *
-    * Dispatching of actions is done by the scrupal object, but since that is contained within this action's Context, we
+    * Dispatching of actions is done by the Scrupal object, but since that is contained within this action's Context, we
     * can provide a shortcut for dispatching this action directly.
     * @return
     */
@@ -69,43 +71,184 @@ trait Action extends (() => Future[Result[_]]) {
   }
 }
 
-/** Mapping Of PathMatcher To Action
+/** Extract An Action From A Context
   *
-  * This Function1 subclass is used to declare that a particular shape of HList can be converted into an Action and
-  * provides the means to do so
-  * @tparam L
+  * Objects of this type optionally extract an Action from a Context. Since the Context contains the RequestContext
+  * and possibly the site and user, such objects participate in request decoding to determine out how to process the
+  * request. If the object cannot extract an action it should return None so other alternatives can be attempted.
   */
-trait PathMatcherToAction[L <: HList] extends ( (L, Uri.Path, Context) ⇒ Action ) {
-  def pm: PathMatcher[L]
-  /** A convenience function for converting a path and context into an action using this PathToAction's
-    * apply function. This just bypasses the need to apply the Uri.Path to the PathMatcher and process its
-    * Matched or Unmatched result. Instead, it returns None for an Unmatched result, or the Action provided by
-    * this PathToAction
-    * @param path The path to match
-    * @param c The context in which to match the path
-    * @return None if the path did not match the PathMatcher, Some(Action) if it did
+trait ActionExtractor {
+  def extractAction(context: Context) : Option[Action]
+  def describe : String = ""
+}
+
+trait DelegatingActionExtractor {
+  /** The ActionExtractors this one delegates to */
+  def delegates : Seq[ActionExtractor]
+
+  /** A method to do the delegation
+    *
+    * @param context The context of the request
+    * @return Some(Action) if one is found, None if none are found, and throws an error if multiple are found.
     */
-  def matches(path: Uri.Path, c: Context) : Option[Action] = {
+  def delegateAction(context: Context) : Option[Action] = {
+    val candidates = {
+      for (ap ← delegates; action = ap.extractAction(context) if action.isDefined ) yield { action.get }
+    }
+    if (candidates.isEmpty)
+      None
+    else if (candidates.size == 1)
+      Some(candidates.head)
+    else
+      toss(s"Ambiguous Actions ($candidates) for context ($context).")
+  }
+}
+
+trait PathMatcherActionExtractor[L <: HList] extends ActionExtractor {
+  /** The PathMatcher to match against the context */
+  def pm: PathMatcher[L]
+
+  override def describe : String = pm.toString()
+
+  def matches(path: Uri.Path) : Boolean = {
     pm(path) match {
-      case Matched(rest, value) ⇒ Some(this.apply(value, rest, c))
+      case Matched(rest, value) ⇒ true
+      case Unmatched ⇒ false
+      case _ ⇒ false
+    }
+  }
+
+  def extractAction(context: Context) : Option[Action] = {
+    pm(context.request.unmatchedPath) match {
+      case Matched(rest, value) ⇒
+        val newRequestContext = context.request.withUnmatchedPathMapped { path ⇒ rest }
+        val newContext = context.withNewRequest(newRequestContext)
+        actionFor(value, newContext)
       case Unmatched ⇒ None
     }
   }
-  def apply(list: L, rest: Uri.Path, c: Context) : Action
+
+  /** Produce The Matching Action
+    *
+    * Subclasses must implement this method to produce Some(Action) if there is a corresponding one, otherwise
+    * None.
+    * @param list The extracted values from the PathMatcher
+    * @param context The context of the request
+    * @return Some(Action) if the correponding context matches, or None if it doesn't
+    */
+  def actionFor(list: L, context: Context) : Option[Action]
 }
 
-abstract class PathToAction[L <:HList](val pm: PathMatcher[L]) extends PathMatcherToAction[L]
+/** Extract An Action From Context For PathMatcher And Method
+  *
+  * This trait encapsulates the extraction of an Action from a [[scrupal.core.api.Context]] by using a
+  * [[spray.routing.PathMatcher]] and an [[spray.http.HttpMethod]]. The context is used to obtain the method and the
+  * unmatchedPath which is then matched against the `pm` and `method` members of this. If a match is made then the
+  * `actionFor` method is invoked to convert the extracted values, a [[shapeless.HList]], the remaining path and
+  * the context into an action.
+  * particular shape of [[shapeless.HList]] and an [[scrupal.core.api.Action]]. If the [[spray.routing.PathMatcher]]
+  * successfully matches a [[spray.http.Uri.Path]] then this trait's `apply` method is invoked, with a
+  * [[scrupal.core.api.Context]], to obtain the Action.
+  *
+  * @tparam L The HList that the PathMatcher produces
+  */
+trait PathAndMethodActionExtractor[L <: HList]  extends PathMatcherActionExtractor[L] {
 
-case class PathToNodeAction[L <:HList](pm: PathMatcher[L], node: Node) extends PathMatcherToAction[L] {
-  def apply(list: L, rest: Uri.Path, c: Context) : Action = {
-    NodeAction(c,node)
+  /** The method to match against the context */
+  def method: HttpMethod
+
+  /** Return Matching Action
+    * Match the context against the `pm` and the `method` and invoke `actionFor` to yield the corresponding Action.
+    *
+    * @param context The context of the request
+    * @return Some(Action) if the corresponding context matches, or None if it doesn't
+    */
+  override def extractAction(context: Context) : Option[Action] = {
+    if (context.request.request.method == method) {
+      super.extractAction(context)
+    } else {
+      None
+    }
   }
 }
 
-case class PathToNodeActionFunction[L <:HList](pm: PathMatcher[L], nodeF: (L, Uri.Path, Context) ⇒ Node )
-  extends PathMatcherToAction[L] {
-  def apply(list: L, rest: Uri.Path, c: Context) : Action = {
-    NodeAction(c,nodeF(list,rest,c))
+trait SingularActionExtractor extends PathMatcherActionExtractor[::[String,HNil]] {
+
+  /** The path segment to match */
+  def segment: String
+
+  /** Key For Identifying This Provider
+    *
+    * When matching a path, it is helpful to quickly identify which ActionProvider to apply to a given path. To that
+    * end, the key provides a constant path segment value that identifies this ActionProvider. For example, if
+    * your path was /foo/bar/doit then foo and bar are potential keys as they might separately identify
+    * an ActionProvider "foo" that contains an ActionProvider "bar". The "doit" suffix is not a candidate for an
+    * ActionProvider's key because it is not / terminated. Keys are path segments and must occur only between slashes.
+    *
+    * Strings returned by key will be URL sanitized. They should therefore match the regular expression for URL
+    * path characters ( [-A-Za-z0-9_~]+ ).  Any characters not matching the regular expression will be converted
+    * to a dash.
+    *
+    * @return The constant string used to identify this ActionProvider
+    */
+  def makeKey(name: String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
+
+  /** Singular form of the keyword */
+  lazy val singularKey = makeKey(segment)
+
+  /** PathMatcher that matches the singular form of the keyword and extracts it. */
+  def pm : PathMatcher[::[String,HNil]] =
+    PathMatcher(Uri.Path(singularKey),singularKey::HNil) ~ Slash |
+      PathMatcher(Uri.Path(singularKey),singularKey::HNil)
+
+
+  /** Final Implementation of [[scrupal.core.api.PathAndMethodActionExtractor.actionFor()]]
+    * This implementation just delegates to a more precise implementation that provides the keyword that was
+    * extracted from the path.
+    * @param list The shapeless HList extracted from the PathMatcher
+    * @param context The new context
+    * @return The Action resulting from the delegated call to [[actionFor()]]
+    */
+  final def actionFor(list: ::[String,HNil], context: Context) : Option[Action] = {
+    actionFor(list.head, context)
+  }
+
+  /** Extract the Action
+    * This method is intended to be defined by subclasses to extract the Action corresponding to the extraction of
+    * the keyword from this Extractor and the context.
+    * @param keyword The keyword used that matched this extractor
+    * @param context The context of the request
+    * @return The Action to process that corresponds to the context
+    */
+  def actionFor(keyword: String, context: Context) : Option[Action]
+}
+
+trait PluralActionExtractor extends SingularActionExtractor
+{
+  /** Plural form of the keyword */
+  lazy val pluralKey = makeKey(Pluralizer.pluralize(segment))
+
+  /** PathMatcher that matches either the singular or plural form of the keyword and extracts it. */
+  override def pm : PathMatcher[::[String,HNil]] = super.pm | PathMatcher(Uri.Path(pluralKey),pluralKey::HNil)
+}
+
+abstract class ActionProducer[L <: HList](val pm: PathMatcher[L]) extends PathMatcherActionExtractor[L]
+
+case class NodeActionProducer[L <: HList](pm: PathMatcher[L], node: Node, method: HttpMethod = HttpMethods.GET)
+  extends PathAndMethodActionExtractor[L]
+{
+  def actionFor(list: L, c: Context) : Option[Action] = {
+    Some(NodeAction(c,node))
+  }
+}
+
+case class FunctionalNodeActionProducer[L <: HList](
+  pm: PathMatcher[L],
+  nodeF: (L, Context) ⇒ Node,
+  method: HttpMethod = HttpMethods.GET
+) extends PathAndMethodActionExtractor[L] {
+  def actionFor(list: L, c: Context) : Option[Action] = {
+    Some(NodeAction(c,nodeF(list, c)))
   }
 }
 

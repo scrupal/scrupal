@@ -43,7 +43,7 @@ case class StringType (
     case bs: BSONString if bs.value.length > maxLen =>
       Some(s"String of length ${bs.value.length} exceeds maximum of $maxLen")
     case bs: BSONString if !regex.pattern.matcher(bs.value).matches() =>
-      Some(s"String '${bs}' does not match pattern '${regex.pattern.pattern()}")
+      Some(s"String '${bs.value}' does not match pattern '${regex.pattern.pattern()}")
     case bs: BSONString ⇒
       None
     case x: BSONValue =>

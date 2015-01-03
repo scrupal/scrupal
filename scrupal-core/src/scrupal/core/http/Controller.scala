@@ -122,24 +122,20 @@ class ActionProviderController extends Controller with PathHelpers {
   def id = 'ActionProviderController
   val priority = 0
 
-  def provideAction(ap: ActionProvider, key: String, unmatchedPath: Uri.Path, context: Context): Directive1[Action] = {
-    ap.actionFor(key, unmatchedPath, context) match {
-      case Some(action) ⇒ extract { ctxt ⇒ action }
-      case None ⇒ reject
-    }
-  }
-
-  def subordinate(key: String, provider: ActionProvider)(f: (String,ActionProvider) ⇒ Route) : Route = {
-    if (provider.isTerminal)
-      f(key, provider)
-    else {
-      rawPathPrefixWithMatch(provider.subordinates) {
-        case (subkey: String, ap: ActionProvider) ⇒
-          subordinate(subkey, ap)(f)
+  def routes(implicit scrupal: Scrupal): Route = {
+    site(scrupal) { site: Site ⇒
+      rawPathPrefix(Slash) {
+        request_context { ctxt: RequestContext ⇒
+          implicit val context = Context(scrupal, ctxt, site)
+          site.extractAction(context) match {
+            case Some(action) ⇒ complete { makeMarshallable { action.dispatch } }
+            case None ⇒ reject
+          }
+        }
       }
     }
   }
-
+/*
   def routes(implicit scrupal: Scrupal): Route = {
     site(scrupal) { site: Site ⇒
       rawPathPrefix(Slash) {
@@ -165,6 +161,7 @@ class ActionProviderController extends Controller with PathHelpers {
       }
     }
   }
+  */
 }
 
 trait RequestLoggers {

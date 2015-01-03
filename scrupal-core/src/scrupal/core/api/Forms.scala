@@ -22,9 +22,8 @@ import scrupal.core.api.Html._
 import scrupal.core.html.Forms._
 import scrupal.core.types._
 import scrupal.utils.Enablee
-import spray.http.Uri
-import spray.routing.PathMatcher.{Unmatched, Matched}
-import spray.routing.PathMatchers
+import spray.http.HttpMethods
+import scala.concurrent.Future
 import scalatags.Text.all._
 import scalatags.Text.attrs
 
@@ -41,13 +40,35 @@ object Forms {
   }
 
   trait FieldItem extends FormItem with Nameable with Describable {
+    def name : String
     def inline : Boolean
     def prefix : Boolean
+    def defaultValue : BSONDocument
   }
 
   trait Container extends FieldItem {
     def fields: Seq[FieldItem]
-    def apply(value: BSONValue) : ValidationResult = validateArray(value.asInstanceOf[BSONArray], fields)
+    def apply(value: BSONValue) : ValidationResult = {
+      value match {
+        case x: BSONDocument if x.get(name).isEmpty => Some(Seq(s"Document has no field named '$name'"))
+        case x: BSONDocument if !x.get(name).get.isInstanceOf[BSONArray] ⇒
+          Some(Seq(s"The field '$name' field must be an array"))
+        case x: BSONDocument ⇒
+          val fieldsVal = x.get(name).get
+          fieldsVal match {
+            case a: BSONArray if a.length != fields.length =>
+              Some(Seq(s"Number of fields (${a.length} doesn't match expected number (${fields.length}."))
+            case a: BSONArray => validateArray(a, fields)
+            case x: BSONValue => Some(Seq(wrongClass("BSONArray", x).getOrElse("")))
+          }
+        case x: BSONValue => single(value) { _ => wrongClass("BSONDocument", x)}
+      }
+    }
+    def defaultValue : BSONDocument = BSONDocument(
+      name → BSONArray(
+        for (field ← fields) yield { field.defaultValue }
+      )
+    )
   }
 
   trait Field extends FieldItem {
@@ -56,8 +77,16 @@ object Forms {
     def attrs: AttrList
 
     def apply(value: BSONValue) : ValidationResult = {
-      fieldType(value)
+      value match {
+        case x: BSONDocument if x.get(name).isEmpty ⇒ Some(Seq(s"Expected field '$name' is missing."))
+        case x: BSONDocument ⇒
+          val fieldValue : BSONValue = x.get(name).get
+          fieldType(fieldValue)
+        case x: BSONValue ⇒ single(value) { _ ⇒ wrongClass("BSONDocument", x) }
+      }
     }
+
+    def defaultValue : BSONDocument = BSONDocument( name → default )
 
     require(fieldType.nonTrivial)
   }
@@ -82,6 +111,7 @@ object Forms {
     def render(form: Form) : TagContent = {
       text(name, form.values.getString(name), attrs ++ Seq(title:=description))
     }
+    override def defaultValue : BSONDocument = BSONDocument( name → default )
   }
 
   case class PasswordField(
@@ -214,7 +244,7 @@ object Forms {
   ) extends Container {
     require(fields.nonEmpty)
     def render(form: Form) : TagContent = {
-      fieldset(scalatags.Text.attrs.title:=description, legend(title), fields.map { field ⇒ field.render(form) } )
+      fieldset(scalatags.Text.attrs.title:=description, legend(title), fields.map { field ⇒ form.renderField(field) } )
     }
   }
 
@@ -230,6 +260,7 @@ object Forms {
       reset(name, Some(label), attrs ++ Seq(title:=description))
     }
     def apply(value: BSONValue) : ValidationResult = None
+    def defaultValue : BSONDocument = BSONDocument( name → BSONNull )
   }
 
   case class SubmitField(
@@ -247,9 +278,11 @@ object Forms {
       )
     }
     def apply(value: BSONValue) : ValidationResult = None
+    def defaultValue : BSONDocument = BSONDocument( name → BSONNull )
   }
 
   trait Form extends Enablee with FormItem with Nameable with Describable with TerminalActionProvider {
+    lazy val segment : String = id.name
     def actionPath : String
     def fields: Seq[FieldItem]
     def values: Settings
@@ -277,6 +310,15 @@ object Forms {
       }
     }
 
+    def defaultValue : BSONDocument = {
+      BSONDocument(
+        "action" → actionPath,
+        "fields" → BSONArray(
+          for (field <- fields) yield { field.defaultValue }
+        )
+      )
+    }
+
     /**
      * Wrap a field's rendered element with an appropriate label and other formatting. This default is aimed at
      * Twitter bootstrap which is the default formatting for Scrupal.
@@ -285,9 +327,9 @@ object Forms {
      * @param field The field whose rendered output should be wrapped
      * @return The TagContent for the final markup for the field
      */
-    def wrap(form: Form, field: FieldItem) : TagContent = {
+    def wrap(field: FieldItem) : TagContent = {
       val the_label = scrupal.core.html.Forms.label(field.name, field.name, Seq(cls:="control-label text-info"))
-      val the_field = field.render(form)
+      val the_field = field.render(this)
       div(cls:="clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
         if (field.inline) {
           if (field.prefix) {
@@ -297,12 +339,12 @@ object Forms {
           }
         } else {
           if (field.prefix) {
-            Seq(div(field.render(form)),the_label)
+            Seq(div(the_field),the_label)
           } else {
             Seq(the_label, div(the_field))
           }
         },
-        for(error ← form.errorsOf(field)) yield {
+        for(error ← errorsOf(field)) yield {
           div(cls:="text-danger small col-md-10", style:="padding-left:0;padding-top:0;margin-top:0;", error)
         },
         if (field.description.nonEmpty) {
@@ -313,10 +355,17 @@ object Forms {
       )
     }
 
+    def renderField(field: FieldItem) : TagContent = wrap(field)
+
     def render(form: Form) : TagContent = {
       scalatags.Text.tags.form(scalatags.Text.attrs.action:=actionPath, method:="POST", attrs.name:=name,
                                "enctype".attr:="application/x-www-form-urlencoded",
-        fields.map { field ⇒ wrap(form, field) }
+        fields.map { field ⇒
+          field match {
+            case f: FieldSet ⇒ field.render(this)
+            case _ ⇒ renderField(field)
+          }
+        }
       )
     }
 
@@ -332,22 +381,33 @@ object Forms {
       * @param context The context to use to match the PathToAction function
       * @return
       */
-    def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-      if (key == singularKey || key == pluralKey) {
-        PathMatchers.separateOnSlashes(actionPath)(path) match {
-          case Matched(pathRest, extractions) ⇒
-            if (pathRest.isEmpty)
-              action(context)
-            else
-              None
-          case Unmatched ⇒ None
+    override def provideAction(matchingSegment: String, context: Context) : Option[Action] = {
+      if (matchingSegment == singularKey && context.request.unmatchedPath.isEmpty) {
+        context.request.request.method match {
+          case HttpMethods.GET ⇒ Some(DisplayFormAction(this, context))
+          case HttpMethods.POST ⇒ Some(AcceptFormAction(this, context))
+          case _ ⇒ None
         }
       } else {
         None
       }
     }
 
-    def action(context: Context) : Option[Action]
+    def acceptForm(context: Context) : Result[_] = {
+      ErrorResult("Form submission not implemented yet", Unimplemented)
+    }
+  }
+
+  case class DisplayFormAction(form: Form, context: Context) extends Action {
+    def apply() : Future[Result[_]] = Future {
+      HtmlResult(form.render.toString(), Successful)
+    } (context.scrupal._executionContext)
+  }
+
+  case class AcceptFormAction(form: Form, context: Context) extends Action {
+    def apply() : Future[Result[_]] = Future {
+      form.acceptForm(context)
+    } (context.scrupal._executionContext)
   }
 
   case class SimpleForm(
@@ -359,10 +419,6 @@ object Forms {
     values: Settings = Settings.Empty
   ) extends Form {
     require(fields.length > 0)
-    def action(context: Context) : Option[Action] = {
-      log.warn("Action Generation Not Implemented")
-      None
-    }
   }
 
   object emptyForm extends Form {

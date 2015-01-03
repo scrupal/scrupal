@@ -25,7 +25,6 @@ import scrupal.core.api._
 import scrupal.core.html.BootstrapPage
 import scrupal.core.nodes.HtmlNode
 import scrupal.core.types._
-import shapeless.HList
 import spray.routing.PathMatchers.PathEnd
 
 import scalatags.Text.all._
@@ -63,7 +62,7 @@ object AdminApp extends Application('admin) {
     }
   )
 
-  val dbForm = Forms.SimpleForm('dbConfigForm, "Database", "Description", "/admin/database/form/submit", Seq(
+  val dbForm = Forms.SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
     StringField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
     IntegerField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
     StringField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
@@ -104,7 +103,7 @@ object AdminApp extends Application('admin) {
           p("Applications:"),
           ul(
             for (app ← context.site.get.applications) {
-              li(app.name, " - ", app.pathsToActions.map { p => p.pm.toString() }.mkString(", "))
+              li(app.name, " - ", app.delegates.map { p => p.describe }.mkString(", ")) // FIXME: describe?
             }
           )
         )
@@ -167,8 +166,8 @@ object AdminApp extends Application('admin) {
     )
   )
 
-  override val pathsToActions : Seq[PathMatcherToAction[_ <: HList]] = Seq(
-    PathToNodeAction(PathEnd, adminLayout)
+  override def delegates : Seq[ActionExtractor] = super.delegates ++ Seq(
+    NodeActionProducer(PathEnd, adminLayout)
   )
 
   dbForm.enable(this)
@@ -176,8 +175,6 @@ object AdminApp extends Application('admin) {
 
 object SiteAdminEntity extends Entity('SiteAdmin) {
   def kind: Symbol = 'SiteAdmin
-
-  val key: String = "Site"
 
   def description: String = "An entity that handles administration of Scrupal sites."
 

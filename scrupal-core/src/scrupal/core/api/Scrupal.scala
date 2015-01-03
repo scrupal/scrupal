@@ -206,7 +206,7 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
       }
       result.map { sites ⇒
         val final_result = if (sites.isEmpty) {
-          val ws = new WelcomeSite()
+          val ws = new WelcomeSite(Symbol(name + "-Welcome"))
           ws.enable(this)
           Map(ws.host → ws )
         } else {

@@ -16,17 +16,12 @@
   **********************************************************************************************************************/
 package scrupal.core.api
 
-import org.joda.time.DateTime
-
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 
 import scrupal.db._
 import scrupal.utils._
-import spray.http.Uri
-import scrupal.core.actions.NodeAction
-
 import scala.util.matching.Regex
 
 /** Site Top Level Object
@@ -34,7 +29,7 @@ import scala.util.matching.Regex
  * Created by reidspencer on 11/3/14.
  */
 abstract class Site(sym: Identifier) extends { val id: Identifier = sym ; val _id : Identifier = sym }
-  with EnablementPathMatcherToActionProvider[Site] with VariantStorable[Identifier] with Registrable[Site]
+  with EnablementActionExtractor[Site] with VariantStorable[Identifier] with Registrable[Site]
           with Settingsable with Nameable with Describable with Modifiable {
   val kind = 'Site
   def registry = Site
@@ -54,38 +49,6 @@ abstract class Site(sym: Identifier) extends { val id: Identifier = sym ; val _i
   }
 
   def isChildScope(e: Enablement[_]) : Boolean = applications.contains(e)
-}
-
-case class NodeSite (
-  override val id : Identifier,
-  name: String,
-  description: String,
-  host: String,
-  siteRoot: Node = Node.Empty,
-  override val requireHttps: Boolean = false,
-  modified: Option[DateTime] = None,
-  created: Option[DateTime] = None
-) extends Site(id) {
-  final override val kind = NodeSite.kind
-  final val key : String = makeKey(id.name)
-
-  override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    Some( NodeAction(context, siteRoot) )
-  }
-}
-
-object NodeSite {
-  import BSONHandlers._
-
-  implicit val nodeReader = Node.NodeReader
-  implicit val nodeWriter = Node.NodeWriter
-  object NodeSiteBRW extends VariantReaderWriter[Site,NodeSite] {
-    implicit val NodeSiteHandler = Macros.handler[NodeSite]
-    override def fromDoc(doc: BSONDocument): NodeSite = NodeSiteHandler.read(doc)
-    override def toDoc(obj: Site): BSONDocument = NodeSiteHandler.write(obj.asInstanceOf[NodeSite])
-  }
-  val kind = 'NodeSite
-  Site.variants.register(kind, NodeSiteBRW)
 }
 
 object Site extends Registry[Site] {

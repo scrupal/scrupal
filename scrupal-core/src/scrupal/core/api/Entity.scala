@@ -22,10 +22,10 @@ import scrupal.core.types.BundleType
 import scrupal.db.{VariantStorable, IdentifierDAO, ScrupalDB}
 
 import scrupal.utils.{Registrable, Enablee}
-import shapeless.HList
-import spray.http.{HttpHeader, HttpMethods, Uri}
+import spray.http.{HttpHeader, HttpMethods}
 import spray.routing.PathMatcher.{Unmatched, Matched}
 import spray.routing.PathMatchers._
+import spray.routing.RequestContext
 
 import scala.concurrent.Future
 
@@ -41,50 +41,39 @@ trait EntityInstanceAction extends Action with Nameable with Describable {
   * This
   * TODO: Finish documenting EntityCommandProvider interface as it is necessary to understanding entities
   */
-trait EntityActionProvider extends TerminalActionProvider {
+trait EntityActionProvider extends PluralTerminalActionProvider {
 
   def make_args(ctxt: Context) : BSONDocument = {
-    ctxt.request match {
-      case Some(context) ⇒
-        val headers = context.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
-        val params = context.request.uri.query.map { case(k,v) ⇒ k -> BSONString(v) }
-        BSONDocument(headers ++ params)
-      case None ⇒
-        BSONDocument()
-    }
+    val headers = ctxt.request.request.headers.map { hdr : HttpHeader  ⇒ hdr.name → BSONString(hdr.value) }
+    val params  = ctxt.request.request.uri.query.map { case(k,v) ⇒ k -> BSONString(v) }
+    BSONDocument(headers ++ params)
   }
 
-  def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-    if (key == pluralKey) {
-      val pm = (Segments ~PathEnd)
-      pm(path) match {
-        case Matched(pathRest, extractions) ⇒
-          val id_path : String = extractions.head.mkString("/")
-          context.request.get.request.method match {
+  override def provideAction(matchingSegment: String, context: Context) : Option[Action] = {
+    val pm = Segments ~ PathEnd
+    pm(context.request.unmatchedPath) match {
+      case Matched(pathRest, extractions) ⇒
+        if (matchingSegment == pluralKey) {
+          val id_path: String = extractions.head.mkString("/")
+          context.request.request.method match {
             case HttpMethods.POST ⇒ Some(create(context, id_path, make_args(context)))
             case HttpMethods.GET ⇒ Some(retrieve(context, id_path))
             case HttpMethods.PUT ⇒ Some(update(context, id_path, make_args(context)))
             case HttpMethods.DELETE ⇒ Some(delete(context, id_path))
             case HttpMethods.OPTIONS ⇒ Some(query(context, id_path, make_args(context)))
           }
-        case Unmatched ⇒ None
-      }
-    } else if (key == singularKey) {
-      val pm = (Segments ~ PathEnd)
-      pm(path) match {
-        case Matched(pathRest, extractions) ⇒
+        } else if (matchingSegment == singularKey) {
           val id_path = extractions.head
-          context.request.get.request.method match {
+          context.request.request.method match {
             case HttpMethods.POST ⇒ Some(createFacet(context, id_path, make_args(context)))
             case HttpMethods.GET ⇒ Some(retrieveFacet(context, id_path))
             case HttpMethods.PUT ⇒ Some(updateFacet(context, id_path, make_args(context)))
             case HttpMethods.DELETE ⇒ Some(deleteFacet(context, id_path))
             case HttpMethods.OPTIONS ⇒ Some(queryFacet(context, id_path, make_args(context)))
           }
-        case Unmatched ⇒ None
-      }
-    } else {
-      None
+        } else
+          None
+      case Unmatched ⇒ None
     }
   }
 
@@ -201,10 +190,11 @@ abstract class QueryFacet(val context: Context, val what: Seq[String], val args:
   * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   */
-abstract class Entity(sym: Symbol) extends { val id: Symbol = sym; val _id: Symbol = sym} with EntityActionProvider
-with
-  VariantStorable[Symbol] with Registrable[Entity] with ModuleOwned
-          with Describable with Enablee with BSONValidator[BSONDocument] with Bootstrappable
+abstract class Entity(sym: Symbol) extends {
+  val id: Symbol = sym; val _id: Symbol = sym ; val segment : String = id.name
+}
+  with EntityActionProvider with VariantStorable[Symbol] with Registrable[Entity] with ModuleOwned
+  with Describable with Enablee with BSONValidator[BSONDocument] with Bootstrappable
 {
   def moduleOf = { Module.values.find(mod ⇒ mod.entities.contains(this)) }
 

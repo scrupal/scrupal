@@ -99,7 +99,6 @@
     <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.7:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
-    <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
@@ -111,5 +110,7 @@
     <orderEntry type="library" name="SBT: com.scalatags:scalatags_2.11:0.5.0-SNAPSHOT:jar" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: nu.validator.htmlparser:htmlparser:1.4:jar" level="project" />
   </component>
 </module>

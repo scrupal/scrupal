@@ -20,13 +20,20 @@ package scrupal.test
 import org.specs2.execute.AsResult
 import org.specs2.specification.Fixture
 import scrupal.core.api._
+import scrupal.core.sites.NodeSite
+import spray.http.{HttpRequest, HttpMethods, HttpMethod, Uri}
+import spray.routing.RequestContext
 
 /**
  * Created by reidspencer on 11/9/14.
  */
-class FakeContext[T <: FakeContext[T]](name: String = "")(implicit val scrupal: Scrupal)
-  extends Context with Fixture[T]  {
+class FakeContext[T <: FakeContext[T]](
+  name: String = "",
+  path: String = "",
+  method: HttpMethod = HttpMethods.GET)(implicit val scrupal: Scrupal) extends Context with Fixture[T]  {
   private val scrupalName = scrupal.label + { if (name.isEmpty) "" else "-" + name }
+  override val uri : Uri =  Uri("http://localhost/" + path)
+  val request : RequestContext = new RequestContext(new HttpRequest(method,uri), null, Uri.Path(path))
   def nm(name: String) = ScrupalSpecification.next(scrupalName + "-" + name)
   def nm = ScrupalSpecification.next(scrupalName)
   def sym(name: String) = Symbol(nm(name))

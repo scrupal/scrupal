@@ -18,7 +18,8 @@
 package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.api.{NodeSite, Scrupal}
+import scrupal.core.api.Scrupal
+import scrupal.core.sites.NodeSite
 import scrupal.core.http.SiteDirectives
 import scrupal.test.CaseClassFixture
 import spray.routing.HttpService

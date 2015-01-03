@@ -19,10 +19,10 @@ package scrupal.test
 
 import scrupal.core.types.StringType
 
-import scalatags.Text.all._
 import scrupal.core.api._
 import scrupal.core.types
 import scrupal.core.nodes
+import scrupal.core.sites.NodeSite
 
 /**
  * Created by reidspencer on 11/10/14.

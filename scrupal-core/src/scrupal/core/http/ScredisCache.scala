@@ -29,11 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 trait Cacheable[PT] {
-  val mediaType: MediaType
-  val payload: PT
+  def mediaType: MediaType
+  def payload: PT
   val ttl: Duration = Duration.Inf // non-expiring, doesn't time out after fixed amount of time after creation
   val tti: Duration = Duration.Inf // non-expiring, doesn't time out if not referenced
-  implicit val payloadHandler : BSONHandler[BSONDocument,PT]
+  implicit def payloadHandler : BSONHandler[BSONDocument,PT]
 }
 
 /** Redis Based Cache
@@ -42,9 +42,9 @@ trait Cacheable[PT] {
   * objecst that have an Array[Byte] payload and a media type. If expiration of the data is wanted, set the ttl field
   * and the EXPIRE command will be sent to Redis to expire it after that duration.
   *
-  * TODO: Figure out a way to do time-to-idle using Redis `OBJECT IDLETIME <key>` command (responsibly). Essentially
-  * we want an actor that once in a while (hourly?) goes through the cache or some fragment of it and evicts things
-  * that have not been accessed in a while.
+  * TODO: Figure out a way to do time-to-idle using Redis `OBJECT IDLETIME <key>` command (responsibly).
+  * Essentially we want an actor that once in a while (hourly?) goes through the cache or some fragment of
+  * it and evicts things that have not been accessed in a while.
   * Created by reidspencer on 11/8/14.
   */
 class ScredisCache(scrupal: Scrupal) extends Cache[Cacheable[_]] {

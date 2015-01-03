@@ -58,7 +58,6 @@ object display_context_table extends ContentsGenerator {
         thead(tr(th("Parameter"), th("Value"))),
         tbody(
           tr(th("Site"), td(context.siteName)),
-          tr(th("Application"), td(context.appName)),
           tr(th("User"), td(context.user)),
           tr(th("Theme"), td(context.themeName))
         )

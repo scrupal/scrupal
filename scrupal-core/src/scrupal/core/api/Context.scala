@@ -34,10 +34,10 @@ import scala.concurrent.ExecutionContext
   */
 trait Context {
   // Scrupal Related things
-  def scrupal: Scrupal
+  val scrupal: Scrupal
 
   // Request related things
-  val request : Option[RequestContext] = None
+  val request : RequestContext
   def uri      = Uri("<NoUri>")
   def method   = HttpMethod.custom("NONE",false,true,false)
   def protocol = HttpProtocols.`HTTP/1.1`
@@ -46,18 +46,19 @@ trait Context {
   // Site related things
   val site : Option[Site] = None
   def siteName : String = "<NoSite>"
-
-  val application : Option[Application] = None
-  def appName : String = "<NoApplication>"
-  def appPath : String = "<NoPath>"
-
   val themeProvider : String = "bootswatch"
   val themeName : String = "default"
-  val user : String = "guest"
   val description : String = ""
+
+  val principal: Option[Principal] = None
+  val user : String = "guest"
 
   def alerts : Seq[Alert] = Seq()
   def suggestURL : URL = new URL("/")
+
+  def withNewRequest(newRequest: RequestContext) = {
+    Context(scrupal, newRequest, site.orNull)
+  }
 
   def withConfiguration[T](f: (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
 
@@ -75,16 +76,15 @@ trait Context {
   * This information is generally overridden by subclasses, but this is the minimum we need to render a page. Note that
   * because this is a WrappedRequest[A], all the fields of Request are fields of this class too.
   * @param scrupal The Scrupal object
-  * @param rqst The request upon which the context is based
+  * @param request The request upon which the context is based
   */
-class SprayContext(val scrupal: Scrupal, rqst: RequestContext) extends Context {
+case class SimpleContext(scrupal: Scrupal, request: RequestContext) extends Context {
   require(scrupal != null)
-  require(rqst != null)
-  override val request : Option[RequestContext] = Some(rqst)
-  override val uri = rqst.request.uri
-  override val method = rqst.request.method
-  override val protocol = rqst.request.protocol
-  override val headers  = rqst.request.headers.map { h ⇒ h.name → h}.toMap
+  require(request != null)
+  override val uri = request.request.uri
+  override val method = request.request.method
+  override val protocol = request.request.protocol
+  override val headers  = request.request.headers.map { h ⇒ h.name → h}.toMap
 }
 
 /** A Site context which pulls the information necessary to render something for a site.
@@ -93,21 +93,13 @@ class SprayContext(val scrupal: Scrupal, rqst: RequestContext) extends Context {
   * @param theSite The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) extends SprayContext(scrupal, request) {
+class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) extends SimpleContext(scrupal, request) {
   require(theSite != null)
   override val site : Option[Site] = Some(theSite)
   override val siteName : String = theSite.name
   override val description : String = theSite.description
   override val themeProvider : String = theSite.themeProvider
   override val themeName: String = theSite.themeName
-}
-
-class ApplicationContext(scrupal: Scrupal, request: RequestContext, theSite: Site, app: Application)
-  extends SiteContext(scrupal, request, theSite) {
-  require(app != null)
-  override val application : Option[Application] = Some(app)
-  override val appName = app.name
-  override val appPath = app.key
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -124,12 +116,11 @@ class UserContext(scrupal: Scrupal, request: RequestContext, site: Site, princip
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
-  def apply(scrupal: Scrupal, request: RequestContext) = new SprayContext(scrupal, request)
+  def apply(scrupal: Scrupal, request: RequestContext) =
+    new SimpleContext(scrupal, request)
 
-  def apply(scrupal: Scrupal, request: RequestContext, site: Site) = new SiteContext(scrupal, request, site)
-
-  def apply(scrupal: Scrupal, request: RequestContext, site: Site, app: Application) =
-    new ApplicationContext(scrupal, request, site, app)
+  def apply(scrupal: Scrupal, request: RequestContext, site: Site) =
+    new SiteContext(scrupal, request, site)
 
   def apply(scrupal: Scrupal, request: RequestContext, site: Site, principal: Principal) =
     new UserContext(scrupal, request, site, principal)
