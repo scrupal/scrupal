@@ -20,7 +20,7 @@ package scrupal.core.api
 import reactivemongo.bson._
 import scrupal.core.types._
 
-import scrupal.db.{BSONSettingsInterface, BSONSettings, BSONPathWalker}
+import scrupal.db.{BSONSettingsImpl, BSONSettings, BSONPathWalker}
 import scrupal.utils.PathWalker
 
 /** Interface To Settings
@@ -28,10 +28,22 @@ import scrupal.utils.PathWalker
   *
   * FIXME: Extract the BSON Specific parts of the implementations and put in scrupal-db
   */
-trait SettingsInterface extends BSONSettingsInterface with BSONValidator {
-
-  def validate(doc: BSONValue) : BVR
-  def validate(path: String) : BVR
+trait SettingsInterface extends BSONSettingsImpl with BSONValidator {
+  def settingsType: StructuredType
+  def validate(ref: ValidationLocation, doc: BSONValue) : VR = {
+    validateMaps(ref, doc, settingsType.fields, settingsDefault)
+  }
+  def validate(ref: ValidationLocation, path: String) : VR = {
+    BSONPathWalker(path, settings) match {
+      case None ⇒ ValidationError(ref, settings, s"Path '$path' was not found amongst the values.")
+      case Some(bv) ⇒
+        TypePathWalker(path,settingsType) match {
+          case None ⇒ ValidationError(ref, settings,
+            s"Path '$path' exists in configuration but the configuration has no type for it")
+          case Some(validator) ⇒ validator.validate(ref, bv)
+        }
+    }
+  }
 }
 
 /** Settings For Anything That Needs Them
@@ -41,24 +53,11 @@ trait SettingsInterface extends BSONSettingsInterface with BSONValidator {
  * Created by reidspencer on 11/10/14.
  */
 case class Settings(
-  types: StructuredType,
-  override val defaults: BSONDocument,
-  override val values: BSONDocument
-) extends BSONSettings(values,defaults) with SettingsInterface {
-  require(types.size == defaults.elements.size)
-  def validate(doc: BSONValue) : BVR = validateMaps(doc, types.fields, defaults)
-
-  def validate(path: String) : BVR = {
-    BSONPathWalker(path,values) match {
-      case None ⇒ ValidationError(values, s"Path '$path' was not found amongst the values.")
-      case Some(bv) ⇒
-        TypePathWalker(path,types) match {
-          case None ⇒ ValidationError(values,
-            s"Path '$path' exists in configuration but the configuration has no type for it")
-          case Some(validator) ⇒ validator.validate(bv)
-        }
-    }
-  }
+  settingsType: StructuredType,
+  initialValue: BSONDocument,
+  override val settingsDefault: BSONDocument = BSONDocument()
+) extends BSONSettings(initialValue,settingsDefault) with SettingsInterface {
+  require(settingsType.size == settingsDefault.elements.size)
 }
 
 
@@ -86,7 +85,7 @@ object TypePathWalker extends PathWalker[DocumentType, IndexableType, Type] {
 object Settings {
   import BSONHandlers._
 
-  implicit val ConfigurationHandler = Macros.handler[Settings]
+  implicit val SettingsHandler = Macros.handler[Settings]
 
   def apply(cfg: com.typesafe.config.Config) : Settings = ???
   // TODO: Implement conversion of Configuration from Typesafe Config with "best guess" at Type from values

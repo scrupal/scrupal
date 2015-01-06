@@ -52,11 +52,12 @@ trait Type extends Registrable[Type] with Describable with BSONValidator with Bo
   def trivial = false
   def nonTrivial = !trivial
 
-  override protected def simplify(value: BSONValue, classes: String)(validator: (BSONValue) => Option[String]): BVR = {
+  override protected def simplify(ref: ValidationLocation, value: BSONValue, classes: String)
+  (validator: (BSONValue) => Option[String]) : VR = {
     validator(value) match {
-      case Some("") ⇒ wrongClass(value, classes)
-      case Some(msg: String) ⇒ TypeValidationError(value, this, msg)
-      case None ⇒ ValidationSucceeded(value)
+      case Some("") ⇒ wrongClass(ref, value, classes)
+      case Some(msg: String) ⇒ TypeValidationError(ref, value, this, msg)
+      case None ⇒ ValidationSucceeded(ref,value)
     }
   }
 
@@ -68,7 +69,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator with Bo
     * @return
     */
   def convert[S <: ScalaValueType](value: BSONValue)(implicit reader: BSONReader[BSONValue,S]) : Try[S] = {
-    val result = validate(value)
+    val result = validate(new ValidationLocation {}, value)
     if (result.isError)
       Failure[S](new Exception(result.message))
     else
@@ -84,7 +85,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator with Bo
     */
   def convert[S <: ScalaValueType](value: S)(implicit writer: BSONWriter[S,BSONValue]) : Try[BSONValue] = {
     writer.writeTry(value).flatMap { bson =>
-      val result = validate(bson)
+      val result = validate(new ValidationLocation {}, bson)
       if (result.isError)
         Failure[BSONValue](new Exception(result.message))
       else
@@ -99,7 +100,8 @@ case class Not_A_Type() extends Type {
   override val trivial = true
   val description = "Not A Type"
   val module = 'NotAModule
-  def validate(value: BSONValue) = TypeValidationError(value, this, "NotAType is not valid")
+  def validate(ref: ValidationLocation, value: BSONValue) =
+    TypeValidationError(ref, value, this, "NotAType is not valid")
 }
 
 case class UnfoundType(id: Symbol) extends Type {
@@ -107,8 +109,8 @@ case class UnfoundType(id: Symbol) extends Type {
   override val trivial = true
   val description = "A type that was not loaded in memory"
   val module = 'NotAModule
-  def validate(value: BSONValue) =
-    TypeValidationError(value, this,
+  def validate(ref: ValidationLocation, value: BSONValue) =
+    TypeValidationError(ref, value, this,
       s"Unfound type '${id.name}' cannot be used for validation. The module defining the type is not loaded.")
 }
 
@@ -127,18 +129,19 @@ trait DocumentType extends Type {
   def allowMissingFields : Boolean = false
   def allowExtraFields : Boolean = false
 
-  def validate(value: BSONValue) : BVR = {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
     value match {
       case d: BSONDocument =>
-        def doValidate(name: String, value: BSONValue) : BVR = {
+        def doValidate(name: String, value: BSONValue) : VR = {
           validatorFor(name) match {
-            case Some(validator) ⇒ validator.validate(value)
+            case Some(validator) ⇒
+              validator.validate(ref.get(name).getOrElse(ref), value)
             case None ⇒ {
               if (!allowExtraFields)
-                ValidationError(value, s"Field '$name' is spurious.")
+                ValidationError(ref, value, s"Field '$name' is spurious.")
               else
               // Don't validate or anything, spurious field
-                ValidationSucceeded(value)
+                ValidationSucceeded(ref, value)
             }
           }
         }
@@ -156,7 +159,7 @@ trait DocumentType extends Type {
             for (
               fieldName ← fieldNames if !elements.contains(fieldName)
             ) yield {
-              ValidationError(value, s"Field '$fieldName' is missing")
+              ValidationError(ref, value, s"Field '$fieldName' is missing")
             }
           } else {
             Seq.empty[ValidationError[BSONValue]]
@@ -164,10 +167,10 @@ trait DocumentType extends Type {
           field_results ++ missing_results
         }
         if (errors.isEmpty)
-          ValidationSucceeded(value)
+          ValidationSucceeded(ref, value)
         else
-          ValidationFailed(value, errors.toSeq)
-      case x: BSONValue => wrongClass(x, "BSONDocument")
+          ValidationFailed(ref, value, errors.toSeq)
+      case x: BSONValue => wrongClass(ref, x, "BSONDocument")
     }
   }
 

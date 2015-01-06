@@ -36,7 +36,7 @@ case class BLOBType  (
   override type ScalaValueType = Array[Byte]
   assert(maxLen >= 0)
   assert(mime.contains("/"))
-  def validate(value: BSONValue) : BVR = simplify(value, "BSONBinary") {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = simplify(ref, value, "BSONBinary") {
     case b: BSONBinary if b.value.size > maxLen => Some(s"BLOB of length ${b.value.size} exceeds maximum length of ${maxLen}")
     case b: BSONBinary => None
     case b: BSONString if b.value.length > maxLen => Some(s"BLOB of length ${b.value.size} exceeds maximum length of ${maxLen}")

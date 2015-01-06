@@ -39,8 +39,8 @@ case class StringType (
   ) extends Type {
   override type ScalaValueType = String
   require(maxLen >= 0)
-  def validate(value: BSONValue) = {
-    simplify(value, "String") {
+  def validate(ref: ValidationLocation, value: BSONValue) = {
+    simplify(ref, value, "String") {
       case bs: BSONString if bs.value.length > maxLen =>
         Some(s"String of length ${bs.value.length} exceeds maximum of $maxLen")
       case bs: BSONString if !regex.pattern.matcher(bs.value).matches() =>

@@ -22,9 +22,11 @@ package scrupal.db
  */
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import org.joda.time.Instant
 
+import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 
 import reactivemongo.bson._
@@ -36,6 +38,13 @@ import scrupal.utils.{PathWalker, ScrupalComponent}
   * FIXME: Extract the BSON Specific parts of the implementations and put in scrupal-db
   */
 trait BSONSettingsInterface {
+
+  def settingsDefault : BSONDocument
+  def settings : BSONDocument
+
+  def keySet : Set[String] = ???
+  def entrySet: Set[BSONValue] = ???
+
 
   def getString(path: String) : Option[String]
   def getBoolean(path: String) : Option[Boolean]
@@ -50,9 +59,6 @@ trait BSONSettingsInterface {
   def getMicroseconds(path: String) : Option[Long]
   def getNanoseconds(path: String) : Option[Long]
 
-  def keySet : Set[String] = ???
-  def entrySet: Set[BSONValue] = ???
-
   def getSettings(path: String): Option[BSONSettings] = ???
 
   def getStrings(path: String): Option[Seq[String]] = ???
@@ -65,6 +71,7 @@ trait BSONSettingsInterface {
   def getInstants(path: String): Option[Seq[Instant]] = ???
   def getDurations(path: String): Option[Seq[Duration]] = ???
 
+  def setValues(values: BSONDocument) : Unit = ???
   def setString(path: String, value: String) : Unit = ???
   def setBoolean(path: String, value: Boolean) : Unit = ???
   def setByte(path: String, value: Byte) : Unit = ???
@@ -91,43 +98,78 @@ trait BSONSettingsInterface {
 /**
  * Created by reidspencer on 11/10/14.
  */
-class BSONSettings(
-  val values: BSONDocument,
-  val defaults: BSONDocument = BSONDocument()
-) extends ScrupalComponent with BSONSettingsInterface with DefaultBSONHandlers {
+abstract class BSONSettingsImpl extends ScrupalComponent with BSONSettingsInterface with DefaultBSONHandlers {
 
   implicit val bsonStringReader = BSONStringHandler.asInstanceOf[BSONReader[BSONValue,String]]
 
-  def getString(path: String) : Option[String] = BSONPathWalker(path,values).map{ s ⇒ s.asInstanceOf[BSONString].as[String] }
-  def getBoolean(path: String) : Option[Boolean] = BSONPathWalker(path, values).map { b ⇒ b.asInstanceOf[BSONBoolean].as[Boolean] }
-  def getByte(path: String) : Option[Byte] = BSONPathWalker(path, values).map { b ⇒
-    b.asInstanceOf[BSONInteger].value.toByte
-  }
+  private val settingsValue : AtomicReference[BSONDocument] = new AtomicReference[BSONDocument]( BSONDocument() )
 
-  def getInt(path: String) : Option[Int] = BSONPathWalker(path,values).map { i ⇒ i.asInstanceOf[BSONInteger].as[Int] }
-  def getLong(path: String) : Option[Long] = BSONPathWalker(path, values).map { l ⇒ l.asInstanceOf[BSONLong].as[Long] }
-  def getDouble(path: String) : Option[Double] = BSONPathWalker(path, values).map { l ⇒ l.asInstanceOf[BSONDouble].as[Double] }
-  def getNumber(path: String) : Option[Number] = BSONPathWalker(path, values).map {
-    case BSONInteger(i) ⇒ Integer.valueOf(i)
-    case BSONLong(l) ⇒ java.lang.Long.valueOf(l)
-    case BSONDouble(d) ⇒ java.lang.Double.valueOf(d)
-    case BSONBoolean(b) ⇒ java.lang.Integer.valueOf(if (b) 1 else 0)
-  }
-  def getInstant(path: String) : Option[Instant] = BSONPathWalker(path, values).map { i ⇒
-    new Instant(i.asInstanceOf[BSONLong].value)
-  }
-  def getDuration(path: String) : Option[Duration] = BSONPathWalker(path, values).map { d ⇒
-    Duration(d.asInstanceOf[BSONLong].value, TimeUnit.NANOSECONDS)
-  }
+  def settings : BSONDocument = settingsValue.get()
+
+  def getString(path: String) : Option[String] =
+    BSONPathWalker(path,settingsValue.get()).map{ s ⇒ s.asInstanceOf[BSONString].as[String] }
+  def getBoolean(path: String) : Option[Boolean] =
+    BSONPathWalker(path, settingsValue.get()).map { b ⇒ b.asInstanceOf[BSONBoolean].as[Boolean] }
+  def getByte(path: String) : Option[Byte] =
+    BSONPathWalker(path, settingsValue.get()).map { b ⇒ b.asInstanceOf[BSONInteger].value.toByte }
+
+  def getInt(path: String) : Option[Int] =
+    BSONPathWalker(path,settingsValue.get()).map { i ⇒ i.asInstanceOf[BSONInteger].as[Int] }
+  def getLong(path: String) : Option[Long] =
+    BSONPathWalker(path, settingsValue.get()).map { l ⇒ l.asInstanceOf[BSONLong].as[Long] }
+  def getDouble(path: String) : Option[Double] =
+    BSONPathWalker(path, settingsValue.get()).map { l ⇒ l.asInstanceOf[BSONDouble].as[Double] }
+  def getNumber(path: String) : Option[Number] =
+    BSONPathWalker(path, settingsValue.get()).map {
+      case BSONInteger(i) ⇒ Integer.valueOf(i)
+      case BSONLong(l) ⇒ java.lang.Long.valueOf(l)
+      case BSONDouble(d) ⇒ java.lang.Double.valueOf(d)
+      case BSONBoolean(b) ⇒ java.lang.Integer.valueOf(if (b) 1 else 0)
+    }
+  def getInstant(path: String) : Option[Instant] =
+    BSONPathWalker(path, settingsValue.get()).map { i ⇒ new Instant(i.asInstanceOf[BSONLong].value) }
+  def getDuration(path: String) : Option[Duration] =
+    BSONPathWalker(path, settingsValue.get()).map { d ⇒ Duration(d.asInstanceOf[BSONLong].value, TimeUnit.NANOSECONDS) }
   def getMilliseconds(path: String) : Option[Long] = getDuration(path).map { d ⇒ d.toMillis }
   def getMicroseconds(path: String) : Option[Long] = getDuration(path).map { d ⇒ d.toMicros }
   def getNanoseconds(path: String) : Option[Long] = getDuration(path).map { d ⇒ d.toNanos }
 
-
-  override def keySet : Set[String] = values.elements.map { x ⇒ x._1 } toSet
-  override def entrySet: Set[BSONValue] = values.elements.map { x ⇒ x._2 } toSet
+  @tailrec
+  private def newValue(f : (BSONDocument) ⇒ BSONDocument) : Unit = {
+    val orig = settingsValue.get()
+    val newV = f(orig)
+    if (!settingsValue.compareAndSet(orig, newV))
+      newValue(f)
+  }
+  override def setValues(values: BSONDocument) : Unit = {
+    settingsValue.set(values)
+  }
+  override def setString(path: String, value: String) : Unit = {
+    newValue { orig ⇒ orig.add(path → BSONString(value)) }
+  }
+  override def setBoolean(path: String, value: Boolean) : Unit = {
+    newValue { orig ⇒ orig.add(path → BSONBoolean(value)) }
+  }
+  override def setByte(path: String, value: Byte) : Unit = {
+    newValue { orig ⇒ orig.add(path → BSONInteger(value)) }
+  }
+  override def setInt(path: String, value: Int) : Unit = {
+    newValue { orig ⇒ orig.add(path → BSONInteger(value)) }
+  }
+  override def setLong(path: String, value: Long) : Unit = {
+    newValue { orig ⇒ orig.add(path → BSONLong(value)) }
+  }
+  override def keySet : Set[String] = settingsValue.get().elements.map { x ⇒ x._1 }.toSet
+  override def entrySet: Set[BSONValue] = settingsValue.get().elements.map { x ⇒ x._2 }.toSet
 
   // TODO: Implement remaining methods of the BSONSettingsInterface trait
+}
+
+class BSONSettings(
+  val initialValues: BSONDocument,
+  val settingsDefault: BSONDocument = BSONDocument()
+  ) extends BSONSettingsImpl {
+  setValues(initialValues)
 }
 
 object BSONPathWalker extends PathWalker[BSONDocument,BSONArray,BSONValue] {
@@ -147,7 +189,7 @@ object BSONPathWalker extends PathWalker[BSONDocument,BSONArray,BSONValue] {
 object BSONSettings {
 
   def apply(values: BSONDocument, defaults: BSONDocument = BSONDocument()) = new BSONSettings(values, defaults)
-  def unapply(bs: BSONSettings) : Option[(BSONDocument, BSONDocument)] = Some(bs.values → bs.defaults)
+  def unapply(bs: BSONSettings) : Option[(BSONDocument, BSONDocument)] = Some(bs.settings → bs.settingsDefault)
 
   implicit val ConfigurationHandler = Macros.handler[BSONSettings]
 

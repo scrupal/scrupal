@@ -25,7 +25,7 @@ case class AnyType(
   id : Identifier,
   description: String
   ) extends Type {
-  def validate(value: BSONValue) : BVR = ValidationSucceeded(value)
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = ValidationSucceeded(ref, value)
   override def kind = 'Any
   override def trivial = true
 }

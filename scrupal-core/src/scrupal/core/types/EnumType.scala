@@ -22,8 +22,8 @@ import scrupal.core.api._
 
 case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator {
 
-  def validate(value: BSONValue): BVR = {
-    simplify(value, "Integer, Long or String") {
+  def validate(ref: ValidationLocation, value: BSONValue): VR = {
+    simplify(ref, value, "Integer, Long or String") {
       case BSONInteger(x) if !enumerators.exists { y => y._2 == x} => Some(s"Value $x not valid for '$name'")
       case BSONInteger(x) => None
       case BSONLong(x) if !enumerators.exists { y => y._2 == x} => Some(s"Value $x not valid for '$name'")
@@ -47,7 +47,7 @@ case class EnumType  (
   override type ScalaValueType = Int
   require(enumerators.nonEmpty)
   val validator = EnumValidator(enumerators,label)
-  def validate(value: BSONValue) = validator.validate(value)
+  def validate(ref: ValidationLocation, value: BSONValue) = validator.validate(ref, value)
   override def kind = 'Enum
   def valueOf(enum: Symbol) = enumerators.get(enum)
   def valueOf(enum: String) = enumerators.get(Symbol(enum))
@@ -61,10 +61,10 @@ case class MultiEnumType(
   override type ScalaValueType = Seq[Int]
   require(enumerators.nonEmpty)
   val validator = EnumValidator(enumerators, label)
-  def validate(value: BSONValue) : BVR = {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
     value match {
-      case a: BSONArray => validateArray(a, validator )
-      case x: BSONValue => wrongClass(x, "Array")
+      case a: BSONArray => validateArray(ref, a, validator )
+      case x: BSONValue => wrongClass(ref, x, "Array")
     }
   }
 }

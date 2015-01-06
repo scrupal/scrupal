@@ -35,39 +35,59 @@ import scalatags.Text.attrs
   */
 object Forms {
 
-  trait FormItem extends Nameable with Describable with BSONValidator {
+  trait FormItem extends Nameable with Describable with BSONValidator with ValidationLocation {
     def render(form: Form) : TagContent
     def defaultValue : BSONValue
   }
 
+  trait Field extends FormItem  {
+    def inline : Boolean
+    def prefix : Boolean
+    def fieldType : Type
+    def attrs: AttrList
+    def validate(value: BSONValue) : VR = validate(this, value)
+    def validate(ref: ValidationLocation, value: BSONValue) : VR = {
+      fieldType.validate(this, value) match {
+        case x: ValidationSucceeded[BSONValue] ⇒ ValidationSucceeded[BSONValue](this,x.value)
+        case x: ValidationFailed[BSONValue] ⇒ ValidationFailed[BSONValue](this, x.value, x.errors)
+        case x: ValidationError[BSONValue] ⇒ ValidationError(this, x.value, x.errors)
+        case x: ValidationException[BSONValue] ⇒ ValidationException(this, x.value, x.cause)
+        case x: TypeValidationError[BSONValue,_] ⇒ TypeValidationError(this, x.value, x.t, x.errors)
+      }
+    }
+    require(fieldType.nonTrivial)
+  }
+
   trait Container extends FormItem {
-    def fields: Seq[FormItem]
-    def validate(value: BSONValue): BVR = {
+    def items: Seq[FormItem]
+    lazy val fieldMap : Map[String,FormItem] = { items.map { field ⇒ field.name → field } }.toMap
+
+    override def index(key: Int) : Option[ValidationLocation] = {
+      key match {
+        case i: Int if i >= 0 && i < items.size ⇒ Some(items(key))
+        case _ ⇒ None
+      }
+    }
+
+    override def get(key: String) : Option[ValidationLocation] = {
+      items.find { p ⇒ p.name == key }
+    }
+
+    def validate( value: BSONValue) : VR = validate(this, value)
+
+    def validate(ref: ValidationLocation, value: BSONValue): VR = {
       value match {
         case x: BSONDocument ⇒
-          val fieldMap = fields.map { field ⇒ field.name → field }
-          validateMaps(x, fieldMap.toMap, defaultValue)
-        case x: BSONValue => wrongClass(x, "BSONDocument")
+          validateMaps(this, x, fieldMap, defaultValue)
+        case x: BSONValue => wrongClass(this, x, "BSONDocument")
       }
     }
 
     def defaultValue : BSONDocument = {
       BSONDocument(
-        for (field <- fields) yield { field.name → field.defaultValue }
+        for (field <- items) yield { field.name → field.defaultValue }
       )
     }
-  }
-
-  trait FieldItem extends FormItem {
-    def inline : Boolean
-    def prefix : Boolean
-  }
-
-  trait Field extends FieldItem  {
-    def fieldType : Type
-    def attrs: AttrList
-    def validate(value: BSONValue) : BVR = { fieldType.validate(value) }
-    require(fieldType.nonTrivial)
   }
 
   /** A Text Field.
@@ -218,11 +238,11 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
-  ) extends FieldItem {
+  ) extends FormItem {
     def render(form: Form) : TagContent = {
       reset(name, Some(label), attrs ++ Seq(title:=description))
     }
-    override def validate(value: BSONValue) : BVR = ValidationSucceeded(value)
+    override def validate(ref: ValidationLocation, value: BSONValue) : VR = ValidationSucceeded(this, value)
     def defaultValue : BSONValue = BSONNull
   }
 
@@ -234,13 +254,13 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
-  ) extends FieldItem {
+  ) extends FormItem {
     def render(form: Form) : TagContent = {
       submit(name, label, attrs ++ Seq(title:=description) ++
         (frmaction match { case Some(x) ⇒ Seq(formaction:=x); case _ ⇒ Seq.empty[AttrPair]} )
       )
     }
-    def validate(value: BSONValue) : BVR = ValidationSucceeded(value)
+    def validate(ref: ValidationLocation, value: BSONValue) : VR = ValidationSucceeded(this, value)
     def defaultValue = BSONNull
   }
 
@@ -248,21 +268,21 @@ object Forms {
     name: String,
     description: String,
     title: String,
-    fields: Seq[FormItem],
+    items: Seq[Field],
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
     ) extends Container {
-    require(fields.nonEmpty)
+    require(items.nonEmpty)
     def render(form: Form) : TagContent = {
-      fieldset(scalatags.Text.attrs.title:=description, legend(title), fields.map { field ⇒ form.renderItem(field) } )
+      fieldset(scalatags.Text.attrs.title:=description, legend(title), items.map { field ⇒ form.renderItem(field) } )
     }
   }
 
   trait Form extends Container with Enablee with TerminalActionProvider {
     lazy val segment : String = id.name
     def actionPath : String
-    def fields: Seq[FormItem]
+    def items: Seq[FormItem]
     def values: Settings
 
     def hasErrors(field: FormItem) : Boolean = false // TODO: Implement Form.hasErrors
@@ -276,7 +296,7 @@ object Forms {
      * @param field The field whose rendered output should be wrapped
      * @return The TagContent for the final markup for the field
      */
-    def wrap(field: FieldItem) : TagContent = {
+    def wrap(field: Field) : TagContent = {
       val the_label = scrupal.core.html.Forms.label(field.name, field.name, Seq(cls:="control-label text-info"))
       val the_field = field.render(this)
       div(cls:="clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
@@ -306,8 +326,7 @@ object Forms {
 
     def renderItem(item: FormItem) : TagContent = {
       item match {
-        case f: FieldSet ⇒ f.render(this)
-        case f: FieldItem ⇒ wrap(f)
+        case f: Field ⇒ wrap(f)
         case f: FormItem ⇒ f.render(this)
       }
     }
@@ -316,7 +335,7 @@ object Forms {
       scalatags.Text.tags.form(
         scalatags.Text.attrs.action:=actionPath, method:="POST", attrs.name:=name,
         "enctype".attr:="application/x-www-form-urlencoded",
-        fields.map { field ⇒ renderItem(field) }
+        items.map { field ⇒ renderItem(field) }
       )
     }
 
@@ -393,15 +412,15 @@ object Forms {
     name: String,
     description: String,
     actionPath: String,
-    fields: Seq[FormItem],
+    items: Seq[FormItem],
     values: Settings = Settings.Empty
   ) extends Form {
-    require(fields.length > 0)
+    require(items.length > 0)
   }
 
   object emptyForm extends Form {
     val id = 'emptyForm; val name = ""; val description = ""; val actionPath = ""
-    val fields = Seq.empty[FieldItem]
+    val items = Seq.empty[FormItem]
     val values = Settings.Empty
   }
 }

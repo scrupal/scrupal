@@ -27,10 +27,12 @@ case class SelectionType(
 ) extends Type {
   override type ScalaValueType = String
   require(choices.nonEmpty)
-  def validate(value: BSONValue) : BVR = simplify(value, "BSONString") {
-    case BSONString(s) if !choices.contains(s) ⇒ Some(s"Invalid choice")
-    case BSONString(s) ⇒ None
-    case x: BSONValue ⇒ Some("")
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
+    simplify(ref, value, "BSONString") {
+      case BSONString(s) if !choices.contains(s) ⇒ Some(s"Invalid choice")
+      case BSONString(s) ⇒ None
+      case x: BSONValue ⇒ Some("")
+    }
   }
 }
 

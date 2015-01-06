@@ -35,8 +35,8 @@ case class RangeType (
   ) extends Type {
   override type ScalaValueType = Long
   require(min <= max)
-  def validate(value: BSONValue) : BVR = {
-    simplify(value, "Integer or Long") {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
+    simplify(ref, value, "Integer or Long") {
       case BSONLong(l) if l < min => Some(s"Value $l is out of range, below minimum of $min")
       case BSONLong(l) if l > max => Some(s"Value $l is out of range, above maximum of $max")
       case BSONLong(l) => None

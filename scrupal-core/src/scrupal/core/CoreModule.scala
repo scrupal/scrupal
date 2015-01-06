@@ -51,7 +51,6 @@ object CoreModule extends Module {
     notes_key → BSONString("No notes.")
   ))
 
-
   /** Controls whether debug information is displayed at the bottom of page requests.
     * Debug data will also be tacked on to the end of JSON data delivered via the REST api in the "debug" field.
     */

@@ -204,7 +204,7 @@ abstract class Entity(sym: Symbol) extends {
 
   def registry = Entity
 
-  def validate(value: BSONValue) : BVR = instanceType.validate(value)
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = instanceType.validate(ref, value)
 
   def create(context: Context, id: String, instance: BSONDocument)
     : Create = NoopCreate(context, id, instance)

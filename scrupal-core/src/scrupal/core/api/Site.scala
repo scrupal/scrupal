@@ -29,8 +29,8 @@ import scala.util.matching.Regex
  * Created by reidspencer on 11/3/14.
  */
 abstract class Site(sym: Identifier) extends { val id: Identifier = sym ; val _id : Identifier = sym }
-  with EnablementActionExtractor[Site] with VariantStorable[Identifier] with Registrable[Site]
-          with Settingsable with Nameable with Describable with Modifiable {
+  with Settingsable with EnablementActionExtractor[Site] with VariantStorable[Identifier] with Registrable[Site]
+          with Nameable with Describable with Modifiable {
   val kind = 'Site
   def registry = Site
 

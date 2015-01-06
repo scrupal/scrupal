@@ -19,7 +19,6 @@ package scrupal.core.api
 
 import java.net.URL
 
-import reactivemongo.bson.{BSONNull, BSONValue}
 import scrupal.db.DBContext
 import scrupal.utils._
 
@@ -34,8 +33,8 @@ import scala.concurrent.ExecutionContext
   * functionality of the API.
   */
 trait Module
-  extends Registrable[Module] with Authorable with Describable with Enablee
-  with Enablement[Module] with Settingsable with Versionable with Bootstrappable
+  extends Settingsable with Registrable[Module] with Authorable with Describable with Enablee
+  with Enablement[Module] with Versionable with Bootstrappable
 {
   /** The name of the database your module's schema is stored to
     *
@@ -131,7 +130,7 @@ trait Module
     features foreach { feature ⇒
       require(feature != null) ; require(feature.label.length > 0) ; feature.bootstrap(config)
     }
-    types    foreach {
+    types foreach {
       typ     ⇒ require(typ != null)     ; require(typ.label.length > 0)     ; typ.bootstrap(config)
     }
     entities foreach { entity  ⇒
@@ -142,24 +141,6 @@ trait Module
     }
     // FIXME: What about handlers and schemas?
   }
-}
-
-case class BasicModule(
-  id: Symbol,
-  description: String = "",
-  author: String = "",
-  copyright: String = "",
-  license: OSSLicense = OSSLicense.GPLv3,
-  version: Version = Version(0,1,0),
-  obsoletes: Version = Version(0,0,0),
-  applications : Seq[Application] = Seq(),
-  nodes: Seq[Node] = Seq(),
-  features : Seq[Feature] = Seq(),
-  entities : Seq[Entity] = Seq(),
-  types: Seq[Type] = Seq(),
-  handlers : Seq[HandlerFor[Event]] = Seq()
-) extends Module {
-  def moreDetailsURL = new URL("http://example.com")
 }
 
 /** Amalgamated information about all registered Modules

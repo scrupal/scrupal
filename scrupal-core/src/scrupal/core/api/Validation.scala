@@ -19,32 +19,39 @@ package scrupal.core.api
 
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONValue}
 
-sealed trait ValidationResults[T] {
-  def value: T
+trait ValidationLocation {
+  def index(key: Int) : Option[ValidationLocation] = Some(this)
+  def get(key: String) : Option[ValidationLocation] = Some(this)
+}
+
+sealed trait ValidationResults[VAL] {
+  def ref: ValidationLocation
+  def value: VAL
   def isError : Boolean
   def message : String
-  def add(vr: ValidationResults[T]) : ValidationResults[T] = {
+  def add(vr: ValidationResults[VAL]) : ValidationResults[VAL] = {
     this match {
-      case ValidationSucceeded(value) ⇒ ValidationFailed(value, Seq(vr))
-      case ValidationFailed(value, errors) ⇒ ValidationFailed(value, errors :+ vr)
-      case x: ValidationError[T] ⇒ ValidationFailed(vr.value, Seq(vr, x))
-      case x: ValidationException[T] ⇒ ValidationFailed(vr.value, Seq(vr, x))
-      case x: TypeValidationError[_] ⇒ ValidationFailed(vr.value, Seq(vr, x))
+      case ValidationSucceeded(oref,oval) ⇒ ValidationFailed(oref, oval, Seq(vr))
+      case ValidationFailed(oref, oval, errors) ⇒ ValidationFailed(oref, oval, errors :+ vr)
+      case x: ValidationError[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
+      case x: ValidationException[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
+      case x: TypeValidationError[VAL,_] ⇒ ValidationFailed(ref, value, Seq(x, vr))
     }
   }
 }
 
-case class ValidationSucceeded[T](value: T) extends ValidationResults[T] {
+case class ValidationSucceeded[VAL](ref: ValidationLocation, value: VAL) extends ValidationResults[VAL] {
   def isError = false
   def message = ""
 }
 
-case class ValidationFailed[T](value: T, errors: Seq[ValidationResults[T]]) extends ValidationResults[T] {
+case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationResults[VAL]])
+  extends ValidationResults[VAL] {
   def isError = true
   def message : String = errors.mkString("\n")
 }
 
-case class ValidationError[T](value: T, errors: Seq[String]) extends ValidationResults[T]
+case class ValidationError[VAL](ref: ValidationLocation, value: VAL, errors: Seq[String]) extends ValidationResults[VAL]
 {
   def isError = true
   def message: String = {
@@ -53,18 +60,18 @@ case class ValidationError[T](value: T, errors: Seq[String]) extends ValidationR
 }
 
 object ValidationError {
-  def apply[T](value: T, error: String) = new ValidationError(value, Seq(error))
+  def apply[VAL](ref: ValidationLocation, value: VAL, error: String) = new ValidationError(ref, value, Seq(error))
 }
 
-case class ValidationException[T](value: T, cause: Throwable) extends ValidationResults[T] {
+case class ValidationException[VAL](ref: ValidationLocation, value: VAL, cause: Throwable) extends ValidationResults[VAL] {
   def isError = true
   def message : String = {
     s"Failed to validate value $value: ${cause.getClass.getName}: ${cause.getMessage}"
   }
 }
 
-case class TypeValidationError[T <: Type](value: BSONValue, t: T, errors: Seq[String])
-  extends ValidationResults[BSONValue]
+case class TypeValidationError[VAL, T <: Type](ref: ValidationLocation, value: VAL, t: T, errors: Seq[String])
+  extends ValidationResults[VAL]
 {
   def isError = true
   def message: String = {
@@ -73,39 +80,40 @@ case class TypeValidationError[T <: Type](value: BSONValue, t: T, errors: Seq[St
 }
 
 object TypeValidationError {
-  def apply[T <: Type](value: BSONValue, t: T, error: String) = new TypeValidationError(value, t, Seq(error))
+  def apply[VAL,T <: Type](ref: ValidationLocation, value: VAL, t: T, error: String) = {
+    new TypeValidationError(ref, value, t, Seq(error))
+  }
 }
 
-trait SelfValidator[T] {
-  def validate() : ValidationResults[T]
-}
-
-/** Generic Value Validator as a Function. You can apply these validations in other validations making them
-  * composable.
- */
-trait BSONValidator {
-
+trait Validator[VAL] {
   /** A Type alias for brevity */
-  type BVR = ValidationResults[BSONValue]
-
-  protected def simplify(value: BSONValue, classes: String)(validator: (BSONValue) => Option[String]): BVR = {
-    validator(value) match {
-      case Some("") ⇒ wrongClass(value, classes)
-      case Some(msg: String) ⇒ ValidationError(value, msg)
-      case None ⇒ ValidationSucceeded(value)
-    }
-  }
-
-  protected def wrongClass(value: BSONValue, expected: String) : BVR = {
-    ValidationError(value, s"Expected value of type $expected but got ${value.getClass.getSimpleName} instead.")
-  }
+  type VR = ValidationResults[VAL]
 
   /** Validate value of BSON type B with this validator
     *
     * @param value the BSONValue to be validated
     * @return Any of the ValidationResults
     */
-  def validate(value: BSONValue) : BVR
+  def validate(ref: ValidationLocation, value: VAL) : VR
+
+  protected def simplify(ref: ValidationLocation, value: VAL, classes: String)
+    (validator: (VAL) => Option[String]): VR = {
+    validator(value) match {
+      case Some("") ⇒ wrongClass(ref, value, classes)
+      case Some(msg: String) ⇒ ValidationError(ref, value,  msg)
+      case None ⇒ ValidationSucceeded(ref, value)
+    }
+  }
+
+  protected def wrongClass(ref: ValidationLocation, value: VAL, expected: String) : VR = {
+    ValidationError(ref, value, s"Expected value of type $expected but got ${value.getClass.getSimpleName} instead.")
+  }
+}
+
+/** Generic Value Validator as a Function. You can apply these validations in other validations making them
+  * composable.
+ */
+trait BSONValidator extends Validator[BSONValue] {
 
   /** The validation method for validating a BSONArray
     * This traverses the array and validates that each element conforms to the Validator provided
@@ -113,44 +121,45 @@ trait BSONValidator {
     * @param validator The validator each element of the array will be validated against.
     * @return Any of the ValidationResults
     */
-  protected def validateArray(value : BSONArray, validator: BSONValidator) : BVR = {
+  protected def validateArray(ref: ValidationLocation, value : BSONArray, validator: BSONValidator) : VR = {
     val errors = {
       for (
         v <- value.values;
-        e = validator.validate(v.asInstanceOf[BSONValue]) if e.isError
+        e = validator.validate(ref, v.asInstanceOf[BSONValue]) if e.isError
       ) yield { e }
     }
     if (errors.isEmpty)
-      ValidationSucceeded(value)
+      ValidationSucceeded(ref, value)
     else
-      ValidationFailed(value, errors)
+      ValidationFailed(ref, value, errors)
   }
 
   protected def validateMaps(
-    document: BSONValue,
-    validators: Map[String,BSONValidator],
+    ref: ValidationLocation,
+    value: BSONValue,
+    validators: Map[String, BSONValidator],
     defaults: BSONDocument
-  ) : BVR = {
-    document match {
+  ) : VR = {
+    value match {
       case doc: BSONDocument ⇒
         val elems = doc.elements.toMap // read it all in once, we'll look at everything in the typical case
         val combined = for (
           (key,validator) ← validators
         ) yield {
           if (elems.contains(key)) {
-            validator.validate(elems.get(key).get)
+            validator.validate(ref, elems.get(key).get)
           } else if (defaults.elements.contains(key)) {
-            validator.validate(defaults.get(key).get)
+            validator.validate(ref, defaults.get(key).get)
           } else {
-            ValidationError(document, s"Element '$key' is missing and has no default.")
+            ValidationError(ref, value, s"Element '$key' is missing and has no default.")
           }
         }
         val errors = combined.filter { vr ⇒ vr.isError }
         if (errors.isEmpty)
-          ValidationSucceeded(document)
+          ValidationSucceeded(ref, value)
         else
-          ValidationFailed(document, errors.toSeq)
-      case x: BSONValue ⇒ wrongClass(x, "BSONDocument")
+          ValidationFailed(ref, value, errors.toSeq)
+      case x: BSONValue ⇒ wrongClass(ref, x, "BSONDocument")
     }
   }
 }

@@ -35,8 +35,8 @@ case class RegexType (
   description: String
 ) extends Type {
   override type ScalaValueType = Regex
-  def validate(value: BSONValue) : BVR = {
-    simplify(value, "String") {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
+    simplify(ref, value, "String") {
       case BSONString(bs) => Try {
         Pattern.compile(bs)
       } match {

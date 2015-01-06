@@ -33,19 +33,19 @@ case class SetType  (
   ) extends IndexableType {
   override type ScalaValueType = Seq[elemType.ScalaValueType]
   override def kind = 'Set
-  def validate(value: BSONValue) : BVR = {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
     value match {
       case a: BSONArray =>
         val vals = a.values // stop dealing with a stream
-        val msgs = validateArray(a, elemType)
+        val msgs = validateArray(ref, a, elemType)
         val distinct = vals.distinct
         if (distinct.size != vals.size) {
           val delta = vals.filterNot { x ⇒ distinct.contains(x) }
-          msgs.add(ValidationError(value,s"Set contains non-distinct values: $delta"))
+          msgs.add(ValidationError(ref, value,s"Set contains non-distinct values: $delta"))
         }
         else
           msgs
-      case x: BSONValue  => wrongClass(x, "BSONArray")
+      case x: BSONValue  => wrongClass(ref, x, "BSONArray")
     }
   }
 }

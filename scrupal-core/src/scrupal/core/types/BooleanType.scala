@@ -29,8 +29,8 @@ case class BooleanType(
   def verity = List("true", "on", "yes", "confirmed")
   def falseness = List("false", "off", "no", "denied")
 
-  def validate(value: BSONValue) : BVR = {
-    simplify(value, "Boolean, Integer, Long, or String") {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
+    simplify(ref, value, "Boolean, Integer, Long, or String") {
       case b: BSONBoolean => None
       case BSONInteger(bi) if bi == 0 || bi == 1 => None
       case BSONInteger(bi) => Some(s"Value '$bi' could not be converted to boolean (0 or 1 required)")

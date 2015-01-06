@@ -32,20 +32,20 @@ class FormsSpec extends Specification {
     "accept an AnyString_t" in {
       val field = StringField("Foo", "Description", AnyString_t)
       val doc = BSONString("foo")
-      field.validate(doc) must beEqualTo(ValidationSucceeded(doc))
+      field.validate(doc) must beEqualTo(ValidationSucceeded(field,doc))
     }
     "accept an empty string" in {
       val field = StringField("Foo", "Description", AnyString_t)
       val doc = BSONString("")
-      field.validate(doc) must beEqualTo(ValidationSucceeded(doc))
+      field.validate(doc) must beEqualTo(ValidationSucceeded(field, doc))
     }
     "reject an invalid string" in {
       val str = BSONString("###")
       val field = StringField("Foo", "Description", DomainName_t)
       val result = field.validate(str)
       result.isError must beTrue
-      result.isInstanceOf[TypeValidationError[_]] must beTrue
-      val error = result.asInstanceOf[TypeValidationError[_]]
+      result.isInstanceOf[TypeValidationError[BSONValue,_]] must beTrue
+      val error = result.asInstanceOf[TypeValidationError[BSONValue,_]]
       error.message must contain("does not match pattern")
     }
     "render correctly" in {
@@ -59,15 +59,15 @@ class FormsSpec extends Specification {
     "accept a valid number" in {
       val field = IntegerField("Foo", "Description", AnyInteger_t)
       val doc = BSONInteger(42)
-      field.validate(doc) must beEqualTo(ValidationSucceeded(doc))
+      field.validate(doc) must beEqualTo(ValidationSucceeded(field, doc))
     }
     "reject an invalid number" in {
       val field = IntegerField("F", "Description", AnyInteger_t)
       val doc = BSONString("Foo")
       val result = field.validate(doc)
       result.isError must beTrue
-      result.isInstanceOf[TypeValidationError[_]] must beTrue
-      val error = result.asInstanceOf[TypeValidationError[_]]
+      result.isInstanceOf[TypeValidationError[BSONValue, _]] must beTrue
+      val error = result.asInstanceOf[TypeValidationError[BSONValue, _]]
       error.message must contain("is not convertible to a numeric")
     }
     "reject an out of range number" in {
@@ -75,8 +75,8 @@ class FormsSpec extends Specification {
       val doc = BSONLong(-42)
       val result = field.validate(doc)
       result.isError must beTrue
-      result.isInstanceOf[TypeValidationError[_]] must beTrue
-      val error = result.asInstanceOf[TypeValidationError[_]]
+      result.isInstanceOf[TypeValidationError[BSONValue,_]] must beTrue
+      val error = result.asInstanceOf[TypeValidationError[BSONValue, _]]
       error.message must contain("is out of range, below minimum of")
     }
     "render correctly" in {
@@ -88,7 +88,7 @@ class FormsSpec extends Specification {
 
   "Forms" should {
     "reject an empty FieldSet" in {
-      FieldSet("Foo", "description", "title", Seq.empty[Forms.FormItem]) must throwRequirementFailed
+      FieldSet("Foo", "description", "title", Seq.empty[Forms.Field]) must throwRequirementFailed
     }
     "reject an empty Form" in {
       SimpleForm('Foo, "Foo", "Description", "/foo", Seq.empty[Forms.FormItem]) must throwRequirementFailed
@@ -99,7 +99,7 @@ class FormsSpec extends Specification {
           FieldSet("This", "Description", "title", Seq( StringField("A", "An A", Identifier_t) ))
         ))
       val doc = BSONDocument("This" →  BSONDocument( "A" → BSONString("foo")  ) )
-      form.validate( doc ) must beEqualTo(ValidationSucceeded(doc))
+      form.validate( doc ) must beEqualTo(ValidationSucceeded(form, doc))
     }
     "render correctly" in {
       val form =

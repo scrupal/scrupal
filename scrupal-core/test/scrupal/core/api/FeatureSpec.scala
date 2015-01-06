@@ -17,7 +17,7 @@
 
 package scrupal.core.api
 
-import scrupal.test.{ScrupalSpecification, FakeContext}
+import scrupal.test.{FakeModule, ScrupalSpecification, FakeContext}
 
 
 /** Test cases for the scrupal.core.api.Feature class
@@ -26,7 +26,7 @@ import scrupal.test.{ScrupalSpecification, FakeContext}
 class FeatureSpec extends ScrupalSpecification("FeatureSpec") {
 
   case class Fixture(name: String) extends FakeContext[Fixture](name) {
-    val mod = new BasicModule(sym, "Description")
+    val mod = new FakeModule(sym, "Description")
     mod.enable(mod)
     assert(mod.isEnabled(mod))
     val omod = Some(mod)

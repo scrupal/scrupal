@@ -35,8 +35,8 @@ case class RealType (
   ) extends Type {
   override type ScalaValueType = Double
   require(min <= max)
-  def validate(value: BSONValue) : BVR =  {
-    simplify(value, "Double, Long or Integer") {
+  def validate(ref: ValidationLocation, value: BSONValue) : VR =  {
+    simplify(ref, value, "Double, Long or Integer") {
       case BSONDouble(d) if d < min => Some(s"Value $d is out of range, below minimum of $min")
       case BSONDouble(d) if d > max => Some(s"Value $d is out of range, above maximum of $max")
       case BSONDouble(d) => None
