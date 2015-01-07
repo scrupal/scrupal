@@ -51,6 +51,12 @@ case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Se
   def message : String = errors.mkString("\n")
 }
 
+object ValidationFailed {
+  def apply[VAL](ref: ValidationLocation, value: VAL, error: ValidationResults[VAL]) = {
+    new ValidationFailed[VAL](ref, value, Seq.empty[ValidationResults[VAL]]).add(error)
+  }
+}
+
 case class ValidationError[VAL](ref: ValidationLocation, value: VAL, errors: Seq[String]) extends ValidationResults[VAL]
 {
   def isError = true

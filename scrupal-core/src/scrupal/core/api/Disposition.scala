@@ -50,7 +50,7 @@ object Promise        extends Disposition(4, 'Promise,
 
 // Unsuccessful Dispositions are in the negative range
 object Unspecified    extends Disposition( -1, 'Unspecified,
-                              "Action processing yielded An error of unspecified nature.")
+                              "Action processing yielded an error of unspecified nature.")
 object TimedOut       extends Disposition( -2, 'TimedOut, "Action processing attempted but it timed out.")
 object Unintelligible extends Disposition( -3, 'Unintelligible, "Action rejected because it could not be understood.")
 object Unimplemented  extends Disposition( -4, 'Unimplemented, "Action rejected because its has not been implemented yet.")
@@ -71,6 +71,8 @@ object Exhausted      extends Disposition(-12, 'Exhausted,
                               "Action processing started but a computing resource became exhausted")
 object Exception      extends Disposition(-13, 'Exception,
                               "An exception occurred during the processing of the action")
+object Unacceptable   extends Disposition(-14, 'Unacceptable,
+                              "The content of the request could not be accepted")
 
 object Disposition extends Registry[Disposition] {
   val registryName = "Dispositions"

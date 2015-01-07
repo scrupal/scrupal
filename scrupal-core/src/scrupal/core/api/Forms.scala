@@ -22,7 +22,7 @@ import scrupal.core.api.Html._
 import scrupal.core.html.Forms._
 import scrupal.core.types._
 import scrupal.utils.Enablee
-import spray.http.HttpMethods
+import spray.http.{FormData, HttpRequest, HttpMethods}
 import scala.concurrent.Future
 import scalatags.Text.all._
 import scalatags.Text.attrs
@@ -43,8 +43,10 @@ object Forms {
   trait Field extends FormItem  {
     def inline : Boolean
     def prefix : Boolean
+    def optional : Boolean
     def fieldType : Type
     def attrs: AttrList
+    def decode(value: String) : BSONValue
     def validate(value: BSONValue) : VR = validate(this, value)
     def validate(ref: ValidationLocation, value: BSONValue) : VR = {
       fieldType.validate(this, value) match {
@@ -104,12 +106,14 @@ object Forms {
     fieldType: StringType,
     defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
   ) extends Field {
     def render(form: Form) : TagContent = {
       text(name, form.values.getString(name), attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONString(value) else BSONNull
   }
 
   case class PasswordField(
@@ -118,12 +122,14 @@ object Forms {
     fieldType: StringType = Password_t,
     defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
   ) extends Field {
     def render(form: Form) : TagContent = {
       password(name, form.values.getString(name), attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONString(value) else BSONNull
   }
 
   case class TextAreaField(
@@ -132,12 +138,14 @@ object Forms {
     fieldType: StringType,
     defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
     ) extends Field {
     def render(form: Form) : TagContent = {
       scrupal.core.html.Forms.textarea(name, form.values.getString(name), attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONString(value) else BSONNull
   }
 
   case class BooleanField(
@@ -146,12 +154,14 @@ object Forms {
     fieldType: BooleanType,
     defaultValue: BSONValue = BSONBoolean(value=false),
     attrs: AttrList = EmptyAttrList,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
   ) extends Field {
     def render(form: Form) : TagContent = {
       checkbox(name, form.values.getBoolean(name).getOrElse(false), attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = BSONBoolean(value.nonEmpty)
   }
 
   case class IntegerField(
@@ -162,12 +172,14 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     minVal: Long = Long.MinValue,
     maxVal: Long = Long.MaxValue,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
     ) extends Field {
     def render(form: Form) : TagContent = {
       number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONLong(value.toLong) else BSONNull
   }
 
   case class RealField(
@@ -178,12 +190,14 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     minVal: Double = Double.MinValue,
     maxVal: Double = Double.MaxValue,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
     ) extends Field {
     def render(form: Form) : TagContent = {
       number(name, form.values.getDouble(name), minVal, maxVal, attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONDouble(value.toDouble) else BSONNull
   }
 
   case class RangeField(
@@ -194,12 +208,14 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     minVal: Double = 0L,
     maxVal: Double = 100L,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
   ) extends Field {
     def render(form: Form) : TagContent = {
       range(name, form.values.getDouble(name), minVal, maxVal, attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONDouble(value.toDouble) else BSONNull
   }
 
   case class SelectionField(
@@ -208,6 +224,7 @@ object Forms {
     fieldType : SelectionType,
     defaultValue: BSONValue = BSONString(""),
     attrs: AttrList = EmptyAttrList,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
     ) extends Field {
@@ -215,20 +232,23 @@ object Forms {
       val options = fieldType.choices.map { choice ⇒ choice → choice}
       scrupal.core.html.Forms.select(name, form.values.getString(name), options.toMap, attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONString(value) else BSONNull
   }
 
   case class TimestampField(
     name: String,
     description: String,
     fieldType : TimestampType,
-    defaultValue: BSONValue = BSONString(""),
+    defaultValue: BSONValue = BSONDateTime(0),
     attrs: AttrList = EmptyAttrList,
+    optional : Boolean = false,
     inline : Boolean = false,
     prefix : Boolean = false
   ) extends Field {
     def render(form: Form) : TagContent = {
       datetime(name, form.values.getInstant(name).map { i ⇒ i.toDateTime }, attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = if (value.nonEmpty) BSONDateTime(value.toLong) else BSONNull
   }
 
   case class ResetField(
@@ -238,12 +258,16 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
-  ) extends FormItem {
+  ) extends {
+    final val fieldType : BooleanType = Boolean_t
+    final val optional : Boolean = false
+  } with Field {
+    def defaultValue : BSONValue = BSONBoolean(value=false)
     def render(form: Form) : TagContent = {
       reset(name, Some(label), attrs ++ Seq(title:=description))
     }
+    def decode(value: String) : BSONValue = BSONBoolean(value.nonEmpty)
     override def validate(ref: ValidationLocation, value: BSONValue) : VR = ValidationSucceeded(this, value)
-    def defaultValue : BSONValue = BSONNull
   }
 
   case class SubmitField(
@@ -254,14 +278,19 @@ object Forms {
     attrs: AttrList = EmptyAttrList,
     inline : Boolean = false,
     prefix : Boolean = false
-  ) extends FormItem {
+  ) extends {
+    final val fieldType : BooleanType = Boolean_t
+    final val optional : Boolean = false
+  } with Field {
+    def defaultValue = BSONBoolean(value=false)
+
     def render(form: Form) : TagContent = {
       submit(name, label, attrs ++ Seq(title:=description) ++
         (frmaction match { case Some(x) ⇒ Seq(formaction:=x); case _ ⇒ Seq.empty[AttrPair]} )
       )
     }
-    def validate(ref: ValidationLocation, value: BSONValue) : VR = ValidationSucceeded(this, value)
-    def defaultValue = BSONNull
+    def decode(value: String) : BSONValue = BSONBoolean(value.nonEmpty)
+    override def validate(ref: ValidationLocation, value: BSONValue) : VR = ValidationSucceeded(this, value)
   }
 
   case class FieldSet(
@@ -380,30 +409,74 @@ object Forms {
   }
 
   class AcceptFormAction(val form: Form, val context: Context) extends Action {
-/*
-    def decodeFormData(r: HttpRequest) : BSONDocument = {
+    def decodeFormData(r: HttpRequest) : ValidationResults[BSONValue] = {
       import spray.httpx.unmarshalling._
+      val formItems : Map[String,Field] = {
+        for (item <- form.items if item.isInstanceOf[Field]) yield { item.name → item.asInstanceOf[Field] }
+      }.toMap
       r.as[FormData] match {
         case Right(formData) ⇒
-          formData.fields.map { pair ⇒
-
+          val data : Seq[ValidationResults[BSONDocument]] =
+            for ((name, value) ← formData.fields if value.nonEmpty) yield {
+              formItems.get(name) match {
+                case Some(item) ⇒
+                  try {
+                    item.decode(value) match {
+                      case BSONNull ⇒ ValidationSucceeded(form, BSONDocument())
+                      case v: BSONValue ⇒ ValidationSucceeded(form, BSONDocument(name → v))
+                    }
+                  } catch {
+                    case x: Throwable ⇒ ValidationException(form, BSONDocument(name → BSONString(value)), x)
+                  }
+                case None ⇒
+                  ValidationError(form, BSONDocument(name → BSONString(value)), "Spurious field '" + name + "'")
+              }
+            }
+          val elems : Map[String,BSONValue] = data.foldLeft(Seq.empty[(String,BSONValue)]) {
+            case (last, results) ⇒ last ++ results.value.elements
+          }.toMap
+          val errors : Seq[ValidationResults[BSONValue]] = {
+            {data.filter { result ⇒ result.isError}.map { r ⇒ r.asInstanceOf[ValidationResults[BSONValue]]}} ++ {
+              for (
+                (name, item) ← formItems if item.optional;
+                value = elems.get(name) if value.isEmpty
+              ) yield {
+                ValidationError(form, BSONDocument(name → BSONNull).asInstanceOf[BSONValue],
+                  s"Required field '$name' has no value.")
+              }
+            }
           }
-        case Left(ContentExpected) ⇒
-        case Left(MalformedContent(msg,cause)) ⇒
-        case Left(UnsupportedContentType(msg) ⇒
-        case Left(x) ⇒ x.map BSONDocument()
+          val doc = BSONDocument(elems)
+          val vr = form.validate(doc)
+          if (errors.isEmpty)
+            vr
+          else if (errors.size == 1)
+            ValidationFailed(vr.ref, vr.value, errors.head)
+          else
+            ValidationFailed(vr.ref, vr.value, errors)
+
+        case Left(ContentExpected) ⇒ ValidationError(form, BSONDocument(), "Content Expected")
+        case Left(MalformedContent(msg,cause)) ⇒ cause match {
+          case Some(throwable) ⇒ ValidationException(form, BSONDocument(), throwable)
+          case None ⇒ ValidationError(form, BSONDocument(), msg)
+        }
+        case Left(UnsupportedContentType(msg)) ⇒
+          ValidationError(form, BSONDocument(), "Unsupported content type: " + msg)
+        case Left(x) ⇒ ValidationError(form, BSONDocument(), "Unspecified error")
       }
-    } */
+    }
 
     def apply() : Future[Result[_]] = Future {
-      /*val doc = decodeFormData(context.request.request)
-      form(doc) match {
-        case Some(errors) ⇒
-        case None
-      }*/
-
-
-      ErrorResult(s"Submission of form '${form.name}", Unimplemented)
+      decodeFormData(context.request.request) match {
+        case ValidationSucceeded(ref, doc) ⇒
+          StringResult(s"Submission of form '${form.name} succeeded.", Successful)
+        case ValidationFailed(ref, doc, errors) ⇒
+          val msg : StringBuilder = new StringBuilder()
+          for (e ← errors) msg.append(e.message).append("\n")
+          ErrorResult(msg.toString(), Unacceptable)
+        case vr: ValidationResults[BSONValue] ⇒
+          ErrorResult(s"Submission of form '${form.name}", Unimplemented)
+      }
     } (context.scrupal._executionContext)
   }
 
