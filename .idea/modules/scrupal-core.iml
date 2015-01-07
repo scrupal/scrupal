@@ -94,6 +94,6 @@
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0:jar" level="project" />
     <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: nu.validator.htmlparser:htmlparser:1.4:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.typesafe.akka:akka-actor_2.11:2.3.6:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.typesafe.akka:akka-actor_2.11:2.3.8:jar" level="project" />
   </component>
 </module>
