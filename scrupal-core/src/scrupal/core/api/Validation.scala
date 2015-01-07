@@ -34,9 +34,9 @@ sealed trait ValidationResults[VAL] {
   def message : StringBuilder = {
     val s = new StringBuilder()
     if (isError) {
-      s.append("Failed to validate ").append(ref.location).append(":")
+      s.append("\nFailed to validate ").append(ref.location).append(": ")
     } else {
-      s.append("Successfully validated ").append(ref.location)
+      s.append("Successfully validated ").append(ref.location).append(".")
     }
     s
   }
@@ -79,8 +79,10 @@ case class ValidationError[VAL](ref: ValidationLocation, value: VAL, errors: Seq
   def isError = true
   override def message : StringBuilder = {
     val s = super.message
-    for (err ← errors) { s.append("\t").append(err).append("\n") }
-    s
+    for (err ← errors) {
+      s.append("\t").append(err).append("\n")
+    }
+    s.deleteCharAt(s.length-1)
   }
 }
 
@@ -103,8 +105,8 @@ case class TypeValidationError[VAL, T <: Type](ref: ValidationLocation, value: V
   override def message: StringBuilder = {
     val s = super.message
     s.append("Value does not conform to ").append(t.label).append(":\n")
-    for (err <- errors) { s.append("\t").append(err).append("\n") }
-    s
+    for (err <- errors) { s.append(err).append("\n") }
+    s.deleteCharAt(s.length-1)
   }
 }
 
