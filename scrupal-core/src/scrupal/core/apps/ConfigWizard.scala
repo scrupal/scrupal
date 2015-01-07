@@ -17,9 +17,9 @@
 
 package scrupal.core.apps
 
-import reactivemongo.bson.{BSONLong, BSONInteger, BSONString}
+import reactivemongo.bson.{BSONLong, BSONString}
 import scrupal.core._
-import scrupal.core.api.Forms._
+import scrupal.core.api._
 import scrupal.core.types._
 import scrupal.utils.ScrupalComponent
 
@@ -490,29 +490,29 @@ object ConfigWizard extends ScrupalComponent {
   }
 
   val databaseSection = FieldSet("Database", "Description", "Database", Seq(
-    StringField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
-    IntegerField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
-    StringField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
-    StringField("User", "The user name for the MongoDB server authentication", Identifier_t),
-    PasswordField("Password", "The password for the MongoDB server authentication", Password_t)
+    TextFormField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
+    IntegerFormField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
+    TextFormField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
+    TextFormField("User", "The user name for the MongoDB server authentication", Identifier_t),
+    PasswordFormField("Password", "The password for the MongoDB server authentication", Password_t)
   ))
 
   case class SiteInfo(name:String="", description: String="", host:String="", requiresHttps: Boolean=false)
 
   val siteSection = FieldSet("Site", "Description", "Site", Seq(
-    StringField("Name", "The name of the site you want to create", Identifier_t),
-    StringField("Description", "A description of your site", NonEmptyString_t),
-    StringField("Host", "The host name or IP address from which your site will be served", DomainName_t),
-    BooleanField("HttpsRequired", "Check whether HTTPS is required or not", Boolean_t)
+    TextFormField("Name", "The name of the site you want to create", Identifier_t),
+    TextFormField("Description", "A description of your site", NonEmptyString_t),
+    TextFormField("Host", "The host name or IP address from which your site will be served", DomainName_t),
+    BooleanFormField("HttpsRequired", "Check whether HTTPS is required or not", Boolean_t)
   ))
 
   // def makeSiteForm = siteSection.fill(SiteInfo())
 
   case class PageInfo(name: String="", description: String="", body: String="")
   val pageSection = FieldSet("Page", "Description", "Page", Seq(
-    StringField("Name", "The name of the page you want to create", Identifier_t),
-    StringField("Description",  "A description or summary of your page", NonEmptyString_t),
-    TextAreaField("Body", "The body of your page in markdown format", Markdown_t)
+    TextFormField("Name", "The name of the page you want to create", Identifier_t),
+    TextFormField("Description",  "A description or summary of your page", NonEmptyString_t),
+    TextAreaFormField("Body", "The body of your page in markdown format", Markdown_t)
   ))
 
   // def makePageForm = pageSection.fill(PageInfo())

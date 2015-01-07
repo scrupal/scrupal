@@ -22,13 +22,25 @@ import reactivemongo.bson.{BSONArray, BSONDocument, BSONValue}
 trait ValidationLocation {
   def index(key: Int) : Option[ValidationLocation] = Some(this)
   def get(key: String) : Option[ValidationLocation] = Some(this)
+  def location: String
 }
+
+object SomeValidationLocation extends ValidationLocation { def location = "something" }
 
 sealed trait ValidationResults[VAL] {
   def ref: ValidationLocation
   def value: VAL
   def isError : Boolean
-  def message : String
+  def message : StringBuilder = {
+    val s = new StringBuilder()
+    if (isError) {
+      s.append("Failed to validate ").append(ref.location).append(":")
+    } else {
+      s.append("Successfully validated ").append(ref.location)
+    }
+    s
+  }
+
   def add(vr: ValidationResults[VAL]) : ValidationResults[VAL] = {
     this match {
       case ValidationSucceeded(oref,oval) ⇒ ValidationFailed(oref, oval, Seq(vr))
@@ -42,13 +54,18 @@ sealed trait ValidationResults[VAL] {
 
 case class ValidationSucceeded[VAL](ref: ValidationLocation, value: VAL) extends ValidationResults[VAL] {
   def isError = false
-  def message = ""
 }
 
 case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationResults[VAL]])
   extends ValidationResults[VAL] {
   def isError = true
-  def message : String = errors.mkString("\n")
+  override def message : StringBuilder = {
+    val s = super.message
+    for (err ← errors) {
+      s.append(err.message)
+    }
+    s
+  }
 }
 
 object ValidationFailed {
@@ -60,8 +77,10 @@ object ValidationFailed {
 case class ValidationError[VAL](ref: ValidationLocation, value: VAL, errors: Seq[String]) extends ValidationResults[VAL]
 {
   def isError = true
-  def message: String = {
-    s"Failed to validate value $value:\n ${errors.map{ e => "\t"+e+"\n"}}\n"
+  override def message : StringBuilder = {
+    val s = super.message
+    for (err ← errors) { s.append("\t").append(err).append("\n") }
+    s
   }
 }
 
@@ -71,8 +90,9 @@ object ValidationError {
 
 case class ValidationException[VAL](ref: ValidationLocation, value: VAL, cause: Throwable) extends ValidationResults[VAL] {
   def isError = true
-  def message : String = {
-    s"Failed to validate value $value: ${cause.getClass.getName}: ${cause.getMessage}"
+  override def message : StringBuilder = {
+    val s = super.message
+    s.append(cause.getClass.getName).append(": ").append(cause.getMessage)
   }
 }
 
@@ -80,8 +100,11 @@ case class TypeValidationError[VAL, T <: Type](ref: ValidationLocation, value: V
   extends ValidationResults[VAL]
 {
   def isError = true
-  def message: String = {
-    s"Value, $value, does not conform to ${t.label}:\n ${errors.map{ e => "\t"+e+"\n"}}\n"
+  override def message: StringBuilder = {
+    val s = super.message
+    s.append("Value does not conform to ").append(t.label).append(":\n")
+    for (err <- errors) { s.append("\t").append(err).append("\n") }
+    s
   }
 }
 

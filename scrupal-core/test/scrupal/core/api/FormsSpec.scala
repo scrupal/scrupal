@@ -19,7 +19,6 @@ package scrupal.core.api
 
 import org.specs2.mutable.Specification
 import reactivemongo.bson._
-import scrupal.core.api.Forms._
 import scrupal.core.types._
 import scrupal.test.HTML5Validator
 
@@ -30,73 +29,75 @@ class FormsSpec extends Specification {
 
   "Forms.TextField" should {
     "accept an AnyString_t" in {
-      val field = StringField("Foo", "Description", AnyString_t)
+      val field = TextFormField("Foo", "Description", AnyString_t)
       val doc = BSONString("foo")
       field.validate(doc) must beEqualTo(ValidationSucceeded(field,doc))
     }
     "accept an empty string" in {
-      val field = StringField("Foo", "Description", AnyString_t)
+      val field = TextFormField("Foo", "Description", AnyString_t)
       val doc = BSONString("")
       field.validate(doc) must beEqualTo(ValidationSucceeded(field, doc))
     }
     "reject an invalid string" in {
       val str = BSONString("###")
-      val field = StringField("Foo", "Description", DomainName_t)
+      val field = TextFormField("Foo", "Description", DomainName_t)
       val result = field.validate(str)
       result.isError must beTrue
       result.isInstanceOf[TypeValidationError[BSONValue,_]] must beTrue
       val error = result.asInstanceOf[TypeValidationError[BSONValue,_]]
-      error.message must contain("does not match pattern")
+      error.message.toString must contain("does not match pattern")
     }
     "render correctly" in {
-      val field = StringField("Foo", "Description", AnyString_t)
-      val content = field.render(Forms.emptyForm).render
-      content must beEqualTo("""<input type="text" name="Foo" title="Description" />""")
+      val field = TextFormField("Foo", "Description", AnyString_t, optional=true)
+      val content = field.render(emptyForm).render
+      content must beEqualTo(
+        """<input type="text" name="Foo" title="Description" />""")
     }
   }
 
   "Forms.IntegerField" should {
     "accept a valid number" in {
-      val field = IntegerField("Foo", "Description", AnyInteger_t)
+      val field = IntegerFormField("Foo", "Description", AnyInteger_t)
       val doc = BSONInteger(42)
       field.validate(doc) must beEqualTo(ValidationSucceeded(field, doc))
     }
     "reject an invalid number" in {
-      val field = IntegerField("F", "Description", AnyInteger_t)
+      val field = IntegerFormField("F", "Description", AnyInteger_t)
       val doc = BSONString("Foo")
       val result = field.validate(doc)
       result.isError must beTrue
       result.isInstanceOf[TypeValidationError[BSONValue, _]] must beTrue
       val error = result.asInstanceOf[TypeValidationError[BSONValue, _]]
-      error.message must contain("is not convertible to a numeric")
+      error.message.toString must contain("is not convertible to a numeric")
     }
     "reject an out of range number" in {
-      val field = IntegerField("F", "Description", TcpPort_t)
+      val field = IntegerFormField("F", "Description", TcpPort_t)
       val doc = BSONLong(-42)
       val result = field.validate(doc)
       result.isError must beTrue
       result.isInstanceOf[TypeValidationError[BSONValue,_]] must beTrue
       val error = result.asInstanceOf[TypeValidationError[BSONValue, _]]
-      error.message must contain("is out of range, below minimum of")
+      error.message.toString must contain("is out of range, below minimum of")
     }
     "render correctly" in {
-      val field = IntegerField("F", "Description", TcpPort_t, minVal = 0, maxVal = 100)
-      val content = field.render(Forms.emptyForm).render
-      content must beEqualTo("""<input type="number" name="F" min="0.0" max="100.0" title="Description" />""")
+      val field = IntegerFormField("F", "Description", TcpPort_t, minVal = 0, maxVal = 100)
+      val content = field.render(emptyForm).render
+      content must beEqualTo(
+        """<input type="number" name="F" min="0.0" max="100.0" title="Description" required="required" />""")
     }
   }
 
   "Forms" should {
     "reject an empty FieldSet" in {
-      FieldSet("Foo", "description", "title", Seq.empty[Forms.Field]) must throwRequirementFailed
+      FieldSet("Foo", "description", "title", Seq.empty[FormField]) must throwRequirementFailed
     }
     "reject an empty Form" in {
-      SimpleForm('Foo, "Foo", "Description", "/foo", Seq.empty[Forms.FormItem]) must throwRequirementFailed
+      SimpleForm('Foo, "Foo", "Description", "/foo", Seq.empty[FormItem]) must throwRequirementFailed
     }
     "accept a valid complex form" in {
       val form =
         SimpleForm('Foo2, "Foo", "Description", "/foo", Seq(
-          FieldSet("This", "Description", "title", Seq( StringField("A", "An A", Identifier_t) ))
+          FieldSet("This", "Description", "title", Seq( TextFormField("A", "An A", Identifier_t) ))
         ))
       val doc = BSONDocument("This" →  BSONDocument( "A" → BSONString("foo")  ) )
       form.validate( doc ) must beEqualTo(ValidationSucceeded(form, doc))
@@ -105,15 +106,15 @@ class FormsSpec extends Specification {
       val form =
         SimpleForm('Foo3, "Foo", "Description", "/foo", Seq(
           FieldSet("This", "Description", "title", Seq(
-            StringField("A", "An A", Identifier_t),
-            PasswordField("P", "A P", Password_t),
-            TextAreaField("TA", "A TA", AnyString_t),
-            BooleanField("B", "A B", Boolean_t),
-            IntegerField("I", "An I", AnyInteger_t, minVal = 0, maxVal = 100),
-            RangeField("Rng", "A Rng", AnyReal_t),
-            RealField("R", "A R", AnyReal_t, minVal = 0.0, maxVal = 100.0),
-            SelectionField("S", "A S", UnspecificQuantity_t),
-            TimestampField("T", "A T", AnyTimestamp_t)
+            TextFormField("A", "An A", Identifier_t),
+            PasswordFormField("P", "A P", Password_t),
+            TextAreaFormField("TA", "A TA", AnyString_t),
+            BooleanFormField("B", "A B", Boolean_t),
+            IntegerFormField("I", "An I", AnyInteger_t, minVal = 0, maxVal = 100),
+            RangeFormField("Rng", "A Rng", AnyReal_t),
+            RealFormField("R", "A R", AnyReal_t, minVal = 0.0, maxVal = 100.0),
+            SelectionFormField("S", "A S", UnspecificQuantity_t),
+            TimestampFormField("T", "A T", AnyTimestamp_t)
           ))
         ))
       HTML5Validator.validate(form.render) must beTrue

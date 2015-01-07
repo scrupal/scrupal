@@ -47,7 +47,7 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
       }
     }
 
-    object vLoc extends ValidationLocation
+    val vLoc = SomeValidationLocation
 
     object rangeTy extends RangeType(sym("aRange"), "Ten from 10", 10, 20)
     object realTy extends RealType(sym("aReal"), "Ten from 10", 10.1, 20.9)
@@ -221,7 +221,7 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
       val js = BSONArray(17, 17)
       val result = t.setTy.validate(t.vLoc, js)
       result.isError must beTrue
-      result.message must contain("non-distinct")
+      result.message.toString must contain("non-distinct")
     }
     "reject BSONArray(21)" in TestTypes() { t: TestTypes ⇒
       val js = BSONArray(21)

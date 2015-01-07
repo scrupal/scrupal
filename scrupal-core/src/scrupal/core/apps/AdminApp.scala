@@ -19,7 +19,6 @@ package scrupal.core.apps
 
 import org.joda.time.DateTime
 import reactivemongo.bson.{BSONLong, BSONString}
-import scrupal.core.api.Forms._
 import scrupal.core.api.Html.{ContentsGenerator, TemplateGenerator, Contents}
 import scrupal.core.api._
 import scrupal.core.html.BootstrapPage
@@ -43,7 +42,7 @@ object AdminApp extends Application('admin) {
       extends SimpleForm('SiteSelectionForm, "SiteSelection",
         "A form for selecting the site to administrate", "/admin/siteselectionform",
         Seq(
-          SelectionField("Site", "Select a site to administrate", Site_t, inline=true)
+          SelectionFormField("Site", "Select a site to administrate", Site_t, inline=true)
         )
       )
 
@@ -62,13 +61,13 @@ object AdminApp extends Application('admin) {
     }
   )
 
-  val dbForm = Forms.SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
-    StringField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
-    IntegerField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
-    StringField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
-    StringField("User", "The user name for the MongoDB server authentication", Identifier_t),
-    PasswordField("Password", "The password for the MongoDB server authentication", Password_t),
-    SubmitField("Database", "Submit database configuration to Scrupal server.", "Configure")
+  val dbForm = SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
+    TextFormField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
+    IntegerFormField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
+    TextFormField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
+    TextFormField("User", "The user name for the MongoDB server authentication", Identifier_t),
+    PasswordFormField("Password", "The password for the MongoDB server authentication", Password_t),
+    SubmitFormField("Database", "Submit database configuration to Scrupal server.", "Configure")
   ))
 
   object Database extends Html.Fragment('AdminDatabase, "Database Configuration") ( new ContentsGenerator {

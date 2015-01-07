@@ -22,6 +22,7 @@
       <parameter value="-J-Xss8m" />
       <parameter value="-J-Xmx2048m" />
       <parameter value="-target:jvm-1.7" />
+      <parameter value="-J-Xmx1024m" />
     </parameters>
   </component>
 </project>
