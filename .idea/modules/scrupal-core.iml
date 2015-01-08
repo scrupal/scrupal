@@ -87,13 +87,13 @@
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: ch.qos.logback:logback-core:1.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.akka:akka-slf4j_2.11:2.3.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-api:2.0.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-core:2.0.2:jar" level="project" />
     <orderEntry type="library" name="SBT: com.scalatags:scalatags_2.11:0.5.0-SNAPSHOT:jar" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:bootstrap:2.3.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.webjars:jquery:1.9.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: io.netty:netty:3.6.5.Final:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="SBT: nu.validator.htmlparser:htmlparser:1.4:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe.akka:akka-actor_2.11:2.3.8:jar" level="project" />
+    <orderEntry type="library" name="SBT: io.netty:netty:3.9.4.Final:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-api:2.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-core:2.1:jar" level="project" />
   </component>
 </module>
