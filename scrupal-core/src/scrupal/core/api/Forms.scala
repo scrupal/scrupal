@@ -63,11 +63,7 @@ trait FormField extends FormItem  {
   def decode(value: String) : BSONValue
   def validate(value: BSONValue) : VR = validate(this, value)
   def validate(ref: ValidationLocation, value: BSONValue) : VR = {
-    fieldType.validate(this, value) match {
-      case x: ValidationSucceeded[BSONValue] ⇒ ValidationSucceeded[BSONValue](this, value)
-      case x: ValidationFailed[BSONValue] ⇒ ValidationFailed[BSONValue](this, value, x.errors)
-      case x: ValidationErrorResults[BSONValue] ⇒ ValidationFailed[BSONValue](this, value, Seq(x))
-    }
+    fieldType.validate(this, value)
   }
   def location = s"form field '${name}'"
   require(fieldType.nonTrivial)
