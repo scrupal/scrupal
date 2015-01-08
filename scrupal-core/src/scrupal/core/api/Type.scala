@@ -71,7 +71,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator with Bo
   def convert[S <: ScalaValueType](value: BSONValue)(implicit reader: BSONReader[BSONValue,S]) : Try[S] = {
     val result = validate(SomeValidationLocation, value)
     if (result.isError)
-      Failure[S](new Exception(result.message.toString()))
+      Failure[S](new Exception(result.asInstanceOf[ValidationErrorResults[BSONValue]].message.toString()))
     else
       reader.readTry(value)
   }
@@ -87,7 +87,7 @@ trait Type extends Registrable[Type] with Describable with BSONValidator with Bo
     writer.writeTry(value).flatMap { bson =>
       val result = validate(SomeValidationLocation, bson)
       if (result.isError)
-        Failure[BSONValue](new Exception(result.message.toString()))
+        Failure[BSONValue](new Exception(result.asInstanceOf[ValidationErrorResults[BSONValue]].message.toString()))
       else
         Success[BSONValue](bson)
     }
@@ -147,22 +147,22 @@ trait DocumentType extends Type {
         }
         // Note: Stream this to a map up front because we're going to access everything so we might as well stream it once
         val elements = d.elements.toMap
-        val errors = {
-          val field_results = for (
+        val errors : Iterable[ValidationErrorResults[BSONValue]] = {
+          val field_results : Iterable[ValidationErrorResults[BSONValue]] = for (
             field ← elements ;
             result = doValidate(field._1, field._2) if result.isError
           ) yield {
-            result
+            result.asInstanceOf[ValidationErrorResults[BSONValue]]
           }
 
-          val missing_results = if (!allowMissingFields) {
+          val missing_results : Iterable[ValidationErrorResults[BSONValue]] = if (!allowMissingFields) {
             for (
               fieldName ← fieldNames if !elements.contains(fieldName)
             ) yield {
               ValidationError(ref, value, s"Field '$fieldName' is missing")
             }
           } else {
-            Seq.empty[ValidationError[BSONValue]]
+            Iterable.empty[ValidationError[BSONValue]]
           }
           field_results ++ missing_results
         }
@@ -173,7 +173,6 @@ trait DocumentType extends Type {
       case x: BSONValue => wrongClass(ref, x, "BSONDocument")
     }
   }
-
 }
 
 

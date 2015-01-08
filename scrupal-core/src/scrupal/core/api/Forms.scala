@@ -64,11 +64,9 @@ trait FormField extends FormItem  {
   def validate(value: BSONValue) : VR = validate(this, value)
   def validate(ref: ValidationLocation, value: BSONValue) : VR = {
     fieldType.validate(this, value) match {
-      case x: ValidationSucceeded[BSONValue] ⇒ ValidationSucceeded[BSONValue](this,x.value)
-      case x: ValidationFailed[BSONValue] ⇒ ValidationFailed[BSONValue](this, x.value, x.errors)
-      case x: ValidationError[BSONValue] ⇒ ValidationError(this, x.value, x.errors)
-      case x: ValidationException[BSONValue] ⇒ ValidationException(this, x.value, x.cause)
-      case x: TypeValidationError[BSONValue,_] ⇒ TypeValidationError(this, x.value, x.t, x.errors)
+      case x: ValidationSucceeded[BSONValue] ⇒ ValidationSucceeded[BSONValue](this, value)
+      case x: ValidationFailed[BSONValue] ⇒ ValidationFailed[BSONValue](this, value, x.errors)
+      case x: ValidationErrorResults[BSONValue] ⇒ ValidationFailed[BSONValue](this, value, Seq(x))
     }
   }
   def location = s"form field '${name}'"
@@ -456,8 +454,8 @@ class AcceptFormAction(val form: Form, val context: Context) extends Action {
         val elems : Map[String,BSONValue] = data.foldLeft(Seq.empty[(String,BSONValue)]) {
           case (last, results) ⇒ last ++ results.value.elements
         }.toMap
-        val errors : Seq[ValidationResults[BSONValue]] = {
-          {data.filter { result ⇒ result.isError}.map { r ⇒ r.asInstanceOf[ValidationResults[BSONValue]]}} ++ {
+        val errors : Seq[ValidationErrorResults[BSONValue]] = {
+          {data.filter { result ⇒ result.isError}.map { r ⇒ r.asInstanceOf[ValidationErrorResults[BSONValue]]}} ++ {
             for (
               (name, item) ← formItems if item.optional;
               value = elems.get(name) if value.isEmpty
@@ -471,32 +469,40 @@ class AcceptFormAction(val form: Form, val context: Context) extends Action {
         val vr = form.validate(doc)
         if (errors.isEmpty)
           vr
-        else if (errors.size == 1)
-          ValidationFailed(vr.ref, vr.value, errors.head)
         else
           ValidationFailed(vr.ref, vr.value, errors)
 
-      case Left(ContentExpected) ⇒ ValidationError(form, BSONDocument(), "Content Expected")
+      case Left(ContentExpected) ⇒
+        ValidationError(form, BSONDocument(), "Content Expected")
       case Left(MalformedContent(msg,cause)) ⇒ cause match {
         case Some(throwable) ⇒ ValidationException(form, BSONDocument(), throwable)
         case None ⇒ ValidationError(form, BSONDocument(), msg)
       }
       case Left(UnsupportedContentType(msg)) ⇒
         ValidationError(form, BSONDocument(), "Unsupported content type: " + msg)
-      case Left(x) ⇒ ValidationError(form, BSONDocument(), "Unspecified error")
+      case Left(x) ⇒
+        ValidationError(form, BSONDocument(), "Unspecified error")
     }
+  }
+
+  def handleValidatedFormData(doc: BSONDocument) : Result[_] = {
+    StringResult(s"Submission of form '${form.name} succeeded.", Successful)
+  }
+
+  def handleValidationFailure(errors: Seq[ValidationErrorResults[BSONValue]]) = {
+    val msg : StringBuilder = new StringBuilder()
+    for (e ← errors) msg.append(e.message).append("\n")
+    ErrorResult(msg.toString(), Unacceptable)
   }
 
   def apply() : Future[Result[_]] = Future {
     decodeFormData(context.request.request) match {
       case ValidationSucceeded(ref, doc) ⇒
-        StringResult(s"Submission of form '${form.name} succeeded.", Successful)
+        handleValidatedFormData(doc.asInstanceOf[BSONDocument])
       case ValidationFailed(ref, doc, errors) ⇒
-        val msg : StringBuilder = new StringBuilder()
-        for (e ← errors) msg.append(e.message).append("\n")
-        ErrorResult(msg.toString(), Unacceptable)
-      case vr: ValidationResults[BSONValue] ⇒
-        ErrorResult(s"Submission of form '${form.name}", Unimplemented)
+        handleValidationFailure(errors)
+      case vr: ValidationErrorResults[BSONValue] ⇒
+        handleValidationFailure(Seq(vr))
     }
   } (context.scrupal._executionContext)
 }

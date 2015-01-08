@@ -31,81 +31,67 @@ sealed trait ValidationResults[VAL] {
   def ref: ValidationLocation
   def value: VAL
   def isError : Boolean
-  def message : StringBuilder = {
-    val s = new StringBuilder()
-    if (isError) {
-      s.append("\nFailed to validate ").append(ref.location).append(": ")
-    } else {
-      s.append("Successfully validated ").append(ref.location).append(".")
-    }
-    s
-  }
-
-  def add(vr: ValidationResults[VAL]) : ValidationResults[VAL] = {
+  def message : StringBuilder
+  def add(vr: ValidationErrorResults[VAL]) : ValidationResults[VAL] = {
     this match {
-      case ValidationSucceeded(oref,oval) ⇒ ValidationFailed(oref, oval, Seq(vr))
-      case ValidationFailed(oref, oval, errors) ⇒ ValidationFailed(oref, oval, errors :+ vr)
-      case x: ValidationError[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
-      case x: ValidationException[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
-      case x: TypeValidationError[VAL,_] ⇒ ValidationFailed(ref, value, Seq(x, vr))
+      case ValidationSucceeded(oref, oval) ⇒ ValidationFailed(oref, oval, Seq(vr))
+      case ValidationFailed(oref, oval, oerrors) ⇒ ValidationFailed(oref, oval, oerrors :+ vr)
+      case x: ValidationErrorResults[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
     }
   }
 }
 
 case class ValidationSucceeded[VAL](ref: ValidationLocation, value: VAL) extends ValidationResults[VAL] {
   def isError = false
+  def message = new StringBuilder("Validation of ").append(ref.location).append(" succeeded.")
 }
 
-case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationResults[VAL]])
-  extends ValidationResults[VAL] {
+sealed trait ValidationErrorResults[VAL] extends ValidationResults[VAL] {
+  def ref: ValidationLocation
+  def value: VAL
   def isError = true
+  def message : StringBuilder  = {
+    new StringBuilder("\nFailed to validate ").append(ref.location).append(": ")
+  }
+}
+
+case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationErrorResults[VAL]])
+  extends ValidationErrorResults[VAL] {
   override def message : StringBuilder = {
-    val s = super.message
+    val s = new StringBuilder
     for (err ← errors) {
-      s.append(err.message)
+      s.append(err.message).append("\n")
     }
     s
   }
 }
 
 object ValidationFailed {
-  def apply[VAL](ref: ValidationLocation, value: VAL, error: ValidationResults[VAL]) = {
-    new ValidationFailed[VAL](ref, value, Seq.empty[ValidationResults[VAL]]).add(error)
+  def apply[VAL](ref: ValidationLocation, value: VAL, error: ValidationErrorResults[VAL]) = {
+    new ValidationFailed[VAL](ref, value, Seq(error))
   }
 }
 
-case class ValidationError[VAL](ref: ValidationLocation, value: VAL, errors: Seq[String]) extends ValidationResults[VAL]
-{
-  def isError = true
+case class ValidationError[VAL](ref: ValidationLocation, value: VAL, errMsg: String)
+  extends ValidationErrorResults[VAL] {
   override def message : StringBuilder = {
-    val s = super.message
-    for (err ← errors) {
-      s.append("\t").append(err).append("\n")
-    }
-    s.deleteCharAt(s.length-1)
+    super.message.append(errMsg)
   }
 }
 
-object ValidationError {
-  def apply[VAL](ref: ValidationLocation, value: VAL, error: String) = new ValidationError(ref, value, Seq(error))
-}
-
-case class ValidationException[VAL](ref: ValidationLocation, value: VAL, cause: Throwable) extends ValidationResults[VAL] {
-  def isError = true
+case class ValidationException[VAL](ref: ValidationLocation, value: VAL, cause: Throwable)
+  extends ValidationErrorResults[VAL] {
   override def message : StringBuilder = {
-    val s = super.message
-    s.append(cause.getClass.getName).append(": ").append(cause.getMessage)
+    super.message.append(cause.getClass.getName).append(": ").append(cause.getMessage)
   }
 }
 
 case class TypeValidationError[VAL, T <: Type](ref: ValidationLocation, value: VAL, t: T, errors: Seq[String])
-  extends ValidationResults[VAL]
+  extends ValidationErrorResults[VAL]
 {
-  def isError = true
   override def message: StringBuilder = {
-    val s = super.message
-    s.append("Value does not conform to ").append(t.label).append(":\n")
-    for (err <- errors) { s.append(err).append("\n") }
+    val s = super.message.append("value does not conform to ").append(t.label).append(":\n")
+    for (err <- errors) { s.append("\t").append(err).append("\n") }
     s.deleteCharAt(s.length-1)
   }
 }
@@ -153,11 +139,11 @@ trait BSONValidator extends Validator[BSONValue] {
     * @return Any of the ValidationResults
     */
   protected def validateArray(ref: ValidationLocation, value : BSONArray, validator: BSONValidator) : VR = {
-    val errors = {
+    val errors : Seq[ValidationErrorResults[BSONValue]] = {
       for (
         v <- value.values;
         e = validator.validate(ref, v.asInstanceOf[BSONValue]) if e.isError
-      ) yield { e }
+      ) yield { e.asInstanceOf[ValidationErrorResults[BSONValue]] }
     }
     if (errors.isEmpty)
       ValidationSucceeded(ref, value)
@@ -185,7 +171,9 @@ trait BSONValidator extends Validator[BSONValue] {
             ValidationError(ref, value, s"Element '$key' is missing and has no default.")
           }
         }
-        val errors = combined.filter { vr ⇒ vr.isError }
+        val errors : Seq[ValidationErrorResults[BSONValue]] = {
+          combined.filter { vr ⇒ vr.isError} map { vr ⇒ vr.asInstanceOf[ValidationErrorResults[BSONValue]]}
+        }.toSeq
         if (errors.isEmpty)
           ValidationSucceeded(ref, value)
         else
