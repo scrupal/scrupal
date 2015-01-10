@@ -39,11 +39,13 @@ sealed trait ValidationResults[VAL] {
       case x: ValidationErrorResults[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
     }
   }
+  def errorMap: Map[ValidationLocation, Seq[String]]
 }
 
 case class ValidationSucceeded[VAL](ref: ValidationLocation, value: VAL) extends ValidationResults[VAL] {
   def isError = false
   def message = new StringBuilder("Validation of ").append(ref.location).append(" succeeded.")
+  def errorMap = Map.empty[ValidationLocation,Seq[String]]
 }
 
 sealed trait ValidationErrorResults[VAL] extends ValidationResults[VAL] {
@@ -53,6 +55,7 @@ sealed trait ValidationErrorResults[VAL] extends ValidationResults[VAL] {
   def message : StringBuilder  = {
     new StringBuilder("\nFailed to validate ").append(ref.location).append(": ")
   }
+  def errorMap = Map(ref → Seq(message.toString()))
 }
 
 case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationErrorResults[VAL]])
@@ -63,6 +66,12 @@ case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Se
       s.append(err.message).append("\n")
     }
     s
+  }
+  override def errorMap = {
+    val grouped = errors.groupBy { vr ⇒ vr.ref }
+    for ((ref,errs) ← grouped) yield {
+      ref → errs.map { e ⇒ e.message.toString() }
+    }
   }
 }
 

@@ -328,8 +328,14 @@ trait Form extends Container with Enablee with TerminalActionProvider {
   def items: Seq[FormItem]
   def values: Settings
 
-  def hasErrors(field: FormItem) : Boolean = false // TODO: Implement Form.hasErrors
-  def errorsOf(field: FormItem) : Seq[String] = Seq.empty[String] // TODO: Implement Form.errorsOf
+  type ErrorMap = Map[FormItem,Seq[String]]
+  def errorMap: ErrorMap  = Map.empty[FormItem,Seq[String]]
+
+  def hasErrors(field: FormItem) : Boolean = errorMap.contains(field)
+  def errorsOf(field: FormItem) : Seq[String] = errorMap.getOrElse(field, Seq.empty[String])
+
+  def withErrorMap(errorMap: ErrorMap) : Form
+
 
   def location = s"form '$name'"
   /**
@@ -375,7 +381,7 @@ trait Form extends Container with Enablee with TerminalActionProvider {
     }
   }
 
-  def render(form: Form) : TagContent = {
+  def render : TagContent = {
     scalatags.Text.tags.form(
       scalatags.Text.attrs.action:=actionPath, method:="POST", attrs.name:=name,
       "enctype".attr:="application/x-www-form-urlencoded",
@@ -383,7 +389,7 @@ trait Form extends Container with Enablee with TerminalActionProvider {
     )
   }
 
-  def render : TagContent = render(this)
+  def render(form: Form) : TagContent = render()
 
   /** Resolve an Action
     *
@@ -481,6 +487,15 @@ class AcceptFormAction(val form: Form, val context: Context) extends Action {
     }
   }
 
+  def renderFormWithErrors(validationResults: ValidationResults[BSONValue]) = {
+    val errorMap = validationResults.errorMap map { case (ref,msg) ⇒
+        ref.asInstanceOf[FormItem] -> msg
+    }
+
+    val tmpForm : Form = form.withErrorMap(errorMap)
+    tmpForm.render()
+  }
+
   def handleValidatedFormData(doc: BSONDocument) : Result[_] = {
     StringResult(s"Submission of form '${form.name} succeeded.", Successful)
   }
@@ -509,14 +524,18 @@ case class SimpleForm(
   description: String,
   actionPath: String,
   items: Seq[FormItem],
-  values: Settings = Settings.Empty
+  values: Settings = Settings.Empty,
+  override val errorMap: Map[FormItem,Seq[String]] = Map.empty[FormItem,Seq[String]]
 ) extends Form {
   require(items.length > 0)
+
+  def withErrorMap(em: ErrorMap) : Form = copy(errorMap = em)
 }
 
 object emptyForm extends Form {
   val id = 'emptyForm; val name = ""; val description = ""; val actionPath = ""
   val items = Seq.empty[FormItem]
   val values = Settings.Empty
+  def withErrorMap(em: ErrorMap) : Form = this
 }
 
