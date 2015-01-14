@@ -1,0 +1,2338 @@
+Index: scrupal-core/test/scrupal/core/api/NodeSpec.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/test/scrupal/core/api/NodeSpec.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/test/scrupal/core/api/NodeSpec.scala	(revision )
+@@ -23,7 +23,7 @@
+ 
+ import play.api.libs.iteratee.{Enumerator, Iteratee}
+ import scalatags.Text.all._
+-import scrupal.core.api.Html.{Fragment, TemplateGenerator}
++import scrupal.core.api.Html.{ContentsArgs, Fragment, FragmentGenerator}
+ import scrupal.core.nodes.{FileNode, MessageNode, LinkNode, HtmlNode}
+ import scrupal.test.{FakeContext, ScrupalSpecification}
+ import spray.http.MediaTypes
+@@ -41,12 +41,9 @@
+   sequential
+ 
+   case class Fixture(name: String) extends FakeContext[Fixture](name) {
+-
+-    val templateF = new TemplateGenerator {
+-      def apply(context: Context, args: Map[String, Fragment]) = Seq(span("scrupal"))
++    val template = new Html.Template(Symbol(name), "Describe me") {
++      def apply(context: Context, args: ContentsArgs) = Seq(span("scrupal"))
+     }
+-
+-    val template = Html.Template(Symbol(name), "Describe me")(templateF)
+ 
+     val message = MessageNode("Description", "text-warning", "This is boring.")
+     val html = HtmlNode("Description", template, args=Map.empty[String,Fragment])
+Index: .idea/modules/scrupal-db.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/modules/scrupal-db.iml	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ .idea/modules/scrupal-db.iml	(revision )
+@@ -16,15 +16,11 @@
+     <orderEntry type="inheritedJdk" />
+     <orderEntry type="sourceFolder" forTests="false" />
+     <orderEntry type="module" module-name="scrupal-utils" exported="" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.lambdaworks:scrypt:1.4.0:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.typesafe:config:1.2.1:jar" level="project" />
+     <orderEntry type="library" name="SBT: io.github.nremond:pbkdf2-scala_2.11:0.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.clapper:grizzled-slf4j_2.11:1.0.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.mindrot:jbcrypt:0.3m:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson-macros_2.11:0.11.0-SNAPSHOT:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.reactivemongo:reactivemongo-bson_2.11:0.11.0-SNAPSHOT:jar" level="project" />
+@@ -40,10 +36,7 @@
+     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-common_2.11:2.3.11:jar" level="project" />
+     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-core_2.11:2.3.11:jar" level="project" />
+     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2-matcher_2.11:2.3.11:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.7:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
+@@ -54,5 +47,12 @@
+     <orderEntry type="library" name="SBT: io.netty:netty:3.9.4.Final:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-api:2.1:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-core:2.1:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
+   </component>
+ </module>
+\ No newline at end of file
+Index: .idea/modules/scrupal-core.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/modules/scrupal-core.iml	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ .idea/modules/scrupal-core.iml	(revision )
+@@ -18,9 +18,6 @@
+     <orderEntry type="module" module-name="scrupal-db" exported="" />
+     <orderEntry type="module" module-name="scrupal-utils" exported="" />
+     <orderEntry type="library" name="SBT: com.chuusai:shapeless_2.11:1.2.4:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.lambdaworks:scrypt:1.4.0:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.typesafe:config:1.2.1:jar" level="project" />
+     <orderEntry type="library" scope="TEST" name="SBT: commons-io:commons-io:2.4:jar" level="project" />
+@@ -31,7 +28,6 @@
+     <orderEntry type="library" name="SBT: io.spray:spray-util_2.11:1.3.2:jar" level="project" />
+     <orderEntry type="library" name="SBT: joda-time:joda-time:2.5:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.clapper:grizzled-slf4j_2.11:1.0.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.jvnet.mimepull:mimepull:1.9.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.mindrot:jbcrypt:0.3m:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.parboiled:parboiled-core:1.1.6:jar" level="project" />
+@@ -78,10 +74,7 @@
+     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:classycle:1.4.3:jar" level="project" />
+     <orderEntry type="library" scope="TEST" name="SBT: org.specs2:specs2_2.11:2.3.13:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.livestream:scredis_2.11:2.0.6:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.7:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
+@@ -95,5 +88,12 @@
+     <orderEntry type="library" name="SBT: io.netty:netty:3.9.4.Final:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-api:2.1:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-core:2.1:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
+   </component>
+ </module>
+\ No newline at end of file
+Index: scrupal-core/src/scrupal/core/http/Controller.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/http/Controller.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/http/Controller.scala	(revision )
+@@ -95,7 +95,12 @@
+         request_context { ctxt: RequestContext ⇒
+           implicit val context = Context(scrupal, ctxt, site)
+           site.extractAction(context) match {
+-            case Some(action) ⇒ complete { makeMarshallable { action.dispatch } }
++            case Some(action) ⇒ complete {
++              makeMarshallable {
++                val future_result = action.dispatch
++                future_result
++              }
++            }
+             case None ⇒ reject
+           }
+         }
+Index: scrupal-utils/src/scrupal/utils/Enablement.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-utils/src/scrupal/utils/Enablement.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-utils/src/scrupal/utils/Enablement.scala	(revision )
+@@ -42,7 +42,8 @@
+ 
+   def isEnabled(enablee: Enablee, forScope: Enablement[_] = this) : Boolean = {
+     if (forScope != this && !isChildScope(forScope))
+-      toss(s"Scope ${forScope.id} is not a child of $id so enablement for $enablee cannot be determined.")
++      toss(s"Scope ${forScope.id.name} is not a child of ${id.name} " +
++            s"so enablement for ${enablee.enablementName} cannot be determined.")
+     _enabled.lookup(enablee) match {
+       case Some(set) ⇒
+         set.contains(forScope) && (
+@@ -58,7 +59,7 @@
+ 
+   def enable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
+     if (forScope != this && !isChildScope(forScope))
+-      toss(s"Scope ${forScope.id} is not a child of $id so $enablee cannot be enabled for it.")
++      toss(s"Scope ${forScope.id} is not a child of $id so ${enablee.enablementName} cannot be enabled for it.")
+     val update_value : mutable.HashSet[AnyRef] = _enabled.lookup(enablee) match {
+       case Some(set) ⇒ set + forScope
+       case None ⇒ mutable.HashSet(forScope)
+@@ -68,7 +69,7 @@
+ 
+   def disable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
+     if (forScope != this && !isChildScope(forScope))
+-      toss(s"Scope ${forScope.id} is not a child of $id so $enablee cannot be disabled for it.")
++      toss(s"Scope ${forScope.id} is not a child of $id so ${enablee.enablementName} cannot be disabled for it.")
+     _enabled.lookup(enablee) match {
+       case Some(set) ⇒
+         val update_value : mutable.HashSet[AnyRef] = set - forScope
+@@ -77,7 +78,7 @@
+         else
+           _enabled.register(enablee, update_value)
+       case None ⇒
+-        log.debug(s"Attempt to disable $enablee that isn't enabled.")
++        log.debug(s"Attempt to disable ${enablee.enablementName} that isn't enabled.")
+     }
+   }
+ 
+@@ -104,6 +105,7 @@
+   * indicate that. All the enabled/disabled status is recorded in the Enablement objects.
+   */
+ trait Enablee extends Identifiable {
++  def enablementName = id.name
+   def parent : Option[Enablee] = None
+   def isEnabled(scope: Enablement[_]) : Boolean = { scope.isEnabled(this) }
+   def isEnabled(scope: Enablement[_], how: Boolean): Boolean = { scope.isEnabled(this) == how }
+Index: scrupal-core/src/scrupal/core/nodes/MarkedDocNode.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/nodes/MarkedDocNode.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/nodes/MarkedDocNode.scala	(revision )
+@@ -20,7 +20,7 @@
+ import org.joda.time.DateTime
+ import reactivemongo.bson.{BSONDocument, BSONHandler, BSONObjectID, Macros}
+ import scrupal.core.api.AssetLocator.Directory
+-import scrupal.core.api.Html.{Contents, ContentsGenerator}
++import scrupal.core.api.Html.Contents
+ import scrupal.core.api._
+ import scrupal.core.html.MarkedPage
+ import scrupal.db.VariantReaderWriter
+@@ -153,7 +153,7 @@
+                 div(cls := "col-md-2", menu),
+                 div(cls := "col-md-10",
+                   div(cls := "well",
+-                    div(id := "marked", raw(content))
++                    div(scalatags.Text.attrs.id := "marked", raw(content))
+                   ),
+                   footer
+                 )
+Index: scrupal-core/src/scrupal/core/api/ActionProcessor.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/ActionProcessor.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/ActionProcessor.scala	(revision )
+@@ -106,7 +106,8 @@
+   def receive : Receive = {
+     case action: Action ⇒
+       try {
+-        sender ! action()
++        val result = action()
++        sender ! result
+       } catch {
+         case xcptn: Throwable ⇒
+           log.warning(s"The Command, $action, threw an exception: ", xcptn) // FIXME: doesn't print the exception
+Index: scrupal-core/src/scrupal/core/Boot.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/Boot.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/Boot.scala	(revision )
+@@ -18,7 +18,6 @@
+ package scrupal.core
+ 
+ import scrupal.core.api.Scrupal
+-import scrupal.core.apps.AdminApp
+ import scrupal.utils.Configuration
+ 
+ object Boot extends Scrupal with App {
+@@ -32,7 +31,6 @@
+   override def open() = {
+     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
+     require(CoreModule.id == 'Core)
+-    require(AdminApp.id == 'admin)
+     super.open()
+   }
+ 
+Index: scrupal-core/src/scrupal/core/api/BSONHandlers.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/BSONHandlers.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/BSONHandlers.scala	(revision )
+@@ -23,7 +23,6 @@
+ 
+ import org.joda.time.DateTime
+ import reactivemongo.bson._
+-import scrupal.core.api.Html.Fragment.BSONHandlerForHtmlFragment
+ import scrupal.core.api.Html.Template.BSONHandlerForHtmlTemplate
+ import scrupal.core.api.Layout.BSONHandlerForLayout
+ import scrupal.core.api.Type.BSONHandlerForType
+@@ -118,7 +117,6 @@
+     override def read(bson: BSONBinary) : Array[Byte] = bson.value.readArray(bson.value.size)
+   }
+ 
+-  implicit val HtmlFragmentHandler = new BSONHandlerForHtmlFragment[Html.Fragment]
+   implicit val HtmlTemplateHandler = new BSONHandlerForHtmlTemplate[Html.Template]
+ 
+   implicit val LayoutHandler : BSONHandler[BSONString,Layout] = new BSONHandlerForLayout[Layout]
+@@ -128,13 +126,13 @@
+     override def read(bson: BSONString): File = new File(bson.value)
+   }
+ 
+-  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html.Fragment]] =
+-    new BSONHandler[BSONDocument,Map[String,Html.Fragment]] {
+-      override def write(elements: Map[String,Html.Fragment]): BSONDocument = {
+-        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlFragmentHandler.write(html) } )
++  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html.Template]] =
++    new BSONHandler[BSONDocument,Map[String,Html.Template]] {
++      override def write(elements: Map[String,Html.Template]): BSONDocument = {
++        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlTemplateHandler.write(html) } )
+       }
+-      override def read(doc: BSONDocument): Map[String,Html.Fragment] = {
+-        doc.elements.map { case(name, value) ⇒ name -> HtmlFragmentHandler.read(value.asInstanceOf[BSONString]) }
++      override def read(doc: BSONDocument): Map[String,Html.Template] = {
++        doc.elements.map { case(name, value) ⇒ name -> HtmlTemplateHandler.read(value.asInstanceOf[BSONString])  }
+       }.toMap
+     }
+ 
+Index: scrupal-core/src/scrupal/core/api/Forms.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Forms.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Forms.scala	(revision )
+@@ -27,13 +27,8 @@
+ import scalatags.Text.all._
+ import scalatags.Text.attrs
+ 
+-/** Scrupal Forms
+-  * This object just contains the form related things. Note that this is a very general notion of forms and not
+-  * much tied to the HTML ideas. Forms are Inputs inside Sections inside Pages. Inputs are named Types. All of
+-  * these are storable and are Validators so we can validate a BSON document against a form. This should be used
+-  * for all input to Scrupal.
+-  */
+ 
++
+ /** Abstract Form Item.
+   *
+   * Each item in a form is nameable, describable, a BSONValidator, and can render itself. A FormItem is
+@@ -44,6 +39,7 @@
+ trait FormItem extends Nameable with Describable with BSONValidator with ValidationLocation {
+   def render(form: Form) : TagContent
+   def defaultValue : BSONValue
++  final def hasDefaultValue : Boolean = defaultValue != BSONNull
+ }
+ 
+ /** Abstract Form Field.
+@@ -52,9 +48,19 @@
+   * methods for decoding input values, validation and display options
+   */
+ trait FormField extends FormItem  {
++
++  /** Field is inline with label */
+   def inline : Boolean
++
++  /** Field comes before label */
+   def prefix : Boolean
++
++  /** Field does not require a value */
+   def optional : Boolean
++
++  /** Field should have help description shown below it */
++  def showHelp: Boolean
++
+   def fieldType : Type
+   def attributes(attrs: AttrList) : AttrList = {
+     attrs ++ Seq(title:=description) ++ {
+@@ -69,9 +75,24 @@
+   require(fieldType.nonTrivial)
+ }
+ 
++/** Container of FormItems
++  * This is for Forms and Fieldsets that are logical contains of other FormItems
++  */
+ trait Container extends FormItem {
+   def items: Seq[FormItem]
+   lazy val fieldMap : Map[String,FormItem] = { items.map { field ⇒ field.name → field } }.toMap
++  lazy val defaultValue : BSONDocument = {
++    BSONDocument( {
++      fieldMap.map {
++        case (key,item) ⇒ {
++          if (item.isInstanceOf[ Container ])
++            item.defaultValue.asInstanceOf[ BSONDocument ].elements
++          else
++            Seq(key -> item.defaultValue)
++        }
++      }.flatten
++    })
++  }
+ 
+   override def index(key: Int) : Option[ValidationLocation] = {
+     key match {
+@@ -88,18 +109,11 @@
+ 
+   def validate(ref: ValidationLocation, value: BSONValue): VR = {
+     value match {
+-      case x: BSONDocument ⇒
+-        validateMaps(this, x, fieldMap, defaultValue)
+-      case x: BSONValue => wrongClass(this, x, "BSONDocument")
++      case x: BSONDocument ⇒ validateMaps(this, x, fieldMap, defaultValue)
++      case x: BSONValue    ⇒ wrongClass(this, x, "BSONDocument")
+     }
+   }
+-
+-  def defaultValue : BSONDocument = {
+-    BSONDocument(
+-      for (field <- items) yield { field.name → field.defaultValue }
+-    )
+-  }
++}
+-}
+ 
+ /** A Text Field.
+   *
+@@ -113,11 +127,12 @@
+   name: String,
+   description: String,
+   fieldType: StringType,
+-  defaultValue: BSONValue = BSONString(""),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+ ) extends FormField {
+   def render(form: Form) : TagContent = {
+     text(name, form.values.getString(name), attributes(attrs))
+@@ -129,11 +144,12 @@
+   name: String,
+   description: String,
+   fieldType: StringType = Password_t,
+-  defaultValue: BSONValue = BSONString(""),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+ ) extends FormField {
+   def render(form: Form) : TagContent = {
+     password(name, form.values.getString(name), attributes(attrs))
+@@ -145,11 +161,12 @@
+   name: String,
+   description: String,
+   fieldType: StringType,
+-  defaultValue: BSONValue = BSONString(""),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+   ) extends FormField {
+   def render(form: Form) : TagContent = {
+     scrupal.core.html.Forms.textarea(name, form.values.getString(name), attributes(attrs))
+@@ -161,11 +178,12 @@
+   name: String,
+   description: String,
+   fieldType: BooleanType,
+-  defaultValue: BSONValue = BSONBoolean(value=false),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+ ) extends FormField {
+   def render(form: Form) : TagContent = {
+     checkbox(name, form.values.getBoolean(name).getOrElse(false), attributes(attrs))
+@@ -177,14 +195,15 @@
+   name: String,
+   description: String,
+   fieldType : RangeType,
+-  defaultValue: BSONValue = BSONLong(0L),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   minVal: Long = Long.MinValue,
+   maxVal: Long = Long.MaxValue,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+-  ) extends FormField {
++) extends FormField {
+   def render(form: Form) : TagContent = {
+     number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attributes(attrs))
+   }
+@@ -195,14 +214,15 @@
+   name: String,
+   description: String,
+   fieldType : RealType,
+-  defaultValue: BSONValue = BSONDouble(0.0),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   minVal: Double = Double.MinValue,
+   maxVal: Double = Double.MaxValue,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+-  ) extends FormField {
++) extends FormField {
+   def render(form: Form) : TagContent = {
+     number(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
+   }
+@@ -213,13 +233,14 @@
+   name: String,
+   description: String,
+   fieldType : RealType,
+-  defaultValue: BSONValue = BSONDouble(0.0),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   minVal: Double = 0L,
+   maxVal: Double = 100L,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+ ) extends FormField {
+   def render(form: Form) : TagContent = {
+     range(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
+@@ -231,12 +252,13 @@
+   name: String,
+   description: String,
+   fieldType : SelectionType,
+-  defaultValue: BSONValue = BSONString(""),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+-  ) extends FormField {
++) extends FormField {
+   def render(form: Form) : TagContent = {
+     val options = fieldType.choices.map { choice ⇒ choice → choice}
+     scrupal.core.html.Forms.select(name, form.values.getString(name), options.toMap, attributes(attrs))
+@@ -248,11 +270,12 @@
+   name: String,
+   description: String,
+   fieldType : TimestampType,
+-  defaultValue: BSONValue = BSONDateTime(0),
++  defaultValue: BSONValue = BSONNull,
+   attrs: AttrList = EmptyAttrList,
+   optional : Boolean = false,
+   inline : Boolean = false,
+-  prefix : Boolean = false
++  prefix : Boolean = false,
++  showHelp : Boolean = false
+ ) extends FormField {
+   def render(form: Form) : TagContent = {
+     datetime(name, form.values.getInstant(name).map { i ⇒ i.toDateTime }, attributes(attrs))
+@@ -270,6 +293,7 @@
+ ) extends {
+   final val fieldType : BooleanType = Boolean_t
+   final val optional : Boolean = false
++  final val showHelp : Boolean = false
+ } with FormField {
+   override def attributes(attrs: AttrList) : AttrList = {
+     attrs ++ Seq(title := description)
+@@ -293,6 +317,7 @@
+ ) extends {
+   final val fieldType : BooleanType = Boolean_t
+   final val optional : Boolean = false
++  final val showHelp : Boolean = false
+ } with FormField {
+   override def attributes(attrs: AttrList) : AttrList = {
+     attrs ++ Seq(title := description) ++
+@@ -322,6 +347,10 @@
+   def location = s"field set '$name'"
+ }
+ 
++/** Scrupal Forms
++  * This trait brings together all the form related objects nd generically represents an HTML5 Form in Scrupal.
++  *
++  */
+ trait Form extends Container with Enablee with TerminalActionProvider {
+   lazy val segment : String = id.name
+   def actionPath : String
+@@ -350,27 +379,28 @@
+     val the_label = scrupal.core.html.Forms.label(field.name, field.name, Seq(cls:="control-label text-info"))
+     val the_field = field.render(this)
+     div(cls:="clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
+-      if (field.inline) {
++      if (field.name.isEmpty) {
++        Seq(div(the_field))
++      } else if (field.inline) {
+         if (field.prefix) {
+-          Seq(div(the_field,"&nbsp;",the_label))
++          Seq(div(the_field, nbsp, the_label))
+         } else {
+-          Seq(div(the_label,": ", the_field))
++          Seq(div(the_label, nbsp, the_field))
+         }
+-      } else {
+-        if (field.prefix) {
++      } else if (field.prefix) {
+-          Seq(div(the_field),the_label)
++        Seq(div(the_field), the_label)
+-        } else {
+-          Seq(the_label, div(the_field))
++      } else {
++        Seq(the_label, div(the_field))
+-        }
+       },
+       for(error ← errorsOf(field)) yield {
+         div(cls:="text-danger small col-md-10", style:="padding-left:0;padding-top:0;margin-top:0;", error)
+       },
+-      if (field.description.nonEmpty) {
++      if (field.showHelp && field.description.nonEmpty) {
+         Seq(div(cls := "help-block text-muted small col-md-10", style := "padding-left:0;padding-top:0;",
+           field.description))
+-      } else Seq.empty[AttrPair]
+-      // if(!field.url.isEmpty) { a(target:="_blank", href:=field.url, "More Help&hellip;") }
++      } else {
++        Seq.empty[ AttrPair ]
++      }
+     )
+   }
+ 
+@@ -391,14 +421,14 @@
+ 
+   def render(form: Form) : TagContent = render()
+ 
+-  /** Resolve an Action
++  /** Provide the form action
+     *
+-    * Given a path and a context, find the matching PathToAction and then invoke it to yield the corresponding Action.
+-    * A subclass must implement this method.
++    * This method from ActionProvider is invoked when a request is made to display or submit the form.
++    * It simply checks the conditions and invokes a method to acquire the Action object corresponding
++    * to rendering or submitting the form.
+     *
+-    * @param key The key used to select this ActionProvider
+-    * @param path The path to use to match the PathToAction function
+-    * @param context The context to use to match the PathToAction function
++    * @param key The path segment used to select this ActionProvider
++    * @param context The context of the request
+     * @return
+     */
+   override def provideAction(matchingSegment: String, context: Context) : Option[Action] = {
+@@ -431,7 +461,7 @@
+ class AcceptFormAction(val form: Form, val context: Context) extends Action {
+   def decodeFormData(r: HttpRequest) : ValidationResults[BSONValue] = {
+     import spray.httpx.unmarshalling._
+-    type FF = scrupal.core.api.FormField // spray unmarshalling also defined FormField
++    type FF = scrupal.core.api.FormField // spray unmarshalling also defines FormField
+     val formItems : Map[String,FF] = {
+       for (item <- form.items if item.isInstanceOf[FF]) yield { item.name → item.asInstanceOf[FF] }
+     }.toMap
+@@ -460,7 +490,7 @@
+           {data.filter { result ⇒ result.isError}.map { r ⇒ r.asInstanceOf[ValidationErrorResults[BSONValue]]}} ++ {
+             for (
+               (name, item) ← formItems if item.optional;
+-              value = elems.get(name) if value.isEmpty
++              value = elems.get(name) if value.isEmpty && !item.hasDefaultValue
+             ) yield {
+               ValidationError(form, BSONDocument(name → BSONNull).asInstanceOf[BSONValue],
+                 s"Required field '$name' has no value.")
+@@ -487,33 +517,31 @@
+     }
+   }
+ 
+-  def renderFormWithErrors(validationResults: ValidationResults[BSONValue]) = {
++  def formWithErrors(validationResults: ValidationResults[BSONValue]) : Form = {
+     val errorMap = validationResults.errorMap map { case (ref,msg) ⇒
+         ref.asInstanceOf[FormItem] -> msg
+     }
+-
+-    val tmpForm : Form = form.withErrorMap(errorMap)
+-    tmpForm.render()
++    form.withErrorMap(errorMap)
+   }
+ 
+   def handleValidatedFormData(doc: BSONDocument) : Result[_] = {
+-    StringResult(s"Submission of form '${form.name} succeeded.", Successful)
++    StringResult(s"Submission of '${form.name}' succeeded.", Successful)
+   }
+ 
+-  def handleValidationFailure(errors: Seq[ValidationErrorResults[BSONValue]]) = {
++  def handleValidationFailure(failure: ValidationFailed[BSONValue]) : Result[_] = {
+     val msg : StringBuilder = new StringBuilder()
+-    for (e ← errors) msg.append(e.message).append("\n")
+-    ErrorResult(msg.toString(), Unacceptable)
++    for (e ← failure.errors) msg.append(e.message).append("\n")
++    FormErrorResult(failure, Unacceptable)
+   }
+ 
+   def apply() : Future[Result[_]] = Future {
+     decodeFormData(context.request.request) match {
+       case ValidationSucceeded(ref, doc) ⇒
+         handleValidatedFormData(doc.asInstanceOf[BSONDocument])
+-      case ValidationFailed(ref, doc, errors) ⇒
+-        handleValidationFailure(errors)
++      case err: ValidationFailed[BSONValue] ⇒
++        handleValidationFailure(err)
+       case vr: ValidationErrorResults[BSONValue] ⇒
+-        handleValidationFailure(Seq(vr))
++        handleValidationFailure(ValidationFailed(form, BSONNull, Seq(vr)))
+     }
+   } (context.scrupal._executionContext)
+ }
+Index: scrupal-core/src/scrupal/core/sites/WelcomeSite.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/sites/WelcomeSite.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/sites/WelcomeSite.scala	(revision )
+@@ -19,9 +19,8 @@
+ 
+ import org.joda.time.DateTime
+ import scrupal.core.CoreModule
+-import scrupal.core.api.Html.{Contents, TemplateGenerator}
++import scrupal.core.api.Html.{ContentsArgs, Contents, FragmentGenerator}
+ import scrupal.core.api._
+-import scrupal.core.apps.AdminApp
+ import scrupal.core.entities.EchoEntity
+ import scrupal.core.html.PlainPage
+ import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
+@@ -59,9 +58,7 @@
+ 
+   CoreModule.enable(this)
+   EchoEntity.enable(this)
+-  AdminApp.enable(this)
+   CoreModule.enable(EchoEntity)
+-  CoreModule.enable(AdminApp)
+ }
+ 
+ object WelcomeSite {
+@@ -102,9 +99,9 @@
+   ))
+ 
+ 
+-  object WelcomePageTemplate extends Html.Template('WelcomePage, "The Welcome Page") ( new TemplateGenerator {
+-    def apply(context: Context, args: Map[String,Html.Fragment]) : Contents =
++  object WelcomePageTemplate extends Html.Template('WelcomePage, "The Welcome Page") {
++    def apply(context : Context, args : ContentsArgs = Html.EmptyContentsArgs) : Contents = {
+       welcomePage(context)
+     }
+-  )
++  }
+ }
+Index: scrupal-core/src/scrupal/core/api/Node.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Node.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Node.scala	(revision )
+@@ -17,8 +17,6 @@
+ 
+ package scrupal.core.api
+ 
+-import org.joda.time.DateTime
+-import play.api.libs.iteratee.Enumerator
+ import reactivemongo.api.DefaultDB
+ import reactivemongo.api.indexes.{Index, IndexType}
+ import reactivemongo.bson._
+@@ -33,9 +31,10 @@
+ 
+ /** A function that generates content
+   *
+-  * This is the basic characteristics of a Node. It is simply a function that receives a Context
+-  * and produces content as a Byte array. The Context provides the setting in which it is
++  * This is the basic characteristic of a Node. It is simply a function that receives a Context
++  * and produces content as a Future Result. The Context provides the setting in which it is
+   * generating the content. All dynamic content in Scrupal is generated through a Generator.
++  * The Result embodies the notion of completing a request with some content and a disposition.
+   */
+ trait Generator extends ((Context) => Future[Result[_]])
+ 
+Index: project/Dependencies.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- project/Dependencies.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ project/Dependencies.scala	(revision )
+@@ -50,6 +50,8 @@
+ 
+   val scalatags               = "com.scalatags"       %% "scalatags"              % "0.5.0-SNAPSHOT"
+ 
++  val json4s                  = "org.json4s"          %% "json4s-jackson"         % "3.2.10"
++
+   // Spray Stuff
+   val akkaV = "2.3.6"
+   val sprayV = "1.3.2"
+Index: scrupal-core/src/scrupal/core/api/Layout.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Layout.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Layout.scala	(revision )
+@@ -32,7 +32,7 @@
+   * can be used to perform the arranging.
+   *
+   */
+-trait Arranger extends ( (Map[String,Fragment], Context) => Array[Byte] )
++trait Arranger extends ( (ContentsArgs, Context) => Array[Byte] )
+ 
+ /** Abstract Layout
+   *
+@@ -50,29 +50,36 @@
+   template: Html.Template
+ ) extends Layout {
+   val mediaType = MediaTypes.`text/html`
+-  def apply(args: Map[String,Fragment], context: Context) : Array[Byte] = {
++  def apply(args: ContentsArgs, context: Context) : Array[Byte] = {
+     template.render(context,args).getBytes(utf8)
+   }
+ }
+ 
+ object Layout extends Registry[Layout] {
+   def registryName = "Layouts"
++
+   def registrantsName = "layout"
+ 
+   object DefaultLayoutTemplate extends Html.Template('DefaultLayoutTemplate,
+-      "Default layout page used when the expected layout could not be found") ( new TemplateGenerator {
+-    def apply(context: Context, args: Map[String,Fragment]) : Contents =
++    "Default layout page used when the expected layout could not be found") {
++    def apply(context : Context, args : ContentsArgs) : Contents = {
+       Seq(
+         p(
+           """A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout
+             |which just lists the tag content down the page. This probably isn't what you want, but it's what you've got
+             |until you create a defaultLayout for your pages.
+           """.stripMargin),
+-        for ( (key, frag) ← args) {
++        for ((key, frag) ← args) {
+-          Seq( h1(key, " - ", frag.id.name, " - ", frag.description), div(frag(context)) )
++          frag match {
++            case t: Html.Template ⇒
++              Seq(h1("Template: ", key, " - ", t.id.name, " - ", t.description), div(t.generate(context,args)))
++            case x: Html.Generator ⇒
++              Seq(h1("Generator"), div(x.generate(context,args)))
+-        }
++          }
++        }
+       )
+-    })
++    }
++  }
+ 
+   lazy val default = HtmlLayout('default, "Default Layout", DefaultLayoutTemplate)
+ 
+Index: .idea/modules/scrupal-config.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/modules/scrupal-config.iml	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ .idea/modules/scrupal-config.iml	(revision )
+@@ -18,9 +18,6 @@
+     <orderEntry type="module" module-name="scrupal-db" exported="" />
+     <orderEntry type="module" module-name="scrupal-utils" exported="" />
+     <orderEntry type="library" name="SBT: com.chuusai:shapeless_2.11:1.2.4:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.jsuereth:scala-arm_2.11:1.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.lambdaworks:scrypt:1.4.0:jar" level="project" />
+@@ -42,7 +39,6 @@
+     <orderEntry type="library" scope="TEST" name="SBT: junit:junit:4.11:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.clapper:grizzled-slf4j_2.11:1.0.2:jar" level="project" />
+     <orderEntry type="library" scope="TEST" name="SBT: org.hamcrest:hamcrest-core:1.3:jar" level="project" />
+-    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.jvnet.mimepull:mimepull:1.9.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.mindrot:jbcrypt:0.3m:jar" level="project" />
+     <orderEntry type="library" scope="TEST" name="SBT: org.mockito:mockito-core:1.9.5:jar" level="project" />
+@@ -79,10 +75,7 @@
+     <orderEntry type="library" name="SBT: org.apache.commons:commons-lang3:3.3.2:jar" level="project" />
+     <orderEntry type="module" module-name="scrupal-core" exported="" />
+     <orderEntry type="library" name="SBT: com.livestream:scredis_2.11:2.0.6:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
+     <orderEntry type="library" name="SBT: com.typesafe.play:play-iteratees_2.11:2.3.7:jar" level="project" />
+-    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.scala-lang:scala-compiler:2.11.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.4:jar" level="project" />
+     <orderEntry type="library" name="SBT: ch.qos.logback:logback-classic:1.1.2:jar" level="project" />
+@@ -96,5 +89,12 @@
+     <orderEntry type="library" name="SBT: io.netty:netty:3.9.4.Final:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-api:2.1:jar" level="project" />
+     <orderEntry type="library" name="SBT: org.apache.logging.log4j:log4j-core:2.1:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.3.2:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-datacommons_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-functional_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: com.typesafe.play:play-json_2.11:2.3.7:jar" level="project" />
++    <orderEntry type="library" name="SBT: org.joda:joda-convert:1.6:jar" level="project" />
+   </component>
+ </module>
+\ No newline at end of file
+Index: scrupal-core/src/scrupal/core/nodes/HtmlNode.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/nodes/HtmlNode.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/nodes/HtmlNode.scala	(revision )
+@@ -19,6 +19,7 @@
+ 
+ import org.joda.time.DateTime
+ import reactivemongo.bson.{Macros, BSONDocument, BSONHandler, BSONObjectID}
++import scrupal.core.api.Html.ContentsArgs
+ import scrupal.core.api._
+ import scrupal.db.VariantReaderWriter
+ 
+@@ -35,14 +36,15 @@
+ case class HtmlNode (
+   description: String,
+   template: Html.Template,
+-  args: Map[String, Html.Fragment],
+   modified: Option[DateTime] = Some(DateTime.now),
+   created: Option[DateTime] = Some(DateTime.now),
+   _id: BSONObjectID = BSONObjectID.generate,
+   final val kind: Symbol = HtmlNode.kind
+ ) extends AbstractHtmlNode {
++  def args: ContentsArgs = Html.EmptyContentsArgs
++  def results(context: Context) : Html.Contents = template(context,args)
+   def content(context: Context)(implicit ec: ExecutionContext) : Future[Html.Contents] = {
+-    Future.successful(template(context,args))
++    Future.successful(results(context))
+   }
+ }
+ 
+Index: scrupal-core/src/scrupal/core/api/Validation.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Validation.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Validation.scala	(revision )
+@@ -17,7 +17,7 @@
+ 
+ package scrupal.core.api
+ 
+-import reactivemongo.bson.{BSONArray, BSONDocument, BSONValue}
++import reactivemongo.bson._
+ 
+ trait ValidationLocation {
+   def index(key: Int) : Option[ValidationLocation] = Some(this)
+@@ -32,6 +32,7 @@
+   def value: VAL
+   def isError : Boolean
+   def message : StringBuilder
++  def bsonMessage : BSONDocument
+   def add(vr: ValidationErrorResults[VAL]) : ValidationResults[VAL] = {
+     this match {
+       case ValidationSucceeded(oref, oval) ⇒ ValidationFailed(oref, oval, Seq(vr))
+@@ -46,16 +47,17 @@
+   def isError = false
+   def message = new StringBuilder("Validation of ").append(ref.location).append(" succeeded.")
+   def errorMap = Map.empty[ValidationLocation,Seq[String]]
++  def bsonMessage = BSONDocument("form" → BSONString(ref.location), "valid" → BSONBoolean(value=true))
+ }
+ 
+ sealed trait ValidationErrorResults[VAL] extends ValidationResults[VAL] {
+   def ref: ValidationLocation
+-  def value: VAL
+   def isError = true
+   def message : StringBuilder  = {
+     new StringBuilder("\nFailed to validate ").append(ref.location).append(": ")
+   }
+   def errorMap = Map(ref → Seq(message.toString()))
++  def bsonMessage : BSONDocument = BSONDocument( ref.location → BSONString( message.toString() ) )
+ }
+ 
+ case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationErrorResults[VAL]])
+@@ -67,6 +69,16 @@
+     }
+     s
+   }
++  override def bsonMessage : BSONDocument = {
++    val grouped = errors.groupBy { vr ⇒ vr.ref }
++    BSONDocument(
++      "form" → BSONString(ref.location), "valid" → BSONBoolean(value=false), "errors" → BSONDocument(
++        grouped.map { case ( ref, errs)  ⇒ ref.location -> BSONArray(
++          errs.map { err ⇒ err.bsonMessage.stream.head.getOrElse(""→BSONString("Unspecified error"))._2 }
++        ) }
++      )
++    )
++  }
+   override def errorMap = {
+     val grouped = errors.groupBy { vr ⇒ vr.ref }
+     for ((ref,errs) ← grouped) yield {
+@@ -172,12 +184,14 @@
+         val combined = for (
+           (key,validator) ← validators
+         ) yield {
+-          if (elems.contains(key)) {
+-            validator.validate(ref, elems.get(key).get)
+-          } else if (defaults.elements.contains(key)) {
+-            validator.validate(ref, defaults.get(key).get)
+-          } else {
+-            ValidationError(ref, value, s"Element '$key' is missing and has no default.")
++          elems.get(key) match {
++            case Some(v) ⇒ validator.validate(ref, elems.get(key).get)
++            case None ⇒ {
++              defaults.get(key) match {
++                case Some(v) ⇒ validator.validate(ref, v)
++                case None ⇒ ValidationError(ref, value, s"Element '$key' is missing and has no default.")
++              }
++            }
+           }
+         }
+         val errors : Seq[ValidationErrorResults[BSONValue]] = {
+Index: scrupal-core/src/scrupal/core/api/Html.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Html.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Html.scala	(revision )
+@@ -18,7 +18,7 @@
+ package scrupal.core.api
+ 
+ import reactivemongo.bson.{BSONHandler, BSONString}
+-import scrupal.utils.{Registrable, Registry}
++import scrupal.utils.{Identifiable, Registrable, Registry}
+ 
+ import scalatags.Text.all._
+ import scalatags.Text.{TypedTag, tags2}
+@@ -31,28 +31,11 @@
+   type Contents = Seq[Modifier]
+   val emptyContents = Seq.empty[Modifier]
+ 
+-  def renderContents(contents: Contents) : String = {
+-    val sb = new StringBuilder(4096)
+-    for (tag ← contents) {sb.append(tag.toString)}
+-    sb.toString()
+-  }
+-
+-  trait ContentsGenerator extends ((Context) ⇒ Contents) {
+-    def render(context: Context) : String = { renderContents(apply(context)) }
+-  }
+-
+-  trait TemplateGenerator extends ((Context,Map[String,Fragment]) ⇒ Contents) {
+-    def render(context: Context, args: Map[String,Fragment]) : String = { renderContents(apply(context, args)) }
+-  }
+-
+-  trait SimpleContentsGenerator {
+-    def apply() : Contents
+-    def render() : String = { renderContents(apply()) }
+-  }
+-
+   def js(javascript: String) = script(`type`:="application/javascript", javascript)
+   def jslib(lib: String, path: String) = script(`type`:="application/javascript", src:=s"/assets/lib/$lib/$path")
+ 
++  val nbsp = raw("&nbsp;")
++
+   object ng {
+     val app = "ng-app".attr
+     val controller = "ng-controller".attr
+@@ -62,29 +45,59 @@
+ 
+   def ng(name: String) = ("ng-" + name).attr
+ 
+-  case class Fragment(id: Identifier, description: String)(gen: ContentsGenerator)
+-    extends Registrable[Fragment] with Describable with ContentsGenerator
+-  {
+-    def registry = Fragment
+-    def apply(context:Context) : Contents = gen(context)
++  def renderContents(contents: Contents) : String = {
++    val sb = new StringBuilder(4096)
++    for (tag ← contents) {sb.append(tag.toString)}
++    sb.toString()
+   }
+ 
+-  object Fragment extends Registry[Fragment] {
+-    def registryName = "Html Fragments"
+-    def registrantsName = "html fragment"
++  type ContentsArgs = Map[String,Generator]
++  val EmptyContentsArgs = Map.empty[String,Generator]
+ 
+-    class BSONHandlerForHtmlFragment[T <: Fragment]  extends BSONHandler[BSONString,T] {
+-      override def write(t: T): BSONString = BSONString(t.id.name)
+-      override def read(bson: BSONString): T = Fragment.as(Symbol(bson.value))
++  trait Generator {
++    def generate(context : Context, args :ContentsArgs = EmptyContentsArgs) : Contents
++    def render(context : Context, args : ContentsArgs = EmptyContentsArgs) : String
+-    }
++  }
++
++  trait SimpleGenerator extends Generator with (() ⇒ Contents) {
++    def generate(context : Context, args :ContentsArgs = EmptyContentsArgs) : Contents = {
++      apply()
+-  }
++    }
++    def render(context : Context, args : ContentsArgs = EmptyContentsArgs) : String = {
++      renderContents(apply())
++    }
++  }
+ 
+-  case class Template(id: Symbol, description: String)(gen: TemplateGenerator)
+-    extends  Registrable[Template] with Describable with TemplateGenerator
++  trait FragmentGenerator extends Generator with ((Context) ⇒ Contents) {
++    def generate(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents = {
++      this.apply(context)
++    }
++    def render(context: Context, args: ContentsArgs = EmptyContentsArgs) : String = {
++      renderContents(apply(context))
++    }
++  }
++
++  trait TemplateGenerator extends Generator with ((Context,ContentsArgs) ⇒ Contents)
+   {
++    def generate(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents = {
++      this.apply(context, args)
++    }
++    def render(context: Context, args: ContentsArgs = EmptyContentsArgs) : String = {
++      renderContents(apply(context, args))
++    }
++  }
++
++  abstract class Template(_i: Symbol, _d: String) extends {
++    val id : Symbol = _i; val description : String = _d
++  } with Registrable[Template] with Describable with TemplateGenerator {
+     def registry = Template
+-    def apply(context: Context, args: Map[String,Fragment]) : Contents = gen(context, args)
++    def tag(tagName: String, context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents = {
++      args.get(tagName) match {
++        case Some(v) ⇒ v.generate(context, args)
++        case None ⇒ Seq("")
+-  }
++      }
++    }
++  }
+ 
+   object Template extends Registry[Template] {
+     def registryName = "Html Templates"
+@@ -96,44 +109,44 @@
+     }
+   }
+ 
+-  case class Tag(tag: TypedTag[String]) extends ContentsGenerator  {
+-    def apply(context:Context) : Contents = Seq(tag)
++  abstract class Page(_id: Symbol, val theTitle: String, _d: String) extends Template(_id,_d) {
++    def headTitle(context: Context, args: ContentsArgs = EmptyContentsArgs)  : TagContent = {
++      tags2.title(theTitle)
+-  }
++    }
+-
+-  abstract class Page(val theTitle: String, val theDescription: String) extends ContentsGenerator {
+-    def headTitle(context: Context)  : TagContent = tags2.title(theTitle)
+-    def headDescription(context: Context) : TagContent = {
+-      meta(name := "description", content := theDescription)
++    def headDescription(context: Context, args: ContentsArgs = EmptyContentsArgs) : TagContent = {
++      meta(name := "description", content := description)
+     }
+-    def favIcon(context: Context) : TagContent = {
++    def favIcon(context: Context, args: ContentsArgs = EmptyContentsArgs) : TagContent = {
+       link(rel := "shortcut icon", `type` := "image/x-icon", href := PathOf.favicon()(context))
+     }
+-    def headSuffix(context: Context)  : Contents
+-    def headTag(context: Context)  : TagContent = {
++    def headSuffix(context: Context, args: ContentsArgs = EmptyContentsArgs)  : Contents
++    def headTag(context: Context, args: ContentsArgs = EmptyContentsArgs)  : TagContent = {
+       head(
+-        headTitle(context),
+-        headDescription(context),
++        headTitle(context, args),
++        headDescription(context, args),
+         meta(charset := "UTF-8"),
+         meta(name := "viewport", content := "width=device-width, initial-scale=1.0"),
+-        favIcon(context),
+-        headSuffix(context)
++        favIcon(context, args),
++        headSuffix(context, args)
+       )
+     }
+-    def bodyPrefix(context: Context) : Contents
+-    def bodyMain(context: Context) : Contents
+-    def bodySuffix(context: Context) : Contents
+-    def bodyTag(context: Context) : TagContent = {
++    def bodyPrefix(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents
++    def bodyMain(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents
++    def bodySuffix(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents
++    def bodyTag(context: Context, args: ContentsArgs = EmptyContentsArgs) : TagContent = {
+       body(
+-        bodyPrefix(context), bodyMain(context), bodySuffix(context)
++        bodyPrefix(context, args), bodyMain(context, args), bodySuffix(context, args)
+       )
+     }
+-    def apply(context: Context): Contents = {
+-      Seq[TagContent](scalatags.Text.all.html(headTag(context), bodyTag(context)))
++    def apply(context: Context, args: ContentsArgs = EmptyContentsArgs): Contents = {
++      Seq[TagContent](scalatags.Text.all.html(headTag(context, args), bodyTag(context, args)))
+     }
+-    override def render(context: Context) : String = {
++    override def render(context: Context, args: ContentsArgs = EmptyContentsArgs) : String = {
+       val sb = new StringBuilder(4096)
+       sb.append("<!DOCTYPE html>")
+-      for (tag ← apply(context)) {sb.append(tag.toString)}
++      for (tag ← generate(context, args)) {
++        sb.append(tag.toString)
++      }
+       sb.toString()
+     }
+   }
+Index: .idea/codeStyleSettings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/codeStyleSettings.xml	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ .idea/codeStyleSettings.xml	(revision )
+@@ -5,6 +5,10 @@
+       <value>
+         <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="true" />
+         <ScalaCodeStyleSettings>
++          <option name="SPACE_BEFORE_TYPE_COLON" value="true" />
++          <option name="USE_SCALADOC2_FORMATTING" value="true" />
++          <option name="SPACES_IN_ONE_LINE_BLOCKS" value="true" />
++          <option name="ENFORCE_PROCEDURE_SYNTAX_FOR_UNIT" value="false" />
+           <option name="REPLACE_CASE_ARROW_WITH_UNICODE_CHAR" value="true" />
+           <option name="REPLACE_MAP_ARROW_WITH_UNICODE_CHAR" value="true" />
+           <option name="REPLACE_FOR_GENERATOR_ARROW_WITH_UNICODE_CHAR" value="true" />
+@@ -13,6 +17,7 @@
+           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+         </XML>
+         <codeStyleSettings language="Scala">
++          <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
+           <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+           <option name="ALIGN_MULTILINE_FOR" value="false" />
+           <option name="ALIGN_MULTILINE_EXTENDS_LIST" value="true" />
+\ No newline at end of file
+Index: scrupal-utils/src/scrupal/utils/LoggingHelpers.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-utils/src/scrupal/utils/LoggingHelpers.scala	(revision )
++++ scrupal-utils/src/scrupal/utils/LoggingHelpers.scala	(revision )
+@@ -0,0 +1,291 @@
++/**********************************************************************************************************************
++ * Copyright © 2015 Reactific Software LLC                                                                            *
++ *                                                                                                                    *
++ * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
++ *                                                                                                                    *
++ * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
++ * of the GNU General Public License as published by the Free Software Foundation,                                    *
++ * either version 3 of the License, or (at your option) any later version.                                            *
++ *                                                                                                                    *
++ * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
++ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
++ * See the GNU General Public License for more details.                                                               *
++ *                                                                                                                    *
++ * You should have received a copy of the GNU General Public License along with Scrupal.                              *
++ * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
++ **********************************************************************************************************************/
++
++package scrupal.utils
++
++import ch.qos.logback.classic.{LoggerContext, Level, Logger}
++import ch.qos.logback.classic.encoder.PatternLayoutEncoder
++import ch.qos.logback.core.ConsoleAppender
++import ch.qos.logback.classic.spi.ILoggingEvent
++import ch.qos.logback.core.read.CyclicBufferAppender
++import ch.qos.logback.core.rolling.{SizeBasedTriggeringPolicy, FixedWindowRollingPolicy, RollingFileAppender}
++import ch.qos.logback.classic.html.HTMLLayout
++
++import java.io.File
++
++import org.slf4j.LoggerFactory
++
++import scala.util.matching.Regex
++import scala.collection.JavaConverters._
++import scala.util.{Failure, Success, Try}
++
++import scalatags.Text.all._
++import scalatags.Text.TypedTag
++
++
++/** Log File Related Helpers
++  *
++  *  This object just provides a variety of utilities for manipulating LogBack programatically.
++  */
++object LoggingHelpers extends ScrupalComponent {
++
++  def initializeLogging(forDebug: Boolean = true) = {
++     if (forDebug)
++       setToDebug("scrupal\\..*")
++     else
++       setToWarn("scrupal\\..*")
++  }
++
++  /** Easy access to the root logger */
++  def rootLogger: Logger = { LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger] }
++
++  /** Easy access to the logger context */
++  def loggerContext: LoggerContext = { rootLogger.getLoggerContext }
++
++  /** Set a component to ERROR logging level */
++  def setToError(component: ScrupalComponent) = setLoggingLevel(component.getClass.getName, Level.ERROR)
++  def setToError(pkg: String) = setLoggingLevel(pkg, Level.ERROR)
++
++  /** Set a component to WARN logging level */
++  def setToWarn(component: ScrupalComponent) = setLoggingLevel(component.getClass.getName, Level.WARN)
++  def setToWarn(pkg: String) = setLoggingLevel(pkg, Level.WARN)
++
++  /** Set a component to WARN logging level */
++  def setToInfo(component: ScrupalComponent) = setLoggingLevel(component.getClass.getName, Level.INFO)
++  def setToInfo(pkg: String) = setLoggingLevel(pkg, Level.INFO)
++
++  /** Set a component to WARN logging level */
++  def setToDebug(component: ScrupalComponent) = setLoggingLevel(component.getClass.getName, Level.DEBUG)
++  def setToDebug(pkg: String) = setLoggingLevel(pkg, Level.DEBUG)
++
++  /** Set a component to WARN logging level */
++  def setToTrace(component: ScrupalComponent) = setLoggingLevel(component.getClass.getName, Level.TRACE)
++  def setToTrace(pkg: String) = setLoggingLevel(pkg, Level.TRACE)
++
++
++  /** Set Logging Level Generically.
++    * This function sets the logging level for any pkg that matches a regular expression. This allows a variety of
++    * loggers to be set without knowing their full names explicitly.
++    * @param regex A Scala regular expression string for the names of the loggers to match
++    * @param level The level you want any matching loggers to be set to.
++    * @return A list of the names of the loggers whose levels were set
++    */
++  def setLoggingLevel(regex: String, level: Level) : Seq[String] = {
++    val lc = loggerContext
++    for (logger <- findLoggers(regex)) yield {
++      val previousLevel: Level = logger.getLevel
++      logger.setLevel(level)
++      log.trace("Switched Logging Level For '" + logger.getName + "' from " + previousLevel + " to " + level)
++      logger.getName
++    }
++  }
++
++  /** Find loggers matching a pattern
++    * @param pattern A Scala regular expression string for the names of the loggers to match
++    * @return A sequence of the matching loggers
++    */
++  def findLoggers(pattern: String) : Seq[Logger] = {
++    val regex = new Regex(pattern)
++    val lc = loggerContext
++    for (log: Logger <- lc.getLoggerList.asScala  if  regex.findFirstIn(log.getName).isDefined ) yield log
++  }
++
++  /** Determine if a logger has an appender or not
++    * @param logger The logger to check
++    * @return true iff the logger has an appender
++    */
++  def hasAppenders(logger: Logger) : Boolean = { logger.iteratorForAppenders().hasNext() }
++
++  def getLoggingTableData : (Iterable[String], Iterable[Iterable[String]]) = {
++    val lc = loggerContext
++    val data = for (log: Logger <- lc.getLoggerList.asScala) yield {
++      List(log.getName, log.getEffectiveLevel.toString, log.getLoggerContext.getName)
++    }
++    List("Name", "Level", "Context") -> data
++  }
++
++  def getLoggingConfig : List[(String,String)] = {
++    val lc = loggerContext
++    for (log: Logger <- lc.getLoggerList.asScala) yield {
++      log.getName -> log.getEffectiveLevel.toString
++    }
++  }.toList
++
++  def removeAppender(name: String) = {
++    val existingAppender = rootLogger.getAppender(name)
++    if (existingAppender != null) {
++      existingAppender.stop()
++      rootLogger.detachAppender(existingAppender)
++    }
++  }
++
++  private val FILE_PATTERN = "%d %-7relative %-5level [%thread:%logger{30}] - %msg%n%xException"
++  private val CONSOLE_PATTERN = "%date %-5level %logger{30} - %message%n%xException"
++
++  private def makeEncoder(pattern: String, immediateFlush: Boolean, lc: LoggerContext) = {
++    val ple = new PatternLayoutEncoder()
++    ple.setPattern(pattern)
++    ple.setOutputPatternAsHeader(false)
++    ple.setImmediateFlush(immediateFlush)
++    ple.setContext(lc)
++    ple.start()
++    ple
++  }
++
++  private def setRollingPolicy(fwrp: FixedWindowRollingPolicy, maxFiles: Int, fName: String) = {
++    fwrp.setMaxIndex(maxFiles)
++    fwrp.setMinIndex(1)
++    fwrp.setFileNamePattern(fName + ".%i.zip")
++  }
++
++  private def makeRollingPolicy(lc: LoggerContext, maxFiles: Int, fName: String) : FixedWindowRollingPolicy = {
++    val fwrp = new FixedWindowRollingPolicy
++    setRollingPolicy(fwrp, maxFiles, fName)
++    fwrp.setContext(lc)
++    fwrp.start()
++    fwrp
++  }
++
++  private def setTriggeringPolicy(sbtp: SizeBasedTriggeringPolicy[ILoggingEvent], maxSize: Int) = {
++    sbtp.setMaxFileSize(maxSize + "MB")
++  }
++
++  private def makeTriggeringPolicy(lc: LoggerContext, maxSize: Int) : SizeBasedTriggeringPolicy[ILoggingEvent] = {
++    val sbtp = new SizeBasedTriggeringPolicy[ILoggingEvent]
++    setTriggeringPolicy(sbtp, maxSize)
++    sbtp.setContext(lc)
++    sbtp.start()
++    sbtp
++  }
++
++  val FILE_APPENDER_NAME = "FILE"
++  val PAGE_APPENDER_NAME = "PAGE"
++  val STDOUT_APPENDER_NAME = "STDOUT"
++
++  def setFileAppender(
++    file: File,
++    maxFiles: Int,
++    maxFileSizeInMB: Int,
++    immediateFlush: Boolean,
++    name: String = FILE_APPENDER_NAME
++  ) = Try {
++    val lc = loggerContext
++    val fName = file.getCanonicalPath
++    rootLogger.getAppender(name) match {
++      case rfa: RollingFileAppender[ILoggingEvent] => {
++        rfa.getRollingPolicy match {
++          case fwrp: FixedWindowRollingPolicy => setRollingPolicy(fwrp, maxFiles, fName)
++          case _ => rfa.setRollingPolicy(makeRollingPolicy(lc, maxFiles, fName))
++        }
++        rfa.getTriggeringPolicy match {
++          case sbtp: SizeBasedTriggeringPolicy[ILoggingEvent] => setTriggeringPolicy(sbtp, maxFileSizeInMB)
++          case _ => rfa.setTriggeringPolicy(makeTriggeringPolicy(lc, maxFileSizeInMB))
++        }
++        rfa.getEncoder match {
++          case ple: PatternLayoutEncoder => ple.setImmediateFlush(immediateFlush)
++          case _ => rfa.setEncoder(makeEncoder(FILE_PATTERN, immediateFlush, lc))
++        }
++        rfa
++      }
++      case _ => {
++        val rfa = new RollingFileAppender[ILoggingEvent]
++        rfa.setContext(lc)
++        rfa.setAppend(true)
++        rfa.setName(name)
++        rfa.setFile(fName)
++        rfa.setEncoder(makeEncoder(FILE_PATTERN, immediateFlush, lc))
++        rfa.setRollingPolicy(makeRollingPolicy(lc, maxFiles, fName))
++        rfa.setTriggeringPolicy(makeTriggeringPolicy(lc, maxFileSizeInMB))
++        rfa.start()
++        rootLogger.addAppender(rfa)
++        rfa
++      }
++    }
++  } match {
++    case Success(fa) => Some(fa)
++    case Failure(xcptn) => log.error("Failed to set RollingFileAppender: ", xcptn); None
++  }
++
++  var pageAppender: Option[CyclicBufferAppender[ILoggingEvent]] = None
++
++  def setPageAppender(maxSize: Int, name: String = PAGE_APPENDER_NAME) = Try {
++    val lc = loggerContext
++    rootLogger.getAppender(name) match {
++      case cba: CyclicBufferAppender[ILoggingEvent] => {
++        cba.setMaxSize(maxSize)
++        cba
++      }
++      case _ => {
++        val cba = new CyclicBufferAppender[ILoggingEvent]()
++        cba.setMaxSize(maxSize)
++        cba.setName(name)
++        cba.setContext(lc)
++        cba.start()
++        rootLogger.addAppender(cba)
++        cba
++      }
++    }
++  } match {
++    case Success(cb) => pageAppender = Some(cb)
++    case Failure(xcptn) => log.warn("Failed to set PageAppender: ", xcptn); pageAppender = None;
++  }
++
++  def convertRecentEventsToHtml() : TypedTag[String] = Try {
++    val lc = loggerContext
++    pageAppender match {
++      case None => div("No log content available.")
++      case Some(pa) => {
++        val layout = new HTMLLayout()
++        val buffer = new StringBuilder(4096)
++        layout.setContext(lc)
++        layout.setPattern("%date%relative%level%logger%msg%ex")
++        layout.setTitle("")
++        layout.start()
++        for (i <- 0 until pa.getLength) {
++          buffer.append( layout.doLayout(pa.get(i)) )
++        }
++        div(buffer.toString())
++      }
++    }
++  } match {
++    case Success(result) => result
++    case Failure(xcptn) =>
++      log.warn("Error while converting log events to html: ", xcptn)
++      div(`class`:="text-danger",
++        s"Error while converting log events to html: ${xcptn.getClass.getCanonicalName}: ${xcptn.getMessage}"
++      )
++  }
++
++  def setStdOutAppender(name: String = STDOUT_APPENDER_NAME) = Try {
++    val lc = loggerContext
++    rootLogger.getAppender(name) match {
++      case ca : ConsoleAppender[ILoggingEvent] => {
++        ca.setWithJansi(true)
++        ca
++      }
++      case _ => {
++        val ca = new ConsoleAppender[ILoggingEvent]
++        ca.setContext(lc)
++        ca.setEncoder(makeEncoder(CONSOLE_PATTERN, immediateFlush=true, lc))
++        ca.setWithJansi(true)
++        ca.start()
++        rootLogger.addAppender(ca)
++        ca
++      }
++    }
++  }
++}
+Index: scrupal-core/src/scrupal/core/apps/AdminApp.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/apps/AdminApp.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/apps/AdminApp.scala	(revision )
+@@ -18,8 +18,8 @@
+ package scrupal.core.apps
+ 
+ import org.joda.time.DateTime
+-import reactivemongo.bson.{BSONLong, BSONString}
+-import scrupal.core.api.Html.{ContentsGenerator, TemplateGenerator, Contents}
++import reactivemongo.bson.{BSONValue, BSONDocument, BSONLong, BSONString}
++import scrupal.core.api.Html.{Generator, ContentsArgs, EmptyContentsArgs, Contents}
+ import scrupal.core.api._
+ import scrupal.core.html.BootstrapPage
+ import scrupal.core.nodes.HtmlNode
+@@ -30,60 +30,90 @@
+ 
+ 
+ object AdminApp extends Application('admin) {
+-  val kind: Symbol = 'Admin
++  val kind : Symbol = 'Admin
++
+-  def description: String = "The Scrupal Administrative Application"
++  def description : String = "The Scrupal Administrative Application"
++
+-  def name: String = "AdminApp"
++  def name : String = "AdminApp"
++
+-  val timestamp = Some(new DateTime(2014,12,5,12,20,6))
++  val timestamp = Some(new DateTime(2014, 12, 5, 12, 20, 6))
++
+-  def created: Option[DateTime] = timestamp
++  def created : Option[ DateTime ] = timestamp
++
+-  def modified: Option[DateTime] = timestamp
++  def modified : Option[ DateTime ] = timestamp
+ 
+-  object StatusBar extends Html.Fragment('AdminStatusBar, "Lists the Sites") ( new ContentsGenerator {
+-    object SiteSelectionForm
+-      extends SimpleForm('SiteSelectionForm, "SiteSelection",
++  object StatusBar extends Html.Template('AdminStatusBar, "Lists the Sites") {
++
++    class SiteSelectionForm extends SimpleForm('SiteSelectionForm, "SiteSelection",
+-        "A form for selecting the site to administrate", "/admin/siteselectionform",
+-        Seq(
++      "A form for selecting the site to administrate", "/admin/siteselectionform",
++      Seq(
+-          SelectionFormField("Site", "Select a site to administrate", Site_t, inline=true)
++        SelectionFormField("Site: ", "Select a site to administrate", Site_t, inline = true)
+-        )
+-      )
++      )
++    )
+ 
+-    def apply(context: Context): Contents = {
+-      Seq(SiteSelectionForm.render(SiteSelectionForm))
++    lazy val siteSelectionForm = new SiteSelectionForm
++
++    def apply(context : Context, args: ContentsArgs = EmptyContentsArgs) : Contents = {
++      Seq(siteSelectionForm.render)
+     }
+-  })
++  }
+ 
+-  object SiteConfig extends Html.Fragment('AdminSite, "Configuration") ( new ContentsGenerator {
+-    def apply(context: Context) : Contents =
++  StatusBar.siteSelectionForm.enable(this)
++
++  object SiteConfig extends Html.Template('AdminSite, "Configuration") {
++    def apply(context : Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+-      Seq(div(cls:="well",
++      Seq(div(cls := "well",
+-        for ( (enablee,enablement) <- context.site.get.getEnablementMap) {
++        for ((enablee, enablement) <- context.site.get.getEnablementMap) {
+-        p(enablee.id.name, " is enabled in ", enablement.map{ e => e.id.name }.mkString(", ") )
++          p(enablee.id.name, " is enabled in ", enablement.map { e => e.id.name }.mkString(", "))
+         }
+       ))
+     }
+-  )
++  }
+ 
+-  val dbForm = SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
+-    TextFormField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
+-    IntegerFormField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
+-    TextFormField("Name", "The name of the database you want to connect to", Identifier_t, BSONString("scrupal")),
+-    TextFormField("User", "The user name for the MongoDB server authentication", Identifier_t),
+-    PasswordFormField("Password", "The password for the MongoDB server authentication", Password_t),
+-    SubmitFormField("Database", "Submit database configuration to Scrupal server.", "Configure")
+-  ))
++  class DBForm extends SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
++    TextFormField("Host:", "The hostname where your MongoDB server is running",
++      DomainName_t, BSONString("localhost"), optional=true, inline = true, attrs = Seq(placeholder:="localhost")),
++    IntegerFormField("Port:", "The port number at which your MongoDB server is running",
++      TcpPort_t, BSONLong(5253), optional=true, inline = true, attrs = Seq(placeholder:="5253")),
++    TextFormField("Name:", "The name of the database you want to connect to",
++      Identifier_t, BSONString("scrupal"), optional=true, inline = true, attrs = Seq(placeholder:="scrupal")),
++    TextFormField("User:", "The user name for the MongoDB server authentication",
++      Identifier_t, BSONString("admin"), optional=true, inline = true, attrs=Seq(placeholder:="admin")),
++    PasswordFormField("Password:", "The password for the MongoDB server authentication", Password_t, inline = true),
++    SubmitFormField("", "Submit database configuration to Scrupal server.", "Configure Database")
++  )) {
++    override def provideAcceptFormAction(matchingSegment: String, context: Context) : Option[AcceptFormAction] = {
++      Some(new DataBaseFormAcceptance(this, context))
++    }
++  }
+ 
+-  object Database extends Html.Fragment('AdminDatabase, "Database Configuration") ( new ContentsGenerator {
+-    def apply(context: Context) : Contents =
++  case class DataBaseFormAcceptance(override val form : Form, override val context : Context)
++    extends AcceptFormAction(form, context) {
++    override def handleValidatedFormData(doc : BSONDocument) : Result[ _ ] = {
++      super.handleValidatedFormData(doc)
++    }
++
++    override def handleValidationFailure(errors : ValidationFailed[BSONValue]) : Result[ _ ] = {
++      val node = adminLayout(formWithErrors(errors))
++      val contents = node.results(context)
++      HtmlResult(contents, Successful)
++    }
++  }
++
++  object Database extends Html.Template('AdminDatabase, "Database Configuration") {
++    def apply(context : Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+       context.withSchema { (dbc, schema) ⇒
+         Seq(
+-          div(cls:="well", dbForm.render )
++          div(cls := "well", tag("DatabaseForm", context, args))
+         )
+       }
+     }
+-  )
++  }
+ 
+-  object Modules extends Html.Fragment('AdminModules, "Modules Administration") ( new ContentsGenerator {
+-    def apply(context: Context) : Contents =
++  object Modules extends Html.Template('AdminModules, "Modules Administration") {
++    def apply(context : Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+       Seq(
+-        div(cls:="well",
++        div(cls := "well",
+           p("Modules Defined:"),
+           ul(
+             for (mod ← Module.values) {
+@@ -93,12 +123,12 @@
+         )
+       )
+     }
+-  )
++  }
+ 
+-  object Applications extends Html.Fragment('AdminApplications, "Applications Administration") ( new ContentsGenerator{
+-    def apply(context: Context) : Contents =
++  object Applications extends Html.Template('AdminApplications, "Applications Administration") {
++    def apply(context : Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+       Seq(
+-        div(cls:="well",
++        div(cls := "well",
+           p("Applications:"),
+           ul(
+             for (app ← context.site.get.applications) {
+@@ -108,68 +138,69 @@
+         )
+       )
+     }
+-  )
++  }
+ 
+-  object TemplatePage extends Html.Template('ScrupalAdmin, "Scrupal Administration") ( new TemplateGenerator {
+-    def apply(context: Context, args: Map[String, Html.Fragment]): Contents = {
+-      val page = new BootstrapPage("ScrupalAdmin", "Scrupal Administration") {
+-        override def body_content(context: Context): Contents = {
++  object TemplatePage extends BootstrapPage('ScrupalAdmin, "Scrupal Admin", "Scrupal Administration") {
++    override def body_content(context: Context, args: ContentsArgs): Contents = {
+-          Seq(
+-            div(cls := "container",
+-              div(cls := "panel panel-primary",
++      Seq(
++        div(cls := "container",
++          div(cls := "panel panel-primary",
+-                div(cls := "panel-heading", h1(cls := "panel-title", StatusBar(context)))),
++            div(cls := "panel-heading", h1(cls := "panel-title", tag("StatusBar", context, args)))),
+-              div(cls := "panel-body",
+-                div(role := "tabpanel",
++          div(cls := "panel-body",
++            div(role := "tabpanel",
+-                  ul(cls := "nav nav-pills", role := "tablist",
++              ul(cls := "nav nav-pills", role := "tablist", scalatags.Text.attrs.id:= "AdminTab",
+-                    li(cls := "active", role := "presentation",
++                li(cls:="active", role := "presentation",
+-                      a(href := "#database", aria.controls := "database", role := "tab", data("toggle") := "pill",
+-                        "Database")),
+-                    li(role := "presentation",
+-                      a(href := "#configuration", aria.controls := "configuration", role := "tab",
+-                        data("toggle") := "pill", "Configuration")),
+-                    li(role := "presentation",
+-                      a(href := "#modules", aria.controls := "modules", role := "tab",
+-                        data("toggle") := "pill", "Modules")),
+-                    li(role := "presentation",
+-                      a(href := "#applications", aria.controls := "applications", role := "tab",
+-                        data("toggle") := "pill", "Applications"))
+-                  ),
+-                  div(cls := "tab-content",
+-                    div(role := "tabpanel", cls := "tab-pane active", scalatags.Text.all.id := "database",
++                  a(href := "#database", aria.controls := "database", role := "tab", data("toggle") := "pill",
++                    "Database")),
++                li(role := "presentation",
++                  a(href := "#configuration", aria.controls := "configuration", role := "tab",
++                    data("toggle") := "pill", "Configuration")),
++                li(role := "presentation",
++                  a(href := "#modules", aria.controls := "modules", role := "tab",
++                    data("toggle") := "pill", "Modules")),
++                li(role := "presentation",
++                  a(href := "#applications", aria.controls := "applications", role := "tab",
++                    data("toggle") := "pill", "Applications"))
++              ),
++              div(cls := "tab-content",
++                div(role := "tabpanel", cls := "tab-pane active", scalatags.Text.all.id := "database",
+-                      Database(context)),
++                  tag("Database", context, args)),
+-                    div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "configuration",
++                div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "configuration",
+-                      SiteConfig(context)),
++                  tag("Configuration", context, args)),
+-                    div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "modules", Modules(context)),
+-                    div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "applications",
++                div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "modules", Modules(context)),
++                div(role := "tabpanel", cls := "tab-pane", scalatags.Text.all.id := "applications",
+-                      Applications(context))
++                  tag("Applications", context, args))
+-                  )
+-                )
+-              )
+-            )
+-          )
+-        }
+-      }
++              )
++            )
++          )
++        )
++      )
++    }
++  }
+-      page.apply(context)
+-    }
+-  })
+ 
+-  object adminLayout extends HtmlNode(
++  def adminLayout(dbForm: Form) = {
++    new HtmlNode(
+-    description = "Layout for Admin application",
++      description = "Layout for Admin application",
+-    template = TemplatePage,
+-    args = Map[String, Html.Fragment](
++      template = TemplatePage
++    ) {
++      override def args : Map[String, Html.Generator] = Map(
+-      "StatusBar" → StatusBar,
+-      "Configuration" → SiteConfig,
++        "StatusBar" → StatusBar,
++        "Configuration" → SiteConfig,
++        // "DatabaseForm" → dbForm,
+-      "Database" → Database,
+-      "Modules" → Modules,
+-      "Applications" → Applications
+-    )
++        "Database" → Database,
++        "Modules" → Modules,
++        "Applications" → Applications
++      )
+-  )
++    }
++  }
+ 
+-  override def delegates : Seq[ActionExtractor] = super.delegates ++ Seq(
+-    NodeActionProducer(PathEnd, adminLayout)
+-  )
+-
++  override def delegates : Seq[ActionExtractor] = {
++    def dbForm = new DBForm
+-  dbForm.enable(this)
++    dbForm.enable(this)
++    super.delegates ++ Seq(
++      NodeActionProducer(PathEnd, adminLayout(dbForm))
++    )
++  }
+ }
+ 
+ object SiteAdminEntity extends Entity('SiteAdmin) {
+Index: scrupal-core/src/scrupal/core/api/Result.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Result.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Result.scala	(revision )
+@@ -21,13 +21,13 @@
+ 
+ import play.api.libs.iteratee.Enumerator
+ import reactivemongo.api.BSONSerializationPack
+-import reactivemongo.bson.{BSONArray, BSONDocument, BSONString}
++import reactivemongo.bson.buffer.ArrayBSONBuffer
++import reactivemongo.bson._
+ import scrupal.core.api.Html.TagContent
+ import scrupal.core.html.display_exception_result
+ import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
++import sun.rmi.rmic.IndentingWriter
+ 
+-import scalatags.Text.TypedTag
+-
+ trait Resolvable extends ( () ⇒ EnumeratorResult)
+ 
+ /** Encapsulation of an Action's Result
+@@ -156,7 +156,10 @@
+ 
+ object HtmlResult {
+   def apply(tag: TagContent, disposition: Disposition) = new HtmlResult(tag.toString(), disposition)
++  def apply(contents: Html.Contents, disposition: Disposition) = {
++    new HtmlResult(Html.renderContents(contents), disposition)
+-}
++  }
++}
+ 
+ /** Result with a BSONDocument payload.
+   *
+@@ -203,7 +206,7 @@
+   }
+ 
+   def toHtmlResult(context: Context) : HtmlResult = {
+-    HtmlResult(display_exception_result(this).render(), disposition)
++    HtmlResult(display_exception_result(this).render(context), disposition)
+  }
+ 
+   val body = display_exception_result(this)().toString().getBytes(utf8)
+@@ -226,6 +229,19 @@
+   def formatted = s"Error: ${disposition.id.name}: ${payload}"
+ 
+   def body = formatted.getBytes(utf8)
++}
++
++case class FormErrorResult(
++  payload: ValidationFailed[BSONValue],
++  disposition: Disposition = Unacceptable
++) extends Result[ValidationFailed[BSONValue]] {
++  val contentType : ContentType = ScrupalMediaTypes.bson
++  def apply() : EnumeratorResult = {
++    val buffer = new ArrayBSONBuffer()
++    BSONSerializationPack.writeToBuffer(buffer, payload.bsonMessage)
++    EnumeratorResult(Enumerator(buffer.array), contentType, disposition)
++  }
++  def formatted: String = payload.message.toString()
+ }
+ 
+ // TODO: Support more Result types: JSON
+Index: scrupal-core/src/scrupal/core/http/ScrupalMarshallers.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/http/ScrupalMarshallers.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/http/ScrupalMarshallers.scala	(revision )
+@@ -137,6 +137,7 @@
+       case Unsupported    => StatusCodes.NotImplemented
+       case Unauthorized   => StatusCodes.Unauthorized
+       case Unavailable    => StatusCodes.ServiceUnavailable
++      case Unacceptable   ⇒ StatusCodes.NotAcceptable
+       case NotFound       => StatusCodes.NotFound
+       case Ambiguous      => StatusCodes.Conflict
+       case Conflict       => StatusCodes.Conflict
+@@ -150,9 +151,15 @@
+   implicit val error_marshaller: ToResponseMarshaller[ErrorResult] =
+     ToResponseMarshaller[ErrorResult] { (value, context ) ⇒
+       val status_code = disposition2StatusCode(value.disposition)
+-      context.marshalTo(HttpResponse(status_code, HttpEntity(value.contentType,value.formatted)))
++      context.marshalTo(HttpResponse(status_code, HttpEntity(value.contentType, value.formatted)))
+     }
+ 
++  implicit val form_error_marshaller: ToResponseMarshaller[FormErrorResult] =
++    ToResponseMarshaller[FormErrorResult] { (value, context ) ⇒
++      val status_code = disposition2StatusCode(value.disposition)
++      context.marshalTo(HttpResponse(status_code, HttpEntity(text_ct, value.formatted)))
++    }
++
+   implicit val exception_marshaller: ToResponseMarshaller[ExceptionResult] =
+     ToResponseMarshaller[ExceptionResult] { (value, ctxt)  ⇒
+       ctxt.handleError(value.payload)
+@@ -167,6 +174,7 @@
+           case h: HtmlResult ⇒ html_marshaller(h, trmc)
+           case s: StringResult ⇒ string_marshaller(s, trmc)
+           case e: ErrorResult ⇒ error_marshaller(e, trmc)
++          case f: FormErrorResult ⇒ form_error_marshaller(f, trmc)
+           case x: ExceptionResult ⇒ exception_marshaller(x, trmc)
+           case o: OctetsResult ⇒
+             val m = octets_marshaller(o.contentType)
+@@ -180,14 +188,17 @@
+           case b: BSONResult ⇒
+             val m = bson_marshaller
+             m(b, trmc)
++          case _ ⇒
++            toss(s"Failed to find marshaller for: $value")
+         }
+       }
+     }
+   }
+ }
+ 
+-class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext) extends Actor with
+-                                                                                                  ActorLogging  {
++class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext)
++  extends Actor with ActorLogging  {
++
+   object ChunkSent
+ 
+   def bsonStreamToData(key: String, value: BSONValue) : Array[Byte] = {
+Index: scrupal-core/src/scrupal/core/http/AssetsController.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/http/AssetsController.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/http/AssetsController.scala	(revision )
+@@ -34,7 +34,7 @@
+   }
+ 
+   def routes(implicit scrupal: Scrupal): Route = {
+-    logRequestResponse(showAllResponses _) {
++    // logRequestResponse(showAllResponses _) {
+       get {
+         pathPrefix("assets") {
+           path("favicon") {
+@@ -65,7 +65,7 @@
+           } ~ reject
+         }
+       }
+-    }
++    // }
+   }
+ 
+   def resultAsRoute(result: ⇒ Result[_])(implicit scrupal: Scrupal): Route = {
+Index: .idea/scala_settings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/scala_settings.xml	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ .idea/scala_settings.xml	(revision )
+@@ -4,10 +4,7 @@
+     <option name="collectionTypeHighlightingLevel" value="1" />
+     <option name="dontCacheCompoundTypes" value="true" />
+     <option name="implicitParametersSearchDepth" value="1" />
+-    <option name="includeBlockExpressions" value="true" />
+-    <option name="includeLiterals" value="true" />
+     <option name="searchAllSymbols" value="true" />
+-    <option name="showArgumentsToByNameParams" value="true" />
+     <option name="treatDocCommentAsBlockComment" value="true" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: scrupal-core/src/scrupal/core/html/utils.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/html/utils.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/html/utils.scala	(revision )
+@@ -28,19 +28,19 @@
+ 
+ import scalatags.Text.all._
+ 
+-case class danger(message: Contents) extends SimpleContentsGenerator {
++case class danger(message: Contents) extends SimpleGenerator {
+   def apply() : Contents = { Seq(div(cls:="bg-danger", message)) }
+ }
+ 
+-case class warning(message: Contents) extends SimpleContentsGenerator {
++case class warning(message: Contents) extends SimpleGenerator {
+   def apply() : Contents = { Seq(div(cls:="bg-warning", message)) }
+ }
+ 
+-case class success(message: Contents) extends SimpleContentsGenerator {
++case class success(message: Contents) extends SimpleGenerator {
+   def apply() : Contents = { Seq(div(cls:="bg-success", message)) }
+ }
+ 
+-case class exception(activity: String, error: Throwable) extends SimpleContentsGenerator {
++case class exception(activity: String, error: Throwable) extends SimpleGenerator {
+   def apply() : Contents = {
+     danger(Seq(
+       p(s"While attempting to ${activity} an exception occurred:"),
+@@ -50,7 +50,7 @@
+ }
+ 
+ 
+-object display_context_table extends ContentsGenerator {
++object display_context_table extends FragmentGenerator {
+   def apply(context: Context) = {
+     Seq(div(cls := "span10 row", style := "font-size: 0.75em",
+       table(cls := "span10 table table-striped table-bordered table-condensed",
+@@ -75,7 +75,7 @@
+   }
+ }
+ 
+-object debug_footer extends ContentsGenerator {
++object debug_footer extends FragmentGenerator {
+   def apply(context: Context) = {
+     if (Feature.enabled('DebugFooter, context.scrupal)) {
+       display_context_table(context)
+@@ -85,7 +85,7 @@
+   }
+ }
+ 
+-object display_alerts extends ContentsGenerator {
++object display_alerts extends FragmentGenerator {
+   def apply(context: Context) : Contents = {
+     for (alert ← context.alerts if alert.unexpired) yield {
+       div(cls := "alert alert-dismissible @alert.cssClass",
+@@ -96,7 +96,7 @@
+   }
+ }
+ 
+-case class display_exception(xcptn: Throwable) extends SimpleContentsGenerator {
++case class display_exception(xcptn: Throwable) extends SimpleGenerator {
+   def apply() = {
+     Seq(
+       dl(cls:="dl-horizontal",
+@@ -123,11 +123,11 @@
+   }
+ }
+ 
+-case class display_exception_result(xcptn: scrupal.core.api.ExceptionResult) extends SimpleContentsGenerator {
++case class display_exception_result(xcptn: scrupal.core.api.ExceptionResult) extends SimpleGenerator {
+   def apply() = { Seq(div(cls:="bg-danger", display_exception(xcptn.payload)()))  }
+ }
+ 
+-trait bson_fragment extends SimpleContentsGenerator {
++trait bson_fragment extends SimpleGenerator {
+   def value(value: BSONValue) : Modifier = {
+     value match {
+       case s: BSONString ⇒ "\"" + s.value + "\""
+@@ -177,7 +177,7 @@
+   )
+ }
+ 
+-object reactific_copyright extends SimpleContentsGenerator {
++object reactific_copyright extends SimpleGenerator {
+   def apply() = {
+     Seq( sub(sup("Copyright &copy; 2012-2014, Reactific Software LLC. All Rights Reserved.")) )
+   }
+Index: scrupal-core/src/scrupal/core/http/Boot.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/http/Boot.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/http/Boot.scala	(revision )
+@@ -55,7 +55,7 @@
+     val interface = config.getString("scrupal.http.interface").getOrElse("0.0.0.0")
+     val port = config.getInt("scrupal.http.port").getOrElse(8888)
+ 
+-    log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout}ms")
++    log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout.duration.toMillis}ms")
+ 
+     // start a new HTTP server on port 8080 with our service actor as the handler
+     IO(Http) ? Http.Bind(service, interface, port)
+Index: scrupal-core/src/scrupal/core/api/Scrupal.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/api/Scrupal.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/api/Scrupal.scala	(revision )
+@@ -25,6 +25,8 @@
+ import akka.util.Timeout
+ 
+ import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
++import scrupal.core.CoreModule
++import scrupal.core.apps.AdminApp
+ import scrupal.core.sites.WelcomeSite
+ 
+ import scrupal.db.DBContext
+@@ -46,6 +48,9 @@
+ )
+ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal]
+ {
++
++  LoggingHelpers.initializeLogging(forDebug = true)
++
+   val key = ""
+   def registry = Scrupal
+ 
+@@ -205,15 +210,17 @@
+           Map.empty[String, Site]
+       }
+       result.map { sites ⇒
+-        val final_result = if (sites.isEmpty) {
++        if (sites.isEmpty) {
+           val ws = new WelcomeSite(Symbol(name + "-Welcome"))
+           ws.enable(this)
++          DataCache.update(this, schema)
++          AdminApp.enable(ws)
++          CoreModule.enable(AdminApp)
+           Map(ws.host → ws )
+         } else {
++          DataCache.update(this, schema)
+           sites
+         }
+-        DataCache.update(this, schema)
+-        final_result
+       }
+     }
+   }
+Index: scrupal-core/src/scrupal/core/html/pages.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/html/pages.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/html/pages.scala	(revision )
+@@ -23,8 +23,10 @@
+ import scrupal.core.api._
+ import scrupal.core.api.Html._
+ 
+-abstract class BasicPage(the_title: String, the_description: String) extends Html.Page(the_title, the_description) {
+-  def headSuffix(context: Context) : Html.Contents = {
++abstract class BasicPage(_id: Symbol, the_title: String, the_description: String)
++  extends Html.Page(_id, the_title,  the_description)
++{
++  def headSuffix(context: Context, args: ContentsArgs= EmptyContentsArgs) : Html.Contents = {
+     implicit val ctxt : Context = context
+     Seq(
+       link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
+@@ -33,9 +35,9 @@
+     )
+   }
+ 
+-  def bodyPrefix(context: Context): Html.Contents = { display_alerts(context) }
++  def bodyPrefix(context: Context, args: ContentsArgs= EmptyContentsArgs): Html.Contents = { display_alerts(context) }
+ 
+-  def bodySuffix(context: Context): Html.Contents = {
++  def bodySuffix(context: Context, args: ContentsArgs= EmptyContentsArgs): Html.Contents = {
+     if(Feature.enabled('DebugFooter, context.scrupal)){
+       display_context_table(context)
+     } else {
+@@ -44,39 +46,39 @@
+   }
+ }
+ 
+-abstract class BootstrapPage(the_title: String, the_description: String)
+-  extends BasicPage(the_title, the_description)
++abstract class BootstrapPage(_id: Symbol, the_title: String, the_description: String)
++  extends BasicPage(_id, the_title, the_description)
+ {
+-  override def headSuffix(context: Context) : Html.Contents = {
++  override def headSuffix(context: Context, args: ContentsArgs= EmptyContentsArgs) : Html.Contents = {
+     super.headSuffix(context) ++ Seq(
+       jslib("jquery", "jquery.js"),
+       jslib("bootstrap", "js/bootstrap.js")
+     )
+   }
+ 
+-  def body_content(context: Context) : Contents = {
++  def body_content(context: Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+     Seq(span(em("OOPS!"), " You forgot to override body_content!"))
+   }
+ 
+-  override def bodyMain(context: Context) : Contents = {
++  override def bodyMain(context: Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+     Seq(div(cls:="container", body_content(context)))
+   }
+ }
+ 
+-abstract class MarkedPage(the_title: String, the_description: String)
+-  extends BootstrapPage(the_title, the_description)
++abstract class MarkedPage(_id: Symbol, the_title: String, the_description: String)
++  extends BootstrapPage(_id, the_title, the_description)
+ {
+-  override def headSuffix(context: Context) = {
++  override def headSuffix(context: Context, args: ContentsArgs= EmptyContentsArgs) = {
+     super.headSuffix(context) ++ Seq(
+       jslib("marked","marked.js")
+     )
+   }
+ 
+-  override def bodyMain(context: Context) : Contents = {
++  override def bodyMain(context: Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+     Seq(div(scalatags.Text.all.id:="marked", body_content(context)))
+   }
+ 
+-  override def bodySuffix(context: Context) :Contents = {
++  override def bodySuffix(context: Context, args: ContentsArgs= EmptyContentsArgs) :Contents = {
+     Seq(js(
+       """marked.setOptions({
+         |  renderer: new marked.Renderer(),
+@@ -94,11 +96,11 @@
+   }
+ }
+ 
+-case class ForbiddenPage(what: String, why: String)
+-  extends BasicPage("Forbidden - " + what, "Forbidden Error Page") {
+-  val description = "A page for displaying an HTTP Forbidden error"
++case class ForbiddenPage(_id: Symbol, what: String, why: String)
++  extends BasicPage(_id, "Forbidden - " + what, "Forbidden Error Page") {
++  override val description = "A page for displaying an HTTP Forbidden error"
+ 
+-  def bodyMain(context: Context): Html.Contents = {
++  def bodyMain(context: Context, args: ContentsArgs= EmptyContentsArgs): Html.Contents = {
+     danger(Seq(
+       h1("Nuh Uh! I Can't Do That!"),
+       p(em("Drat!"), s"Because $why, you can't $what. That's just the way it is."),
+@@ -110,11 +112,13 @@
+ }
+ 
+ case class NotFoundPage(
++  override val id: Symbol,
+   what: String,
+   causes: Seq[String] = Seq(),
+   suggestions: Seq[String] =Seq()
+-) extends BasicPage("Not Found - " + what, "Not Found Error Page") {
+-  def bodyMain(context: Context) : Contents = {
++) extends BasicPage(id, "Not Found - " + what, "Not Found Error Page") {
++  override val description = "A page for displaying an HTTP Not Found error."
++  def bodyMain(context: Context, args: ContentsArgs= EmptyContentsArgs) : Contents = {
+     warning(Seq(
+       h1("There's A Hole In THe Fabrice Of The InterWebz!"),
+       p(em("Oops!"), "We couldn't find ", what, ". That might be because:"),
+@@ -131,13 +135,21 @@
+   }
+ }
+ 
+-abstract class GenericPlainPage(title: String, description: String) extends BasicPage(title, description) {
+-  def content(context: Context) : Html.Contents
+-  def bodyMain(context: Context) : Contents = Seq(
+-    div(cls:="container", content(context), debug_footer(context))
++abstract class GenericPlainPage(_id: Symbol, title: String, description: String)
++  extends BasicPage(_id, title, description)
++{
++  def content(context: Context, args: ContentsArgs= EmptyContentsArgs) : Html.Contents
++  def bodyMain(context: Context, args: ContentsArgs= EmptyContentsArgs) : Contents = Seq(
++    div(cls:="container", content(context, args), debug_footer(context))
+   )
+ }
+-case class PlainPage(title: String, description: String, the_content: Html.Contents)
+-  extends GenericPlainPage(title, description) {
+-  def content(context: Context) : Html.Contents = the_content
++
++case class PlainPage(
++  override val id: Symbol,
++  title: String,
++  override val description: String,
++  the_content: Html.Contents)
++  extends GenericPlainPage(id, title, description)
++{
++  def content(context: Context, args: ContentsArgs= EmptyContentsArgs) : Html.Contents = the_content
+ }
+Index: scrupal-core/src/scrupal/core/html/layout.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- scrupal-core/src/scrupal/core/html/layout.scala	(revision b1e883b45700354b8a6b5706fee8eb833e9a213b)
++++ scrupal-core/src/scrupal/core/html/layout.scala	(revision )
+@@ -18,27 +18,31 @@
+ package scrupal.core.html
+ 
+ import scrupal.core.api.Html._
+-import scrupal.core.api.{Html, Context}
++import scrupal.core.api.Context
+ 
+ import scalatags.Text.all._
+ 
+-trait Layout extends Fragment {
++trait Layout extends Template {
+   def compose(context: Context)
+-
+ }
+ 
+-case class DefaultLayout(args: Map[String,Html.Fragment])
+-  extends BasicPage("DefaultLayout", "Default Layout Page")
++case class DefaultLayout(args: ContentsArgs)
++  extends BasicPage('DefaultLayout, "DefaultLayout", "Default Layout Page")
+ {
+-  val description = "Default layout page used when the expected layout could not be found"
+-  def bodyMain(context: Context) : Contents = Seq(
++  override val description = "Default layout page used when the expected layout could not be found"
++  def bodyMain(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents = Seq(
+     p(
+       """A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout
+         |which just lists the tag content down the page. This probably isn't what you want, but it's what you've got
+         |until you create a defaultLayout for your pages.
+       """.stripMargin),
+     for ( (key, frag) ← args) {
+-      Seq( h1(key, " - ", frag.id.name, " - ", frag.description), div(frag(context)) )
++      frag match {
++        case t: Template ⇒
++          Seq(h1("Template: ", key, " - ", t.id.name, " - ", t.description), div(t.generate(context,args)))
++        case x: Generator ⇒
++          Seq(h1("Generator"), div(x.generate(context,args)))
++      }
+     }
+   )
+ }
