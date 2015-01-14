@@ -4,10 +4,7 @@
     <option name="collectionTypeHighlightingLevel" value="1" />
     <option name="dontCacheCompoundTypes" value="true" />
     <option name="implicitParametersSearchDepth" value="1" />
-    <option name="includeBlockExpressions" value="true" />
-    <option name="includeLiterals" value="true" />
     <option name="searchAllSymbols" value="true" />
-    <option name="showArgumentsToByNameParams" value="true" />
     <option name="treatDocCommentAsBlockComment" value="true" />
   </component>
 </project>

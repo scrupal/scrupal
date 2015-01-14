@@ -5,6 +5,10 @@
       <value>
         <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="true" />
         <ScalaCodeStyleSettings>
+          <option name="SPACE_BEFORE_TYPE_COLON" value="true" />
+          <option name="USE_SCALADOC2_FORMATTING" value="true" />
+          <option name="SPACES_IN_ONE_LINE_BLOCKS" value="true" />
+          <option name="ENFORCE_PROCEDURE_SYNTAX_FOR_UNIT" value="false" />
           <option name="REPLACE_CASE_ARROW_WITH_UNICODE_CHAR" value="true" />
           <option name="REPLACE_MAP_ARROW_WITH_UNICODE_CHAR" value="true" />
           <option name="REPLACE_FOR_GENERATOR_ARROW_WITH_UNICODE_CHAR" value="true" />
@@ -13,6 +17,7 @@
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
         <codeStyleSettings language="Scala">
+          <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
           <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
           <option name="ALIGN_MULTILINE_FOR" value="false" />
           <option name="ALIGN_MULTILINE_EXTENDS_LIST" value="true" />
