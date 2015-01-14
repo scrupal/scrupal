@@ -26,7 +26,6 @@ import reactivemongo.bson._
 import scrupal.core.api.Html.TagContent
 import scrupal.core.html.display_exception_result
 import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
-import sun.rmi.rmic.IndentingWriter
 
 trait Resolvable extends ( () ⇒ EnumeratorResult)
 
