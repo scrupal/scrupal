@@ -42,7 +42,8 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
 
   def isEnabled(enablee: Enablee, forScope: Enablement[_] = this) : Boolean = {
     if (forScope != this && !isChildScope(forScope))
-      toss(s"Scope ${forScope.id} is not a child of $id so enablement for $enablee cannot be determined.")
+      toss(s"Scope ${forScope.id.name} is not a child of ${id.name} " +
+            s"so enablement for ${enablee.enablementName} cannot be determined.")
     _enabled.lookup(enablee) match {
       case Some(set) ⇒
         set.contains(forScope) && (
@@ -58,7 +59,7 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
 
   def enable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
     if (forScope != this && !isChildScope(forScope))
-      toss(s"Scope ${forScope.id} is not a child of $id so $enablee cannot be enabled for it.")
+      toss(s"Scope ${forScope.id} is not a child of $id so ${enablee.enablementName} cannot be enabled for it.")
     val update_value : mutable.HashSet[AnyRef] = _enabled.lookup(enablee) match {
       case Some(set) ⇒ set + forScope
       case None ⇒ mutable.HashSet(forScope)
@@ -68,7 +69,7 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
 
   def disable(enablee: Enablee, forScope: Enablement[_] = this) : Unit = {
     if (forScope != this && !isChildScope(forScope))
-      toss(s"Scope ${forScope.id} is not a child of $id so $enablee cannot be disabled for it.")
+      toss(s"Scope ${forScope.id} is not a child of $id so ${enablee.enablementName} cannot be disabled for it.")
     _enabled.lookup(enablee) match {
       case Some(set) ⇒
         val update_value : mutable.HashSet[AnyRef] = set - forScope
@@ -77,7 +78,7 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
         else
           _enabled.register(enablee, update_value)
       case None ⇒
-        log.debug(s"Attempt to disable $enablee that isn't enabled.")
+        log.debug(s"Attempt to disable ${enablee.enablementName} that isn't enabled.")
     }
   }
 
@@ -104,6 +105,7 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
   * indicate that. All the enabled/disabled status is recorded in the Enablement objects.
   */
 trait Enablee extends Identifiable {
+  def enablementName = id.name
   def parent : Option[Enablee] = None
   def isEnabled(scope: Enablement[_]) : Boolean = { scope.isEnabled(this) }
   def isEnabled(scope: Enablement[_], how: Boolean): Boolean = { scope.isEnabled(this) == how }
