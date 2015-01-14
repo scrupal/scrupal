@@ -106,7 +106,8 @@ class ActionProcessor extends Actor with ActorLogging {
   def receive : Receive = {
     case action: Action ⇒
       try {
-        sender ! action()
+        val result = action()
+        sender ! result
       } catch {
         case xcptn: Throwable ⇒
           log.warning(s"The Command, $action, threw an exception: ", xcptn) // FIXME: doesn't print the exception

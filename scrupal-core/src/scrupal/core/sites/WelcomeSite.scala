@@ -19,9 +19,7 @@ package scrupal.core.sites
 
 import org.joda.time.DateTime
 import scrupal.core.CoreModule
-import scrupal.core.api.Html.{Contents, TemplateGenerator}
 import scrupal.core.api._
-import scrupal.core.apps.AdminApp
 import scrupal.core.entities.EchoEntity
 import scrupal.core.html.PlainPage
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
@@ -39,13 +37,12 @@ case class WelcomeSite(sym: Identifier) extends Site(sym) {
   override val themeName = "cyborg"
   def host: String = ".*"
   val siteRoot: Node =
-    HtmlNode (
+    new HtmlNode (
       "Main index page for Welcome To Scrupal Site",
       WelcomeSite.WelcomePageTemplate,
-      args = Map.empty[String,Html.Fragment],
       modified=Some(DateTime.now),
       created=Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+    )
 
   object DocPathToDocs extends FunctionalNodeActionProducer(PathMatcher("doc")/Segments, {
     (list: ::[List[String],HNil], ctxt) ⇒ new MarkedDocNode("doc","docs", list.head)
@@ -59,14 +56,13 @@ case class WelcomeSite(sym: Identifier) extends Site(sym) {
 
   CoreModule.enable(this)
   EchoEntity.enable(this)
-  AdminApp.enable(this)
   CoreModule.enable(EchoEntity)
-  CoreModule.enable(AdminApp)
 }
 
 object WelcomeSite {
 
-  object welcomePage extends PlainPage("Welcome To Scrupal!", "An introductory page for Scrupal", Seq(
+  object WelcomePageTemplate
+    extends PlainPage('WelcomePage, "Welcome To Scrupal!", "An introductory page for Scrupal", Seq(
     div(cls:="panel panel-primary",
       div(cls:="panel-heading",
         h1(cls:="panel-title", "Welcome To Scrupal!")
@@ -100,11 +96,4 @@ object WelcomeSite {
       )
     )
   ))
-
-
-  object WelcomePageTemplate extends Html.Template('WelcomePage, "The Welcome Page") ( new TemplateGenerator {
-    def apply(context: Context, args: Map[String,Html.Fragment]) : Contents =
-      welcomePage(context)
-    }
-  )
 }

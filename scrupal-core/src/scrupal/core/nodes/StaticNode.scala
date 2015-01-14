@@ -19,6 +19,7 @@ package scrupal.core.nodes
 
 import org.joda.time.DateTime
 import reactivemongo.bson.{Macros, BSONDocument, BSONHandler, BSONObjectID}
+import scrupal.core.api.Html.ContentsArgs
 import scrupal.core.api._
 import scrupal.db.VariantReaderWriter
 import spray.http.{MediaType, MediaTypes}
@@ -27,15 +28,16 @@ import scala.concurrent.Future
 
 case class StaticNode(
   description: String,
-  body: Html.Fragment,
+  body: Html.Template,
   modified: Option[DateTime] = Some(DateTime.now),
   created: Option[DateTime] = Some(DateTime.now),
   _id: BSONObjectID = BSONObjectID.generate,
   final val kind: Symbol = StaticNode.kind
 ) extends Node {
+  def args : ContentsArgs = Html.EmptyContentsArgs
   val mediaType: MediaType = MediaTypes.`text/html`
   def apply(ctxt: Context): Future[Result[_]] = Future.successful {
-    HtmlResult(body.render(ctxt), Successful)
+    HtmlResult(body.render(ctxt, args), Successful)
   }
 }
 

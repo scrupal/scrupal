@@ -19,8 +19,9 @@ package scrupal.core.http
 
 import akka.actor.{Actor, Props}
 import akka.util.Timeout
+import scrupal.core.api.Html.ContentsArgs
 import scrupal.core.api._
-import scrupal.core.html.PlainPage
+import scrupal.core.html.{PlainPageGenerator, PlainPage}
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
 import spray.routing.{Route, _}
@@ -61,8 +62,10 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   */
 trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives with RequestLoggers {
 
-  def routeConstructionFailure(xcptn: Throwable) = {
-    PlainPage("Unable To Process Route", "Unable To Process Route", {
+  case class RouteConstructionFailure(xcptn: Throwable) extends PlainPageGenerator {
+    val title = "Unable To Process Route"
+    val description = "Unable To Process Route"
+    def content(context: Context, args: ContentsArgs = Html.EmptyContentsArgs) : Html.Contents = {
       Seq(
         h1("Unable To Process Routes"),
         p("Unfortunately, Scrupal failed to construct its routes so it cannot process your request. This",
@@ -79,7 +82,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
             )
         ))
       )
-    })
+    }
   }
 
   def createRouter(scrupal: Scrupal) : Route = {
@@ -96,7 +99,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
               extract( x ⇒ x ) { request_context ⇒
                 complete {
                   val scrupal_context = Context(scrupal, request_context)
-                  routeConstructionFailure(xcptn)(scrupal_context).toString()
+                  RouteConstructionFailure(xcptn).render(scrupal_context)
                 }
               }
             }

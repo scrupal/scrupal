@@ -17,7 +17,7 @@
 
 package scrupal.core.api
 
-import reactivemongo.bson.{BSONArray, BSONDocument, BSONValue}
+import reactivemongo.bson._
 
 trait ValidationLocation {
   def index(key: Int) : Option[ValidationLocation] = Some(this)
@@ -32,6 +32,7 @@ sealed trait ValidationResults[VAL] {
   def value: VAL
   def isError : Boolean
   def message : StringBuilder
+  def bsonMessage : BSONDocument
   def add(vr: ValidationErrorResults[VAL]) : ValidationResults[VAL] = {
     this match {
       case ValidationSucceeded(oref, oval) ⇒ ValidationFailed(oref, oval, Seq(vr))
@@ -46,16 +47,17 @@ case class ValidationSucceeded[VAL](ref: ValidationLocation, value: VAL) extends
   def isError = false
   def message = new StringBuilder("Validation of ").append(ref.location).append(" succeeded.")
   def errorMap = Map.empty[ValidationLocation,Seq[String]]
+  def bsonMessage = BSONDocument("form" → BSONString(ref.location), "valid" → BSONBoolean(value=true))
 }
 
 sealed trait ValidationErrorResults[VAL] extends ValidationResults[VAL] {
   def ref: ValidationLocation
-  def value: VAL
   def isError = true
   def message : StringBuilder  = {
     new StringBuilder("\nFailed to validate ").append(ref.location).append(": ")
   }
   def errorMap = Map(ref → Seq(message.toString()))
+  def bsonMessage : BSONDocument = BSONDocument( ref.location → BSONString( message.toString() ) )
 }
 
 case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationErrorResults[VAL]])
@@ -66,6 +68,16 @@ case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Se
       s.append(err.message).append("\n")
     }
     s
+  }
+  override def bsonMessage : BSONDocument = {
+    val grouped = errors.groupBy { vr ⇒ vr.ref }
+    BSONDocument(
+      "form" → BSONString(ref.location), "valid" → BSONBoolean(value=false), "errors" → BSONDocument(
+        grouped.map { case ( ref, errs)  ⇒ ref.location -> BSONArray(
+          errs.map { err ⇒ err.bsonMessage.stream.head.getOrElse(""→BSONString("Unspecified error"))._2 }
+        ) }
+      )
+    )
   }
   override def errorMap = {
     val grouped = errors.groupBy { vr ⇒ vr.ref }
@@ -172,12 +184,14 @@ trait BSONValidator extends Validator[BSONValue] {
         val combined = for (
           (key,validator) ← validators
         ) yield {
-          if (elems.contains(key)) {
-            validator.validate(ref, elems.get(key).get)
-          } else if (defaults.elements.contains(key)) {
-            validator.validate(ref, defaults.get(key).get)
-          } else {
-            ValidationError(ref, value, s"Element '$key' is missing and has no default.")
+          elems.get(key) match {
+            case Some(v) ⇒ validator.validate(ref, elems.get(key).get)
+            case None ⇒ {
+              defaults.get(key) match {
+                case Some(v) ⇒ validator.validate(ref, v)
+                case None ⇒ ValidationError(ref, value, s"Element '$key' is missing and has no default.")
+              }
+            }
           }
         }
         val errors : Seq[ValidationErrorResults[BSONValue]] = {

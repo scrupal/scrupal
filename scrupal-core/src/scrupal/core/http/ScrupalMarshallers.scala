@@ -137,6 +137,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
       case Unsupported    => StatusCodes.NotImplemented
       case Unauthorized   => StatusCodes.Unauthorized
       case Unavailable    => StatusCodes.ServiceUnavailable
+      case Unacceptable   ⇒ StatusCodes.NotAcceptable
       case NotFound       => StatusCodes.NotFound
       case Ambiguous      => StatusCodes.Conflict
       case Conflict       => StatusCodes.Conflict
@@ -150,7 +151,13 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
   implicit val error_marshaller: ToResponseMarshaller[ErrorResult] =
     ToResponseMarshaller[ErrorResult] { (value, context ) ⇒
       val status_code = disposition2StatusCode(value.disposition)
-      context.marshalTo(HttpResponse(status_code, HttpEntity(value.contentType,value.formatted)))
+      context.marshalTo(HttpResponse(status_code, HttpEntity(value.contentType, value.formatted)))
+    }
+
+  implicit val form_error_marshaller: ToResponseMarshaller[FormErrorResult] =
+    ToResponseMarshaller[FormErrorResult] { (value, context ) ⇒
+      val status_code = disposition2StatusCode(value.disposition)
+      context.marshalTo(HttpResponse(status_code, HttpEntity(text_ct, value.formatted)))
     }
 
   implicit val exception_marshaller: ToResponseMarshaller[ExceptionResult] =
@@ -167,6 +174,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
           case h: HtmlResult ⇒ html_marshaller(h, trmc)
           case s: StringResult ⇒ string_marshaller(s, trmc)
           case e: ErrorResult ⇒ error_marshaller(e, trmc)
+          case f: FormErrorResult ⇒ form_error_marshaller(f, trmc)
           case x: ExceptionResult ⇒ exception_marshaller(x, trmc)
           case o: OctetsResult ⇒
             val m = octets_marshaller(o.contentType)
@@ -180,14 +188,17 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
           case b: BSONResult ⇒
             val m = bson_marshaller
             m(b, trmc)
+          case _ ⇒
+            toss(s"Failed to find marshaller for: $value")
         }
       }
     }
   }
 }
 
-class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext) extends Actor with
-                                                                                                  ActorLogging  {
+class StreamingResponseActor(ct: ContentType, trmc: ToResponseMarshallingContext)
+  extends Actor with ActorLogging  {
+
   object ChunkSent
 
   def bsonStreamToData(key: String, value: BSONValue) : Array[Byte] = {

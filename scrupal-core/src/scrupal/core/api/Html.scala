@@ -18,7 +18,7 @@
 package scrupal.core.api
 
 import reactivemongo.bson.{BSONHandler, BSONString}
-import scrupal.utils.{Registrable, Registry}
+import scrupal.utils.{Identifiable, Registrable, Registry}
 
 import scalatags.Text.all._
 import scalatags.Text.{TypedTag, tags2}
@@ -31,27 +31,10 @@ object Html {
   type Contents = Seq[Modifier]
   val emptyContents = Seq.empty[Modifier]
 
-  def renderContents(contents: Contents) : String = {
-    val sb = new StringBuilder(4096)
-    for (tag ← contents) {sb.append(tag.toString)}
-    sb.toString()
-  }
-
-  trait ContentsGenerator extends ((Context) ⇒ Contents) {
-    def render(context: Context) : String = { renderContents(apply(context)) }
-  }
-
-  trait TemplateGenerator extends ((Context,Map[String,Fragment]) ⇒ Contents) {
-    def render(context: Context, args: Map[String,Fragment]) : String = { renderContents(apply(context, args)) }
-  }
-
-  trait SimpleContentsGenerator {
-    def apply() : Contents
-    def render() : String = { renderContents(apply()) }
-  }
-
   def js(javascript: String) = script(`type`:="application/javascript", javascript)
   def jslib(lib: String, path: String) = script(`type`:="application/javascript", src:=s"/assets/lib/$lib/$path")
+
+  val nbsp = raw("&nbsp;")
 
   object ng {
     val app = "ng-app".attr
@@ -62,28 +45,58 @@ object Html {
 
   def ng(name: String) = ("ng-" + name).attr
 
-  case class Fragment(id: Identifier, description: String)(gen: ContentsGenerator)
-    extends Registrable[Fragment] with Describable with ContentsGenerator
-  {
-    def registry = Fragment
-    def apply(context:Context) : Contents = gen(context)
+  def renderContents(contents: Contents) : String = {
+    val sb = new StringBuilder(4096)
+    for (tag ← contents) {sb.append(tag.toString)}
+    sb.toString()
   }
 
-  object Fragment extends Registry[Fragment] {
-    def registryName = "Html Fragments"
-    def registrantsName = "html fragment"
+  type ContentsArgs = Map[String,Generator]
+  val EmptyContentsArgs = Map.empty[String,Generator]
 
-    class BSONHandlerForHtmlFragment[T <: Fragment]  extends BSONHandler[BSONString,T] {
-      override def write(t: T): BSONString = BSONString(t.id.name)
-      override def read(bson: BSONString): T = Fragment.as(Symbol(bson.value))
+  trait Generator {
+    def generate(context : Context, args :ContentsArgs) : Contents
+    def render(context : Context, args : ContentsArgs) : String
+    def tag(tagName: String, context: Context, args: ContentsArgs) : Contents = {
+      args.get(tagName) match {
+        case Some(v) ⇒ v.generate(context, args)
+        case None ⇒ Seq("")
+      }
     }
   }
 
-  case class Template(id: Symbol, description: String)(gen: TemplateGenerator)
-    extends  Registrable[Template] with Describable with TemplateGenerator
+  trait SimpleGenerator extends Generator with (() ⇒ Contents) {
+    def generate(context : Context, args :ContentsArgs) : Contents = {
+      apply()
+    }
+    def render(context : Context, args : ContentsArgs) : String = {
+      renderContents(apply())
+    }
+  }
+
+  trait FragmentGenerator extends Generator with ((Context) ⇒ Contents) {
+    def generate(context: Context, args: ContentsArgs) : Contents = {
+      this.apply(context)
+    }
+    def render(context: Context, args: ContentsArgs) : String = {
+      renderContents(apply(context))
+    }
+  }
+
+  trait TemplateGenerator extends Generator with ((Context,ContentsArgs) ⇒ Contents)
+  {
+    def generate(context: Context, args: ContentsArgs) : Contents = {
+      this.apply(context, args)
+    }
+    def render(context: Context, args: ContentsArgs) : String = {
+      renderContents(apply(context, args))
+    }
+  }
+
+  abstract class Template(_i: Symbol) extends { val id : Symbol = _i }
+    with Registrable[Template] with Describable with TemplateGenerator
   {
     def registry = Template
-    def apply(context: Context, args: Map[String,Fragment]) : Contents = gen(context, args)
   }
 
   object Template extends Registry[Template] {
@@ -96,47 +109,53 @@ object Html {
     }
   }
 
-  case class Tag(tag: TypedTag[String]) extends ContentsGenerator  {
-    def apply(context:Context) : Contents = Seq(tag)
-  }
-
-  abstract class Page(val theTitle: String, val theDescription: String) extends ContentsGenerator {
-    def headTitle(context: Context)  : TagContent = tags2.title(theTitle)
-    def headDescription(context: Context) : TagContent = {
-      meta(name := "description", content := theDescription)
+  trait PageGenerator extends Describable with TemplateGenerator {
+    def title : String
+    def headTitle(context: Context, args: ContentsArgs = EmptyContentsArgs)  : TagContent = {
+      tags2.title(title)
     }
-    def favIcon(context: Context) : TagContent = {
+    def headDescription(context: Context, args: ContentsArgs = EmptyContentsArgs) : TagContent = {
+      meta(name := "description", content := description)
+    }
+    def favIcon(context: Context, args: ContentsArgs = EmptyContentsArgs) : TagContent = {
       link(rel := "shortcut icon", `type` := "image/x-icon", href := PathOf.favicon()(context))
     }
-    def headSuffix(context: Context)  : Contents
-    def headTag(context: Context)  : TagContent = {
+    def headSuffix(context: Context, args: ContentsArgs = EmptyContentsArgs)  : Contents
+    def headTag(context: Context, args: ContentsArgs = EmptyContentsArgs)  : TagContent = {
       head(
-        headTitle(context),
-        headDescription(context),
+        headTitle(context, args),
+        headDescription(context, args),
         meta(charset := "UTF-8"),
         meta(name := "viewport", content := "width=device-width, initial-scale=1.0"),
-        favIcon(context),
-        headSuffix(context)
+        favIcon(context, args),
+        headSuffix(context, args)
       )
     }
-    def bodyPrefix(context: Context) : Contents
-    def bodyMain(context: Context) : Contents
-    def bodySuffix(context: Context) : Contents
-    def bodyTag(context: Context) : TagContent = {
+    def bodyPrefix(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents
+    def bodyMain(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents
+    def bodySuffix(context: Context, args: ContentsArgs = EmptyContentsArgs) : Contents
+    def bodyTag(context: Context, args: ContentsArgs = EmptyContentsArgs) : TagContent = {
       body(
-        bodyPrefix(context), bodyMain(context), bodySuffix(context)
+        bodyPrefix(context, args), bodyMain(context, args), bodySuffix(context, args)
       )
     }
-    def apply(context: Context): Contents = {
-      Seq[TagContent](scalatags.Text.all.html(headTag(context), bodyTag(context)))
+    def apply(context: Context, args: ContentsArgs = EmptyContentsArgs): Contents = {
+      Seq[TagContent](scalatags.Text.all.html(headTag(context, args), bodyTag(context, args)))
     }
-    override def render(context: Context) : String = {
+    override def render(context: Context, args: ContentsArgs = EmptyContentsArgs) : String = {
       val sb = new StringBuilder(4096)
       sb.append("<!DOCTYPE html>")
-      for (tag ← apply(context)) {sb.append(tag.toString)}
+      for (tag ← generate(context, args)) {
+        sb.append(tag.toString)
+      }
       sb.toString()
     }
   }
+
+  abstract class Page(val title: String, val description: String) extends PageGenerator
+
+  abstract class TemplatePage(_id : Symbol, val title: String, val description: String)
+    extends Template(_id) with PageGenerator
 }
 
 

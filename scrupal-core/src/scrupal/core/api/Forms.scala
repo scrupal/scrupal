@@ -27,12 +27,7 @@ import scala.concurrent.Future
 import scalatags.Text.all._
 import scalatags.Text.attrs
 
-/** Scrupal Forms
-  * This object just contains the form related things. Note that this is a very general notion of forms and not
-  * much tied to the HTML ideas. Forms are Inputs inside Sections inside Pages. Inputs are named Types. All of
-  * these are storable and are Validators so we can validate a BSON document against a form. This should be used
-  * for all input to Scrupal.
-  */
+
 
 /** Abstract Form Item.
   *
@@ -44,6 +39,7 @@ import scalatags.Text.attrs
 trait FormItem extends Nameable with Describable with BSONValidator with ValidationLocation {
   def render(form: Form) : TagContent
   def defaultValue : BSONValue
+  final def hasDefaultValue : Boolean = defaultValue != BSONNull
 }
 
 /** Abstract Form Field.
@@ -52,9 +48,19 @@ trait FormItem extends Nameable with Describable with BSONValidator with Validat
   * methods for decoding input values, validation and display options
   */
 trait FormField extends FormItem  {
+
+  /** Field is inline with label */
   def inline : Boolean
+
+  /** Field comes before label */
   def prefix : Boolean
+
+  /** Field does not require a value */
   def optional : Boolean
+
+  /** Field should have help description shown below it */
+  def showHelp: Boolean
+
   def fieldType : Type
   def attributes(attrs: AttrList) : AttrList = {
     attrs ++ Seq(title:=description) ++ {
@@ -69,9 +75,24 @@ trait FormField extends FormItem  {
   require(fieldType.nonTrivial)
 }
 
+/** Container of FormItems
+  * This is for Forms and Fieldsets that are logical contains of other FormItems
+  */
 trait Container extends FormItem {
   def items: Seq[FormItem]
   lazy val fieldMap : Map[String,FormItem] = { items.map { field ⇒ field.name → field } }.toMap
+  lazy val defaultValue : BSONDocument = {
+    BSONDocument( {
+      fieldMap.map {
+        case (key,item) ⇒ {
+          if (item.isInstanceOf[ Container ])
+            item.defaultValue.asInstanceOf[ BSONDocument ].elements
+          else
+            Seq(key -> item.defaultValue)
+        }
+      }.flatten
+    })
+  }
 
   override def index(key: Int) : Option[ValidationLocation] = {
     key match {
@@ -88,16 +109,9 @@ trait Container extends FormItem {
 
   def validate(ref: ValidationLocation, value: BSONValue): VR = {
     value match {
-      case x: BSONDocument ⇒
-        validateMaps(this, x, fieldMap, defaultValue)
-      case x: BSONValue => wrongClass(this, x, "BSONDocument")
+      case x: BSONDocument ⇒ validateMaps(this, x, fieldMap, defaultValue)
+      case x: BSONValue    ⇒ wrongClass(this, x, "BSONDocument")
     }
-  }
-
-  def defaultValue : BSONDocument = {
-    BSONDocument(
-      for (field <- items) yield { field.name → field.defaultValue }
-    )
   }
 }
 
@@ -113,11 +127,12 @@ case class TextFormField(
   name: String,
   description: String,
   fieldType: StringType,
-  defaultValue: BSONValue = BSONString(""),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
+  prefix : Boolean = false,
+  showHelp : Boolean = false
 ) extends FormField {
   def render(form: Form) : TagContent = {
     text(name, form.values.getString(name), attributes(attrs))
@@ -129,11 +144,12 @@ case class PasswordFormField(
   name: String,
   description: String,
   fieldType: StringType = Password_t,
-  defaultValue: BSONValue = BSONString(""),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
+  prefix : Boolean = false,
+  showHelp : Boolean = false
 ) extends FormField {
   def render(form: Form) : TagContent = {
     password(name, form.values.getString(name), attributes(attrs))
@@ -145,11 +161,12 @@ case class TextAreaFormField(
   name: String,
   description: String,
   fieldType: StringType,
-  defaultValue: BSONValue = BSONString(""),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
+  prefix : Boolean = false,
+  showHelp : Boolean = false
   ) extends FormField {
   def render(form: Form) : TagContent = {
     scrupal.core.html.Forms.textarea(name, form.values.getString(name), attributes(attrs))
@@ -161,11 +178,12 @@ case class BooleanFormField(
   name: String,
   description: String,
   fieldType: BooleanType,
-  defaultValue: BSONValue = BSONBoolean(value=false),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
+  prefix : Boolean = false,
+  showHelp : Boolean = false
 ) extends FormField {
   def render(form: Form) : TagContent = {
     checkbox(name, form.values.getBoolean(name).getOrElse(false), attributes(attrs))
@@ -177,14 +195,15 @@ case class IntegerFormField(
   name: String,
   description: String,
   fieldType : RangeType,
-  defaultValue: BSONValue = BSONLong(0L),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   minVal: Long = Long.MinValue,
   maxVal: Long = Long.MaxValue,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
-  ) extends FormField {
+  prefix : Boolean = false,
+  showHelp : Boolean = false
+) extends FormField {
   def render(form: Form) : TagContent = {
     number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attributes(attrs))
   }
@@ -195,14 +214,15 @@ case class RealFormField(
   name: String,
   description: String,
   fieldType : RealType,
-  defaultValue: BSONValue = BSONDouble(0.0),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   minVal: Double = Double.MinValue,
   maxVal: Double = Double.MaxValue,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
-  ) extends FormField {
+  prefix : Boolean = false,
+  showHelp : Boolean = false
+) extends FormField {
   def render(form: Form) : TagContent = {
     number(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
   }
@@ -213,13 +233,14 @@ case class RangeFormField(
   name: String,
   description: String,
   fieldType : RealType,
-  defaultValue: BSONValue = BSONDouble(0.0),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   minVal: Double = 0L,
   maxVal: Double = 100L,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
+  prefix : Boolean = false,
+  showHelp : Boolean = false
 ) extends FormField {
   def render(form: Form) : TagContent = {
     range(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
@@ -231,12 +252,13 @@ case class SelectionFormField(
   name: String,
   description: String,
   fieldType : SelectionType,
-  defaultValue: BSONValue = BSONString(""),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
-  ) extends FormField {
+  prefix : Boolean = false,
+  showHelp : Boolean = false
+) extends FormField {
   def render(form: Form) : TagContent = {
     val options = fieldType.choices.map { choice ⇒ choice → choice}
     scrupal.core.html.Forms.select(name, form.values.getString(name), options.toMap, attributes(attrs))
@@ -248,11 +270,12 @@ case class TimestampFormField(
   name: String,
   description: String,
   fieldType : TimestampType,
-  defaultValue: BSONValue = BSONDateTime(0),
+  defaultValue: BSONValue = BSONNull,
   attrs: AttrList = EmptyAttrList,
   optional : Boolean = false,
   inline : Boolean = false,
-  prefix : Boolean = false
+  prefix : Boolean = false,
+  showHelp : Boolean = false
 ) extends FormField {
   def render(form: Form) : TagContent = {
     datetime(name, form.values.getInstant(name).map { i ⇒ i.toDateTime }, attributes(attrs))
@@ -270,6 +293,7 @@ case class ResetFormField(
 ) extends {
   final val fieldType : BooleanType = Boolean_t
   final val optional : Boolean = false
+  final val showHelp : Boolean = false
 } with FormField {
   override def attributes(attrs: AttrList) : AttrList = {
     attrs ++ Seq(title := description)
@@ -293,6 +317,7 @@ case class SubmitFormField(
 ) extends {
   final val fieldType : BooleanType = Boolean_t
   final val optional : Boolean = false
+  final val showHelp : Boolean = false
 } with FormField {
   override def attributes(attrs: AttrList) : AttrList = {
     attrs ++ Seq(title := description) ++
@@ -322,7 +347,11 @@ case class FieldSet(
   def location = s"field set '$name'"
 }
 
-trait Form extends Container with Enablee with TerminalActionProvider {
+/** Scrupal Forms
+  * This trait brings together all the form related objects nd generically represents an HTML5 Form in Scrupal.
+  *
+  */
+trait Form extends Container with Enablee with TerminalActionProvider with Html.TemplateGenerator {
   lazy val segment : String = id.name
   def actionPath : String
   def items: Seq[FormItem]
@@ -350,29 +379,32 @@ trait Form extends Container with Enablee with TerminalActionProvider {
     val the_label = scrupal.core.html.Forms.label(field.name, field.name, Seq(cls:="control-label text-info"))
     val the_field = field.render(this)
     div(cls:="clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
-      if (field.inline) {
+      if (field.name.isEmpty) {
+        Seq(div(the_field))
+      } else if (field.inline) {
         if (field.prefix) {
-          Seq(div(the_field,"&nbsp;",the_label))
+          Seq(div(the_field, nbsp, the_label))
         } else {
-          Seq(div(the_label,": ", the_field))
+          Seq(div(the_label, nbsp, the_field))
         }
+      } else if (field.prefix) {
+        Seq(div(the_field), the_label)
       } else {
-        if (field.prefix) {
-          Seq(div(the_field),the_label)
-        } else {
-          Seq(the_label, div(the_field))
-        }
+        Seq(the_label, div(the_field))
       },
       for(error ← errorsOf(field)) yield {
         div(cls:="text-danger small col-md-10", style:="padding-left:0;padding-top:0;margin-top:0;", error)
       },
-      if (field.description.nonEmpty) {
+      if (field.showHelp && field.description.nonEmpty) {
         Seq(div(cls := "help-block text-muted small col-md-10", style := "padding-left:0;padding-top:0;",
           field.description))
-      } else Seq.empty[AttrPair]
-      // if(!field.url.isEmpty) { a(target:="_blank", href:=field.url, "More Help&hellip;") }
+      } else {
+        Seq.empty[ AttrPair ]
+      }
     )
   }
+
+  def apply(context: Context, args: ContentsArgs) : Contents = { Seq(render) }
 
   def renderItem(item: FormItem) : TagContent = {
     item match {
@@ -391,14 +423,14 @@ trait Form extends Container with Enablee with TerminalActionProvider {
 
   def render(form: Form) : TagContent = render()
 
-  /** Resolve an Action
+  /** Provide the form action
     *
-    * Given a path and a context, find the matching PathToAction and then invoke it to yield the corresponding Action.
-    * A subclass must implement this method.
+    * This method from ActionProvider is invoked when a request is made to display or submit the form.
+    * It simply checks the conditions and invokes a method to acquire the Action object corresponding
+    * to rendering or submitting the form.
     *
-    * @param key The key used to select this ActionProvider
-    * @param path The path to use to match the PathToAction function
-    * @param context The context to use to match the PathToAction function
+    * @param key The path segment used to select this ActionProvider
+    * @param context The context of the request
     * @return
     */
   override def provideAction(matchingSegment: String, context: Context) : Option[Action] = {
@@ -431,7 +463,7 @@ class RenderFormAction(val form: Form, val context: Context) extends Action {
 class AcceptFormAction(val form: Form, val context: Context) extends Action {
   def decodeFormData(r: HttpRequest) : ValidationResults[BSONValue] = {
     import spray.httpx.unmarshalling._
-    type FF = scrupal.core.api.FormField // spray unmarshalling also defined FormField
+    type FF = scrupal.core.api.FormField // spray unmarshalling also defines FormField
     val formItems : Map[String,FF] = {
       for (item <- form.items if item.isInstanceOf[FF]) yield { item.name → item.asInstanceOf[FF] }
     }.toMap
@@ -460,7 +492,7 @@ class AcceptFormAction(val form: Form, val context: Context) extends Action {
           {data.filter { result ⇒ result.isError}.map { r ⇒ r.asInstanceOf[ValidationErrorResults[BSONValue]]}} ++ {
             for (
               (name, item) ← formItems if item.optional;
-              value = elems.get(name) if value.isEmpty
+              value = elems.get(name) if value.isEmpty && !item.hasDefaultValue
             ) yield {
               ValidationError(form, BSONDocument(name → BSONNull).asInstanceOf[BSONValue],
                 s"Required field '$name' has no value.")
@@ -487,33 +519,31 @@ class AcceptFormAction(val form: Form, val context: Context) extends Action {
     }
   }
 
-  def renderFormWithErrors(validationResults: ValidationResults[BSONValue]) = {
+  def formWithErrors(validationResults: ValidationResults[BSONValue]) : Form = {
     val errorMap = validationResults.errorMap map { case (ref,msg) ⇒
         ref.asInstanceOf[FormItem] -> msg
     }
-
-    val tmpForm : Form = form.withErrorMap(errorMap)
-    tmpForm.render()
+    form.withErrorMap(errorMap)
   }
 
   def handleValidatedFormData(doc: BSONDocument) : Result[_] = {
-    StringResult(s"Submission of form '${form.name} succeeded.", Successful)
+    StringResult(s"Submission of '${form.name}' succeeded.", Successful)
   }
 
-  def handleValidationFailure(errors: Seq[ValidationErrorResults[BSONValue]]) = {
+  def handleValidationFailure(failure: ValidationFailed[BSONValue]) : Result[_] = {
     val msg : StringBuilder = new StringBuilder()
-    for (e ← errors) msg.append(e.message).append("\n")
-    ErrorResult(msg.toString(), Unacceptable)
+    for (e ← failure.errors) msg.append(e.message).append("\n")
+    FormErrorResult(failure, Unacceptable)
   }
 
   def apply() : Future[Result[_]] = Future {
     decodeFormData(context.request.request) match {
       case ValidationSucceeded(ref, doc) ⇒
         handleValidatedFormData(doc.asInstanceOf[BSONDocument])
-      case ValidationFailed(ref, doc, errors) ⇒
-        handleValidationFailure(errors)
+      case err: ValidationFailed[BSONValue] ⇒
+        handleValidationFailure(err)
       case vr: ValidationErrorResults[BSONValue] ⇒
-        handleValidationFailure(Seq(vr))
+        handleValidationFailure(ValidationFailed(form, BSONNull, Seq(vr)))
     }
   } (context.scrupal._executionContext)
 }

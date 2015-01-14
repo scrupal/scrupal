@@ -95,7 +95,12 @@ class ActionProviderController extends BasicController('ActionProviderController
         request_context { ctxt: RequestContext ⇒
           implicit val context = Context(scrupal, ctxt, site)
           site.extractAction(context) match {
-            case Some(action) ⇒ complete { makeMarshallable { action.dispatch } }
+            case Some(action) ⇒ complete {
+              makeMarshallable {
+                val future_result = action.dispatch
+                future_result
+              }
+            }
             case None ⇒ reject
           }
         }

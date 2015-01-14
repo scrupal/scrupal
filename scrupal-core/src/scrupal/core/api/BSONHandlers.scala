@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
 import reactivemongo.bson._
-import scrupal.core.api.Html.Fragment.BSONHandlerForHtmlFragment
 import scrupal.core.api.Html.Template.BSONHandlerForHtmlTemplate
 import scrupal.core.api.Layout.BSONHandlerForLayout
 import scrupal.core.api.Type.BSONHandlerForType
@@ -118,7 +117,6 @@ object BSONHandlers {
     override def read(bson: BSONBinary) : Array[Byte] = bson.value.readArray(bson.value.size)
   }
 
-  implicit val HtmlFragmentHandler = new BSONHandlerForHtmlFragment[Html.Fragment]
   implicit val HtmlTemplateHandler = new BSONHandlerForHtmlTemplate[Html.Template]
 
   implicit val LayoutHandler : BSONHandler[BSONString,Layout] = new BSONHandlerForLayout[Layout]
@@ -128,13 +126,13 @@ object BSONHandlers {
     override def read(bson: BSONString): File = new File(bson.value)
   }
 
-  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html.Fragment]] =
-    new BSONHandler[BSONDocument,Map[String,Html.Fragment]] {
-      override def write(elements: Map[String,Html.Fragment]): BSONDocument = {
-        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlFragmentHandler.write(html) } )
+  implicit val MapOfNamedHtml : BSONHandler[BSONDocument,Map[String,Html.Template]] =
+    new BSONHandler[BSONDocument,Map[String,Html.Template]] {
+      override def write(elements: Map[String,Html.Template]): BSONDocument = {
+        BSONDocument( elements.map { case (name,html) ⇒ name → HtmlTemplateHandler.write(html) } )
       }
-      override def read(doc: BSONDocument): Map[String,Html.Fragment] = {
-        doc.elements.map { case(name, value) ⇒ name -> HtmlFragmentHandler.read(value.asInstanceOf[BSONString]) }
+      override def read(doc: BSONDocument): Map[String,Html.Template] = {
+        doc.elements.map { case(name, value) ⇒ name -> HtmlTemplateHandler.read(value.asInstanceOf[BSONString])  }
       }.toMap
     }
 

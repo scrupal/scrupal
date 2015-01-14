@@ -17,8 +17,6 @@
 
 package scrupal.core.api
 
-import org.joda.time.DateTime
-import play.api.libs.iteratee.Enumerator
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
@@ -33,9 +31,10 @@ import scala.language.existentials
 
 /** A function that generates content
   *
-  * This is the basic characteristics of a Node. It is simply a function that receives a Context
-  * and produces content as a Byte array. The Context provides the setting in which it is
+  * This is the basic characteristic of a Node. It is simply a function that receives a Context
+  * and produces content as a Future Result. The Context provides the setting in which it is
   * generating the content. All dynamic content in Scrupal is generated through a Generator.
+  * The Result embodies the notion of completing a request with some content and a disposition.
   */
 trait Generator extends ((Context) => Future[Result[_]])
 

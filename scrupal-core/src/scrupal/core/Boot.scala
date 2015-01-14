@@ -18,7 +18,6 @@
 package scrupal.core
 
 import scrupal.core.api.Scrupal
-import scrupal.core.apps.AdminApp
 import scrupal.utils.Configuration
 
 object Boot extends Scrupal with App {
@@ -32,7 +31,6 @@ object Boot extends Scrupal with App {
   override def open() = {
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require(CoreModule.id == 'Core)
-    require(AdminApp.id == 'admin)
     super.open()
   }
 

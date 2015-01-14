@@ -18,9 +18,10 @@
 package scrupal.core.entities
 
 import reactivemongo.bson.BSONDocument
+import scrupal.core.api.Html.ContentsArgs
 import scalatags.Text.all._
 import scrupal.core.api._
-import scrupal.core.html.{GenericPlainPage, display_context_table, bson_document_panel, PlainPage}
+import scrupal.core.html._
 import scrupal.core.types.BundleType
 import scrupal.utils.OSSLicense
 
@@ -50,22 +51,25 @@ object EchoEntity extends Entity('Echo) {
   def description: String = "An entity that stores nothing and merely echos its requests"
 
   case class echo_doc(kind: String, id: String, instance: reactivemongo.bson.BSONDocument)
-    extends GenericPlainPage(kind + " -" + id, "Echo " + kind + " Request")
+    extends PlainPageGenerator
   {
-    def content(context: Context): Html.Contents = {
+    def title = kind + " -" + id
+    def description = "Echo " + kind + " Request"
+    def content(context: Context, args: ContentsArgs): Html.Contents = {
       Seq(
-        h1(theTitle),
+        h1(title),
         bson_document_panel("Instance Document", instance)(),
         display_context_table(context)
       )
     }
   }
 
-  case class echo_request(kind: String, id: String)
-    extends GenericPlainPage(kind + " - " + id, "Echo " + kind + " Request") {
-    def content(context: Context) : Html.Contents = {
+  case class echo_request(kind: String, id: String) extends PlainPageGenerator {
+    val title = kind + " - " + id
+    val description = "Echo " + kind + " Request"
+    def content(context: Context, args: ContentsArgs) : Html.Contents = {
       Seq(
-        h1(theTitle),
+        h1(title),
         display_context_table(context)
       )
     }
@@ -113,11 +117,13 @@ object EchoEntity extends Entity('Echo) {
   }
 
   case class facet_doc(kind: String, what: Seq[String], instance: reactivemongo.bson.BSONDocument)
-    extends GenericPlainPage("Facet " + kind + " -" + what.head, "Echo Facet " + kind + " Request")
+    extends PlainPageGenerator
   {
-    def content(context: Context): Html.Contents = {
+    val title = "Facet " + kind + " -" + what.head
+    val description = "Echo Facet " + kind + " Request"
+    def content(context: Context, args: ContentsArgs): Html.Contents = {
       Seq(
-        h1(theTitle),
+        h1(title),
         h3("Facet ID: ", what.tail.mkString("/")),
         bson_document_panel("Instance Document", instance)(),
         display_context_table(context)
@@ -126,10 +132,13 @@ object EchoEntity extends Entity('Echo) {
   }
 
   case class facet_request(kind: String, what: Seq[String])
-    extends GenericPlainPage("Facet " + kind + " - " + what.head, "Echo Facet " + kind + " Request") {
-    def content(context: Context) : Html.Contents = {
+    extends PlainPageGenerator
+  {
+    val title = "Facet " + kind + " - " + what.head
+    val description = "Echo Facet " + kind + " Request"
+    def content(context: Context, args: ContentsArgs ) : Html.Contents = {
       Seq(
-        h1(theTitle),
+        h1(title),
         h3("Facet ID: ", what.tail.mkString("/")),
         display_context_table(context)
       )

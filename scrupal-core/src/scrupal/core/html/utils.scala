@@ -28,19 +28,19 @@ import scalatags.Text.Modifier
 
 import scalatags.Text.all._
 
-case class danger(message: Contents) extends SimpleContentsGenerator {
+case class danger(message: Contents) extends SimpleGenerator {
   def apply() : Contents = { Seq(div(cls:="bg-danger", message)) }
 }
 
-case class warning(message: Contents) extends SimpleContentsGenerator {
+case class warning(message: Contents) extends SimpleGenerator {
   def apply() : Contents = { Seq(div(cls:="bg-warning", message)) }
 }
 
-case class success(message: Contents) extends SimpleContentsGenerator {
+case class success(message: Contents) extends SimpleGenerator {
   def apply() : Contents = { Seq(div(cls:="bg-success", message)) }
 }
 
-case class exception(activity: String, error: Throwable) extends SimpleContentsGenerator {
+case class exception(activity: String, error: Throwable) extends SimpleGenerator {
   def apply() : Contents = {
     danger(Seq(
       p(s"While attempting to ${activity} an exception occurred:"),
@@ -50,7 +50,7 @@ case class exception(activity: String, error: Throwable) extends SimpleContentsG
 }
 
 
-object display_context_table extends ContentsGenerator {
+object display_context_table extends FragmentGenerator {
   def apply(context: Context) = {
     Seq(div(cls := "span10 row", style := "font-size: 0.75em",
       table(cls := "span10 table table-striped table-bordered table-condensed",
@@ -75,7 +75,7 @@ object display_context_table extends ContentsGenerator {
   }
 }
 
-object debug_footer extends ContentsGenerator {
+object debug_footer extends FragmentGenerator {
   def apply(context: Context) = {
     if (Feature.enabled('DebugFooter, context.scrupal)) {
       display_context_table(context)
@@ -85,7 +85,7 @@ object debug_footer extends ContentsGenerator {
   }
 }
 
-object display_alerts extends ContentsGenerator {
+object display_alerts extends FragmentGenerator {
   def apply(context: Context) : Contents = {
     for (alert ← context.alerts if alert.unexpired) yield {
       div(cls := "alert alert-dismissible @alert.cssClass",
@@ -96,7 +96,7 @@ object display_alerts extends ContentsGenerator {
   }
 }
 
-case class display_exception(xcptn: Throwable) extends SimpleContentsGenerator {
+case class display_exception(xcptn: Throwable) extends SimpleGenerator {
   def apply() = {
     Seq(
       dl(cls:="dl-horizontal",
@@ -123,11 +123,11 @@ case class display_exception(xcptn: Throwable) extends SimpleContentsGenerator {
   }
 }
 
-case class display_exception_result(xcptn: scrupal.core.api.ExceptionResult) extends SimpleContentsGenerator {
+case class display_exception_result(xcptn: scrupal.core.api.ExceptionResult) extends SimpleGenerator {
   def apply() = { Seq(div(cls:="bg-danger", display_exception(xcptn.payload)()))  }
 }
 
-trait bson_fragment extends SimpleContentsGenerator {
+trait bson_fragment extends SimpleGenerator {
   def value(value: BSONValue) : Modifier = {
     value match {
       case s: BSONString ⇒ "\"" + s.value + "\""
@@ -177,7 +177,7 @@ case class bson_document_panel(title: String, doc: BSONDocument) extends bson_fr
   )
 }
 
-object reactific_copyright extends SimpleContentsGenerator {
+object reactific_copyright extends SimpleGenerator {
   def apply() = {
     Seq( sub(sup("Copyright &copy; 2012-2014, Reactific Software LLC. All Rights Reserved.")) )
   }

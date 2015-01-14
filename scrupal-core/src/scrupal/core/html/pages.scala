@@ -23,8 +23,8 @@ import scalatags.Text.all._
 import scrupal.core.api._
 import scrupal.core.api.Html._
 
-abstract class BasicPage(the_title: String, the_description: String) extends Html.Page(the_title, the_description) {
-  def headSuffix(context: Context) : Html.Contents = {
+trait BasicPageGenerator extends PageGenerator {
+  def headSuffix(context: Context, args: ContentsArgs) : Html.Contents = {
     implicit val ctxt : Context = context
     Seq(
       link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
@@ -33,9 +33,9 @@ abstract class BasicPage(the_title: String, the_description: String) extends Htm
     )
   }
 
-  def bodyPrefix(context: Context): Html.Contents = { display_alerts(context) }
+  def bodyPrefix(context: Context, args: ContentsArgs): Html.Contents = { display_alerts(context) }
 
-  def bodySuffix(context: Context): Html.Contents = {
+  def bodySuffix(context: Context, args: ContentsArgs): Html.Contents = {
     if(Feature.enabled('DebugFooter, context.scrupal)){
       display_context_table(context)
     } else {
@@ -44,39 +44,49 @@ abstract class BasicPage(the_title: String, the_description: String) extends Htm
   }
 }
 
-abstract class BootstrapPage(the_title: String, the_description: String)
-  extends BasicPage(the_title, the_description)
-{
-  override def headSuffix(context: Context) : Html.Contents = {
+abstract class BasicPage(
+  override val id: Symbol,
+  override val title: String,
+  override val description: String
+) extends TemplatePage(id, title, description) with BasicPageGenerator
+
+
+trait BootstrapPageGenerator extends BasicPageGenerator {
+  override def headSuffix(context: Context, args: ContentsArgs) : Html.Contents = {
     super.headSuffix(context) ++ Seq(
       jslib("jquery", "jquery.js"),
       jslib("bootstrap", "js/bootstrap.js")
     )
   }
 
-  def body_content(context: Context) : Contents = {
+  def body_content(context: Context, args: ContentsArgs) : Contents = {
     Seq(span(em("OOPS!"), " You forgot to override body_content!"))
   }
 
-  override def bodyMain(context: Context) : Contents = {
-    Seq(div(cls:="container", body_content(context)))
+  override def bodyMain(context: Context, args: ContentsArgs) : Contents = {
+    Seq(div(cls:="container", body_content(context, args)))
   }
 }
 
-abstract class MarkedPage(the_title: String, the_description: String)
-  extends BootstrapPage(the_title, the_description)
-{
-  override def headSuffix(context: Context) = {
-    super.headSuffix(context) ++ Seq(
+abstract class BootstrapPage(
+  override val id: Symbol,
+  override val title: String,
+  override val description: String
+) extends BasicPage(id, title, description) with BootstrapPageGenerator
+
+
+trait MarkedPageGenerator extends BootstrapPageGenerator {
+  override def headSuffix(context: Context, args: ContentsArgs) = {
+    super.headSuffix(context, args) ++ Seq(
       jslib("marked","marked.js")
     )
   }
 
-  override def bodyMain(context: Context) : Contents = {
-    Seq(div(scalatags.Text.all.id:="marked", body_content(context)))
+  override def bodyMain(context: Context, args: ContentsArgs) : Contents = {
+    Seq(div(scalatags.Text.all.id:="marked", body_content(context, args)))
   }
 
-  override def bodySuffix(context: Context) :Contents = {
+  override def bodySuffix(context: Context, args: ContentsArgs) :Contents = {
     Seq(js(
       """marked.setOptions({
         |  renderer: new marked.Renderer(),
@@ -94,11 +104,20 @@ abstract class MarkedPage(the_title: String, the_description: String)
   }
 }
 
-case class ForbiddenPage(what: String, why: String)
-  extends BasicPage("Forbidden - " + what, "Forbidden Error Page") {
-  val description = "A page for displaying an HTTP Forbidden error"
+abstract class MarkedPage(
+  override val id: Symbol,
+  override val title: String,
+  override val description: String
+) extends BootstrapPage(id, title, description) with MarkedPageGenerator
 
-  def bodyMain(context: Context): Html.Contents = {
+
+trait ForbiddenPageGenerator extends BasicPageGenerator {
+  def what: String
+  def why: String
+  override val title = "Forbidden - " + what
+  override val description = "Forbidden Error Page"
+
+  def bodyMain(context: Context, args: ContentsArgs): Html.Contents = {
     danger(Seq(
       h1("Nuh Uh! I Can't Do That!"),
       p(em("Drat!"), s"Because $why, you can't $what. That's just the way it is."),
@@ -109,12 +128,19 @@ case class ForbiddenPage(what: String, why: String)
   }
 }
 
-case class NotFoundPage(
+case class ForbiddenPage(
+  override val id: Symbol,
   what: String,
-  causes: Seq[String] = Seq(),
-  suggestions: Seq[String] =Seq()
-) extends BasicPage("Not Found - " + what, "Not Found Error Page") {
-  def bodyMain(context: Context) : Contents = {
+  why: String
+) extends Html.Template(id) with ForbiddenPageGenerator
+
+trait NotFoundPageGenerator extends BasicPageGenerator {
+  def what: String
+  def causes: Seq[String]
+  def suggestions: Seq[String]
+  def title : String = "Not Found - " + what
+  def description : String = "Not Found Error Page"
+  def bodyMain(context: Context, args: ContentsArgs) : Contents = {
     warning(Seq(
       h1("There's A Hole In THe Fabrice Of The InterWebz!"),
       p(em("Oops!"), "We couldn't find ", what, ". That might be because:"),
@@ -131,13 +157,29 @@ case class NotFoundPage(
   }
 }
 
-abstract class GenericPlainPage(title: String, description: String) extends BasicPage(title, description) {
-  def content(context: Context) : Html.Contents
-  def bodyMain(context: Context) : Contents = Seq(
-    div(cls:="container", content(context), debug_footer(context))
+case class NotFoundPage(
+  override val id: Symbol,
+  what: String,
+  causes: Seq[String] = Seq(),
+  suggestions: Seq[String] =Seq()
+) extends Html.Template(id) with NotFoundPageGenerator
+
+trait PlainPageGenerator extends BasicPageGenerator {
+  def content(context: Context, args: ContentsArgs) : Html.Contents
+  def bodyMain(context: Context, args: ContentsArgs) : Contents = Seq(
+    div(cls:="container", content(context, args), debug_footer(context))
   )
 }
-case class PlainPage(title: String, description: String, the_content: Html.Contents)
-  extends GenericPlainPage(title, description) {
-  def content(context: Context) : Html.Contents = the_content
+
+abstract class GenericPlainPage(_id: Symbol, title: String, description: String)
+  extends BasicPage(_id, title, description) with PlainPageGenerator
+
+case class PlainPage(
+  override val id: Symbol,
+  override val title: String,
+  override val description: String,
+  the_content: Html.Contents
+) extends GenericPlainPage(id, title, description)
+{
+  def content(context: Context, args: ContentsArgs) : Html.Contents = the_content
 }

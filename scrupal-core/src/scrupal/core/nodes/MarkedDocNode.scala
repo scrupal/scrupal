@@ -20,9 +20,9 @@ package scrupal.core.nodes
 import org.joda.time.DateTime
 import reactivemongo.bson.{BSONDocument, BSONHandler, BSONObjectID, Macros}
 import scrupal.core.api.AssetLocator.Directory
-import scrupal.core.api.Html.{Contents, ContentsGenerator}
+import scrupal.core.api.Html.{ContentsArgs, Contents}
 import scrupal.core.api._
-import scrupal.core.html.MarkedPage
+import scrupal.core.html.MarkedPageGenerator
 import scrupal.db.VariantReaderWriter
 import spray.http.{MediaType, MediaTypes}
 
@@ -120,7 +120,7 @@ case class MarkedDocNode(
                   val footerText: String = dir.copyright.getOrElse("Footer")
                   val footer = Seq(div(cls := "footer", sub(sub(footerText))))
                   val contents = Source.fromInputStream(url.openStream()).mkString
-                  val page = MarkedDocNode.docPage(title, "Description", nav, contents, footer)
+                  val page = MarkedDocNode.DocPage(title, "Description", nav, contents, footer)
                   HtmlResult(page.render(context), Successful)
                 case None ⇒
                   ErrorResult(s"Document at $root/$doc was not listed in directory", NotFound)
@@ -142,26 +142,26 @@ object MarkedDocNode {
   }
   Node.variants.register(kind, MarkedDocNodeBRW)
 
-  def docPage(title: String, description: String, menu: Html.Contents, content: String, footer: Html.Contents) = {
-    new MarkedPage(title, description) {
-      override def bodyMain(context: Context): Contents = {
-        Seq(
-          div(cls := "container",
-            div(cls := "panel panel-primary",
-              div(cls := "panel-heading", h1(cls := "panel-title", title)),
-              div(cls := "panel-body",
-                div(cls := "col-md-2", menu),
-                div(cls := "col-md-10",
-                  div(cls := "well",
-                    div(id := "marked", raw(content))
-                  ),
-                  footer
-                )
+  case class DocPage(title: String, description: String, menu: Html.Contents, content: String, footer: Html.Contents)
+    extends MarkedPageGenerator
+  {
+    override def bodyMain(context: Context, args: ContentsArgs): Contents = {
+      Seq(
+        div(cls := "container",
+          div(cls := "panel panel-primary",
+            div(cls := "panel-heading", h1(cls := "panel-title", title)),
+            div(cls := "panel-body",
+              div(cls := "col-md-2", menu),
+              div(cls := "col-md-10",
+                div(cls := "well",
+                  div(scalatags.Text.attrs.id := "marked", raw(content))
+                ),
+                footer
               )
             )
           )
         )
-      }
+      )
     }
   }
 

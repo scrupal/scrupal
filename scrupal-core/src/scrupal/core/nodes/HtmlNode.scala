@@ -19,6 +19,7 @@ package scrupal.core.nodes
 
 import org.joda.time.DateTime
 import reactivemongo.bson.{Macros, BSONDocument, BSONHandler, BSONObjectID}
+import scrupal.core.api.Html.ContentsArgs
 import scrupal.core.api._
 import scrupal.db.VariantReaderWriter
 
@@ -35,14 +36,15 @@ import scala.concurrent.{ExecutionContext, Future}
 case class HtmlNode (
   description: String,
   template: Html.Template,
-  args: Map[String, Html.Fragment],
   modified: Option[DateTime] = Some(DateTime.now),
   created: Option[DateTime] = Some(DateTime.now),
   _id: BSONObjectID = BSONObjectID.generate,
   final val kind: Symbol = HtmlNode.kind
 ) extends AbstractHtmlNode {
+  def args: ContentsArgs = Html.EmptyContentsArgs
+  def results(context: Context) : Html.Contents = template(context,args)
   def content(context: Context)(implicit ec: ExecutionContext) : Future[Html.Contents] = {
-    Future.successful(template(context,args))
+    Future.successful(results(context))
   }
 }
 

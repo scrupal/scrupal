@@ -25,6 +25,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import com.typesafe.config.{ConfigRenderOptions, ConfigValue}
+import scrupal.core.CoreModule
+import scrupal.core.apps.AdminApp
 import scrupal.core.sites.WelcomeSite
 
 import scrupal.db.DBContext
@@ -46,6 +48,9 @@ class Scrupal(
 )
 extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal]
 {
+
+  LoggingHelpers.initializeLogging(forDebug = true)
+
   val key = ""
   def registry = Scrupal
 
@@ -205,15 +210,17 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
           Map.empty[String, Site]
       }
       result.map { sites ⇒
-        val final_result = if (sites.isEmpty) {
+        if (sites.isEmpty) {
           val ws = new WelcomeSite(Symbol(name + "-Welcome"))
           ws.enable(this)
+          DataCache.update(this, schema)
+          AdminApp.enable(ws)
+          CoreModule.enable(AdminApp)
           Map(ws.host → ws )
         } else {
+          DataCache.update(this, schema)
           sites
         }
-        DataCache.update(this, schema)
-        final_result
       }
     }
   }

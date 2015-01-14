@@ -34,7 +34,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
   }
 
   def routes(implicit scrupal: Scrupal): Route = {
-    logRequestResponse(showAllResponses _) {
+    // logRequestResponse(showAllResponses _) {
       get {
         pathPrefix("assets") {
           path("favicon") {
@@ -65,7 +65,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
           } ~ reject
         }
       }
-    }
+    // }
   }
 
   def resultAsRoute(result: ⇒ Result[_])(implicit scrupal: Scrupal): Route = {

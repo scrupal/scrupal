@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 
 import play.api.libs.iteratee.{Enumerator, Iteratee}
 import scalatags.Text.all._
-import scrupal.core.api.Html.{Fragment, TemplateGenerator}
+import scrupal.core.api.Html.ContentsArgs
 import scrupal.core.nodes.{FileNode, MessageNode, LinkNode, HtmlNode}
 import scrupal.test.{FakeContext, ScrupalSpecification}
 import spray.http.MediaTypes
@@ -41,15 +41,13 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
   sequential
 
   case class Fixture(name: String) extends FakeContext[Fixture](name) {
-
-    val templateF = new TemplateGenerator {
-      def apply(context: Context, args: Map[String, Fragment]) = Seq(span("scrupal"))
+    val template = new Html.Template(Symbol(name)) {
+      val description = "Describe me"
+      def apply(context: Context, args: ContentsArgs) = Seq(span("scrupal"))
     }
 
-    val template = Html.Template(Symbol(name), "Describe me")(templateF)
-
     val message = MessageNode("Description", "text-warning", "This is boring.")
-    val html = HtmlNode("Description", template, args=Map.empty[String,Fragment])
+    val html = HtmlNode("Description", template)
     val file = FileNode("Description",
                         new File("scrupal-core/test/resources/fakeAsset.txt"), MediaTypes.`text/plain`)
     val link = LinkNode("Description", new URL("http://scrupal.org/"))

@@ -32,7 +32,7 @@ import scalatags.Text.all._
   * can be used to perform the arranging.
   *
   */
-trait Arranger extends ( (Map[String,Fragment], Context) => Array[Byte] )
+trait Arranger extends ( (ContentsArgs, Context) => Array[Byte] )
 
 /** Abstract Layout
   *
@@ -50,29 +50,36 @@ case class HtmlLayout(
   template: Html.Template
 ) extends Layout {
   val mediaType = MediaTypes.`text/html`
-  def apply(args: Map[String,Fragment], context: Context) : Array[Byte] = {
+  def apply(args: ContentsArgs, context: Context) : Array[Byte] = {
     template.render(context,args).getBytes(utf8)
   }
 }
 
 object Layout extends Registry[Layout] {
   def registryName = "Layouts"
+
   def registrantsName = "layout"
 
-  object DefaultLayoutTemplate extends Html.Template('DefaultLayoutTemplate,
-      "Default layout page used when the expected layout could not be found") ( new TemplateGenerator {
-    def apply(context: Context, args: Map[String,Fragment]) : Contents =
+  object DefaultLayoutTemplate extends Html.Template('DefaultLayoutTemplate) {
+    def description = "Default layout page used when the expected layout could not be found"
+    def apply(context : Context, args : ContentsArgs) : Contents = {
       Seq(
         p(
           """A page defaultLayout was not selected for this information. As a result you are seeing the basic defaultLayout
             |which just lists the tag content down the page. This probably isn't what you want, but it's what you've got
             |until you create a defaultLayout for your pages.
           """.stripMargin),
-        for ( (key, frag) ← args) {
-          Seq( h1(key, " - ", frag.id.name, " - ", frag.description), div(frag(context)) )
+        for ((key, frag) ← args) {
+          frag match {
+            case t: Html.Template ⇒
+              Seq(h1("Template: ", key, " - ", t.id.name, " - ", t.description), div(t.generate(context,args)))
+            case x: Html.Generator ⇒
+              Seq(h1("Generator"), div(x.generate(context,args)))
+          }
         }
       )
-    })
+    }
+  }
 
   lazy val default = HtmlLayout('default, "Default Layout", DefaultLayoutTemplate)
 

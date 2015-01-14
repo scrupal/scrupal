@@ -21,12 +21,12 @@ import java.io.InputStream
 
 import play.api.libs.iteratee.Enumerator
 import reactivemongo.api.BSONSerializationPack
-import reactivemongo.bson.{BSONArray, BSONDocument, BSONString}
+import reactivemongo.bson.buffer.ArrayBSONBuffer
+import reactivemongo.bson._
 import scrupal.core.api.Html.TagContent
 import scrupal.core.html.display_exception_result
 import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
-
-import scalatags.Text.TypedTag
+import sun.rmi.rmic.IndentingWriter
 
 trait Resolvable extends ( () ⇒ EnumeratorResult)
 
@@ -156,6 +156,9 @@ case class HtmlResult(
 
 object HtmlResult {
   def apply(tag: TagContent, disposition: Disposition) = new HtmlResult(tag.toString(), disposition)
+  def apply(contents: Html.Contents, disposition: Disposition) = {
+    new HtmlResult(Html.renderContents(contents), disposition)
+  }
 }
 
 /** Result with a BSONDocument payload.
@@ -203,7 +206,7 @@ case class ExceptionResult(
   }
 
   def toHtmlResult(context: Context) : HtmlResult = {
-    HtmlResult(display_exception_result(this).render(), disposition)
+    HtmlResult(display_exception_result(this).render(context, Html.EmptyContentsArgs), disposition)
  }
 
   val body = display_exception_result(this)().toString().getBytes(utf8)
@@ -226,6 +229,19 @@ case class ErrorResult(
   def formatted = s"Error: ${disposition.id.name}: ${payload}"
 
   def body = formatted.getBytes(utf8)
+}
+
+case class FormErrorResult(
+  payload: ValidationFailed[BSONValue],
+  disposition: Disposition = Unacceptable
+) extends Result[ValidationFailed[BSONValue]] {
+  val contentType : ContentType = ScrupalMediaTypes.bson
+  def apply() : EnumeratorResult = {
+    val buffer = new ArrayBSONBuffer()
+    BSONSerializationPack.writeToBuffer(buffer, payload.bsonMessage)
+    EnumeratorResult(Enumerator(buffer.array), contentType, disposition)
+  }
+  def formatted: String = payload.message.toString()
 }
 
 // TODO: Support more Result types: JSON
