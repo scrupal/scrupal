@@ -50,6 +50,8 @@ trait Dependencies
 
   val scalatags               = "com.scalatags"       %% "scalatags"              % "0.5.0-SNAPSHOT"
 
+  val json4s                  = "org.json4s"          %% "json4s-jackson"         % "3.2.10"
+
   // Spray Stuff
   val akkaV = "2.3.6"
   val sprayV = "1.3.2"
