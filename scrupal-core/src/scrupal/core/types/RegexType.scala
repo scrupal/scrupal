@@ -43,7 +43,7 @@ case class RegexType (
         case Success(x) ⇒ None
         case Failure(x) ⇒ Some(s"Error in pattern: ${x.getClass.getName}: ${x.getMessage}")
       }
-      case _ ⇒ Some("")
+      case _ ⇒  Some("") // A signal to simplify that its the wrong class
     }
   }
 }

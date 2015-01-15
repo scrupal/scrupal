@@ -357,11 +357,11 @@ trait Form extends Container with Enablee with TerminalActionProvider with Html.
   def items: Seq[FormItem]
   def values: Settings
 
-  type ErrorMap = Map[FormItem,Seq[String]]
-  def errorMap: ErrorMap  = Map.empty[FormItem,Seq[String]]
+  type ErrorMap = Map[FormItem,Contents]
+  def errorMap: ErrorMap  = Map.empty[FormItem,Contents]
 
   def hasErrors(field: FormItem) : Boolean = errorMap.contains(field)
-  def errorsOf(field: FormItem) : Seq[String] = errorMap.getOrElse(field, Seq.empty[String])
+  def errorsOf(field: FormItem) : Contents = errorMap.getOrElse(field, Seq.empty[Modifier])
 
   def withErrorMap(errorMap: ErrorMap) : Form
 
@@ -555,7 +555,7 @@ case class SimpleForm(
   actionPath: String,
   items: Seq[FormItem],
   values: Settings = Settings.Empty,
-  override val errorMap: Map[FormItem,Seq[String]] = Map.empty[FormItem,Seq[String]]
+  override val errorMap: Map[FormItem,Contents] = Map.empty[FormItem,Contents]
 ) extends Form {
   require(items.length > 0)
 

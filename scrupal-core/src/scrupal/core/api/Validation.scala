@@ -18,6 +18,8 @@
 package scrupal.core.api
 
 import reactivemongo.bson._
+import scrupal.core.api.Html.Contents
+import scalatags.Text.all._
 
 trait ValidationLocation {
   def index(key: Int) : Option[ValidationLocation] = Some(this)
@@ -27,7 +29,7 @@ trait ValidationLocation {
 
 object SomeValidationLocation extends ValidationLocation { def location = "something" }
 
-sealed trait ValidationResults[VAL] {
+sealed trait ValidationResults[VAL] extends Html.SimpleGenerator {
   def ref: ValidationLocation
   def value: VAL
   def isError : Boolean
@@ -40,30 +42,35 @@ sealed trait ValidationResults[VAL] {
       case x: ValidationErrorResults[VAL] ⇒ ValidationFailed(ref, value, Seq(x, vr))
     }
   }
-  def errorMap: Map[ValidationLocation, Seq[String]]
+  def errorMap: Map[ValidationLocation, Contents]
 }
 
 case class ValidationSucceeded[VAL](ref: ValidationLocation, value: VAL) extends ValidationResults[VAL] {
   def isError = false
   def message = new StringBuilder("Validation of ").append(ref.location).append(" succeeded.")
-  def errorMap = Map.empty[ValidationLocation,Seq[String]]
+  def errorMap = Map.empty[ValidationLocation,Contents]
   def bsonMessage = BSONDocument("form" → BSONString(ref.location), "valid" → BSONBoolean(value=true))
+  def apply() : Contents =  Seq(div(message.toString()))
 }
 
 sealed trait ValidationErrorResults[VAL] extends ValidationResults[VAL] {
   def ref: ValidationLocation
   def isError = true
   def message : StringBuilder  = {
-    new StringBuilder("\nFailed to validate ").append(ref.location).append(": ")
+    new StringBuilder
   }
-  def errorMap = Map(ref → Seq(message.toString()))
+  def errorMap = Map(ref → apply())
   def bsonMessage : BSONDocument = BSONDocument( ref.location → BSONString( message.toString() ) )
+  override def apply() : Contents = {
+    Seq(span(cls:="warning",message.toString()))
+  }
 }
 
 case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Seq[ValidationErrorResults[VAL]])
   extends ValidationErrorResults[VAL] {
   override def message : StringBuilder = {
-    val s = new StringBuilder
+    val s = super.message
+    s.append("Failed to validate ").append(ref.location).append(": \n")
     for (err ← errors) {
       s.append(err.message).append("\n")
     }
@@ -82,8 +89,19 @@ case class ValidationFailed[VAL](ref: ValidationLocation, value: VAL, errors: Se
   override def errorMap = {
     val grouped = errors.groupBy { vr ⇒ vr.ref }
     for ((ref,errs) ← grouped) yield {
-      ref → errs.map { e ⇒ e.message.toString() }
+      ref → {errs.map { e ⇒ e.apply() }}.flatten
     }
+  }
+
+  override def apply() : Contents = {
+    val msgs : Contents = errors.size match {
+      case 0 ⇒ Seq("unspecified.")
+      case 1 ⇒ errors.head.apply()
+      case _ ⇒ Seq(ul(
+        for (err ← errors) yield { li(err.apply()) }
+      ))
+    }
+    Seq(div(cls:="warning", "Failed to validate ", ref.location, ":", msgs))
   }
 }
 
@@ -111,9 +129,14 @@ case class TypeValidationError[VAL, T <: Type](ref: ValidationLocation, value: V
   extends ValidationErrorResults[VAL]
 {
   override def message: StringBuilder = {
-    val s = super.message.append("value does not conform to ").append(t.label).append(":\n")
-    for (err <- errors) { s.append("\t").append(err).append("\n") }
-    s.deleteCharAt(s.length-1)
+    val s = super.message
+    if (errors.isEmpty)
+      s.append("value does not conform to ").append(t.label).append("")
+    else {
+      for (err <- errors) { s.append(err).append(",\n") }
+      s.deleteCharAt(s.length - 1)
+      s.deleteCharAt(s.length - 1)
+    }
   }
 }
 

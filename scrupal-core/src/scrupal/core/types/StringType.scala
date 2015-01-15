@@ -18,7 +18,6 @@
 package scrupal.core.types
 
 import reactivemongo.bson.{BSONString, BSONValue}
-import scrupal.core.api.Identifier
 import scrupal.core.api._
 import scrupal.utils.Patterns._
 
@@ -35,16 +34,17 @@ case class StringType (
   id : Identifier,
   description : String,
   regex : Regex,
-  maxLen : Int = Int.MaxValue
+  maxLen : Int = Int.MaxValue,
+  patternName : String = "pattern"
   ) extends Type {
   override type ScalaValueType = String
   require(maxLen >= 0)
   def validate(ref: ValidationLocation, value: BSONValue) = {
     simplify(ref, value, "String") {
       case bs: BSONString if bs.value.length > maxLen =>
-        Some(s"String of length ${bs.value.length} exceeds maximum of $maxLen")
+        Some(s"String of length ${bs.value.length} exceeds maximum of $maxLen.")
       case bs: BSONString if !regex.pattern.matcher(bs.value).matches() =>
-        Some(s"String '${bs.value}' does not match pattern '${regex.pattern.pattern()}")
+        Some(s"'${bs.value}' does not match $patternName.")
       case bs: BSONString ⇒
         None
       case x: BSONValue =>
@@ -62,21 +62,33 @@ object NonEmptyString_t
 
 /** The Scrupal Type for the identifier of things */
 object Identifier_t
-  extends StringType('Identifier, "Scrupal Identifier", anchored(Identifier), 64)
+  extends StringType('Identifier, "Scrupal Identifier", anchored(Identifier), 64, "an identifier")
 
 object Password_t
-  extends StringType('Password, "A type for human written passwords", anchored(Password), 64)
+  extends StringType('Password, "A type for human written passwords", anchored(Password), 64, "a password") {
+  override def validate(ref: ValidationLocation, value: BSONValue) = {
+    simplify(ref, value, "String") {
+      case bs: BSONString if bs.value.length > maxLen =>
+        Some(s"Value is too short for a password.")
+      case bs: BSONString if !regex.pattern.matcher(bs.value).matches() =>
+        Some(s"Value is not legal for a password.")
+      case bs: BSONString ⇒
+        None
+      case x: BSONValue =>
+        Some("")
+    }
+  }
+}
 
 object Description_t
   extends StringType('Description, "Scrupal Description", anchored(".+".r), 1024)
 
 object Markdown_t
-  extends StringType('Markdown, "Markdown document type", anchored(Markdown))
+  extends StringType('Markdown, "Markdown document type", anchored(Markdown), patternName="markdown formatting")
 
 /** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
 object DomainName_t
-  extends StringType('DomainName, "RFC compliant Domain Name", anchored(DomainName), 253)
-
+  extends StringType('DomainName, "RFC compliant Domain Name", anchored(DomainName), 253, "a domain name")
 
 /** The Scrupal Type for Uniform Resource Locators.
   * We should probably have one for URIs too,  per http://tools.ietf.org/html/rfc3986
@@ -86,15 +98,15 @@ object URL_t
 
 /** The Scrupal Type for IP version 4 addresses */
 object IPv4Address_t
-  extends StringType('IPv4Address, "A type for IP v4 Addresses", anchored(IPv4Address), 15)
+  extends StringType('IPv4Address, "A type for IP v4 Addresses", anchored(IPv4Address), 15, "an IPv4 address")
 
 /** The Scrupal Type for Email addresses */
 object EmailAddress_t
-  extends StringType('EmailAddress, "An email address", anchored(EmailAddress), 253)
+  extends StringType('EmailAddress, "An email address", anchored(EmailAddress), 253, "an e-mail address")
 
 object LegalName_t
-  extends StringType('LegalName, "The name of a person or corporate entity", anchored(LegalName), 128)
+  extends StringType('LegalName, "The name of a person or corporate entity", anchored(LegalName), 128, "a legal name.")
 
 object Title_t
-  extends StringType('Title, "A string that is valid for a page title", anchored(Title), 70)
+  extends StringType('Title, "A string that is valid for a page title", anchored(Title), 70, "a page title")
 
