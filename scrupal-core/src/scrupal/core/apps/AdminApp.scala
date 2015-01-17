@@ -120,8 +120,8 @@ object AdminApp extends Application('admin) {
         div(cls := "well",
           p("Modules Defined:"),
           ul(
-            for (mod ← Module.values) {
-              Seq(li(mod.id.name, " - ", mod.description, " - ", mod.moreDetailsURL.toString))
+            for (mod ← Module.values) yield {
+              li(mod.id.name, " - ", mod.description, " - ", mod.moreDetailsURL.toString)
             }
           )
         )
@@ -136,7 +136,7 @@ object AdminApp extends Application('admin) {
         div(cls := "well",
           p("Applications:"),
           ul(
-            for (app ← context.site.get.applications) {
+            for (app ← context.site.get.applications) yield {
               li(app.name, " - ", app.delegates.map { p => p.describe }.mkString(", ")) // FIXME: describe?
             }
           )

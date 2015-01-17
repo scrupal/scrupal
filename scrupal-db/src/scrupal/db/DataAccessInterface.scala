@@ -358,7 +358,4 @@ trait DataAccessInterface[Model <: Storable[Id],Id] extends ScrupalComponent {
       s"Successfully validated $collectionName in database ${db.name}"
     }
   }
-
-
 }
-

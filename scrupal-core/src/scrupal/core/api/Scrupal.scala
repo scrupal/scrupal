@@ -195,31 +195,34 @@ extends ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Regist
     * @param context The database context from which to load the
     */
   protected def load(config: Configuration, context: DBContext) : Future[Map[String, Site]] = {
-    withSchema { (dbc, schema) =>
-      val result = schema.validateSchema(_executionContext).map {
-        strings: Seq[String] ⇒ {
-          for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
-            log.debug(s"Loading site '${s._id.name}' for host ${s.host}, enabled=${s.isEnabled(this)}")
-            s.enable(this)
-            s.host → s
+    withSchema {
+      (dbc, schema) => {
+        schema.validateSchema(_executionContext).map {
+          strings : Seq[String] ⇒ {
+            for (s <- schema.sites.fetchAllSync(5.seconds)) yield {
+              log.debug(s"Loading site '${ s._id.name }' for host ${ s.host }, enabled=${ s.isEnabled(this) }")
+              s.enable(this)
+              s.host → s
+            }
+          }.toMap
+        }.recover {
+          case x : Throwable ⇒
+            log.warn(s"Attempt to validate API Schema failed.", x)
+            Map.empty[String, Site]
+        }
+      } map {
+        sites ⇒ {
+          if (sites.isEmpty) {
+            val ws = new WelcomeSite(Symbol(name + "-Welcome"))
+            ws.enable(this)
+            DataCache.update(this, schema)
+            AdminApp.enable(ws)
+            CoreModule.enable(AdminApp)
+            Map(ws.host → ws)
+          } else {
+            DataCache.update(this, schema)
+            sites
           }
-        }.toMap
-      }.recover {
-        case x: Throwable ⇒
-          log.warn(s"Attempt to validate API Schema failed.", x)
-          Map.empty[String, Site]
-      }
-      result.map { sites ⇒
-        if (sites.isEmpty) {
-          val ws = new WelcomeSite(Symbol(name + "-Welcome"))
-          ws.enable(this)
-          DataCache.update(this, schema)
-          AdminApp.enable(ws)
-          CoreModule.enable(AdminApp)
-          Map(ws.host → ws )
-        } else {
-          DataCache.update(this, schema)
-          sites
         }
       }
     }
