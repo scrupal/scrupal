@@ -1,28 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaSbtSettings">
+    <option name="customLauncherEnabled" value="true" />
+    <option name="customLauncherPath" value="/usr/local/Cellar/sbt/0.13.8/libexec/sbt-launch.jar" />
     <option name="linkedExternalProjectsSettings">
       <SbtProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="jdk" value="1.7" />
+        <option name="jdk" value="1.8" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/project" />
+            <option value="$PROJECT_DIR$/scrupal-api" />
+            <option value="$PROJECT_DIR$/scrupal-api/project" />
             <option value="$PROJECT_DIR$/scrupal-config" />
             <option value="$PROJECT_DIR$/scrupal-config/project" />
             <option value="$PROJECT_DIR$/scrupal-core" />
             <option value="$PROJECT_DIR$/scrupal-core/project" />
-            <option value="$PROJECT_DIR$/scrupal-db" />
-            <option value="$PROJECT_DIR$/scrupal-db/project" />
+            <option value="$PROJECT_DIR$/scrupal-storage" />
+            <option value="$PROJECT_DIR$/scrupal-storage/project" />
             <option value="$PROJECT_DIR$/scrupal-utils" />
             <option value="$PROJECT_DIR$/scrupal-utils/project" />
           </set>
         </option>
         <option name="resolveClassifiers" value="true" />
         <option name="resolveSbtClassifiers" value="true" />
-        <option name="sbtVersion" value="0.13.7" />
+        <option name="sbtVersion" value="0.13.8" />
       </SbtProjectSettings>
     </option>
+    <option name="maximumHeapSize" value="2048" />
+    <option name="vmParameters" value="" />
   </component>
 </project>

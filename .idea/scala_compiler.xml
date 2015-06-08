@@ -1,28 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <option name="incrementalityType" value="SBT" />
-    <option name="compileOrder" value="ScalaThenJava" />
-    <option name="dynamics" value="true" />
-    <option name="postfixOps" value="true" />
-    <option name="reflectiveCalls" value="true" />
-    <option name="implicitConversions" value="true" />
-    <option name="higherKinds" value="true" />
-    <option name="existentials" value="true" />
-    <option name="macros" value="true" />
-    <option name="deprecationWarnings" value="true" />
-    <option name="uncheckedWarnings" value="true" />
-    <option name="featureWarnings" value="true" />
-    <option name="explainTypeErrors" value="true" />
-    <parameters>
-      <parameter value="-Xlint" />
-      <parameter value="-encoding" />
-      <parameter value="utf8" />
-      <parameter value="-Ywarn-adapted-args" />
-      <parameter value="-J-Xss8m" />
-      <parameter value="-J-Xmx2048m" />
-      <parameter value="-target:jvm-1.7" />
-      <parameter value="-J-Xmx1024m" />
-    </parameters>
+    <profile name="SBT 2" modules="scrupal,scrupal-api,scrupal-config,scrupal-core,scrupal-storage,scrupal-utils">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-encoding" />
+        <parameter value="utf8" />
+        <parameter value="-target:jvm-1.8" />
+      </parameters>
+    </profile>
   </component>
 </project>

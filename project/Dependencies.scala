@@ -1,18 +1,17 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright © 2015 Reactific Software LLC                                                                            *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
+ * except in compliance with the License. You may obtain a copy of the License at                                     *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *        http://www.apache.org/licenses/LICENSE-2.0                                                                  *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the                          *
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
+ * either express or implied. See the License for the specific language governing permissions                         *
+ * and limitations under the License.                                                                                 *
  **********************************************************************************************************************/
 
 
@@ -26,34 +25,31 @@ trait Dependencies
 {
   // val scrupal_org_releases    = "Scrupal.org Releases" at "http://scrupal.github.org/mvn/releases"
   val google_sedis            = "Google Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk/"
-  val typesafe_releases       = "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
-  val sonatype_releases       = "Sonatype Releases"  at "http://oss.sonatype.org/content/repositories/releases/"
-  val sonatype_snapshots      = "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
   val jcenter_repo            = "JCenter" at "http://jcenter.bintray.com/"
 
 //val scala_lang              = "Scala Language" at "http://mvnrepository.com/artifact/org.scala-lang/"
-//val sbt_plugin_releases     = Resolver.url("SBT Plugin Releases",url("http://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 //val geolocation             = "geolocation repository" at "http://blabluble.github.com/modules/releases/"
 
   val all_resolvers : Seq[MavenRepository] = Seq (
-    typesafe_releases, sonatype_releases, sonatype_snapshots, google_sedis, jcenter_repo
-  )
-
-  val resolver_settings : Seq[Setting[_]] = Seq(
-    resolvers ++= all_resolvers
+    google_sedis, jcenter_repo
   )
 
   // Things we borrow from Play Framework
-  val playV = "2.3.7"
-  val play_iteratees          = "com.typesafe.play"   %% "play-iteratees"         % playV
-  val play_json               = "com.typesafe.play"   %% "play-json"              % playV
+  val playV = "2.4.0"
+  val play_anorm              = "com.typesafe.play"         %% "anorm"                    % playV
+  val play_cache              = "com.typesafe.play"         %% "play-cache"               % playV
+  val play_docs               = "com.typesafe.play"         %% "play-docs"                % playV
+  val play_filters            = "com.typesafe.play"         %% "filters-helpers"          % playV
+  val play_iteratees          = "com.typesafe.play"         %% "play-iteratees"           % playV
+  val play_jdbc               = "com.typesafe.play"         %% "play-jdbc"                % playV
+  val play_json               = "com.typesafe.play"         %% "play-json"                % playV
+  val play_ws                 = "com.typesafe.play"         %% "play-ws"                  % playV
+  val mail_plugin             = "com.typesafe.play.plugins" %% "play-plugins-mailer"      % "3.0.1"
 
   val scalatags               = "com.scalatags"       %% "scalatags"              % "0.5.0-SNAPSHOT"
 
-  val json4s                  = "org.json4s"          %% "json4s-jackson"         % "3.2.10"
-
   // Spray Stuff
-  val akkaV = "2.3.6"
+  val akkaV = "2.3.9"
   val sprayV = "1.3.2"
   val spray_can               = "io.spray"            %%  "spray-can"             % sprayV
   val spray_routing           = "io.spray"            %%  "spray-routing"         % sprayV
@@ -70,6 +66,7 @@ trait Dependencies
 
   // Databass, Caches, Data Storage stuff
   // val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
+  val rxmongo                 = "com.reactific"       %% "rxmongo"                % "0.1.0-SNAPSHOT"
   val reactivemongo           = "org.reactivemongo"   %% "reactivemongo"          % "0.11.0-SNAPSHOT"
   val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.6"
 
@@ -85,13 +82,17 @@ trait Dependencies
   // Miscellaneous
   val osgi_core               = "org.osgi"            % "org.osgi.core"           % "6.0.0"
   val grizzled_slf4j          = "org.clapper"         %% "grizzled-slf4j"         % "1.0.2"
-  val logback_classic         = "ch.qos.logback"      %  "logback-classic"        % "1.1.2"
-  val mango                   = "org.feijoas"         %% "mango"                  % "0.11-SNAPSHOT"
+  val logback_classic         = "ch.qos.logback"      %  "logback-classic"        % "1.1.3"
+  val guava                   = "com.google.guava"    % "guava"                   % "16.0.1"
   val joda_time               = "joda-time"           %  "joda-time"              % "2.5"
   val joda_convert            = "org.joda"            % "joda-convert"            % "1.2"
   val mailer_plugin     = "com.typesafe.play.plugins" %% "play-plugins-mailer"    % "2.3.0"
   val config                  =  "com.typesafe"       %  "config"                 % "1.2.1"
   val commons_lang3           = "org.apache.commons"  % "commons-lang3"           % "3.3.2"
+  val scala_pickling     = "org.scala-lang.modules"   %% "scala-pickling"         % "0.10.1"
+  val hsp                     = "com.reactific"       %% "hotspot-profiler"       % "0.1.0-SNAPSHOT"
+  val parser_combinators = "org.scala-lang.modules"   %% "scala-parser-combinators" % "1.0.4"
+  val scala_xml          = "org.scala-lang.modules"   %% "scala-xml"              % "1.0.4"
 
   // Test Libraries
 
@@ -112,34 +113,48 @@ trait Dependencies
   )
   */
 
-  private object Test {
-    val spray_testkit        = "io.spray"            %% "spray-testkit"         % sprayV       % "test"
-    val akka_testkit         = "com.typesafe.akka"   %% "akka-testkit"          % akkaV        % "test"
-    val specs2               = "org.specs2"          %% "specs2-core"           % "2.3.11"     % "test"
-    val commons_io           = "commons-io"          %  "commons-io"            % "2.4"        % "test"
-    val nu_validator         = "nu.validator.htmlparser" % "htmlparser"         % "1.4"        % "test"
+  object Test {
+    val akka_testkit     = "com.typesafe.akka"      %% "akka-testkit"       % akkaV       % "test"
+    val specs2           = "org.specs2"             %% "specs2-core"        % "3.6.1"     % "test"
+    val commons_io       = "commons-io"              %  "commons-io"        % "2.4"       % "test"
+    val nu_validator     = "nu.validator.htmlparser" % "htmlparser"         % "1.4"       % "test"
+    val play_specs2      = "com.typesafe.play"      %% "play-specs2"        % playV       % "test"
+    val play_test        = "com.typesafe.play"      %% "play-test"          % playV       % "test"
   }
 
   val root_dependencies : Seq[ModuleID] = Seq(
   )
 
   val common_dependencies : Seq[ModuleID] = Seq(
-    // mango,
+    guava, parser_combinators, scala_xml, scala_pickling,
     grizzled_slf4j, akka_slf4j, logback_classic,
-    Test.specs2
+    Test.specs2, Test.play_test, Test.play_specs2
   )
-
   val utils_dependencies : Seq[ModuleID] = Seq(
     scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config
   ) ++ common_dependencies
 
+  val api_dependencies : Seq[ModuleID] = Seq(
+    play_json, scala_pickling
+  ) ++ common_dependencies
+
+  val storage_dependencies : Seq[ModuleID] = Seq(
+    play_json, scala_pickling
+  ) ++ common_dependencies
+
   val db_dependencies : Seq[ModuleID] = Seq(
-    reactivemongo, play_iteratees, play_json
+    reactivemongo, rxmongo, play_iteratees, play_json
+  ) ++ common_dependencies
+
+  val ui_dependencies : Seq[ModuleID] = Seq (
+    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
+    commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
+    Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
-    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
-    commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
-    Test.spray_testkit, Test.akka_testkit, Test.commons_io, Test.nu_validator
+    commons_lang3, scala_arm, scala_pickling, livestream_scredis, akka_actor, play_iteratees,
+    Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies
+
 }

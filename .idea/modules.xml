@@ -3,13 +3,15 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-api.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-api-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-api-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-db-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-storage.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-storage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-storage-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-storage-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" />
     </modules>

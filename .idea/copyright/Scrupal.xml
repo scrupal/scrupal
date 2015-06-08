@@ -1,9 +1,0 @@
-<component name="CopyrightManager">
-  <copyright>
-    <option name="notice" value="Copyright © &amp;#36;today.year Reactific Software LLC&#10;&#10;This file is part of Scrupal, an Opinionated Web Application Framework.&#10;&#10;Scrupal is free software: you can redistribute it and/or modify it under the terms &#10;of the GNU General Public License as published by the Free Software Foundation, &#10;either version 3 of the License, or (at your option) any later version. &#10;&#10;Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; &#10;without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. &#10;See the GNU General Public License for more details.&#10;&#10;You should have received a copy of the GNU General Public License along with Scrupal. &#10;If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0." />
-    <option name="keyword" value="Reactific" />
-    <option name="allowReplaceKeyword" value=", Inc" />
-    <option name="myName" value="Scrupal" />
-    <option name="myLocal" value="true" />
-  </copyright>
-</component>
