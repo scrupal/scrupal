@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                              *
+  *                                                                                                           *
   * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                              *
+  *                                                                                                           *
   * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
   * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                              *
-  *  http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                              *
+  *                                                                                                           *
+  * http://www.apache.org/licenses/LICENSE-2.0                                                                  *
+  *                                                                                                           *
   * Unless required by applicable law or agreed to in writing, software distributed under the                          *
   * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
   * either express or implied. See the License for the specific language governing permissions                         *
@@ -21,8 +21,10 @@ import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.atomic.AtomicInteger
 
+import play.api.Configuration
+
 import scrupal.storage.impl.StorageConfigHelper
-import scrupal.utils.{ Configuration, Registry, ScrupalComponent, Registrable }
+import scrupal.utils.{ ConfigHelpers, Registry, ScrupalComponent, Registrable }
 
 import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success, Try }
@@ -68,7 +70,7 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
   private var state : Option[State] = None
 
   def fromConfiguration(id : Symbol, conf : Option[Configuration] = None) : StorageContext = {
-    val topConfig = conf.getOrElse(Configuration.default)
+    val topConfig = conf.getOrElse(ConfigHelpers.default)
     val helper = new StorageConfigHelper(topConfig)
     val config = helper.getStorageConfig
     config.getConfig("db.scrupal") match {

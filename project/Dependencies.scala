@@ -58,8 +58,9 @@ trait Dependencies
   val spray_caching           = "io.spray"            %%  "spray-caching"         % sprayV
 
   // Akka Stuff
-  val akka_actor              = "com.typesafe.akka"   %%  "akka-actor"            % akkaV
-  val akka_slf4j              = "com.typesafe.akka"   %%  "akka-slf4j"            % akkaV
+  val akka_actor              = "com.typesafe.akka"   %% "akka-actor"             % akkaV
+  val akka_slf4j              = "com.typesafe.akka"   %% "akka-slf4j"             % akkaV
+  val akka_http               = "com.typesafe.akka"   %% "akka-http-experimental" % "1.0-RC3"
 
   // Fundamentals
   val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.4"
@@ -94,6 +95,7 @@ trait Dependencies
   val parser_combinators = "org.scala-lang.modules"   %% "scala-parser-combinators" % "1.0.4"
   val scala_xml          = "org.scala-lang.modules"   %% "scala-xml"              % "1.0.4"
 
+  val shapeless               = "com.chuusai"         %% "shapeless"              % "2.2.1"
   // Test Libraries
 
 //val icu4j                   = "com.ibm.icu"          % "icu4j"                  % "51.1"
@@ -130,16 +132,21 @@ trait Dependencies
     grizzled_slf4j, akka_slf4j, logback_classic,
     Test.specs2, Test.play_test, Test.play_specs2
   )
-  val utils_dependencies : Seq[ModuleID] = Seq(
-    scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config
-  ) ++ common_dependencies
 
-  val api_dependencies : Seq[ModuleID] = Seq(
-    play_json, scala_pickling
+  val utils_dependencies : Seq[ModuleID] = Seq(
+    scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config, shapeless
   ) ++ common_dependencies
 
   val storage_dependencies : Seq[ModuleID] = Seq(
     play_json, scala_pickling
+  ) ++ common_dependencies
+
+  val types_dependencies : Seq[ModuleID] = Seq(
+    play_json, shapeless
+  ) ++ common_dependencies
+
+  val api_dependencies : Seq[ModuleID] = Seq(
+    play_json, scala_pickling, shapeless, akka_http
   ) ++ common_dependencies
 
   val db_dependencies : Seq[ModuleID] = Seq(

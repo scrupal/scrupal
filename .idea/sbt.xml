@@ -19,6 +19,8 @@
             <option value="$PROJECT_DIR$/scrupal-core/project" />
             <option value="$PROJECT_DIR$/scrupal-storage" />
             <option value="$PROJECT_DIR$/scrupal-storage/project" />
+            <option value="$PROJECT_DIR$/scrupal-types" />
+            <option value="$PROJECT_DIR$/scrupal-types/project" />
             <option value="$PROJECT_DIR$/scrupal-utils" />
             <option value="$PROJECT_DIR$/scrupal-utils/project" />
           </set>
