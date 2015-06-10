@@ -1,16 +1,16 @@
 /** ********************************************************************************************************************
   * Copyright © 2014 Reactific Software, Inc.                                                                          *
-  *                                                                                                               *
+  *                                                                                                            *
   * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
-  *                                                                                                               *
+  *                                                                                                            *
   * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
   * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
   * or (at your option) any later version.                                                                             *
-  *                                                                                                               *
+  *                                                                                                            *
   * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
   * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
   * details.                                                                                                           *
-  *                                                                                                               *
+  *                                                                                                            *
   * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
   * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
   * ********************************************************************************************************************
@@ -28,21 +28,21 @@ import scrupal.utils.ConfigHelpers
 class StorageConfigHelperSpec extends Specification {
 
   def makeTestConfig(file : String) = Configuration.from(
-    Map(StorageConfigHelper.scrupal_storage_config_file_key -> ("scrupal-storage/src/test/resources/db/config/" + file))
+    Map(StorageConfigHelper.scrupal_storage_config_file_key -> ("scrupal-storage/src/test/resources/storage/config/" + file))
   )
 
   "ConfigHelper" should {
     "Correctly extract database configuration from default.conf file" in {
       val helper = StorageConfigHelper(makeTestConfig("default.conf"))
-      val dbconf = helper.getStorageConfig
-      dbconf.getConfig("db").isDefined must beTrue
-      dbconf.getString("db.default.uri").isDefined must beTrue
-      dbconf.getString("db.default.uri").get must beEqualTo("mongodb://localhost/scrupal")
+      val conf = helper.getStorageConfig
+      conf.getConfig("storage").isDefined must beTrue
+      conf.getString("storage.default.uri").isDefined must beTrue
+      conf.getString("storage.default.uri").get must beEqualTo("scrupal-mem://localhost/scrupal")
     }
 
     "Correctly extract empty config from empty_conf.conf" in {
       val helper = StorageConfigHelper(makeTestConfig("empty_conf.conf"))
-      helper.getStorageConfig.getConfig("db").isDefined must beFalse
+      helper.getStorageConfig.getConfig("storage").isDefined must beFalse
     }
 
     "Reflect get/set/get for valid.conf" in {

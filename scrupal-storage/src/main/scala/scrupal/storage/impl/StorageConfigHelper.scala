@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                             *
+  *                                                                                                        *
   * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                             *
+  *                                                                                                        *
   * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
   * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                             *
+  *                                                                                                        *
   * http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                             *
+  *                                                                                                        *
   * Unless required by applicable law or agreed to in writing, software distributed under the                          *
   * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
   * either express or implied. See the License for the specific language governing permissions                         *
@@ -63,29 +63,29 @@ class StorageConfigHelper(config : Configuration) extends ScrupalComponent {
 
   def forEachStorage(f : (String, Configuration) ⇒ Boolean) : StorageConfig = {
     val config = getStorageConfig
-    val root_config = config.getConfig("db")
+    val root_config = config.getConfig("storage")
     root_config map { rootConfig : Configuration ⇒ internalForEach(rootConfig)(f) }
   }.getOrElse(emptyStorageConfig)
 
   private def internalForEach(rootConfig : Configuration)(f : (String, Configuration) ⇒ Boolean) : StorageConfig = {
-    for (dbName ← rootConfig.subKeys) yield {
-      val dbConf = rootConfig.getConfig(dbName)
-      val resolvedConf = dbConf.getOrElse(Configuration.empty)
-      if (f(dbName, resolvedConf)) (dbName, dbConf) else (dbName, None)
+    for (storageName ← rootConfig.subKeys) yield {
+      val storageConf = rootConfig.getConfig(storageName)
+      val resolvedConf = storageConf.getOrElse(Configuration.empty)
+      if (f(storageName, resolvedConf)) (storageName, storageConf) else (storageName, None)
     }
   }.toMap
 
   def getStorageConfigFile : Option[File] = {
-    config.getString(StorageConfigHelper.scrupal_storage_config_file_key) map { db_config_file_name : String ⇒
-      new File(db_config_file_name)
+    config.getString(StorageConfigHelper.scrupal_storage_config_file_key) map { storage_config_file_name : String ⇒
+      new File(storage_config_file_name)
     }
   }
 
   def getStorageConfig : Configuration = Configuration (
     {
-      getStorageConfigFile map { db_config_file : File ⇒
-        if (db_config_file.isFile) {
-          ConfigFactory.parseFile(db_config_file)
+      getStorageConfigFile map { storage_config_file : File ⇒
+        if (storage_config_file.isFile) {
+          ConfigFactory.parseFile(storage_config_file)
         } else {
           ConfigFactory.empty
         }
@@ -97,8 +97,8 @@ class StorageConfigHelper(config : Configuration) extends ScrupalComponent {
     val result = {
       val data : String = new_config.underlying.root.render (ConfigRenderOptions.concise()) // whew!
       val trimmed_data = data.substring(1, data.length - 1)
-      writeTo.orElse(getStorageConfigFile) map { db_config_file : File ⇒
-        val writer = new PrintWriter(db_config_file)
+      writeTo.orElse(getStorageConfigFile) map { storage_config_file : File ⇒
+        val writer = new PrintWriter(storage_config_file)
         try { writer.println(trimmed_data) } finally { writer.close() }
         new_config
       }
@@ -114,8 +114,8 @@ class StorageConfigHelper(config : Configuration) extends ScrupalComponent {
     setStorageConfig(cfg)
   }
 
-  def addStorageConfig(db_config : Configuration) : Configuration = {
-    setStorageConfig(getStorageConfig ++ db_config)
+  def addStorageConfig(storage_config : Configuration) : Configuration = {
+    setStorageConfig(getStorageConfig ++ storage_config)
   }
 
   def validateStorageConfig : Try[Map[String, Option[Configuration]]] = {
@@ -123,29 +123,29 @@ class StorageConfigHelper(config : Configuration) extends ScrupalComponent {
       val cfg = getStorageConfig
       if (cfg.keys.size == 0)
         throw new Exception("The storage configuration is completely empty.")
-      val db_cfg = cfg.getConfig("storage");
+      val storage_cfg = cfg.getConfig("storage");
       {
-        db_cfg map { the_config : Configuration ⇒
+        storage_cfg map { the_config : Configuration ⇒
           if (the_config.getConfig("default").isDefined)
             throw new Throwable("The initial, default database configuration was detected.")
-          internalForEach(db_cfg.get) { (db : String, db_config : Configuration) ⇒
-            val keys : Set[String] = db_config.subKeys
+          internalForEach(storage_cfg.get) { (storage_name : String, storage_config : Configuration) ⇒
+            val keys : Set[String] = storage_config.subKeys
             // Whatever keys are there they must all be strings so validate that (getString will throw if its not a string)
             // and make sure they didn't provide a key with an empty value, also
-            for (key ← keys) yield if (db_config.getString(key).getOrElse {
-              throw new Exception("Configuration for '" + db + "' is missing a value for '" + key + "'.")
-            }.isEmpty) { throw new Exception("Configuration for '" + db + "' has an empty value for '" + key + "'.") }
+            for (key ← keys) yield if (storage_config.getString(key).getOrElse {
+              throw new Exception("Configuration for '" + storage_name + "' is missing a value for '" + key + "'.")
+            }.isEmpty) { throw new Exception("Configuration for '" + storage_name + "' has an empty value for '" + key + "'.") }
             // The config needs to at least have a uri key
             if (!keys.contains("uri")) {
-              throw new Exception("Configuration for '" + db + "' must specify a value for 'uri' key, at least.")
-            } else if (!db_config.getString("uri").get.startsWith("mongodb://")) {
-              throw new Exception("Configuration for '" + db + "' must have a mongodb URI")
+              throw new Exception("Configuration for '" + storage_name + "' must specify a value for 'uri' key, at least.")
+            } else if (!storage_config.getString("uri").get.startsWith("scrupal-")) {
+              throw new Exception("Configuration for '" + storage_name + "' must have a scrupal URI scheme")
             }
             // Okay, looks good, include this in the results
             true
           }
         }
-      }.getOrElse({ throw new Exception("The database configuration does not contain a top level 'db' key.") })
+      }.getOrElse({ throw new Exception("The storage configuration does not contain a top level 'storage' key.") })
     }
   }
 }
