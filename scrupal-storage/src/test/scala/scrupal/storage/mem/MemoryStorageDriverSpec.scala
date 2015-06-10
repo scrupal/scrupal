@@ -11,8 +11,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class DingBot(id : Long, ding : String, bot : Long) extends JsonStorable[DingBot] {
-  override def indexables : Iterable[Indexable[_, JsValue, DingBot]] = Seq.empty[Indexable[_, JsValue, DingBot]]
+case class DingBot(id : Long, ding : String, bot : Long) extends Storable[DingBot] {
+  override def indexables : Iterable[Indexable[_, DingBot]] = Seq.empty[Indexable[_, DingBot]]
 }
 
 object DingBotTransformer extends JsonTransformer[DingBot] {
@@ -43,7 +43,7 @@ class MemoryStorageDriverSpec extends ScrupalSpecification("MemoryStorageDriver"
       val driver = StorageDriver.driverForURI(uri)
       driver.open(uri, create = true) match {
         case Some(storage) ⇒
-          val coll = storage.makeCollection[JsValue, DingBot]("dingbots")
+          val coll = storage.makeCollection[DingBot]("dingbots")
           val result = coll.insert(new DingBot(1, "ping", 42)) map { wr ⇒ wr.isSuccess must beTrue }
           Await.result(result, 3.seconds)
           success
@@ -59,7 +59,7 @@ class MemoryStorageDriverSpec extends ScrupalSpecification("MemoryStorageDriver"
       val driver = StorageDriver.driverForURI(uri)
       val context = driver.makeContext('test)
       context.withStorage(uri, create = true) { storage ⇒
-        val coll = storage.makeCollection[JsValue, DingBot]("dingbots")
+        val coll = storage.makeCollection[DingBot]("dingbots")
         val result = coll.insert(new DingBot(1, "ping", 42)) map { wr ⇒ wr.isSuccess must beTrue }
         Await.result(result, 3.seconds)
       }

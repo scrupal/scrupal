@@ -1,5 +1,7 @@
 package scrupal.storage.mem
 
+import java.util.concurrent.atomic.AtomicLong
+
 import scrupal.storage.api._
 
 import scala.collection.mutable
@@ -7,26 +9,41 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
-case class MemoryCollection[T, S <: Storable[T, S]](storage : MemoryStorage, name : String) extends Collection[T, S] {
-  override def update(obj : S, upd : Modification) : Future[WriteResult] = update(obj.id, upd)
+case class MemoryCollection[S <: Storable[S]](storage : MemoryStorage, name : String) extends Collection[S] {
+  override def update(obj : S, upd : Modification[S]) : Future[WriteResult] = update(obj.primary_id, upd)
 
-  override def update(id : ID, update : Modification) : Future[WriteResult] = Future {
-    if (content.contains(id))
-      WriteResult.success() // TODO: Implement modifications
-    else
-      WriteResult.failure(new Exception(s"Collection '$name' does not contain object with id #$id"))
+  override def update(id : ID, update : Modification[S]) : Future[WriteResult] = Future {
+    content.get(id) match {
+      case Some(s : S @unchecked) ⇒
+        val newObj = update(s)
+        newObj.primary_id = s.primary_id
+        content.put(id, newObj)
+        WriteResult.success()
+      case None ⇒
+        WriteResult.error(s"Collection '$name' does not contain object with id #$id")
+    }
   }
 
-  override def insert(obj : S) : Future[WriteResult] = Future.successful[WriteResult] {
-    content.put(obj.id, obj)
-    WriteResult.success()
+  override def insert(obj : S, update : Boolean) : Future[WriteResult] = Future.successful[WriteResult] {
+    content.get(obj.primary_id) match {
+      case Some(s : S @unchecked) ⇒
+        if (update) {
+          content.put(obj.primary_id, s)
+          WriteResult.success()
+        } else {
+          WriteResult.error(s"Update not permitted during insert of #${obj.primary_id} in collection '$name")
+        }
+      case None ⇒
+        content.put(obj.primary_id, obj)
+        WriteResult.success()
+    }
   }
 
   override def fetch(id : ID) : Future[Option[S]] = Future {
     content.get(id)
   }
 
-  override def delete(obj : S) : Future[WriteResult] = delete(obj.id)
+  override def delete(obj : S) : Future[WriteResult] = delete(obj.primary_id)
 
   override def delete(id : ID) : Future[WriteResult] = Future {
     if (content.contains(id)) {
@@ -57,17 +74,22 @@ case class MemoryCollection[T, S <: Storable[T, S]](storage : MemoryStorage, nam
     WriteResult.failure(new Exception("MemoryCollection.removeIndex(field) not implemented"))
   }
 
-  override def indices : Seq[Index[T, S]] = {
+  override def indices : Seq[Index[S]] = {
     // TODO: Implement MemoryCollection.indices
-    Seq.empty[Index[T, S]]
+    Seq.empty[Index[S]]
   }
 
-  override def updateWhere(query : Query, update : Modification) : Future[Seq[WriteResult]] = Future {
+  override def updateWhere(query : Query, update : Modification[S]) : Future[Seq[WriteResult]] = Future {
     // TODO: Implement MemoryCollection.updateWhere
     Seq.empty[WriteResult]
   }
 
-  override def close() : Unit = { content.empty }
+  override def close() : Unit = { content.empty; pids.set(0) }
 
+  private def ensurePrimaryId(s : S) : Unit = {
+    if (s.primary_id == Storable.undefined_primary_id)
+      s.primary_id = pids.getAndIncrement()
+  }
+  private val pids = new AtomicLong(0)
   private val content = mutable.HashMap.empty[Long, S]
 }

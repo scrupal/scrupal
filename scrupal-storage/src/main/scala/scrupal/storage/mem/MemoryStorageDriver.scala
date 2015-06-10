@@ -38,9 +38,9 @@ object MemoryStorageDriver extends StorageDriver {
     }
   }
 
-  def makeReference[T, S <: Storable[T, S]](coll : Collection[T, S], id : ID) : Reference[T, S] = {
-    require(coll.isInstanceOf[MemoryCollection[T, S]])
-    new MemoryReference[T, S](coll.asInstanceOf[MemoryCollection[T, S]], id)
+  def makeReference[S <: Storable[S]](coll : Collection[S], id : ID) : Reference[S] = {
+    require(coll.isInstanceOf[MemoryCollection[S]])
+    new MemoryReference[S](coll.asInstanceOf[MemoryCollection[S]], id)
   }
 
   def makeContext(id : Symbol) : StorageContext = {

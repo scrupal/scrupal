@@ -15,25 +15,25 @@ import scala.util.matching.Regex
   */
 case class MemoryStorage(driver : StorageDriver, url : URI) extends Storage {
 
-  private val colls = new mutable.HashMap[String, Collection[_, _]]
+  private val colls = new mutable.HashMap[String, Collection[_]]
 
   /** Returns the set of collections that this Storage instance knows about */
-  def collections : Map[String, Collection[_, _]] = colls.toMap
+  def collections : Map[String, Collection[_]] = colls.toMap
 
   /** Find and return a Collection of a specific name */
-  def collectionFor[T, S <: Storable[T, S]](name : String) : Option[Collection[T, S]] = {
+  def collectionFor[S <: Storable[S]](name : String) : Option[Collection[S]] = {
     colls.get(name) match {
       case None ⇒ None
       case Some(result) ⇒
         result match {
-          case colls : Collection[T, S] @unchecked ⇒ Some(result.asInstanceOf[Collection[T, S]])
+          case colls : Collection[S] @unchecked ⇒ Some(result.asInstanceOf[Collection[S]])
           case _ ⇒ None
         }
     }
   }
 
-  def makeCollection[T, S <: Storable[T, S]](name : String) : Collection[T, S] = {
-    TryWith { new MemoryCollection[T, S](this, name) } { coll ⇒
+  def makeCollection[S <: Storable[S]](name : String) : Collection[S] = {
+    TryWith { new MemoryCollection[S](this, name) } { coll ⇒
       colls.put(name, coll)
       coll
     } match {
@@ -43,9 +43,9 @@ case class MemoryStorage(driver : StorageDriver, url : URI) extends Storage {
   }
 
   /** Find collections matching a specific name pattern and return a Map of them */
-  def collectionsFor(namePattern : Regex) : Map[String, Collection[_, _]] = {
+  def collectionsFor(namePattern : Regex) : Map[String, Collection[_]] = {
     colls.filter {
-      case (name : String, coll : Collection[_, _]) ⇒ namePattern.findFirstIn(name).isDefined
+      case (name : String, coll : Collection[_]) ⇒ namePattern.findFirstIn(name).isDefined
     }
   }.toMap
 

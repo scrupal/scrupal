@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                                  *
+  *                                                                                                                *
   * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                                  *
+  *                                                                                                                *
   * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
   * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                                  *
-  *      http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                                  *
+  *                                                                                                                *
+  *    http://www.apache.org/licenses/LICENSE-2.0                                                                  *
+  *                                                                                                                *
   * Unless required by applicable law or agreed to in writing, software distributed under the                          *
   * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
   * either express or implied. See the License for the specific language governing permissions                         *
@@ -16,6 +16,8 @@
   */
 
 package scrupal.utils
+
+import play.api.libs.json.{ JsObject, JsArray, JsValue }
 
 trait PathWalker[D, A, V] extends ScrupalComponent {
   protected def isDocument(v : V) : Boolean
@@ -98,7 +100,7 @@ trait PathWalker[D, A, V] extends ScrupalComponent {
 }
 
 object MapSeqPathWalker extends PathWalker[Map[String, Any], Seq[Any], Any] {
-  protected def isDocument(v : Any) : Boolean = v.isInstanceOf[Map[_, _]]
+  protected def isDocument(v : Any) : Boolean = v.isInstanceOf[Map[_, Any]]
   protected def asDocument(v : Any) : Map[String, Any] = v.asInstanceOf[Map[String, Any]]
   protected def indexDoc(key : String, d : Map[String, Any]) : Option[Any] = d.get(key)
   protected def isArray(v : Any) : Boolean = v.isInstanceOf[Seq[Any]]
@@ -107,4 +109,17 @@ object MapSeqPathWalker extends PathWalker[Map[String, Any], Seq[Any], Any] {
   protected def arrayLength(a : Seq[Any]) : Int = a.size
   def apply(path : String, doc : Map[String, Any]) : Option[Any] = lookup(path, doc)
 
+}
+
+object JsonPathWalker extends PathWalker[JsObject, JsArray, JsValue] {
+  protected def isDocument(v : JsValue) : Boolean = v.isInstanceOf[JsObject]
+  protected def isArray(v : JsValue) : Boolean = v.isInstanceOf[JsArray]
+  protected def asArray(v : JsValue) : JsArray = v.asInstanceOf[JsArray]
+  protected def asDocument(v : JsValue) : JsObject = v.asInstanceOf[JsObject]
+  protected def indexDoc(key : String, d : JsObject) : Option[JsValue] = d.value.get(key)
+  protected def indexArray(index : Int, a : JsArray) : Option[JsValue] = {
+    if (index < 0 || index > a.value.length) None else Some(a.value(index))
+  }
+  protected def arrayLength(a : JsArray) : Int = a.value.length
+  def apply(path : String, doc : JsObject) : Option[JsValue] = lookup(path, doc)
 }
