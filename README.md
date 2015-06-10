@@ -1,4 +1,4 @@
-[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupalhttps://waffle.io/scrupal/scrupal)
+[![Build Status](https://travis-ci.org/scrupal/scrupal.svg?branch=master)](https://travis-ci.org/scrupal/scrupal)[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal)
 
 # Scrupal
 
