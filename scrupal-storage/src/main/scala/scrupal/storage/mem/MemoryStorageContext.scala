@@ -6,6 +6,6 @@ import scrupal.storage.api.StorageContext
   *
   * Description of thing
   */
-case class MemoryStorageContext(id : Symbol) extends StorageContext {
+case class MemoryStorageContext private[mem] (id : Symbol) extends StorageContext {
   val driver = MemoryStorageDriver
 }

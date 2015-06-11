@@ -9,7 +9,11 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
-case class MemoryCollection[S <: Storable[S]](storage : MemoryStorage, name : String) extends Collection[S] {
+case class MemoryCollection[S <: Storable[S]] private[mem] (schema : Schema, name : String) extends Collection[S] {
+  require(schema.isInstanceOf[MemorySchema])
+
+  def count : Long = content.size
+
   override def update(obj : S, upd : Modification[S]) : Future[WriteResult] = update(obj.primary_id, upd)
 
   override def update(id : ID, update : Modification[S]) : Future[WriteResult] = Future {
@@ -64,19 +68,24 @@ case class MemoryCollection[S <: Storable[S]](storage : MemoryStorage, name : St
     Seq.empty[S]
   }
 
-  override def addIndex(field : String) : Future[WriteResult] = Future {
+  override def addIndex(index : Index) : Future[WriteResult] = Future {
     // TODO: Implement MemoryCollection.addIndex(field) not implemented
     WriteResult.failure(new Exception("MemoryCollection.addIndex(field) not implemented"))
   }
 
-  override def removeIndex(field : String) : Future[WriteResult] = Future {
+  override def removeIndex(index : Index) : Future[WriteResult] = Future {
     // TODO: Implement MemoryCollection.removeIndex(field) not implemented
     WriteResult.failure(new Exception("MemoryCollection.removeIndex(field) not implemented"))
   }
 
-  override def indices : Seq[Index[S]] = {
+  override def indexOf(field : Seq[Indexable]) : Option[Index] = {
+    // TODO: Implement MemoryCollection.indexOf(field)
+    None
+  }
+
+  override def indices : Seq[Index] = {
     // TODO: Implement MemoryCollection.indices
-    Seq.empty[Index[S]]
+    Seq.empty[Index]
   }
 
   override def updateWhere(query : Query, update : Modification[S]) : Future[Seq[WriteResult]] = Future {
@@ -92,4 +101,5 @@ case class MemoryCollection[S <: Storable[S]](storage : MemoryStorage, name : St
   }
   private val pids = new AtomicLong(0)
   private val content = mutable.HashMap.empty[Long, S]
+
 }

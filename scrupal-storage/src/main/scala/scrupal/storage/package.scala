@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                                   *
+  *                                                                                                                  *
   * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                                   *
+  *                                                                                                                  *
   * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
   * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                                   *
-  *       http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                                   *
+  *                                                                                                                  *
+  *      http://www.apache.org/licenses/LICENSE-2.0                                                                  *
+  *                                                                                                                  *
   * Unless required by applicable law or agreed to in writing, software distributed under the                          *
   * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
   * either express or implied. See the License for the specific language governing permissions                         *
@@ -26,8 +26,8 @@ package scrupal
   * about the structure of the information that must be maintained by the concrete implementation. Those assumptions
   * are:
   * - A given type of storage system is represented by the [[scrupal.storage.api.StorageContext]] class
-  * - A StorageContext allows [[scrupal.storage.api.Storage]] objects to be opened and closed.
-  * - The [[scrupal.storage.api.Storage]] objects contain named [[scrupal.storage.api.Schema]] instances.
+  * - A StorageContext allows [[scrupal.storage.api.Store]] objects to be opened and closed.
+  * - The [[scrupal.storage.api.Store]] objects contain named [[scrupal.storage.api.Schema]] instances.
   * - The [[scrupal.storage.api.Schema]] objects contain named [[scrupal.storage.api.Collection]] instances.
   * - The [[scrupal.storage.api.Collection]] objects contain indices to arbitrary objects.
   * - Collections are groups of related objects; related by purpose, not structure or content.

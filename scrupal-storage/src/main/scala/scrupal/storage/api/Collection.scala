@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                            *
+  *                                                                                                       *
   * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                            *
+  *                                                                                                       *
   * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
   * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                            *
+  *                                                                                                       *
   * http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                            *
+  *                                                                                                       *
   * Unless required by applicable law or agreed to in writing, software distributed under the                          *
   * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
   * either express or implied. See the License for the specific language governing permissions                         *
@@ -17,13 +17,19 @@
 
 package scrupal.storage.api
 
+import scrupal.utils.ScrupalComponent
+
 import scala.concurrent.Future
 
-trait Collection[S <: Storable[S]] extends AutoCloseable {
+trait Collection[S <: Storable[S]] extends AutoCloseable with ScrupalComponent {
   def name : String
-  def indices : Seq[Index[S]]
-  def addIndex(field : String) : Future[WriteResult]
-  def removeIndex(field : String) : Future[WriteResult]
+  def schema : Schema
+  override def toString = { s"Collection $name in $schema" }
+  def count : Long
+  def indexOf(field : Seq[Indexable]) : Option[Index]
+  def addIndex(index : Index) : Future[WriteResult]
+  def removeIndex(index : Index) : Future[WriteResult]
+  def indices : Seq[Index]
   def fetch(id : ID) : Future[Option[S]]
   def find(query : Query) : Future[Seq[S]]
   def insert(obj : S, update : Boolean = false) : Future[WriteResult]

@@ -8,6 +8,7 @@ import scala.concurrent.Future
   *
   * Description of thing
   */
-class MemoryReference[S <: Storable[S]](coll : MemoryCollection[S], id : ID) extends Reference[S](coll, id) {
+case class MemoryReference[S <: Storable[S]](coll : MemoryCollection[S], id : ID) extends Reference[S](coll, id) {
   override def fetch : Future[Option[S]] = coll.fetch(id)
+  def close() : Unit = {}
 }

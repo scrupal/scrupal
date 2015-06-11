@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                           *
+  *                                                                                                     *
   * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                           *
+  *                                                                                                     *
   * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
   * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                           *
+  *                                                                                                     *
   * http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                           *
+  *                                                                                                     *
   * Unless required by applicable law or agreed to in writing, software distributed under the                          *
   * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
   * either express or implied. See the License for the specific language governing permissions                         *
@@ -38,15 +38,31 @@ trait StorageContext extends Registrable[StorageContext] with Closeable with Scr
   def registry = StorageContext
   def driver : StorageDriver
 
-  def withStorage[T](url : URI, create : Boolean = false)(f : (Storage) ⇒ T) : T = {
-    driver.open(url, create) match {
-      case Some(storage) ⇒ f(storage)
-      case None ⇒ throw new Exception(s"Storage not found for $url")
+  def withStore[T](uri : URI, create : Boolean = false)(f : (Store) ⇒ T) : T = {
+    driver.open(uri, create) match {
+      case Some(store) ⇒ f(store)
+      case None ⇒ toss(s"Store not found for $uri")
+    }
+  }
+
+  def withSchema[T](uri : URI, schema : String, create : Boolean = false)(f : (Schema) ⇒ T) : T = {
+    driver.open(uri, create) match {
+      case Some(storage) ⇒ storage.withSchema(schema)(f)
+      case None ⇒ toss(s"Store not found for $uri")
+    }
+  }
+
+  def withCollection[T, S <: Storable[S]](
+    uri : URI,
+    schema : String,
+    collection : String)(f : (Collection[S]) ⇒ T) : T = {
+    driver.withStore(uri) { store ⇒
+      store.withCollection[T, S](schema, collection)(f)
     }
   }
 
   def checkExists(storageNames : Seq[String]) : Seq[String] = {
-    storageNames.filter { name ⇒ driver.storageExists(name) }
+    storageNames.filter { name ⇒ driver.storeExists(name) }
   }
 
   def close() = Try {
@@ -63,7 +79,7 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
   val registryName : String = "StorageContexts"
 
   def apply(id : Symbol, url : URI) : StorageContext = {
-    StorageDriver.driverForURI(url).makeContext(id)
+    StorageDriver.apply(url).makeContext(id)
   }
 
   private case class State(driver : StorageDriver, counter : AtomicInteger = new AtomicInteger(1))
@@ -82,7 +98,7 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
   def fromSpecificConfig(id : Symbol, config : Configuration) : StorageContext = {
     config.getString("uri") match {
       case Some(uri) ⇒ fromURI(id, uri)
-      case None ⇒ throw new Exception("Missing 'uri' in database configuration for '" + id.name + "'")
+      case None ⇒ toss("Missing 'uri' in database configuration for '" + id.name + "'")
     }
   }
 
@@ -91,7 +107,7 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
       case Some(context) ⇒
         context
       case None ⇒
-        StorageDriver.driverForURI(new URI(uri)).makeContext(id)
+        StorageDriver.apply(new URI(uri)).makeContext(id)
     }
   }
 
