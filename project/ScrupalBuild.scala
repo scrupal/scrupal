@@ -58,17 +58,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps)
   lazy val storage_deps = storage_proj % "compile->compile;test->test"
 
-  lazy val types_proj = Project(base_name + "-types", file("./scrupal-types"))
-    .settings(buildSettings:_*)
-    .settings(
-      scrupalTitle := "Scrupal Storage",
-      resolvers ++= all_resolvers,
-      libraryDependencies ++= types_dependencies
-    )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
-    .dependsOn(utils_deps)
-  lazy val types_deps = types_proj % "compile->compile;test->test"
-
   lazy val api_proj = Project(base_name + "-api", file("./scrupal-api"))
     .settings(buildSettings:_*)
     .settings(
@@ -77,7 +66,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       libraryDependencies ++= api_dependencies
     )
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
-    .dependsOn(storage_deps, types_deps, utils_deps)
+    .dependsOn(storage_deps, utils_deps)
   lazy val api_deps = api_proj % "compile->compile;test->test"
 
 /*  lazy val db_proj = Project(base_name + "-db", file("./scrupal-db"))
@@ -99,7 +88,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       libraryDependencies ++= core_dependencies
     )
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
-    .dependsOn(api_deps, storage_deps, types_deps, utils_deps)
+    .dependsOn(api_deps, storage_deps, utils_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
@@ -120,8 +109,8 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       libraryDependencies ++= root_dependencies
     )
     .enablePlugins(ScrupalPlugin)
-    .dependsOn(config_deps, core_deps, storage_deps, api_deps, utils_deps)
-    .aggregate(config_proj, core_proj, storage_proj, api_proj, utils_proj)
+    .dependsOn(config_deps, core_deps, api_deps, storage_deps, utils_deps)
+    .aggregate(config_proj, core_proj, api_proj, storage_proj, utils_proj)
 
   override def rootProject = Some(root)
 }
