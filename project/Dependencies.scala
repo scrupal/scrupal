@@ -94,7 +94,7 @@ trait Dependencies
   val hsp                     = "com.reactific"       %% "hotspot-profiler"       % "0.1.0-SNAPSHOT"
   val parser_combinators = "org.scala-lang.modules"   %% "scala-parser-combinators" % "1.0.4"
   val scala_xml          = "org.scala-lang.modules"   %% "scala-xml"              % "1.0.4"
-
+  val silhouette              = "com.mohiva"          %% "play-silhouette"        % "3.0.0-RC1"
   val shapeless               = "com.chuusai"         %% "shapeless"              % "2.2.1"
   // Test Libraries
 
@@ -122,6 +122,7 @@ trait Dependencies
     val nu_validator     = "nu.validator.htmlparser" % "htmlparser"         % "1.4"       % "test"
     val play_specs2      = "com.typesafe.play"      %% "play-specs2"        % playV       % "test"
     val play_test        = "com.typesafe.play"      %% "play-test"          % playV       % "test"
+    val silhouette_test  = "com.mohiva"        %% "play-silhouette-testkit" % "3.0.0-RC1" % "test"
   }
 
   val root_dependencies : Seq[ModuleID] = Seq(
