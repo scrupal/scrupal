@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
-  *                                                                                                      *
+  *                                                                                                     *
   * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
-  *                                                                                                      *
+  *                                                                                                     *
   * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
   * with the License. You may obtain a copy of the License at                                                          *
-  *                                                                                                      *
+  *                                                                                                     *
   * http://www.apache.org/licenses/LICENSE-2.0                                                                     *
-  *                                                                                                      *
+  *                                                                                                     *
   * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
   * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
   * the specific language governing permissions and limitations under the License.                                     *
@@ -47,7 +47,7 @@ class ValidatorSpec extends ScrupalSpecification("Validator") {
   "Results" should {
     "allow simple success of typed location" in {
       val s = Success(TypedLocation(13), 13)
-      s.message must beEqualTo(" succeeded, at 13.")
+      s.message must beEqualTo("Validation succeeded, at 13.")
     }
     "collect several results" in {
       val s = Error(DefaultLocation, 13, "Unlucky number")
@@ -85,7 +85,7 @@ class ValidatorSpec extends ScrupalSpecification("Validator") {
       val vr1 = 13.validate
       val vr2 = 7.validate
       vr1.message must beEqualTo("Value out of range [-10,10], at 13.")
-      vr2.message must beEqualTo(" succeeded, at 7.")
+      vr2.message must beEqualTo("Validation succeeded, at 7.")
     }
   }
 }
