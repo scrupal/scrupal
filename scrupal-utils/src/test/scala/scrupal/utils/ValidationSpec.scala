@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
-  *                                                                                                     *
+  *                                                                                                    *
   * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
-  *                                                                                                     *
+  *                                                                                                    *
   * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
   * with the License. You may obtain a copy of the License at                                                          *
-  *                                                                                                     *
+  *                                                                                                    *
   * http://www.apache.org/licenses/LICENSE-2.0                                                                     *
-  *                                                                                                     *
+  *                                                                                                    *
   * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
   * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
   * the specific language governing permissions and limitations under the License.                                     *
@@ -21,7 +21,7 @@ import scrupal.utils.Validation._
 import scrupal.test.ScrupalSpecification
 
 /** Test Spec for Validator */
-class ValidatorSpec extends ScrupalSpecification("Validator") {
+class ValidationSpec extends ScrupalSpecification("Validator") {
 
   "ValidationLocation" should {
     "correctly derive indexable" in {
@@ -50,9 +50,9 @@ class ValidatorSpec extends ScrupalSpecification("Validator") {
       s.message must beEqualTo("Validation succeeded, at 13.")
     }
     "collect several results" in {
-      val s = Error(DefaultLocation, 13, "Unlucky number")
-      s.add(Error(DefaultLocation.index(0), 1, "First digit is 1"))
-      s.add(Error(DefaultLocation.index(1), 3, "Second digit is 3"))
+      val s = StringFailure(DefaultLocation, 13, "Unlucky number")
+      s.add(StringFailure(DefaultLocation.index(0), 1, "First digit is 1"))
+      s.add(StringFailure(DefaultLocation.index(1), 3, "Second digit is 3"))
       s.message must beEqualTo("Unlucky number, at somewhere.")
     }
   }
@@ -66,7 +66,7 @@ class ValidatorSpec extends ScrupalSpecification("Validator") {
       */
     override def validate(ref : Location, value : Int) : VResult = {
       if (value < -10 || value > 10)
-        Error(ref, value, s"Value out of range [-10,10]")
+        StringFailure(ref, value, s"Value out of range [-10,10]")
       else
         Success(ref, value)
     }

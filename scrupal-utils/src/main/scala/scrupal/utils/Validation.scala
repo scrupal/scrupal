@@ -1,13 +1,13 @@
 /** ********************************************************************************************************************
   * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
-  *                                                                                                            *
+  *                                                                                                                    *
   * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
-  *                                                                                                            *
+  *                                                                                                           *
   * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
   * with the License. You may obtain a copy of the License at                                                          *
-  *                                                                                                            *
-  * http://www.apache.org/licenses/LICENSE-2.0                                                                     *
-  *                                                                                                            *
+  *                                                                                                                    *
+  * http://www.apache.org/licenses/LICENSE-2.0                                                                         *
+  *                                                                                                                    *
   * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
   * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
   * the specific language governing permissions and limitations under the License.                                     *
@@ -139,14 +139,14 @@ object Validation {
   }
 
   /** Validation failure with a simple error message */
-  case class Error[VT](ref : Location, value : VT, errMsg : String) extends Failure[VT] {
+  case class StringFailure[VT](ref : Location, value : VT, errMsg : String) extends Failure[VT] {
     override def msgBldr : StringBuilder = {
       super.msgBldr.append(errMsg)
     }
   }
 
   /** Validation failure with an exception */
-  case class Throwable[VT](ref : Location, value : VT, cause : java.lang.Throwable) extends Failure[VT] {
+  case class ThrowableFailure[VT](ref : Location, value : VT, cause : java.lang.Throwable) extends Failure[VT] {
     override def msgBldr : StringBuilder = {
       super.msgBldr.append(cause.getClass.getName).append(": ").append(cause.getMessage)
     }
@@ -173,13 +173,13 @@ object Validation {
 
       validator(value) match {
         case Some("") ⇒ wrongClass(ref, value, classes)
-        case Some(msg : String) ⇒ Error(ref, value, msg)
+        case Some(msg : String) ⇒ StringFailure(ref, value, msg)
         case None ⇒ Success(ref, value)
       }
     }
 
     protected def wrongClass(ref : Location, value : VType, expected : String) : VResult = {
-      Error(ref, value, s"Expected value of type $expected but got ${value.getClass.getSimpleName} instead.")
+      StringFailure(ref, value, s"Expected value of type $expected but got ${value.getClass.getSimpleName} instead.")
     }
   }
 
