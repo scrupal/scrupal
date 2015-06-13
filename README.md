@@ -2,6 +2,8 @@
 
 # Scrupal
 
+[![Join the chat at https://gitter.im/scrupal/scrupal](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scrupal/scrupal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Introduction
 Welcome to  Scrupal, an open source platform for building the next generation of web applications. The original
 idea for Scrupal was to do what [Drupal](https://drupal.org) did a decade ago: create a platform on which web
