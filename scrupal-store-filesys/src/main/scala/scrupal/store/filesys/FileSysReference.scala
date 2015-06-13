@@ -24,7 +24,7 @@ import scala.concurrent.Future
   *
   * Description of thing
   */
-case class FileSysReference[S <: Storable[S]](coll : FileSysCollection[S], id : ID) extends Reference[S](coll, id) {
+case class FileSysReference[S <: Storable](coll : FileSysCollection[S], id : ID) extends Reference[S](coll, id) {
   override def fetch : Future[Option[S]] = coll.fetch(id)
   def close() : Unit = {}
 }

@@ -17,54 +17,54 @@
 
 package scrupal.storage.api
 
-import play.api.libs.json._
 import scrupal.utils.ScrupalComponent
-
-import scala.pickling.binary.BinaryPickleFormat
 
 /** A Storable Object
   *
-  * All entities placed in storage derive from Storable.
-  * @tparam S The end type of the storable
+  * All entities placed in storage must derive from Storable.
   */
-trait Storable[S <: Storable[S]] { self : S ⇒
-  var primary_id : Long = Storable.undefined_primary_id
-}
-
-trait StorableTransformer[OUT, S <: Storable[S]] {
-  def write(s : S) : OUT
-  def read(data : OUT) : S
-}
-
-class IdentityTransformer[S <: Storable[S]] extends StorableTransformer[S, S] {
-  def write(s : S) : S = s
-  def read(data : S) : S = data
-}
-
-trait JsonTransformer[S <: Storable[S]] extends StorableTransformer[JsValue, S] {
-  def write(s : S) : JsValue
-  def intermediate_read(v : JsValue) : JsResult[S]
-  def read(v : JsValue) : S = intermediate_read(v) match {
-    case x : JsSuccess[S] ⇒ x.value;
-    case x : JsError ⇒ throw new Exception(JsError.toFlatForm(x).toString())
+@SerialVersionUID(1L)
+trait Storable extends Serializable with Equals {
+  private[storage] var primaryId : Long = Storable.undefined_primary_id
+  def getPrimaryId() : Long = primaryId
+  def canEqual(other : Any) : Boolean = { other.isInstanceOf[Storable] }
+  override def equals(other : Any) : Boolean = {
+    other match {
+      case that: Storable => canEqual(other)
+      case _ => false
+    }
   }
 }
 
-import scala.pickling.binary._
+trait StoredFormat {
+  def toBytes : Array[Byte]
+}
 
-trait BinaryTransformer[S <: Storable[S]] extends StorableTransformer[BinaryPickleFormat#OutputType, S] {
-  def pickler : BinaryPickleFormat#PickleType
+trait StorableTransformer[F <: StoredFormat, S <: Storable] {
+  def write(s : S) : F
+  def read(data : F) : S
 }
 
 object Storable extends ScrupalComponent {
+  final val serialVersionUID : Long = 42L
+
   val undefined_primary_id : Long = Long.MinValue
 
-  def apply[OUT, S <: Storable[S]](data : OUT)(implicit trans : StorableTransformer[OUT, S]) : S = {
+  def apply[S <: Storable, F <: StoredFormat](data : F)(implicit trans : StorableTransformer[F, S]) : S = {
     trans.read(data)
   }
 
-  implicit class StorablePimps[S <: Storable[S]](storable : S) {
-    final def payload[OUT](implicit trans : StorableTransformer[OUT, S]) : OUT = trans.write(storable)
+  def unapply[S <: Storable, F <: StoredFormat](s: S)(implicit trans: StorableTransformer[F, S]) : F = {
+    trans.write(s)
+  }
+
+  implicit class StorablePimps[S <: Storable](storable : S) {
+    final def payload[F <: StoredFormat](implicit trans : StorableTransformer[F, S]) : F = {
+      trans.write(storable)
+    }
+    final def toBytes[F <: StoredFormat](implicit trans : StorableTransformer[F,S]) : Array[Byte] = {
+      trans.write(storable).toBytes
+    }
   }
 }
 

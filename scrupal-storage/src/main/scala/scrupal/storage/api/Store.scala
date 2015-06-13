@@ -33,7 +33,7 @@ trait Store extends AutoCloseable with ScrupalComponent {
 
   def withSchema[T](schema : String)(f : (Schema) ⇒ T) : T
 
-  def withCollection[T, S <: Storable[S]](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T
+  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T
 }
 
 object Store {

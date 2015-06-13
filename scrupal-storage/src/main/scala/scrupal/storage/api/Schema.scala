@@ -36,10 +36,10 @@ trait Schema extends AutoCloseable with ScrupalComponent {
   /** The set of collections that this schema provides */
   def collections : Map[String, Collection[_]]
 
-  def addCollection[S <: Storable[S]](name : String) : Collection[S]
+  def addCollection[S <: Storable](name : String) : Collection[S]
 
   /** Find and return a Collection of a specific name */
-  def collectionFor[S <: Storable[S]](name : String) : Option[Collection[S]]
+  def collectionFor[S <: Storable](name : String) : Option[Collection[S]]
 
   /** Find collections matching a specific name pattern and return a Map of them */
   def collectionsFor(namePattern : Regex) : Map[String, Collection[_]]
@@ -47,7 +47,7 @@ trait Schema extends AutoCloseable with ScrupalComponent {
   /** Get the set of collection names */
   def collectionNames : Iterable[String] = { collections.keys }
 
-  def withCollection[T, S <: Storable[S]](name : String)(f : Collection[S] ⇒ T) : T = {
+  def withCollection[T, S <: Storable](name : String)(f : Collection[S] ⇒ T) : T = {
     collections.get(name) match {
       case Some(coll) ⇒ f(coll.asInstanceOf[Collection[S]])
       case None ⇒ toss(s"Collection '$name' in schema '${this.name} does not exist")

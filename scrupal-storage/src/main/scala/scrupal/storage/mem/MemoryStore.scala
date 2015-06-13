@@ -3,11 +3,8 @@ package scrupal.storage.mem
 import java.net.URI
 
 import scrupal.storage.api._
-import scrupal.utils.TryWith
 
 import scala.collection.mutable
-import scala.util.{ Failure, Success }
-import scala.util.matching.Regex
 
 /** Title Of Thing.
   *
@@ -38,7 +35,7 @@ case class MemoryStore private[mem] (driver : StorageDriver, uri : URI) extends 
     }
   }
 
-  def withCollection[T, S <: Storable[S]](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
+  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
     _schemas.get(schema) match {
       case Some(s) ⇒ s.withCollection[T, S](collection)(f)
       case None    ⇒ toss(s"Schema '$schema' not found in $uri ")

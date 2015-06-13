@@ -33,10 +33,10 @@ trait StorageDriver extends AutoCloseable with Registrable[StorageDriver] with S
   }
   def storeExists(storage_name : String) : Boolean
   def makeContext(id : Symbol) : StorageContext
-  def makeReference[S <: Storable[S]](coll : Collection[S], id : ID) : Reference[S]
+  def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S]
   def makeStorage(uri : URI) : Store
   def makeSchema(store : Store, name : String, design : SchemaDesign) : Schema
-  def makeCollection[S <: Storable[S]](schema : Schema, name : String) : Collection[S]
+  def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S]
   def registry = StorageDriver
 }
 

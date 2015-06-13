@@ -52,7 +52,7 @@ trait StorageContext extends Registrable[StorageContext] with Closeable with Scr
     }
   }
 
-  def withCollection[T, S <: Storable[S]](
+  def withCollection[T, S <: Storable](
     uri : URI,
     schema : String,
     collection : String)(f : (Collection[S]) ⇒ T) : T = {

@@ -31,7 +31,7 @@ case class MemorySchema private[mem] (store : Store, name : String, design : Sch
   def collections : Map[String, Collection[_]] = colls.toMap
 
   /** Find and return a Collection of a specific name */
-  def collectionFor[S <: Storable[S]](name : String) : Option[Collection[S]] = {
+  def collectionFor[S <: Storable](name : String) : Option[Collection[S]] = {
     colls.get(name).asInstanceOf[Option[Collection[S]]]
   }
 
@@ -42,7 +42,7 @@ case class MemorySchema private[mem] (store : Store, name : String, design : Sch
     }
   }.toMap
 
-  override def addCollection[S <: Storable[S]](name : String) : Collection[S] = {
+  override def addCollection[S <: Storable](name : String) : Collection[S] = {
     val coll = store.driver.makeCollection(this, name).asInstanceOf[MemoryCollection[S]]
     colls.put(name, coll).asInstanceOf[Collection[S]]
   }

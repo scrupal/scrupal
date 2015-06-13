@@ -31,7 +31,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     // publishTo := Some(Resolvers.MyArtifactHost),
     organization    := "org.scrupal",
     version         := "0.2.0-SNAPSHOT",
-    // scalacOptions   ++= Seq("-Xlog-implicits"),
+    //scalacOptions   += "-Xlog-implicits",
     scrupalCopyrightHolder := "Reactific Software LLC",
     scrupalCopyrightYears := Seq(2013,2014,2015),
     scrupalDeveloperUrl := url("http://reactific.com/")

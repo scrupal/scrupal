@@ -5,20 +5,16 @@ import java.net.URI
 import play.api.libs.json._
 
 import scrupal.storage.api._
+import scrupal.storage.impl.JsonTransformer
 import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class DingBot(id : Long, ding : String, bot : Long) extends Storable[DingBot]
+case class DingBot(id : Long, ding : String, bot : Long) extends Storable
 
-object DingBotTransformer extends JsonTransformer[DingBot] {
-  private val writer = Json.writes[DingBot]
-  private val reader = Json.reads[DingBot]
-  def write(s : DingBot) : JsValue = writer.writes(s)
-  def intermediate_read(v : JsValue) : JsResult[DingBot] = reader.reads(v)
-}
+object DingBotTransformer extends JsonTransformer[DingBot](Json.reads[DingBot], Json.writes[DingBot])
 
 object DingBotsSchema extends SchemaDesign {
   override def name : String = "DingBotSchemaDesign"

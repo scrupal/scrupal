@@ -9,18 +9,18 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
-case class FileSysCollection[S <: Storable[S]] private[filesys] (schema : Schema, name : String) extends Collection[S] {
+case class FileSysCollection[S <: Storable] private[filesys] (schema : Schema, name : String) extends Collection[S] {
   require(schema.isInstanceOf[FileSysSchema])
 
   def count : Long = content.size
 
-  override def update(obj : S, upd : Modification[S]) : Future[WriteResult] = update(obj.primary_id, upd)
+  override def update(obj : S, upd : Modification[S]) : Future[WriteResult] = update(obj.primaryId, upd)
 
   override def update(id : ID, update : Modification[S]) : Future[WriteResult] = Future {
     content.get(id) match {
       case Some(s : S @unchecked) ⇒
         val newObj = update(s)
-        newObj.primary_id = s.primary_id
+        newObj.primaryId = s.primaryId
         content.put(id, newObj)
         WriteResult.success()
       case None ⇒
@@ -29,16 +29,16 @@ case class FileSysCollection[S <: Storable[S]] private[filesys] (schema : Schema
   }
 
   override def insert(obj : S, update : Boolean) : Future[WriteResult] = Future.successful[WriteResult] {
-    content.get(obj.primary_id) match {
+    content.get(obj.primaryId) match {
       case Some(s : S @unchecked) ⇒
         if (update) {
-          content.put(obj.primary_id, s)
+          content.put(obj.primaryId, s)
           WriteResult.success()
         } else {
-          WriteResult.error(s"Update not permitted during insert of #${obj.primary_id} in collection '$name")
+          WriteResult.error(s"Update not permitted during insert of #${obj.primaryId} in collection '$name")
         }
       case None ⇒
-        content.put(obj.primary_id, obj)
+        content.put(obj.primaryId, obj)
         WriteResult.success()
     }
   }
@@ -47,7 +47,7 @@ case class FileSysCollection[S <: Storable[S]] private[filesys] (schema : Schema
     content.get(id)
   }
 
-  override def delete(obj : S) : Future[WriteResult] = delete(obj.primary_id)
+  override def delete(obj : S) : Future[WriteResult] = delete(obj.primaryId)
 
   override def delete(id : ID) : Future[WriteResult] = Future {
     if (content.contains(id)) {
@@ -96,8 +96,8 @@ case class FileSysCollection[S <: Storable[S]] private[filesys] (schema : Schema
   override def close() : Unit = { content.empty; pids.set(0) }
 
   private def ensurePrimaryId(s : S) : Unit = {
-    if (s.primary_id == Storable.undefined_primary_id)
-      s.primary_id = pids.getAndIncrement()
+    if (s.primaryId == Storable.undefined_primary_id)
+      s.primaryId = pids.getAndIncrement()
   }
   private val pids = new AtomicLong(0)
   private val content = mutable.HashMap.empty[Long, S]

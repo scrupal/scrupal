@@ -24,17 +24,17 @@ import scrupal.utils.ScrupalComponent
 import scala.concurrent.Future
 
 /** A reference to a specific object */
-abstract class Reference[S <: Storable[S]](collection : Collection[S], id : ID) extends AutoCloseable {
+abstract class Reference[S <: Storable](collection : Collection[S], id : ID) extends AutoCloseable {
   def fetch : Future[Option[S]]
 }
 
 object Reference extends ScrupalComponent {
-  def apply[T, S <: Storable[S]](storage_url : URI, schema : String, collection : String, obj : S) : Reference[S] = {
+  def apply[T, S <: Storable](storage_url : URI, schema : String, collection : String, obj : S) : Reference[S] = {
     val driver = StorageDriver.apply(storage_url)
     driver.open(storage_url, create = false) match {
       case Some(storage) ⇒
         storage.withCollection(schema, collection) { coll : Collection[_] ⇒
-          driver.makeReference[S](coll.asInstanceOf[Collection[S]], obj.primary_id)
+          driver.makeReference[S](coll.asInstanceOf[Collection[S]], obj.primaryId)
         }
       case None ⇒
         toss(s"No storage for $storage_url")

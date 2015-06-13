@@ -21,7 +21,7 @@ import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.Future
 
-trait Collection[S <: Storable[S]] extends AutoCloseable with ScrupalComponent {
+trait Collection[S <: Storable] extends AutoCloseable with ScrupalComponent {
   def name : String
   def schema : Schema
   override def toString = { s"Collection $name in $schema" }
@@ -53,5 +53,5 @@ object WriteResult {
 }
 
 trait IndexKind
-trait Modification[S <: Storable[S]] { def apply(s : S) : S = s }
+trait Modification[S <: Storable] { def apply(s : S) : S = s }
 trait Query

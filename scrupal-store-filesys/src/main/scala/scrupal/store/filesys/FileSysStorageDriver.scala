@@ -63,7 +63,7 @@ object FileSysStorageDriver extends StorageDriver {
     }
   }
 
-  def makeReference[S <: Storable[S]](coll : Collection[S], id : ID) : Reference[S] = {
+  def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S] = {
     require(coll.isInstanceOf[FileSysCollection[S]])
     FileSysReference[S](coll.asInstanceOf[FileSysCollection[S]], id)
   }
@@ -77,7 +77,7 @@ object FileSysStorageDriver extends StorageDriver {
     FileSysSchema(store, name, design)
   }
 
-  def makeCollection[S <: Storable[S]](schema : Schema, name : String) : Collection[S] = {
+  def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S] = {
     require(schema.isInstanceOf[FileSysSchema])
     FileSysCollection[S](schema, name)
   }

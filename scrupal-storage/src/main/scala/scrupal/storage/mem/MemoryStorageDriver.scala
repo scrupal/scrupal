@@ -3,10 +3,8 @@ package scrupal.storage.mem
 import java.net.URI
 
 import scrupal.storage.api._
-import scrupal.utils.{ TryWith, ScrupalComponent }
 
 import scala.collection.mutable
-import scala.util.{ Failure, Success, Try }
 
 /** Title Of Thing.
   *
@@ -47,7 +45,7 @@ object MemoryStorageDriver extends StorageDriver {
     }
   }
 
-  def makeReference[S <: Storable[S]](coll : Collection[S], id : ID) : Reference[S] = {
+  def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S] = {
     require(coll.isInstanceOf[MemoryCollection[S]])
     MemoryReference[S](coll.asInstanceOf[MemoryCollection[S]], id)
   }
@@ -61,7 +59,7 @@ object MemoryStorageDriver extends StorageDriver {
     MemorySchema(store, name, design)
   }
 
-  def makeCollection[S <: Storable[S]](schema : Schema, name : String) : Collection[S] = {
+  def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S] = {
     require(schema.isInstanceOf[MemorySchema])
     MemoryCollection[S](schema, name)
   }

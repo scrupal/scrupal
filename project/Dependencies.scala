@@ -34,6 +34,10 @@ trait Dependencies
     google_sedis, jcenter_repo
   )
 
+  // Compiler Features
+  val parser_combinators      = "org.scala-lang.modules"    %% "scala-parser-combinators" % "1.0.4"
+  val scala_xml               = "org.scala-lang.modules"    %% "scala-xml"                % "1.0.4"
+
   // Things we borrow from Play Framework
   val playV = "2.4.0"
   val play_anorm              = "com.typesafe.play"         %% "anorm"                    % playV
@@ -44,9 +48,11 @@ trait Dependencies
   val play_jdbc               = "com.typesafe.play"         %% "play-jdbc"                % playV
   val play_json               = "com.typesafe.play"         %% "play-json"                % playV
   val play_ws                 = "com.typesafe.play"         %% "play-ws"                  % playV
-  val mail_plugin             = "com.typesafe.play.plugins" %% "play-plugins-mailer"      % "3.0.1"
 
-  val scalatags               = "com.scalatags"       %% "scalatags"              % "0.5.0-SNAPSHOT"
+  // Play Plugins
+  val mail_plugin             = "com.typesafe.play.plugins" %% "play-plugins-mailer"      % "3.0.1"
+  val silhouette              = "com.mohiva"                %% "play-silhouette"          % "3.0.0-RC1"
+//val play_plugins_redis      = "com.typesafe.play.plugins" %% "play-plugins-redis"       % "2.3.1"
 
   // Spray Stuff
   val akkaV = "2.3.9"
@@ -62,40 +68,39 @@ trait Dependencies
   val akka_slf4j              = "com.typesafe.akka"   %% "akka-slf4j"             % akkaV
   val akka_http               = "com.typesafe.akka"   %% "akka-http-experimental" % "1.0-RC3"
 
-  // Fundamentals
-  val scala_arm               = "com.jsuereth"        %% "scala-arm"              % "1.4"
+  // Fundamental Libraries
+  val shapeless               = "com.chuusai"               %% "shapeless"                % "2.2.1"
+  val scala_arm               = "com.jsuereth"              %% "scala-arm"                % "1.4"
 
-  // Databass, Caches, Data Storage stuff
-  // val play_plugins_redis      = "com.typesafe"        %% "play-plugins-redis"     % "2.1.1"
-  val rxmongo                 = "com.reactific"       %% "rxmongo"                % "0.1.0-SNAPSHOT"
-  val reactivemongo           = "org.reactivemongo"   %% "reactivemongo"          % "0.11.0-SNAPSHOT"
-  val livestream_scredis      = "com.livestream"      %% "scredis"                % "2.0.6"
+  // Databass, Caches, Serialization, Data Storage stuff
+  val rxmongo                 = "com.reactific"             %% "rxmongo"                  % "0.1.0-SNAPSHOT"
+  val reactivemongo           = "org.reactivemongo"         %% "reactivemongo"            % "0.11.0-SNAPSHOT"
+  val livestream_scredis      = "com.livestream"            %% "scredis"                  % "2.0.6"
+  val akka_kryo_serialization = "com.github.romix.akka"     %% "akka-kryo-serialization"  % "0.3.3"
+  val scala_pickling          = "org.scala-lang.modules"    %% "scala-pickling"           % "0.10.1"
 
-  // WebJars based UI components
-  val marked                  = "org.webjars"         % "marked"                  % "0.3.2-1"
-  val fontawesome             = "org.webjars"         % "font-awesome"            % "4.2.0"
+  // UI Based Stuff
+  val marked                  = "org.webjars"               %  "marked"                   % "0.3.2-1"
+  val fontawesome             = "org.webjars"               %  "font-awesome"             % "4.2.0"
+  val scalatags               = "com.scalatags"             %% "scalatags"                % "0.5.0-SNAPSHOT"
 
   // Hashing Algorithms
-  val pbkdf2                  = "io.github.nremond"   %% "pbkdf2-scala"           % "0.4"
-  val bcrypt                  = "org.mindrot"         % "jbcrypt"                 % "0.3m"
-  val scrypt                  = "com.lambdaworks"     % "scrypt"                  % "1.4.0"
+  val pbkdf2                  = "io.github.nremond"         %% "pbkdf2-scala"             % "0.4"
+  val bcrypt                  = "org.mindrot"               % "jbcrypt"                   % "0.3m"
+  val scrypt                  = "com.lambdaworks"           % "scrypt"                    % "1.4.0"
+
+  // Logging
+  val grizzled_slf4j          = "org.clapper"               %% "grizzled-slf4j"           % "1.0.2"
+  val logback_classic         = "ch.qos.logback"            %  "logback-classic"          % "1.1.3"
 
   // Miscellaneous
-  val osgi_core               = "org.osgi"            % "org.osgi.core"           % "6.0.0"
-  val grizzled_slf4j          = "org.clapper"         %% "grizzled-slf4j"         % "1.0.2"
-  val logback_classic         = "ch.qos.logback"      %  "logback-classic"        % "1.1.3"
-  val guava                   = "com.google.guava"    % "guava"                   % "16.0.1"
-  val joda_time               = "joda-time"           %  "joda-time"              % "2.5"
-  val joda_convert            = "org.joda"            % "joda-convert"            % "1.2"
-  val mailer_plugin     = "com.typesafe.play.plugins" %% "play-plugins-mailer"    % "2.3.0"
-  val config                  =  "com.typesafe"       %  "config"                 % "1.2.1"
-  val commons_lang3           = "org.apache.commons"  % "commons-lang3"           % "3.3.2"
-  val scala_pickling     = "org.scala-lang.modules"   %% "scala-pickling"         % "0.10.1"
-  val hsp                     = "com.reactific"       %% "hotspot-profiler"       % "0.1.0-SNAPSHOT"
-  val parser_combinators = "org.scala-lang.modules"   %% "scala-parser-combinators" % "1.0.4"
-  val scala_xml          = "org.scala-lang.modules"   %% "scala-xml"              % "1.0.4"
-  val silhouette              = "com.mohiva"          %% "play-silhouette"        % "3.0.0-RC1"
-  val shapeless               = "com.chuusai"         %% "shapeless"              % "2.2.1"
+  val osgi_core               = "org.osgi"                  % "org.osgi.core"             % "6.0.0"
+  val guava                   = "com.google.guava"          % "guava"                     % "16.0.1"
+  val joda_time               = "joda-time"                 %  "joda-time"                % "2.5"
+  val joda_convert            = "org.joda"                  % "joda-convert"              % "1.2"
+  val config                  =  "com.typesafe"             %  "config"                   % "1.2.1"
+  val commons_lang3           = "org.apache.commons"        % "commons-lang3"             % "3.3.2"
+  val hsp                     = "com.reactific"             %% "hotspot-profiler"         % "0.1.0-SNAPSHOT"
   // Test Libraries
 
 //val icu4j                   = "com.ibm.icu"          % "icu4j"                  % "51.1"
@@ -139,7 +144,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val storage_dependencies : Seq[ModuleID] = Seq(
-    play_json, scala_pickling
+    play_json, scala_pickling, akka_kryo_serialization
   ) ++ common_dependencies
 
   val filesys_dependencies : Seq[ModuleID] = Seq( )
