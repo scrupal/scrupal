@@ -1,8 +1,7 @@
-![Version](https://img.shields.io/badge/version-unreleased-orange.svg?style=flat "unreleased")[![Build Status](https://travis-ci.org/scrupal/scrupal.svg?branch=master)](https://travis-ci.org/scrupal/scrupal.svg?branch=master)[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal)
+![Version](https://img.shields.io/badge/version-unreleased-orange.svg?style=flat "unreleased") [![Build Status](https://travis-ci.org/scrupal/scrupal-sbt.svg?branch=master)](https://travis-ci.org/scrupal/scrupal-sbt) [![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal) [![Join the chat at https://gitter.im/scrupal/scrupal](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scrupal/scrupal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Scrupal
 
-[![Join the chat at https://gitter.im/scrupal/scrupal](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scrupal/scrupal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Introduction
 Welcome to  Scrupal, an open source platform for building the next generation of web applications. The original
