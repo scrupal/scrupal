@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/scrupal/scrupal.svg?branch=master)](https://travis-ci.org/scrupal/scrupal)[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal)
+![Version](https://img.shields.io/badge/version-unreleased-orange.svg?style=flat "unreleased")[![Build Status](https://travis-ci.org/scrupal/scrupal.svg?branch=master)](https://travis-ci.org/scrupal/scrupal.svg?branch=master)[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal)
 
 # Scrupal
 
