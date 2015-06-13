@@ -1,18 +1,16 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.html
@@ -24,7 +22,7 @@ import scrupal.core.api._
 import scrupal.core.api.Html._
 
 trait BasicPageGenerator extends PageGenerator {
-  def headSuffix(context: Context, args: ContentsArgs) : Html.Contents = {
+  def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
     implicit val ctxt : Context = context
     Seq(
       link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
@@ -33,10 +31,10 @@ trait BasicPageGenerator extends PageGenerator {
     )
   }
 
-  def bodyPrefix(context: Context, args: ContentsArgs): Html.Contents = { display_alerts(context) }
+  def bodyPrefix(context : Context, args : ContentsArgs) : Html.Contents = { display_alerts(context) }
 
-  def bodySuffix(context: Context, args: ContentsArgs): Html.Contents = {
-    if(Feature.enabled('DebugFooter, context.scrupal)){
+  def bodySuffix(context : Context, args : ContentsArgs) : Html.Contents = {
+    if (Feature.enabled('DebugFooter, context.scrupal)) {
       display_context_table(context)
     } else {
       Html.emptyContents
@@ -45,48 +43,44 @@ trait BasicPageGenerator extends PageGenerator {
 }
 
 abstract class BasicPage(
-  override val id: Symbol,
-  override val title: String,
-  override val description: String
-) extends TemplatePage(id, title, description) with BasicPageGenerator
-
+  override val id : Symbol,
+  override val title : String,
+  override val description : String) extends TemplatePage(id, title, description) with BasicPageGenerator
 
 trait BootstrapPageGenerator extends BasicPageGenerator {
-  override def headSuffix(context: Context, args: ContentsArgs) : Html.Contents = {
+  override def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
     super.headSuffix(context) ++ Seq(
       jslib("jquery", "jquery.js"),
       jslib("bootstrap", "js/bootstrap.js")
     )
   }
 
-  def body_content(context: Context, args: ContentsArgs) : Contents = {
+  def body_content(context : Context, args : ContentsArgs) : Contents = {
     Seq(span(em("OOPS!"), " You forgot to override body_content!"))
   }
 
-  override def bodyMain(context: Context, args: ContentsArgs) : Contents = {
-    Seq(div(cls:="container", body_content(context, args)))
+  override def bodyMain(context : Context, args : ContentsArgs) : Contents = {
+    Seq(div(cls := "container", body_content(context, args)))
   }
 }
 
 abstract class BootstrapPage(
-  override val id: Symbol,
-  override val title: String,
-  override val description: String
-) extends BasicPage(id, title, description) with BootstrapPageGenerator
-
+  override val id : Symbol,
+  override val title : String,
+  override val description : String) extends BasicPage(id, title, description) with BootstrapPageGenerator
 
 trait MarkedPageGenerator extends BootstrapPageGenerator {
-  override def headSuffix(context: Context, args: ContentsArgs) = {
+  override def headSuffix(context : Context, args : ContentsArgs) = {
     super.headSuffix(context, args) ++ Seq(
-      jslib("marked","marked.js")
+      jslib("marked", "marked.js")
     )
   }
 
-  override def bodyMain(context: Context, args: ContentsArgs) : Contents = {
-    Seq(div(scalatags.Text.all.id:="marked", body_content(context, args)))
+  override def bodyMain(context : Context, args : ContentsArgs) : Contents = {
+    Seq(div(scalatags.Text.all.id := "marked", body_content(context, args)))
   }
 
-  override def bodySuffix(context: Context, args: ContentsArgs) :Contents = {
+  override def bodySuffix(context : Context, args : ContentsArgs) : Contents = {
     Seq(js(
       """marked.setOptions({
         |  renderer: new marked.Renderer(),
@@ -105,19 +99,17 @@ trait MarkedPageGenerator extends BootstrapPageGenerator {
 }
 
 abstract class MarkedPage(
-  override val id: Symbol,
-  override val title: String,
-  override val description: String
-) extends BootstrapPage(id, title, description) with MarkedPageGenerator
-
+  override val id : Symbol,
+  override val title : String,
+  override val description : String) extends BootstrapPage(id, title, description) with MarkedPageGenerator
 
 trait ForbiddenPageGenerator extends BasicPageGenerator {
-  def what: String
-  def why: String
+  def what : String
+  def why : String
   override val title = "Forbidden - " + what
   override val description = "Forbidden Error Page"
 
-  def bodyMain(context: Context, args: ContentsArgs): Html.Contents = {
+  def bodyMain(context : Context, args : ContentsArgs) : Html.Contents = {
     danger(Seq(
       h1("Nuh Uh! I Can't Do That!"),
       p(em("Drat!"), s"Because $why, you can't $what. That's just the way it is."),
@@ -129,27 +121,26 @@ trait ForbiddenPageGenerator extends BasicPageGenerator {
 }
 
 case class ForbiddenPage(
-  override val id: Symbol,
-  what: String,
-  why: String
-) extends Html.Template(id) with ForbiddenPageGenerator
+  override val id : Symbol,
+  what : String,
+  why : String) extends Html.Template(id) with ForbiddenPageGenerator
 
 trait NotFoundPageGenerator extends BasicPageGenerator {
-  def what: String
-  def causes: Seq[String]
-  def suggestions: Seq[String]
+  def what : String
+  def causes : Seq[String]
+  def suggestions : Seq[String]
   def title : String = "Not Found - " + what
   def description : String = "Not Found Error Page"
-  def bodyMain(context: Context, args: ContentsArgs) : Contents = {
+  def bodyMain(context : Context, args : ContentsArgs) : Contents = {
     warning(Seq(
       h1("There's A Hole In THe Fabrice Of The InterWebz!"),
       p(em("Oops!"), "We couldn't find ", what, ". That might be because:"),
-      ul({for (c ← causes) yield {li(c)}},
+      ul({ for (c ← causes) yield { li(c) } },
         li("you used an old bookmark for which the resource is no longer available"),
         li("you mis-typed the web address.")
       ),
       p("You can try one of these options:"),
-      ul({for (s ← suggestions) yield {li(s)}},
+      ul({ for (s ← suggestions) yield { li(s) } },
         li("type in another URL, or "),
         li("Try to get lucky with ", a(href := context.suggestURL.toString, "this suggestion"))
       )
@@ -158,28 +149,25 @@ trait NotFoundPageGenerator extends BasicPageGenerator {
 }
 
 case class NotFoundPage(
-  override val id: Symbol,
-  what: String,
-  causes: Seq[String] = Seq(),
-  suggestions: Seq[String] =Seq()
-) extends Html.Template(id) with NotFoundPageGenerator
+  override val id : Symbol,
+  what : String,
+  causes : Seq[String] = Seq(),
+  suggestions : Seq[String] = Seq()) extends Html.Template(id) with NotFoundPageGenerator
 
 trait PlainPageGenerator extends BasicPageGenerator {
-  def content(context: Context, args: ContentsArgs) : Html.Contents
-  def bodyMain(context: Context, args: ContentsArgs) : Contents = Seq(
-    div(cls:="container", content(context, args), debug_footer(context))
+  def content(context : Context, args : ContentsArgs) : Html.Contents
+  def bodyMain(context : Context, args : ContentsArgs) : Contents = Seq(
+    div(cls := "container", content(context, args), debug_footer(context))
   )
 }
 
-abstract class GenericPlainPage(_id: Symbol, title: String, description: String)
+abstract class GenericPlainPage(_id : Symbol, title : String, description : String)
   extends BasicPage(_id, title, description) with PlainPageGenerator
 
 case class PlainPage(
-  override val id: Symbol,
-  override val title: String,
-  override val description: String,
-  the_content: Html.Contents
-) extends GenericPlainPage(id, title, description)
-{
-  def content(context: Context, args: ContentsArgs) : Html.Contents = the_content
+  override val id : Symbol,
+  override val title : String,
+  override val description : String,
+  the_content : Html.Contents) extends GenericPlainPage(id, title, description) {
+  def content(context : Context, args : ContentsArgs) : Html.Contents = the_content
 }

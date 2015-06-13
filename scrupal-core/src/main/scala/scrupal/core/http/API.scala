@@ -1,35 +1,16 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
- **********************************************************************************************************************/
-
-/**********************************************************************************************************************
- * This file is part of Scrupal a Web Application Framework.                                                          *
- *                                                                                                                    *
- * Copyright (c) 2013, Reid Spencer and viritude llc. All Rights Reserved.                                            *
- *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
- *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
- *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.http
@@ -41,21 +22,21 @@ import spray.routing.Route
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and
   * read about the various APIs supported by their Scrupal Installation.
   */
-case class API(id: Symbol, priority: Int) extends Controller {
-  def routes(implicit scrupal: Scrupal) : Route = reject
+case class API(id : Symbol, priority : Int) extends Controller {
+  def routes(implicit scrupal : Scrupal) : Route = reject
 
-/*
+  /*
   val feature = CoreFeatures.RESTAPIAccess
 
-  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def fetchAll(kind: String) = UserAction { implicit context: AnyUserContext ⇒
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" => Ok(Json.arr("scrupal.org", "scrupal.com"))
-        case "modules" => Ok(Json.toJson(moduleNames))
-        case "entities" => Ok(Json.arr("One", "Two"))
-        case "types" => Ok(Json.toJson(typeNames))
-        case "users" => Ok(Json.arr("One", "Two", "Three"))
-        case _ => {
+        case "sites" ⇒ Ok(Json.arr("scrupal.org", "scrupal.com"))
+        case "modules" ⇒ Ok(Json.toJson(moduleNames))
+        case "entities" ⇒ Ok(Json.arr("One", "Two"))
+        case "types" ⇒ Ok(Json.toJson(typeNames))
+        case "users" ⇒ Ok(Json.arr("One", "Two", "Three"))
+        case _ ⇒ {
           NotFound(JsString(kind))
         }
       }
@@ -68,126 +49,126 @@ case class API(id: Symbol, priority: Int) extends Controller {
     * @param id
     * @return
     */
-  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def fetch(kind: String, id: String) = UserAction { implicit context: AnyUserContext ⇒
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "site" => Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
-        case "module" => {
+        case "site" ⇒ Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
+        case "module" ⇒ {
           Module(Symbol(id)) match {
-            case Some(m: Module) => Ok(m.toJson)
-            case _ => NotFound(Json.obj())
+            case Some(m: Module) ⇒ Ok(m.toJson)
+            case _ ⇒ NotFound(Json.obj())
           }
         }
-        case "entity" => Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
-        case "bundle" => Ok(Json.obj("name" -> id))
-        case "trait" => Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
-        case "type" => Type(Symbol(id)) match {
-          case Some(t: Type) => Ok(t.toJson)
-          case _ => NotFound(JsString("type " + id))
+        case "entity" ⇒ Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
+        case "bundle" ⇒ Ok(Json.obj("name" -> id))
+        case "trait" ⇒ Ok(Json.obj("name" -> id, "description" -> JsString("Description of " + id)))
+        case "type" ⇒ Type(Symbol(id)) match {
+          case Some(t: Type) ⇒ Ok(t.toJson)
+          case _ ⇒ NotFound(JsString("type " + id))
         }
-        case _ => {
+        case _ ⇒ {
           NotFound(JsString(kind + " " + id))
         }
       }
     }
   }
 
-  def createAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def createAll(kind: String) = UserAction { implicit context: AnyUserContext ⇒
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" => NotImplemented(JsString("Creation of " + kind))
-        case "modules" => NotImplemented(JsString("Creation of " + kind))
-        case "entities" => NotImplemented(JsString("Creation of " + kind))
-        case "traits" => NotImplemented(JsString("Creation of " + kind))
-        case "types" => NotImplemented(JsString("Creation of " + kind))
-        case _ => NotImplemented(JsString("Creation of " + kind))
+        case "sites" ⇒ NotImplemented(JsString("Creation of " + kind))
+        case "modules" ⇒ NotImplemented(JsString("Creation of " + kind))
+        case "entities" ⇒ NotImplemented(JsString("Creation of " + kind))
+        case "traits" ⇒ NotImplemented(JsString("Creation of " + kind))
+        case "types" ⇒ NotImplemented(JsString("Creation of " + kind))
+        case _ ⇒ NotImplemented(JsString("Creation of " + kind))
       }
     }
   }
 
-  def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def create(kind: String, id: String) = UserAction { implicit context: AnyUserContext ⇒
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" => NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "modules" => NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "entities" => NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "traits" => NotImplemented(JsString("Creation of " + kind + " " + id))
-        case "types" => NotImplemented(JsString("Creation of " + kind + " " + id))
-        case _ => {
+        case "sites" ⇒ NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "modules" ⇒ NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "entities" ⇒ NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "traits" ⇒ NotImplemented(JsString("Creation of " + kind + " " + id))
+        case "types" ⇒ NotImplemented(JsString("Creation of " + kind + " " + id))
+        case _ ⇒ {
           NotImplemented(JsString("Creation of " + kind + " " + id))
         }
       }
     }
   }
 
-  def deleteAll(kind: String) = UserAction { implicit request: AnyUserContext =>
+  def deleteAll(kind: String) = UserAction { implicit request: AnyUserContext ⇒
     WithFeature(feature) {
       kind.toLowerCase() match {
-        case "sites" => NotImplemented(JsString("Deletion of all " + kind))
-        case "modules" => NotImplemented(JsString("Deletion of all " + kind))
-        case "entities" => NotImplemented(JsString("Deletion of all " + kind))
-        case "traits" => NotImplemented(JsString("Deletion of all " + kind))
-        case "types" => NotImplemented(JsString("Deletion of all " + kind))
-        case _ => {
+        case "sites" ⇒ NotImplemented(JsString("Deletion of all " + kind))
+        case "modules" ⇒ NotImplemented(JsString("Deletion of all " + kind))
+        case "entities" ⇒ NotImplemented(JsString("Deletion of all " + kind))
+        case "traits" ⇒ NotImplemented(JsString("Deletion of all " + kind))
+        case "types" ⇒ NotImplemented(JsString("Deletion of all " + kind))
+        case _ ⇒ {
           NotImplemented(JsString("Deletion of all " + kind))
         }
       }
     }
   }
 
-  def delete(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def delete(kind: String, id: String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Deletion of " + kind + " " + id))
-      case "modules" =>  NotImplemented(JsString("Deletion of " + kind + " " + id))
-      case "entities" => NotImplemented(JsString("Deletion of " + kind + " " + id))
-      case "traits" =>   NotImplemented(JsString("Deletion of " + kind + " " + id))
-      case "types" =>    NotImplemented(JsString("Deletion of " + kind + " " + id))
-      case _ => {        NotImplemented(JsString("Deletion of " + kind + " " + id))  }
+      case "sites" ⇒    NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "modules" ⇒  NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "entities" ⇒ NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "traits" ⇒   NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case "types" ⇒    NotImplemented(JsString("Deletion of " + kind + " " + id))
+      case _ ⇒ {        NotImplemented(JsString("Deletion of " + kind + " " + id))  }
     }
   }
 
 
-  def updateAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def updateAll(kind: String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Update of " + kind ))
-      case "modules" =>  NotImplemented(JsString("Update of " + kind ))
-      case "entities" => NotImplemented(JsString("Update of " + kind ))
-      case "traits" =>   NotImplemented(JsString("Update of " + kind ))
-      case "types" =>    NotImplemented(JsString("Update of " + kind ))
-      case _ => {        NotImplemented(JsString("Update of " + kind ))  }
+      case "sites" ⇒    NotImplemented(JsString("Update of " + kind ))
+      case "modules" ⇒  NotImplemented(JsString("Update of " + kind ))
+      case "entities" ⇒ NotImplemented(JsString("Update of " + kind ))
+      case "traits" ⇒   NotImplemented(JsString("Update of " + kind ))
+      case "types" ⇒    NotImplemented(JsString("Update of " + kind ))
+      case _ ⇒ {        NotImplemented(JsString("Update of " + kind ))  }
     }
   }
 
-  def update(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def update(kind: String, id: String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Update of " + kind + " " + id))
-      case "modules" =>  NotImplemented(JsString("Update of " + kind + " " + id))
-      case "entities" => NotImplemented(JsString("Update of " + kind + " " + id))
-      case "traits" =>   NotImplemented(JsString("Update of " + kind + " " + id))
-      case "types" =>    NotImplemented(JsString("Update of " + kind + " " + id))
-      case _ => {        NotImplemented(JsString("Update of " + kind + " " + id))  }
+      case "sites" ⇒    NotImplemented(JsString("Update of " + kind + " " + id))
+      case "modules" ⇒  NotImplemented(JsString("Update of " + kind + " " + id))
+      case "entities" ⇒ NotImplemented(JsString("Update of " + kind + " " + id))
+      case "traits" ⇒   NotImplemented(JsString("Update of " + kind + " " + id))
+      case "types" ⇒    NotImplemented(JsString("Update of " + kind + " " + id))
+      case _ ⇒ {        NotImplemented(JsString("Update of " + kind + " " + id))  }
     }
   }
 
-  def summarizeAll(kind: String) = UserAction { implicit context: AnyUserContext =>
+  def summarizeAll(kind: String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Info for " + kind ))
-      case "modules" =>  NotImplemented(JsString("Info for " + kind ))
-      case "entities" => NotImplemented(JsString("Info for " + kind ))
-      case "traits" =>   NotImplemented(JsString("Info for " + kind ))
-      case "types" =>    NotImplemented(JsString("Info for " + kind ))
-      case _ => {        NotImplemented(JsString("Info for " + kind ))  }
+      case "sites" ⇒    NotImplemented(JsString("Info for " + kind ))
+      case "modules" ⇒  NotImplemented(JsString("Info for " + kind ))
+      case "entities" ⇒ NotImplemented(JsString("Info for " + kind ))
+      case "traits" ⇒   NotImplemented(JsString("Info for " + kind ))
+      case "types" ⇒    NotImplemented(JsString("Info for " + kind ))
+      case _ ⇒ {        NotImplemented(JsString("Info for " + kind ))  }
     }
   }
 
-  def summarize(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def summarize(kind: String, id: String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "modules" =>  NotImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "entities" => NotImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "traits" =>   NotImplemented(JsString("Info for " + id + " of kind " + kind))
-      case "types" =>    NotImplemented(JsString("Info for " + id + " of kind " + kind))
-      case _ => {        NotImplemented(JsString("Info for " + id + " of kind " + kind))  }
+      case "sites" ⇒    NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "modules" ⇒  NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "entities" ⇒ NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "traits" ⇒   NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case "types" ⇒    NotImplemented(JsString("Info for " + id + " of kind " + kind))
+      case _ ⇒ {        NotImplemented(JsString("Info for " + id + " of kind " + kind))  }
     }
   }
 
@@ -208,25 +189,25 @@ case class API(id: Symbol, priority: Int) extends Controller {
     * but some help is needed for the fields that require entity help. The Entity method
     * `option(name:String, id: InstanceId)` will be called to fill in the blanks as needed by the request
    */
-  def optionsOfAll(kind : String) = UserAction { implicit context: AnyUserContext =>
+  def optionsOfAll(kind : String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Options of " + kind ))
-      case "modules" =>  NotImplemented(JsString("Options of " + kind ))
-      case "entities" => NotImplemented(JsString("Options of " + kind ))
-      case "traits" =>   NotImplemented(JsString("Options of " + kind ))
-      case "types" =>    NotImplemented(JsString("Options of " + kind ))
-      case _ => {        NotImplemented(JsString("Options of " + kind ))  }
+      case "sites" ⇒    NotImplemented(JsString("Options of " + kind ))
+      case "modules" ⇒  NotImplemented(JsString("Options of " + kind ))
+      case "entities" ⇒ NotImplemented(JsString("Options of " + kind ))
+      case "traits" ⇒   NotImplemented(JsString("Options of " + kind ))
+      case "types" ⇒    NotImplemented(JsString("Options of " + kind ))
+      case _ ⇒ {        NotImplemented(JsString("Options of " + kind ))  }
     }
   }
 
-  def optionsOf(kind: String, id: String) = UserAction { implicit context: AnyUserContext =>
+  def optionsOf(kind: String, id: String) = UserAction { implicit context: AnyUserContext ⇒
     kind.toLowerCase() match {
-      case "sites" =>    NotImplemented(JsString("Options of " + kind + " for " + id))
-      case "modules" =>  NotImplemented(JsString("Options of " + kind + " for " + id))
-      case "entities" => NotImplemented(JsString("Options of " + kind + " for " + id))
-      case "traits" =>   NotImplemented(JsString("Options of " + kind + " for " + id))
-      case "types" =>    NotImplemented(JsString("Options of " + kind + " for " + id))
-      case _ => {        NotImplemented(JsString("Options of " + kind + " for " + id))  }
+      case "sites" ⇒    NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "modules" ⇒  NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "entities" ⇒ NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "traits" ⇒   NotImplemented(JsString("Options of " + kind + " for " + id))
+      case "types" ⇒    NotImplemented(JsString("Options of " + kind + " for " + id))
+      case _ ⇒ {        NotImplemented(JsString("Options of " + kind + " for " + id))  }
     }
   }
 
@@ -238,7 +219,7 @@ case class API(id: Symbol, priority: Int) extends Controller {
     * @param what
     * @return
     */
-  def get(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext =>
+  def get(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext ⇒
     NotImplemented(JsString("Getting " + what + " from " + kind + " " + id ))
   }
 
@@ -249,7 +230,7 @@ case class API(id: Symbol, priority: Int) extends Controller {
     * @param what
     * @return
     */
-  def put(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext =>
+  def put(kind: String, id: String, what: String) = UserAction { implicit context: AnyUserContext ⇒
     NotImplemented(JsString("Putting " + what + " to " + kind + " " + id ))
   }
 */
