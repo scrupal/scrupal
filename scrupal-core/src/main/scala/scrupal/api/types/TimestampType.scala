@@ -1,25 +1,23 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api.types
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{BSONLong, BSONValue}
 import scrupal.api._
+import scrupal.utils.Validation.Location
 
 import scala.concurrent.duration.Duration
 
@@ -30,23 +28,22 @@ import scala.concurrent.duration.Duration
   * @param min
   * @param max
   */
-case class TimestampType (
+case class TimestampType(
   id : Identifier,
-  description: String,
-  min: DateTime = new DateTime(0L),
-  max: DateTime = new DateTime(Long.MaxValue/2)
-) extends Type {
-  override type ScalaValueType = Duration
+  description : String,
+  min : DateTime = new DateTime(0L),
+  max : DateTime = new DateTime(Long.MaxValue / 2)) extends Type[Long] {
+  override type ValueType = Duration
   assert(min.getMillis <= max.getMillis)
-  def validate(ref: ValidationLocation, value: BSONValue) = {
+  def validate(ref : Location, value : Long) = {
     simplify(ref, value, "Long") {
-      case BSONLong(l) if l < min.getMillis =>
+      case l : Long if l < min.getMillis ⇒
         Some(s"Timestamp $l is out of range, below minimum of $min")
-      case BSONLong(l) if l > max.getMillis =>
+      case l : Long if l > max.getMillis ⇒
         Some(s"Timestamp $l is out of range, above maximum of $max")
-      case BSONLong(l) =>
+      case l : Long ⇒
         None
-      case x: BSONValue =>
+      case _ ⇒
         Some("")
     }
   }

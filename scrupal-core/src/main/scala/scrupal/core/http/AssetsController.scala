@@ -1,79 +1,79 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.http
 
 import scrupal.core.api._
-import spray.http.{MediaTypes, StatusCodes, Uri}
+import spray.http.{ MediaTypes, StatusCodes, Uri }
 import spray.routing._
-
 
 /** Controller that provides assets
   *
   * This controller provides the assets that are "baked" in to a Scrupal applications.
- */
-class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priority=Int.MinValue /*Make Assets first*/)
+  */
+class AssetsController(scrupal : Scrupal) extends BasicController('Assets, priority = Int.MinValue /*Make Assets first*/ )
   with AssetLocator with ScrupalMarshallers {
 
-  val assets_path: Seq[String] = {
-    scrupal.withConfiguration[Seq[String]] { config => super.asset_path_from_config(config)}
+  val assets_path : Seq[String] = {
+    scrupal.withConfiguration[Seq[String]] { config ⇒ super.asset_path_from_config(config) }
   }
 
-  def routes(implicit scrupal: Scrupal): Route = {
+  def routes(implicit scrupal : Scrupal) : Route = {
     // logRequestResponse(showAllResponses _) {
-      get {
-        pathPrefix("assets") {
-          path("favicon") {
-            favicon(/*theSite*/)
+    get {
+      pathPrefix("assets") {
+        path("favicon") {
+          favicon( /*theSite*/ )
+        } ~
+          path("lib" / Segment / RestPath) {
+            case (library, rest_of_path) ⇒
+              lib(library, rest_of_path)
           } ~
-          path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
-            lib(library, rest_of_path)
+          path("themes" / Segment / RestPath) {
+            case (provider, rest_of_path) ⇒
+              theme(provider, rest_of_path)
           } ~
-          path("themes" / Segment / RestPath) { case (provider, rest_of_path) ⇒
-            theme(provider, rest_of_path)
-          } ~
-          path("stylesheets" / RestPath) { rest_of_path: Uri.Path ⇒
+          path("stylesheets" / RestPath) { rest_of_path : Uri.Path ⇒
             stylesheets(rest_of_path)
           } ~
-          path("javascripts" / RestPath) { rest_of_path: Uri.Path ⇒
+          path("javascripts" / RestPath) { rest_of_path : Uri.Path ⇒
             javascripts(rest_of_path)
           } ~
-          path("images" / RestPath) { rest_of_path: Uri.Path ⇒
+          path("images" / RestPath) { rest_of_path : Uri.Path ⇒
             images(rest_of_path)
           } ~
-          path(RestPath) { rest_of_path: Uri.Path ⇒
+          path(RestPath) { rest_of_path : Uri.Path ⇒
             val r = (StatusCodes.NotFound, s"Asset '$rest_of_path' was not found.")
             complete(r)
           } ~ reject
-        } ~ pathPrefix("webjars") {
-          path("lib" / Segment / RestPath) { case (library, rest_of_path) ⇒
+      } ~ pathPrefix("webjars") {
+        path("lib" / Segment / RestPath) {
+          case (library, rest_of_path) ⇒
             lib(library, rest_of_path)
-          } ~ reject
-        }
+        } ~ reject
       }
+    }
     // }
   }
 
-  def resultAsRoute(result: ⇒ Result[_])(implicit scrupal: Scrupal): Route = {
+  def resultAsRoute(result : ⇒ Result[_])(implicit scrupal : Scrupal) : Route = {
     if (result.disposition.isSuccessful) {
-      complete {makeMarshallable(result)}
+      complete { makeMarshallable(result) }
     } else {
       result match {
-        case er: ErrorResult =>
+        case er : ErrorResult ⇒
           if (result.disposition == NotFound) {
             reject
           } else {
@@ -83,7 +83,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
     }
   }
 
-  def favicon(/*aSite: Site*/)(implicit scrupal: Scrupal): StandardRoute = {
+  def favicon( /*aSite: Site*/ )(implicit scrupal : Scrupal) : StandardRoute = {
     complete {
       val path = "images/scrupal.ico"
       val result = fetch(path, MediaTypes.`image/x-icon`, minified = false)
@@ -91,7 +91,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
     }
   }
 
-  def lib(library: String, rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
+  def lib(library : String, rest_of_path : Uri.Path)(implicit scrupal : Scrupal) : Route = {
     complete {
       val thePath = s"lib/$library/${rest_of_path}"
       val result = fetch(thePath)
@@ -99,7 +99,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
     }
   }
 
-  def theme(provider: String, rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
+  def theme(provider : String, rest_of_path : Uri.Path)(implicit scrupal : Scrupal) : Route = {
     complete {
       val thePath = s"themes/$provider/$rest_of_path"
       val result = fetch(thePath)
@@ -107,7 +107,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
     }
   }
 
-  def images(rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
+  def images(rest_of_path : Uri.Path)(implicit scrupal : Scrupal) : Route = {
     complete {
       val thePath = s"images/$rest_of_path"
       val result = fetch(thePath)
@@ -115,7 +115,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
     }
   }
 
-  def javascripts(rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
+  def javascripts(rest_of_path : Uri.Path)(implicit scrupal : Scrupal) : Route = {
     complete {
       val thePath = s"javascripts/$rest_of_path"
       val result = fetch(thePath)
@@ -123,7 +123,7 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
     }
   }
 
-  def stylesheets(rest_of_path: Uri.Path)(implicit scrupal: Scrupal): Route = {
+  def stylesheets(rest_of_path : Uri.Path)(implicit scrupal : Scrupal) : Route = {
     complete {
       val thePath = s"stylesheets/$rest_of_path"
       val result = fetch(thePath)
@@ -134,15 +134,14 @@ class AssetsController(scrupal: Scrupal) extends BasicController('Assets, priori
 }
 
 case class WebJarsController() extends BasicController('webjars) {
-  def routes(implicit scrupal: Scrupal): Route = {
-    path("javascripts" / RestPath) { file =>
+  def routes(implicit scrupal : Scrupal) : Route = {
+    path("javascripts" / RestPath) { file ⇒
       get {
         complete("foo")
       }
     }
   }
 }
-
 
 /*
 class AssetsBuilder(errorHandler: HttpErrorHandler) extends Controller {
@@ -157,9 +156,9 @@ private def maybeNotModified(request: Request[_], assetInfo: AssetInfo, aggressi
   // If-Modified-Since header, regardless of whether If-None-Match matches or not. This is in
   // accordance with section 14.26 of RFC2616.
   request.headers.get(IF_NONE_MATCH) match {
-    case Some(etags) =>
-      assetInfo.etag.filter(someEtag => etags.split(',').exists(_.trim == someEtag)).flatMap(_ => Some(cacheableResult(assetInfo, aggressiveCaching, NotModified)))
-    case None =>
+    case Some(etags) ⇒
+      assetInfo.etag.filter(someEtag ⇒ etags.split(',').exists(_.trim == someEtag)).flatMap(_ ⇒ Some(cacheableResult(assetInfo, aggressiveCaching, NotModified)))
+    case None ⇒
       for {
         ifModifiedSinceStr <- request.headers.get(IF_MODIFIED_SINCE)
         ifModifiedSince <- parseModifiedDate(ifModifiedSinceStr)
@@ -174,7 +173,7 @@ private def maybeNotModified(request: Request[_], assetInfo: AssetInfo, aggressi
 private def cacheableResult[A <: Result](assetInfo: AssetInfo, aggressiveCaching: Boolean, r: A): Result = {
 
   def addHeaderIfValue(name: String, maybeValue: Option[String], response: Result): Result = {
-    maybeValue.fold(response)(v => response.withHeaders(name -> v))
+    maybeValue.fold(response)(v ⇒ response.withHeaders(name -> v))
   }
 
   val r1 = addHeaderIfValue(ETAG, assetInfo.etag, r)
@@ -221,8 +220,8 @@ def versioned(path: String, file: Asset): Action[AnyContent] = {
     val bareFile = new File(f.getParent, f.getName.drop(requestedDigest.size + 1)).getPath
     val bareFullPath = new File(path + File.separator + bareFile).getPath
     blocking(digest(bareFullPath)) match {
-      case Some(`requestedDigest`) => at(path, bareFile, aggressiveCaching = true)
-      case _ => at(path, file.name)
+      case Some(`requestedDigest`) ⇒ at(path, bareFile, aggressiveCaching = true)
+      case _ ⇒ at(path, file.name)
     }
   } else {
     at(path, file.name)
@@ -237,16 +236,16 @@ def versioned(path: String, file: Asset): Action[AnyContent] = {
  * @param aggressiveCaching if true then an aggressive set of caching directives will be used. Defaults to false.
  */
 def at(path: String, file: String, aggressiveCaching: Boolean = false): Action[AnyContent] = Action.async {
-  implicit request =>
+  implicit request ⇒
 
     import Implicits.trampoline
     val assetName: Option[String] = resourceNameAt(path, file)
-    val assetInfoFuture: Future[Option[(AssetInfo, Boolean)]] = assetName.map { name =>
+    val assetInfoFuture: Future[Option[(AssetInfo, Boolean)]] = assetName.map { name ⇒
       assetInfoForRequest(request, name)
     } getOrElse Future.successful(None)
 
     val pendingResult: Future[Result] = assetInfoFuture.flatMap {
-      case Some((assetInfo, gzipRequested)) =>
+      case Some((assetInfo, gzipRequested)) ⇒
         val stream = assetInfo.url(gzipRequested).openStream()
         val length = stream.available
         val resourceData = Enumerator.fromStream(stream)(Implicits.defaultExecutionContext)
@@ -258,13 +257,13 @@ def at(path: String, file: String, aggressiveCaching: Boolean = false): Action[A
             result(file, length, assetInfo.mimeType, resourceData, gzipRequested, assetInfo.gzipUrl.isDefined)
           )
         })
-      case None => errorHandler.onClientError(request, NOT_FOUND, "Resource not found by Assets controller")
+      case None ⇒ errorHandler.onClientError(request, NOT_FOUND, "Resource not found by Assets controller")
     }
 
     pendingResult.recoverWith {
-      case e: InvalidUriEncodingException =>
+      case e: InvalidUriEncodingException ⇒
         errorHandler.onClientError(request, BAD_REQUEST, s"Invalid URI encoding for $file at $path: " + e.getMessage)
-      case NonFatal(e) =>
+      case NonFatal(e) ⇒
         // Add a bit more information to the exception for better error reporting later
         errorHandler.onServerError(request, new RuntimeException(s"Unexpected error while serving $file at $path: " + e.getMessage, e))
     }
@@ -319,7 +318,7 @@ def resolve(path: String, file: String) : Action[AnyContent] = {
    resolve(file)
  }
  catch {
-   case x: IllegalArgumentException => fallback(path, file)
+   case x: IllegalArgumentException ⇒ fallback(path, file)
  }
 }
 
@@ -390,20 +389,20 @@ def favicon = fallback(images, "viritude.ico")
 */
 def theme(provider: String, name: String, min: Boolean = true) : Action[AnyContent] =  {
  (Global.ScrupalIsConfigured && !CoreFeatures.DevMode) match {
-   case true => {
+   case true ⇒ {
      provider.toLowerCase() match {
-       case "scrupal"    => {
+       case "scrupal"    ⇒ {
          // TODO : Look it up in the database first and if that does not work forward on to static resolution
          fallback(themes, minify(name,".css", true))
        }
-       case "bootswatch" =>  Action { request:RequestHeader =>
+       case "bootswatch" ⇒  Action { request:RequestHeader ⇒
          // TODO : Deal with "NotModified" better here?
          MovedPermanently("http://bootswatch.com/" + name + "/" + minify("bootstrap", ".css", min))
        }
-       case _ =>  fallback(stylesheets, "boostrap.min.css")
+       case _ ⇒  fallback(stylesheets, "boostrap.min.css")
      }
    }
-   case false => fallback(themes, "bootswatch/cyborg.min.css")
+   case false ⇒ fallback(themes, "bootswatch/cyborg.min.css")
  }
 }
 
@@ -413,12 +412,12 @@ def theme(provider: String, name: String, min: Boolean = true) : Action[AnyConte
 def doc(path: String) = fallback(docs, path)
 
 def isValidDocAsset(path: String) : Boolean = {
- resourceNameAt(docs, path).exists { resourceName: String => Play.resource(resourceName).exists { u: URL => true } }
+ resourceNameAt(docs, path).exists { resourceName: String ⇒ Play.resource(resourceName).exists { u: URL ⇒ true } }
 }
 
 private def resourceNameAt(path: String, file: String): Option[String] = {
  val decodedFile = UriEncoding.decodePath(file, "utf-8")
- val resourceName = Option(path + "/" + decodedFile).map(name => if (name.startsWith("/")) name else ("/" + name)).get
+ val resourceName = Option(path + "/" + decodedFile).map(name ⇒ if (name.startsWith("/")) name else ("/" + name)).get
  if (new File(resourceName).isDirectory || !new File(resourceName).getCanonicalPath.startsWith(new File(path).getCanonicalPath)) {
    None
  } else {
@@ -449,38 +448,37 @@ private lazy val suffix_r = "(\\.[^.]*)$".r
 
 private def minify(file: String, suffix: String, min: Boolean ) = {
  (min && Play.mode != Mode.Dev, file.endsWith(suffix)) match {
-   case (false, false) => file + suffix
-   case (false, true) => file
-   case (true, false) => file + ".min" + suffix
-   case (true, true) => suffix_r.replaceFirstIn(file, ".min$1")
+   case (false, false) ⇒ file + suffix
+   case (false, true) ⇒ file
+   case (true, false) ⇒ file + ".min" + suffix
+   case (true, true) ⇒ suffix_r.replaceFirstIn(file, ".min$1")
  }
 }
 */
-/**
-    # Special handling for AngularJS modules that have partial HTML files that need to be served.
-    GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
-
-    # Special handling for the favicon
-      GET            /assets/favicon                        scrupal.controllers.Assets.favicon
-
-    # Get dependency managed resources from WebJars
-      GET            /webjars/require.js                    scrupal.controllers.Assets.requirejs
-    GET            /webjars/javascripts/ *file             scrupal.controllers.Assets.js(file)
-  GET            /webjars/stylesheets/ *file             scrupal.controllers.Assets.css(file)
-  GET            /webjars/ *file                         scrupal.controllers.Assets.misc(file)
-
-  # Map the specialized, manufactured jsroutes.js file which maps THESE routes into javascript !
-  GET            /assets/javascripts/jsroutes.js        scrupal.controllers.Home.jsRoutes(varName ?= "jsRoutes")
-
-  # Map static resources from the /assets folder to the /assets URL path
-   GET            /assets/javascripts/ *file              scrupal.controllers.Assets.js_s(file)
-  GET            /assets/javascripts-min/ *file          scrupal.controllers.Assets.js_s_min(file)
-  GET            /assets/stylesheets/ *file              scrupal.controllers.Assets.css_s(file)
-  #GET            /assets/stylesheets-min/ *file          scrupal.controllers.Assets.css_s(file,min=true)
-  GET            /assets/images/ *file                   scrupal.controllers.Assets.img(file)
-  GET            /assets/themes/:provider/ *file         scrupal.controllers.Assets.theme(provider, file)
-  GET            /assets/doc/ *file                      scrupal.controllers.Assets.doc(file)
-  GET            /webjars/ *file                         scrupal.controllers.Assets.resolve(file)
-  GET            /template/ *file                        scrupal.controllers.Assets.template(file)
-
-*/
+/** # Special handling for AngularJS modules that have partial HTML files that need to be served.
+  * GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
+  *
+  * # Special handling for the favicon
+  * GET            /assets/favicon                        scrupal.controllers.Assets.favicon
+  *
+  * # Get dependency managed resources from WebJars
+  * GET            /webjars/require.js                    scrupal.controllers.Assets.requirejs
+  * GET            /webjars/javascripts/ *file             scrupal.controllers.Assets.js(file)
+  * GET            /webjars/stylesheets/ *file             scrupal.controllers.Assets.css(file)
+  * GET            /webjars/ *file                         scrupal.controllers.Assets.misc(file)
+  *
+  * # Map the specialized, manufactured jsroutes.js file which maps THESE routes into javascript !
+  * GET            /assets/javascripts/jsroutes.js        scrupal.controllers.Home.jsRoutes(varName ?= "jsRoutes")
+  *
+  * # Map static resources from the /assets folder to the /assets URL path
+  * GET            /assets/javascripts/ *file              scrupal.controllers.Assets.js_s(file)
+  * GET            /assets/javascripts-min/ *file          scrupal.controllers.Assets.js_s_min(file)
+  * GET            /assets/stylesheets/ *file              scrupal.controllers.Assets.css_s(file)
+  * #GET            /assets/stylesheets-min/ *file          scrupal.controllers.Assets.css_s(file,min=true)
+  * GET            /assets/images/ *file                   scrupal.controllers.Assets.img(file)
+  * GET            /assets/themes/:provider/ *file         scrupal.controllers.Assets.theme(provider, file)
+  * GET            /assets/doc/ *file                      scrupal.controllers.Assets.doc(file)
+  * GET            /webjars/ *file                         scrupal.controllers.Assets.resolve(file)
+  * GET            /template/ *file                        scrupal.controllers.Assets.template(file)
+  *
+  */

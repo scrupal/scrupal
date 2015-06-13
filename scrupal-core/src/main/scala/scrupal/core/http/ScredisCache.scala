@@ -1,39 +1,36 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.http
 
 import akka.actor.ActorSystem
-import reactivemongo.bson.{BSONDocument, BSONHandler}
+import reactivemongo.bson.{ BSONDocument, BSONHandler }
 import scredis._
 import scrupal.core.api.Scrupal
 import spray.caching.Cache
 import spray.http.MediaType
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
-
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait Cacheable[PT] {
-  def mediaType: MediaType
-  def payload: PT
-  val ttl: Duration = Duration.Inf // non-expiring, doesn't time out after fixed amount of time after creation
-  val tti: Duration = Duration.Inf // non-expiring, doesn't time out if not referenced
-  implicit def payloadHandler : BSONHandler[BSONDocument,PT]
+  def mediaType : MediaType
+  def payload : PT
+  val ttl : Duration = Duration.Inf // non-expiring, doesn't time out after fixed amount of time after creation
+  val tti : Duration = Duration.Inf // non-expiring, doesn't time out if not referenced
+  implicit def payloadHandler : BSONHandler[BSONDocument, PT]
 }
 
 /** Redis Based Cache
@@ -47,30 +44,31 @@ trait Cacheable[PT] {
   * it and evicts things that have not been accessed in a while.
   * Created by reidspencer on 11/8/14.
   */
-class ScredisCache(scrupal: Scrupal) extends Cache[Cacheable[_]] {
+class ScredisCache(scrupal : Scrupal) extends Cache[Cacheable[_]] {
 
   // TODO: Implement ScredisCache
 
   implicit val system = ActorSystem("scredis")
 
   val client = scrupal.withConfiguration {
-    configuration => configuration.getConfig("scredis") match {
-      case Some(config) => Client(config.underlying)
-      case None => Client("scredis")
-    }
+    configuration ⇒
+      configuration.getConfig("scredis") match {
+        case Some(config) ⇒ Client(config.underlying)
+        case None ⇒ Client("scredis")
+      }
   }
 
-  def get(key: Any): Option[Future[Cacheable[_]]] = ???
+  def get(key : Any) : Option[Future[Cacheable[_]]] = ???
 
-  def apply(key: Any, genValue: () ⇒ Future[Cacheable[_]])(implicit ec: ExecutionContext): Future[Cacheable[_]] =  ???
+  def apply(key : Any, genValue : () ⇒ Future[Cacheable[_]])(implicit ec : ExecutionContext) : Future[Cacheable[_]] = ???
 
-  def remove(key: Any) = ???
+  def remove(key : Any) = ???
 
-  def clear(): Unit = ???
+  def clear() : Unit = ???
 
-  def keys: Set[Any] = ???
+  def keys : Set[Any] = ???
 
-  def ascendingKeys(limit: Option[Int] = None) = ???
+  def ascendingKeys(limit : Option[Int] = None) = ???
 
   def size = ???
 }

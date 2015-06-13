@@ -1,31 +1,30 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.http
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ ActorSystem, Props }
+import akka.http.scaladsl.Http
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
-import scrupal.core.api.{Scrupal, Site}
-import scrupal.utils.{Configuration, ScrupalComponent, DateTimeHelpers}
-import spray.can.Http
+import play.api.Configuration
+import scrupal.api.{ Scrupal, Site }
+import scrupal.utils.{ ScrupalComponent, DateTimeHelpers }
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -36,8 +35,7 @@ import scala.concurrent.duration._
   * Since we are Spray based that only consists of creating the actor system, the top level Actor, and binding that
   * actor to the correct HTTP interface and port.
   */
-case class Boot(scrupal: Scrupal, config: Configuration) extends ScrupalComponent
-{
+case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalComponent {
   val executionStart = Platform.currentTime
 
   def run() = {
@@ -58,7 +56,8 @@ case class Boot(scrupal: Scrupal, config: Configuration) extends ScrupalComponen
     log.info(s"Scrupal HTTP starting up. Interface=$interface, Port=$port, Timeout=${timeout.duration.toMillis}ms")
 
     // start a new HTTP server on port 8080 with our service actor as the handler
-    IO(Http) ? Http.Bind(service, interface, port)
+    // FIXME: Need to start the Play Server here, not spray
+    // IO(Http) ? Http.bind(service, interface, port)
 
     scrupal.onStart()
   }
@@ -73,19 +72,21 @@ case class Boot(scrupal: Scrupal, config: Configuration) extends ScrupalComponen
     for (site ← Site.values if site.isEnabled(scrupal)) {
       val app_names = for (app ← site.applications if app.isEnabled(site)) yield {
         for (mod ← app.modules if mod.isEnabled(app)) yield {
-          val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield {ent.singularKey }
+          val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield { ent.singularKey }
           val distinct_paths = paths.distinct
           if (paths.size != distinct_paths.size) {
             toss(
-              s"Cowardly refusing to start with duplicate entity paths in module ${mod.label } in application ${mod
-                .label } in site ${site.label }")
+              s"Cowardly refusing to start with duplicate entity paths in module ${mod.label} in application ${
+                mod
+                  .label
+              } in site ${site.label}")
           }
         }
         app.label
       }
       val distinct_app_names = app_names.distinct
       if (app_names.size != distinct_app_names.size) {
-        toss(s"Cowardly refusing to start with duplicate application names in site ${site.label }")
+        toss(s"Cowardly refusing to start with duplicate application names in site ${site.label}")
       }
     }
   }

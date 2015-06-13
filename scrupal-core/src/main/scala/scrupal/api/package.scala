@@ -1,24 +1,23 @@
 /**********************************************************************************************************************
-  * This file is part of Scrupal a Web Application Framework.                                                          *
-  *                                                                                                                    *
-  * Copyright (c) 2014, Reid Spencer and viritude llc. All Rights Reserved.                                            *
-  *                                                                                                                    *
-  * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
-  * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
-  * or (at your option) any later version.                                                                             *
-  *                                                                                                                    *
-  * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
-  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
-  * details.                                                                                                           *
-  *                                                                                                                    *
-  * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
-  * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
-  **********************************************************************************************************************/
-package scrupal.core
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
+ *                                                                                                                    *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
+ *                                                                                                                    *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
+ *                                                                                                                    *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
+ *                                                                                                                    *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
+ **********************************************************************************************************************/
 
+package scrupal
 
-import java.nio.charset.Charset
-import scrupal.utils._
+import java.nio.charset.StandardCharsets
+
+import play.api.libs.json.JsObject
 
 /** Scrupal API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the main abstractions
@@ -46,9 +45,9 @@ import scrupal.utils._
   * If you can grok these few concepts then you have understood the core concepts of Scrupal.
   *
   */
-package object api extends ScrupalComponent {
+package object api {
 
-  lazy val utf8 = Charset.forName("UTF-8")
+  lazy val utf8 = StandardCharsets.UTF_8
 
   /** The typical type of identifer.
     * We use Symbol because they are memoized by the compiler which means we only pay for the memory of a given
@@ -56,4 +55,6 @@ package object api extends ScrupalComponent {
     */
   type Identifier = Symbol
 
- }
+  val emptyJsObject = JsObject(Seq())
+
+}

@@ -22,9 +22,9 @@ import scrupal.storage.api.{Index, SchemaDesign}
   * This is the Database Schema for the scrupal.api module. It defines the kinds of collections that are found in
   * the schema and provides the means for validating them.
   */
-class ApiSchemaDesign extends SchemaDesign {
+class APISchemaDesign extends SchemaDesign {
 
-  override def name: String = "Core"
+  override def name: String = "API"
 
   override def requiredNames: Seq[String] = Seq("sites", "nodes", "instances", "alerts", "principals")
 

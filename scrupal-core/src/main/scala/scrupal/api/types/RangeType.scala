@@ -1,24 +1,23 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api.types
 
-import reactivemongo.bson.{BSONString, BSONInteger, BSONLong, BSONValue}
 import scrupal.api._
+import scrupal.utils.Validation.Location
+import shapeless.{Poly1, CNil, :+:}
 
 /** A Range type constrains Long Integers between a minimum and maximum value
   *
@@ -27,31 +26,56 @@ import scrupal.api._
   * @param min
   * @param max
   */
-case class RangeType (
+case class RangeType(
   id : Identifier,
   description : String,
   min : Long = Long.MinValue,
-  max : Long = Long.MaxValue
-  ) extends Type {
-  override type ScalaValueType = Long
+  max : Long = Long.MaxValue) extends Type[RangeType.SIL] {
+  override type ValueType = Long
   require(min <= max)
-  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
-    simplify(ref, value, "Integer or Long") {
-      case BSONLong(l) if l < min => Some(s"Value $l is out of range, below minimum of $min")
-      case BSONLong(l) if l > max => Some(s"Value $l is out of range, above maximum of $max")
-      case BSONLong(l) => None
-      case BSONInteger(i) if i < min => Some(s"Value $i is out of range, below minimum of $min")
-      case BSONInteger(i) if i > max => Some(s"Value $i is out of range, above maximum of $max")
-      case BSONInteger(i) => None
-      case BSONString(is) if { try { is.toInt ; false } catch { case x: Throwable ⇒ true } } ⇒
-        Some(s"Value $is is not convertible to a numeric")
-      case BSONString(is) if is.toInt > max ⇒ Some(s"Value $is is out of range, above maximum of $max")
-      case BSONString(is) if is.toInt < min ⇒ Some(s"Value $is is out of range, below minimum of $min")
-      case BSONString(is) ⇒ None
-      case _ => Some("")
+  def validate(ref : Location, value : RangeType.SIL) : VResult = {
+    simplify(ref, value, "String, Integer or Long") { value ⇒
+      object validation extends Poly1 {
+        implicit def caseInt = at[Int] { i : Int ⇒
+          if (i < min)
+            Some(s"Value $i is out of range, below minimum of $max")
+          else if (i > max)
+            Some(s"Value $i is out of range, above maximum of $max")
+          else
+            None
+        }
+        implicit def caseLong = at[Long] { l : Long ⇒
+          if (l < min)
+            Some(s"Value $l is out of range, below minimum of $max")
+          else if (l > max)
+            Some(s"Value $l is out of range, above maximum of $max")
+          else
+            None
+        }
+        implicit def caseString = at[String] { s: String ⇒
+          try {
+            val num = s.toLong
+            if (num > max)
+              Some(s"Value $s is out of range, above maximum of $max")
+            else if (num < min)
+              Some(s"Value $s is out of range, below minimum of $min")
+            else
+              None
+          } catch{
+            case x : Throwable ⇒
+              Some(s"Value '$s' is not convertible to a number: ${x.getClass.getSimpleName}: ${x.getMessage}")
+          }
+        }
+        implicit def caseOther = at[Any] { x ⇒ Some("") }
+      }
+      value.map(validation).select[Option[String]].getOrElse(None)
     }
   }
   override def kind = 'Range
+}
+
+object RangeType {
+  type SIL = String :+: Int :+: Long :+: CNil
 }
 
 object AnyInteger_t

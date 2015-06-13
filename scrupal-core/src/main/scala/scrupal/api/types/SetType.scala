@@ -1,24 +1,22 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api.types
 
-import reactivemongo.bson.{BSONArray, BSONValue}
 import scrupal.api._
+import scrupal.utils.Validation.{Results, IndexedLocation, SeqValidator}
 
 /** A Set type allows an exclusive Set of elements of other types to be constructed
   *
@@ -26,26 +24,19 @@ import scrupal.api._
   * @param description
   * @param elemType
   */
-case class SetType  (
+case class SetType[ET](
   id : Identifier,
   description : String,
-  elemType : Type
-  ) extends IndexableType {
-  override type ScalaValueType = Seq[elemType.ScalaValueType]
+  elemType : Type[ET]) extends IndexableType[ET,Set[ET]] {
+  override type ValueType = Set[ET]
   override def kind = 'Set
-  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
-    value match {
-      case a: BSONArray =>
-        val vals = a.values // stop dealing with a stream
-        val msgs = validateArray(ref, a, elemType)
-        val distinct = vals.distinct
-        if (distinct.size != vals.size) {
-          val delta = vals.filterNot { x ⇒ distinct.contains(x) }
-          msgs.add(ValidationError(ref, value,s"Set contains non-distinct values: $delta"))
-        }
-        else
-          msgs
-      case x: BSONValue  => wrongClass(ref, x, "BSONArray")
+
+  class SetTypeValidator extends SeqValidator[ET, Set[ET]] {
+    override def toSeq(st: Set[ET]): Seq[ET] = st.toSeq
+    override def validateElement(ref: IndexedLocation, v: ET): Results[ET] = {
+      elemType.validate(ref, v)
     }
   }
+
+  val validator : SeqValidator[ET, Set[ET]] = new SetTypeValidator
 }

@@ -1,18 +1,16 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api
@@ -20,11 +18,10 @@ package scrupal.api
 import java.net.URL
 
 import akka.actor.ActorSystem
-import scrupal.db.DBContext
-import scrupal.utils.Configuration
-
-import spray.http._
-import spray.routing.RequestContext
+import akka.http.scaladsl.model.{ HttpHeader, HttpProtocols, Uri, HttpMethod }
+import akka.http.scaladsl.server.RequestContext
+import play.api.Configuration
+import scrupal.storage.api.{Schema, StorageContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -34,14 +31,14 @@ import scala.concurrent.ExecutionContext
   */
 trait Context {
   // Scrupal Related things
-  val scrupal: Scrupal
+  val scrupal : Scrupal
 
   // Request related things
   val request : RequestContext
-  def uri      = Uri("<NoUri>")
-  def method   = HttpMethod.custom("NONE",false,true,false)
+  def uri = Uri("<NoUri>")
+  def method = HttpMethod.custom("NONE", false, true, false)
   def protocol = HttpProtocols.`HTTP/1.1`
-  def headers  = Map.empty[String,HttpHeader]
+  def headers = Map.empty[String, HttpHeader]
 
   // Site related things
   val site : Option[Site] = None
@@ -50,26 +47,29 @@ trait Context {
   val themeName : String = "default"
   val description : String = ""
 
-  val principal: Option[Principal] = None
+  val principal : Option[Principal] = None
   val user : String = "guest"
 
   def alerts : Seq[Alert] = Seq()
   def suggestURL : URL = new URL("/")
 
-  def withNewRequest(newRequest: RequestContext) = {
+  def withNewRequest(newRequest : RequestContext) = {
     Context(scrupal, newRequest, site.orNull)
   }
 
-  def withConfiguration[T](f: (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
+  def withConfiguration[T](f : (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
 
-  def withDBContext[T](f: (DBContext) ⇒ T) : T = { scrupal.withDBContext(f) }
+  def withStorageContext[T](f : (StorageContext) ⇒ T) : T = { scrupal.withStorageContext(f) }
 
-  def withSchema[T](f: (DBContext, Schema) => T) : T = { scrupal.withSchema(f) }
+  def withSchema[T](name : String)(f : (StorageContext, Schema) ⇒ T) : T = {
+    withStorageContext { ctxt ⇒
+      ctxt.withSchema(name) { schema ⇒ f(ctxt, schema) }
+    }
+  }
 
-  def withExecutionContext[T](f: (ExecutionContext) => T) : T = { scrupal.withExecutionContext(f) }
+  def withExecutionContext[T](f : (ExecutionContext) ⇒ T) : T = { scrupal.withExecutionContext(f) }
 
   def withActorSystem[T](f : (ActorSystem) ⇒ T) : T = { scrupal.withActorSystem(f) }
-
 }
 
 /** A Basic context which just mixes the Context trait with the WrappedRequest.
@@ -78,13 +78,13 @@ trait Context {
   * @param scrupal The Scrupal object
   * @param request The request upon which the context is based
   */
-case class SimpleContext(scrupal: Scrupal, request: RequestContext) extends Context {
+case class SimpleContext(scrupal : Scrupal, request : RequestContext) extends Context {
   require(scrupal != null)
   require(request != null)
   override val uri = request.request.uri
   override val method = request.request.method
   override val protocol = request.request.protocol
-  override val headers  = request.request.headers.map { h ⇒ h.name → h}.toMap
+  override val headers = request.request.headers.map { h ⇒ h.name → h }.toMap
 }
 
 /** A Site context which pulls the information necessary to render something for a site.
@@ -93,13 +93,13 @@ case class SimpleContext(scrupal: Scrupal, request: RequestContext) extends Cont
   * @param theSite The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) extends SimpleContext(scrupal, request) {
+class SiteContext(scrupal : Scrupal, request : RequestContext, theSite : Site) extends SimpleContext(scrupal, request) {
   require(theSite != null)
   override val site : Option[Site] = Some(theSite)
   override val siteName : String = theSite.name
   override val description : String = theSite.description
   override val themeProvider : String = theSite.themeProvider
-  override val themeName: String = theSite.themeName
+  override val themeName : String = theSite.themeName
 }
 
 /** A User context which extends SiteContext by adding specific user information.
@@ -108,21 +108,21 @@ class SiteContext(scrupal: Scrupal, request: RequestContext, theSite: Site) exte
   * @param site The site that this request should be processed by
   * @param request The request upon which the context is based
   */
-class UserContext(scrupal: Scrupal, request: RequestContext, site: Site, principal: Principal)
-    extends SiteContext(scrupal, request, site) {
+class UserContext(scrupal : Scrupal, request : RequestContext, site : Site, principal : Principal)
+  extends SiteContext(scrupal, request, site) {
   // TODO: Finish UserContext implementation
-  override val user: String = principal._id.name
+  override val user : String = principal._id.name
 }
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
-  def apply(scrupal: Scrupal, request: RequestContext) =
+  def apply(scrupal : Scrupal, request : RequestContext) =
     new SimpleContext(scrupal, request)
 
-  def apply(scrupal: Scrupal, request: RequestContext, site: Site) =
+  def apply(scrupal : Scrupal, request : RequestContext, site : Site) =
     new SiteContext(scrupal, request, site)
 
-  def apply(scrupal: Scrupal, request: RequestContext, site: Site, principal: Principal) =
+  def apply(scrupal : Scrupal, request : RequestContext, site : Site, principal : Principal) =
     new UserContext(scrupal, request, site, principal)
 
 }

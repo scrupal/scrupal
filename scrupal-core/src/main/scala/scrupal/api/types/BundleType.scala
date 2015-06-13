@@ -1,18 +1,16 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api.types
@@ -36,22 +34,20 @@ import scrupal.api._
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type
   */
-case class BundleType (
+case class BundleType[ET](
   id : Identifier,
   description : String,
-  fields : Map[String, Type]
-) extends StructuredType {
-  override type ScalaValueType = Map[String,Any]
+  fields : Map[String, Type[_]]) extends StructuredType[ET] {
   override def kind = 'Bundle
 }
 
 object BundleType {
-  val Empty = BundleType('EmptyBundleType, "A Bundle with no fields", Map.empty[String,Type])
+  def Empty[ET] = BundleType[ET]('EmptyBundleType, "A Bundle with no fields", Map.empty[String, Type[ET]])
 }
 
 /** The Scrupal Type for information about Sites */
 object SiteInfo_t
-  extends  BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.",
+  extends BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.",
     fields = Map(
       "name" -> Identifier_t,
       "title" -> Identifier_t,
@@ -67,10 +63,10 @@ object PageBundle_t
     fields = Map (
       "title" -> Title_t,
       "body" -> Markdown_t
-      // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
-      // 'master -> Node_t,
-      // 'defaultLayout -> Node_t,
-      // 'body -> Node_t,
-      // 'blocks ->
+    // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
+    // 'master -> Node_t,
+    // 'defaultLayout -> Node_t,
+    // 'body -> Node_t,
+    // 'blocks ->
     )
   )

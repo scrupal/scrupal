@@ -1,30 +1,26 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api
 
+import java.time.OffsetDateTime
 import org.joda.time.DateTime
-import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson._
-import scrupal.db.{IdentifierDAO, Storable}
+import scrupal.storage.api.Storable
 
 /* TODO: Generalize Instance to carry any kind of payload, using VariantDataAccessObject like Node[_]
-trait Instance[P] extends Storable[Identifier] with Nameable with Describable with Modifiable with Facetable {
+trait Instance[P] extends Storable with Nameable with Describable with Modifiable with Facetable {
   def payload : P
 }
 
@@ -45,19 +41,21 @@ case class BasicInstance(
 /** The basic unit of storage and operation in Scrupal
   * Further description needed here.
   */
-case class Instance(
+case class Instance[PT](
   _id : Identifier,
-  name: String,
-  description: String,
-  entityId: Identifier,
-  payload: BSONDocument,
-  // TODO: facets: Map[String,Facet],
+  name : String,
+  description : String,
+  tipe : Type[PT],
+  entityId : Identifier,
+  payload : PT,
+  facets : Map[String,Facet],
   modified : Option[DateTime] = None,
-  created : Option[DateTime] = None
-) extends Storable[Identifier] with Nameable with Describable with Modifiable {
+  created : Option[DateTime] = None) extends
+    Storable with Nameable with Describable with Modifiable with Facetable {
 }
 
 object Instance {
+  /*
   import BSONHandlers._
 
   /** Data Access Object For Instances
@@ -65,7 +63,7 @@ object Instance {
     * that collection as well as conversion to and from BSON format.
     * @param db A parameterless function returning a [[reactivemongo.api.DefaultDB]] instance.
     */
-  case class InstanceDAO(db: DefaultDB) extends IdentifierDAO[Instance] {
+  case class InstanceDAO(db : DefaultDB) extends IdentifierDAO[Instance] {
     final def collectionName = "instances"
     implicit val reader : IdentifierDAO[Instance]#Reader = Macros.reader[Instance]
     implicit val writer : IdentifierDAO[Instance]#Writer = Macros.writer[Instance]
@@ -73,5 +71,5 @@ object Instance {
       Index(key = Seq("entity" -> IndexType.Ascending), name = Some("Entity"))
     )
   }
-
+*/
 }

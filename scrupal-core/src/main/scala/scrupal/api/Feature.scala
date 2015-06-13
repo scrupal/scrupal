@@ -1,28 +1,27 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
+
 package scrupal.api
 
-import scrupal.utils.{Enablee, Enablement, Registrable, Registry}
+import scrupal.utils.{ Enablee, Enablement, Registrable, Registry }
 
 abstract class AbstractFeature extends Describable with Enablee with ModuleOwned with Bootstrappable {
   def implemented : Boolean
   def moduleOf = { Module.values.find(mod ⇒ mod.features.contains(this)) }
   override def parent = moduleOf
-  override def isEnabled(scope: Enablement[_]) : Boolean = implemented && scope.isEnabled(this)
+  override def isEnabled(scope : Enablement[_]) : Boolean = implemented && scope.isEnabled(this)
 }
 
 /** A Feature of a Module.
@@ -33,12 +32,11 @@ abstract class AbstractFeature extends Describable with Enablee with ModuleOwned
   * used. This makes accessing the enabled state of a feature simple.
   */
 case class Feature(
-  id: Symbol,
-  description: String,
-  override val parent: Option[Module],
-  implemented: Boolean = true
-) extends AbstractFeature with Registrable[Feature] {
-  def registry: Registry[Feature] = Feature
+  id : Symbol,
+  description : String,
+  override val parent : Option[Module],
+  implemented : Boolean = true) extends AbstractFeature with Registrable[Feature] {
+  def registry : Registry[Feature] = Feature
   /** Get the name of the feature */
   def name = id.name
 
@@ -46,11 +44,11 @@ case class Feature(
     * When you have an object reference for a feature, you can determine its enablement by just using this
     * apply function like so:
     * {{{
-    *   if (MyFeature()) { /* feature is enabled */ } else { /* feature is disabled */ }
+    * if (MyFeature()) { /* feature is enabled */ } else { /* feature is disabled */ }
     * }}}
     * @return
     */
-  def apply(scope: Enablement[_]) : Boolean = scope.isEnabled(this)
+  def apply(scope : Enablement[_]) : Boolean = scope.isEnabled(this)
 }
 
 /** Feature Registry and companion
@@ -61,16 +59,15 @@ object Feature extends Registry[Feature] {
   val registrantsName = "feature"
   val registryName = "Features"
 
-  def enabled(name: Symbol, scope: Enablement[_]) : Boolean = {
+  def enabled(name : Symbol, scope : Enablement[_]) : Boolean = {
     super.apply(name) match {
       case Some(feature) ⇒ scope.isEnabled(feature)
       case None ⇒ false
     }
   }
 
-  def apply(name: Symbol, scope: Enablement[_]) : Boolean = enabled(name, scope)
-  def apply(f: Feature, scope: Enablement[_]) : Boolean = enabled(f.id, scope)
-
+  def apply(name : Symbol, scope : Enablement[_]) : Boolean = enabled(name, scope)
+  def apply(f : Feature, scope : Enablement[_]) : Boolean = enabled(f.id, scope)
 
   /*
   case class FeatureDAO(db: DefaultDB) extends IdentifierDAO[Feature] {

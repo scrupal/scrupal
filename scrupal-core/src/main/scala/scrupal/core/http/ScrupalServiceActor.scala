@@ -1,42 +1,40 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.http
 
-import akka.actor.{Actor, Props}
+import akka.actor.{ Actor, Props }
 import akka.util.Timeout
 import scrupal.core.api.Html.ContentsArgs
 import scrupal.core.api._
-import scrupal.core.html.{PlainPageGenerator, PlainPage}
+import scrupal.core.html.{ PlainPageGenerator, PlainPage }
 import scrupal.utils.ScrupalComponent
 import spray.http.MediaTypes._
-import spray.routing.{Route, _}
+import spray.routing.{ Route, _ }
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scalatags.Text.all._
 
 object ScrupalServiceActor {
-  def props(scrupal: Scrupal)(implicit askTimeout: Timeout): Props = Props(classOf[ScrupalServiceActor], scrupal)
+  def props(scrupal : Scrupal)(implicit askTimeout : Timeout) : Props = Props(classOf[ScrupalServiceActor], scrupal)
   def name = "Scrupal-Service"
 }
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout) extends Actor with ScrupalService {
+class ScrupalServiceActor(val scrupal : Scrupal)(implicit val askTimeout : Timeout) extends Actor with ScrupalService {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
@@ -47,7 +45,6 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
 
   val the_router = createRouter(scrupal)
 
-
   log.warn("Router: " + the_router) // TODO: turn down to trace when we're sure routing works
 
   // this actor only runs our route, but you could add
@@ -56,16 +53,15 @@ class ScrupalServiceActor(val scrupal: Scrupal)(implicit val askTimeout: Timeout
   def receive = runRoute(the_router)
 }
 
-
 /** The top level Service For Scrupal
   * This trait is mixed in to the ScrupalServiceActor and provides the means by which all the controller's routes are
   */
 trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives with RequestLoggers {
 
-  case class RouteConstructionFailure(xcptn: Throwable) extends PlainPageGenerator {
+  case class RouteConstructionFailure(xcptn : Throwable) extends PlainPageGenerator {
     val title = "Unable To Process Route"
     val description = "Unable To Process Route"
-    def content(context: Context, args: ContentsArgs = Html.EmptyContentsArgs) : Html.Contents = {
+    def content(context : Context, args : ContentsArgs = Html.EmptyContentsArgs) : Html.Contents = {
       Seq(
         h1("Unable To Process Routes"),
         p("Unfortunately, Scrupal failed to construct its routes so it cannot process your request. This",
@@ -76,27 +72,27 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
           dt("Stack Trace"), dd(
             code(
               small(
-                for (ste <- xcptn.getStackTrace) { ste.toString + { if (ste.isNativeMethod) "(native)" else "" } },
+                for (ste ← xcptn.getStackTrace) { ste.toString + { if (ste.isNativeMethod) "(native)" else "" } },
                 br()
               )
             )
-        ))
+          ))
       )
     }
   }
 
-  def createRouter(scrupal: Scrupal) : Route = {
+  def createRouter(scrupal : Scrupal) : Route = {
 
     Try {
       new AssetsController(scrupal).routes(scrupal) ~
-      new ActionProviderController().routes(scrupal)
+        new ActionProviderController().routes(scrupal)
     } match {
       case Success(r) ⇒ r
       case Failure(xcptn) ⇒
         path("") {
           get {
             respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
-              extract( x ⇒ x ) { request_context ⇒
+              extract(x ⇒ x) { request_context ⇒
                 complete {
                   val scrupal_context = Context(scrupal, request_context)
                   RouteConstructionFailure(xcptn).render(scrupal_context)

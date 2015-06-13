@@ -1,30 +1,28 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.nodes
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{BSONDocument, BSONHandler, BSONObjectID, Macros}
+import reactivemongo.bson.{ BSONDocument, BSONHandler, BSONObjectID, Macros }
 import scalatags.Text.all._
 import scrupal.core.api._
 import scrupal.db.VariantReaderWriter
-import spray.http.{MediaType, MediaTypes}
+import spray.http.{ MediaType, MediaTypes }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /** Generate content with Scala code
   *
@@ -38,18 +36,17 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param modified
   * @param created
   */
-case class ScalaNode (
-  description: String,
-  code: String,
-  modified: Option[DateTime] = Some(DateTime.now()),
-  created: Option[DateTime] = Some(DateTime.now()),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = ScalaNode.kind
-) extends Node {
-  override val mediaType: MediaType = MediaTypes.`text/html`
+case class ScalaNode(
+  description : String,
+  code : String,
+  modified : Option[DateTime] = Some(DateTime.now()),
+  created : Option[DateTime] = Some(DateTime.now()),
+  _id : BSONObjectID = BSONObjectID.generate,
+  final val kind : Symbol = ScalaNode.kind) extends Node {
+  override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(ctxt: Context): Future[Result[_]] = ctxt.withExecutionContext {
-    implicit ec: ExecutionContext ⇒
+  def apply(ctxt : Context) : Future[Result[_]] = ctxt.withExecutionContext {
+    implicit ec : ExecutionContext ⇒
       Future {
         import javax.script.ScriptEngineManager
         val sem = new ScriptEngineManager()
@@ -62,10 +59,10 @@ case class ScalaNode (
 object ScalaNode {
   import scrupal.core.api.BSONHandlers._
   final val kind : Symbol = 'Scala
-  object ScalaNodeBRW extends VariantReaderWriter[Node,ScalaNode] {
-    implicit val ScalaNodeHandler : BSONHandler[BSONDocument,ScalaNode] = Macros.handler[ScalaNode]
-    override def fromDoc(doc: BSONDocument): ScalaNode = ScalaNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = ScalaNodeHandler.write(obj.asInstanceOf[ScalaNode])
+  object ScalaNodeBRW extends VariantReaderWriter[Node, ScalaNode] {
+    implicit val ScalaNodeHandler : BSONHandler[BSONDocument, ScalaNode] = Macros.handler[ScalaNode]
+    override def fromDoc(doc : BSONDocument) : ScalaNode = ScalaNodeHandler.read(doc)
+    override def toDoc(obj : Node) : BSONDocument = ScalaNodeHandler.write(obj.asInstanceOf[ScalaNode])
   }
   Node.variants.register(kind, ScalaNodeBRW)
 }

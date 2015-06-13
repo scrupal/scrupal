@@ -1,28 +1,25 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.apps
 
-import reactivemongo.bson.{BSONLong, BSONString}
+import reactivemongo.bson.{ BSONLong, BSONString }
 import scrupal.core._
 import scrupal.core.api._
-import scrupal.core.types._
+import scrupal.api.types._
 import scrupal.utils.ScrupalComponent
-
 
 /** The Entity definition for the Configuration workflow/wizard.
   * This controller handles first-time configuration and subsequent reconfiguration of the essentials of Scrupal. It
@@ -34,7 +31,7 @@ object ConfigWizard extends ScrupalComponent {
 
   val cw = CoreModule.ConfigWizard
 
-  type SiteMap = Map[Symbol,String]
+  type SiteMap = Map[Symbol, String]
 
   object Step extends Enumeration {
     type Kind = Value
@@ -47,32 +44,32 @@ object ConfigWizard extends ScrupalComponent {
     val Six_Success = Value(6)
 
     def numberOfSteps = Step.maxId
-    def stepNumber(kind: Kind) = kind.id + 1
-    def progress(kind: Kind) = (100 * stepNumber(kind)) / numberOfSteps
+    def stepNumber(kind : Kind) = kind.id + 1
+    def progress(kind : Kind) = (100 * stepNumber(kind)) / numberOfSteps
 
-    def currentState(kind: Kind) : String = {
+    def currentState(kind : Kind) : String = {
       kind match {
-        case Zero_Welcome          => "Unconfigured"
-        case One_Specify_Databases => "Database(s) Need To Be Defined"
-        case Two_Connect_Databases => "Database connection(s) are unverified"
-        case Three_Install_Schemas => "Database schemas and configuration needs to be installed"
-        case Four_Create_Site      => "The first Site needs to be created"
-        case Five_Create_Page      => "The first Page needs to be created"
-        case Six_Success           => "Configured"
-        case _                     => nextAction(Zero_Welcome)
+        case Zero_Welcome ⇒ "Unconfigured"
+        case One_Specify_Databases ⇒ "Database(s) Need To Be Defined"
+        case Two_Connect_Databases ⇒ "Database connection(s) are unverified"
+        case Three_Install_Schemas ⇒ "Database schemas and configuration needs to be installed"
+        case Four_Create_Site ⇒ "The first Site needs to be created"
+        case Five_Create_Page ⇒ "The first Page needs to be created"
+        case Six_Success ⇒ "Configured"
+        case _ ⇒ nextAction(Zero_Welcome)
       }
     }
 
-    def nextAction(kind: Kind) : String = {
+    def nextAction(kind : Kind) : String = {
       kind match {
-        case Zero_Welcome          => "Specify database connection parameters"
-        case One_Specify_Databases => "Test database connections"
-        case Two_Connect_Databases => "Install database schemas and configuration"
-        case Three_Install_Schemas => "Create a site to contain data"
-        case Four_Create_Site      => "Create a page to server"
-        case Five_Create_Page      => "Show configuration results"
-        case Six_Success           => "Start using Scrupal!"
-        case _                     => nextAction(Zero_Welcome)
+        case Zero_Welcome ⇒ "Specify database connection parameters"
+        case One_Specify_Databases ⇒ "Test database connections"
+        case Two_Connect_Databases ⇒ "Install database schemas and configuration"
+        case Three_Install_Schemas ⇒ "Create a site to contain data"
+        case Four_Create_Site ⇒ "Create a page to server"
+        case Five_Create_Page ⇒ "Show configuration results"
+        case Six_Success ⇒ "Start using Scrupal!"
+        case _ ⇒ nextAction(Zero_Welcome)
       }
     }
   }
@@ -91,15 +88,15 @@ object ConfigWizard extends ScrupalComponent {
     */
   def getDatabaseNames(config: Configuration) : (Step.Kind, Option[Throwable], DBConfig) = {
     ConfigHelper(config).validateDBConfiguration match {
-      case Failure(x)  => {
+      case Failure(x)  ⇒ {
         log.debug("Configuration failed DB validation: ", x)
         x.getMessage match {
-          case s if s.contains("default") || s.contains("completely empty") || s.contains("not contain") =>
+          case s if s.contains("default") || s.contains("completely empty") || s.contains("not contain") ⇒
             (Zero_Welcome, Some(x), emptyDBConfig)
-          case _ => (One_Specify_Databases, Some(x), emptyDBConfig)
+          case _ ⇒ (One_Specify_Databases, Some(x), emptyDBConfig)
         }
       }
-      case Success(x)  => (Two_Connect_Databases, None, x)
+      case Success(x)  ⇒ (Two_Connect_Databases, None, x)
     }
   }
 
@@ -109,19 +106,19 @@ object ConfigWizard extends ScrupalComponent {
       (state, err, names)
     else {
       try {
-        names.foreach { case (db_name: String, config: Option[Configuration]) =>
+        names.foreach { case (db_name: String, config: Option[Configuration]) ⇒
           config match {
-            case Some(cfg) => {
+            case Some(cfg) ⇒ {
               val context = DBContext.fromSpecificConfig(Symbol(db_name), cfg)
-              context.withDatabase { implicit db =>
+              context.withDatabase { implicit db ⇒
                 true // result of the foreach
               }
             }
-            case None => throw new Exception("Could not find database configuration for '" + db_name)
+            case None ⇒ throw new Exception("Could not find database configuration for '" + db_name)
           }
         }
       } catch {
-        case x: Throwable => (Step.Two_Connect_Databases, Some(x), emptyDBConfig)
+        case x: Throwable ⇒ (Step.Two_Connect_Databases, Some(x), emptyDBConfig)
       }
       (Step.Three_Install_Schemas, None, names)
     }
@@ -138,13 +135,13 @@ object ConfigWizard extends ScrupalComponent {
         try
         {
           dbConfig match {
-            case Some(config) => {
+            case Some(config) ⇒ {
               val context = DBContext.fromSpecificConfig(Symbol(db), config)
               val schema = new CoreSchema(context)
               schema.validate match {
-                case Success(false) =>
+                case Success(false) ⇒
                   (Step.Three_Install_Schemas, Some(new Exception("Schema validation failed.")), dbConfigs)
-                case Success(true) => {
+                case Success(true) ⇒ {
                   val numSites = schema.sites.countSync()
                   if (numSites > 0) {
                     val numInstances = schema.instances.countSync()
@@ -160,19 +157,19 @@ object ConfigWizard extends ScrupalComponent {
                       "sites have been defined yet.")), dbConfigs)
                   }
                 }
-                case Failure(x) => (Step.Three_Install_Schemas,Some(x), dbConfigs)
+                case Failure(x) ⇒ (Step.Three_Install_Schemas,Some(x), dbConfigs)
               }
             }
-            case None => (Step.One_Specify_Databases,
+            case None ⇒ (Step.One_Specify_Databases,
               Some(new Exception("No configuration found for database '" + db + "'.")), emptyDBConfig)
           }
         }
-        catch { case x : Throwable => (Step.Two_Connect_Databases,Some(x), emptyDBConfig) }
+        catch { case x : Throwable ⇒ (Step.Two_Connect_Databases,Some(x), emptyDBConfig) }
       }
       // We just collected together a list of the results for each site. now let's find the earliest
       // step amongst them.
       db_results.foldLeft[(Step.Value,Option[Throwable],DBConfig)]((Step.Six_Success,None,emptyDBConfig)) {
-        case (step1, step2) => if (step1._1 < step2._1) step1 else step2
+        case (step1, step2) ⇒ if (step1._1 < step2._1) step1 else step2
       }
     }
   }
@@ -183,13 +180,13 @@ object ConfigWizard extends ScrupalComponent {
     if (dbConfigs.nonEmpty) {
       val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
       dbConfig match {
-        case Some(config) => {
+        case Some(config) ⇒ {
           implicit val context = DBContext.fromSpecificConfig(Symbol(db), config)
           // FIXME: Process the results of Schema.create
-          CoreModule.schemas(context).foreach { schema:Schema => schema.create }
+          CoreModule.schemas(context).foreach { schema:Schema ⇒ schema.create }
           true
         }
-        case None => throw new Exception("Cannot create schemas, Database configuration is invalid.")
+        case None ⇒ throw new Exception("Cannot create schemas, Database configuration is invalid.")
       }
     } else throw new Exception("Cannot create schemas, database configuration is empty.")
   }
@@ -200,14 +197,14 @@ object ConfigWizard extends ScrupalComponent {
     if (dbConfigs.nonEmpty) {
       val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
       dbConfig match {
-        case Some(config) => {
+        case Some(config) ⇒ {
           val context = DBContext.fromSpecificConfig(Symbol(db), config)
           val schema = new CoreSchema(context)
           val sd = Site(Symbol(siteData.name), Symbol(siteData.name), siteData.description, siteData.host, None, siteData.requiresHttps, true, None, None)
           schema.sites.insert( sd )
           true
         }
-        case None => throw new Exception("Cannot create site, database configuration is invalid.")
+        case None ⇒ throw new Exception("Cannot create site, database configuration is invalid.")
       }
     } else {
       throw new Exception("Cannot create site, database configuration is empty.")
@@ -220,7 +217,7 @@ object ConfigWizard extends ScrupalComponent {
     if (!dbConfigs.isEmpty) {
       val (db:String, dbConfig: Option[Configuration]) = dbConfigs.head
       dbConfig match {
-        case Some(config) => {
+        case Some(config) ⇒ {
           val context = DBContext.fromSpecificConfig(Symbol(db), config)
           val schema = new CoreSchema(context)
           val id = Symbol(pageInfo.name)
@@ -232,7 +229,7 @@ object ConfigWizard extends ScrupalComponent {
           log.debug("Inserted instance with id=" + inserted)
           true
         }
-        case None => throw new Exception("Cannot create page, database configuration is invalid.")
+        case None ⇒ throw new Exception("Cannot create page, database configuration is invalid.")
       }
     } else throw new Exception("Cannot create page, database configuration is empty.")
   }
@@ -254,9 +251,9 @@ object ConfigWizard extends ScrupalComponent {
     val context = DBContext.fromConfiguration()
     val schema = new CoreSchema(context)
     schema.validate match {
-      case Success(true) => // nothing to do
-      case Success(false) => Module.installSchemas(context)
-      case Failure(x) => log.error("Failed to validate schema because: ", x); throw x
+      case Success(true) ⇒ // nothing to do
+      case Success(false) ⇒ Module.installSchemas(context)
+      case Failure(x) ⇒ log.error("Failed to validate schema because: ", x); throw x
     }
 
     val instance = Instance('YourPage, "YourPage", "Auto-generated page created by Short-cut Configuration", 'Page,
@@ -301,22 +298,22 @@ object ConfigWizard extends ScrupalComponent {
     * corresponds to the state of affairs of Scrupal's installation.
     * @return One of the Configuration Pages
     */
-  def configure() = BasicAction { implicit context : AnyBasicContext => WithFeature(cw) {
+  def configure() = BasicAction { implicit context : AnyBasicContext ⇒ WithFeature(cw) {
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
       step match {
-        case Zero_Welcome          => Ok(html.config.index(step,error))
-        case One_Specify_Databases => Ok(html.config.database(makeDatabasesForm(dbs), step, error))
-        case Two_Connect_Databases => Ok(html.config.connect(step,error,extractDatabaseUrl(dbs)))
-        case Three_Install_Schemas => Ok(html.config.schema(step,error))
-        case Four_Create_Site      => Ok(html.config.site(makeSiteForm,step,error))
-        case Five_Create_Page      => Ok(html.config.page(makePageForm,step,error))
-        case Six_Success           => Global.reload(context.config); Ok(html.config.success(step,error))
-        case _                     => Ok(html.config.index(step,error)) // just in case
+        case Zero_Welcome          ⇒ Ok(html.config.index(step,error))
+        case One_Specify_Databases ⇒ Ok(html.config.database(makeDatabasesForm(dbs), step, error))
+        case Two_Connect_Databases ⇒ Ok(html.config.connect(step,error,extractDatabaseUrl(dbs)))
+        case Three_Install_Schemas ⇒ Ok(html.config.schema(step,error))
+        case Four_Create_Site      ⇒ Ok(html.config.site(makeSiteForm,step,error))
+        case Five_Create_Page      ⇒ Ok(html.config.page(makePageForm,step,error))
+        case Six_Success           ⇒ Global.reload(context.config); Ok(html.config.success(step,error))
+        case _                     ⇒ Ok(html.config.index(step,error)) // just in case
       }
     }
   }
 
-  private def getFormAction(name:String)(f: (String) => Result )(implicit request: Request[AnyContent] ) : Result = {
+  private def getFormAction(name:String)(f: (String) ⇒ Result )(implicit request: Request[AnyContent] ) : Result = {
     val formData : Map[String,Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map())
     if (formData.contains(name)) {
       val hows = formData.get(name).get
@@ -333,28 +330,28 @@ object ConfigWizard extends ScrupalComponent {
     * to the configuration process. This is where the work gets done.
     * @return An Action
     */
-  def configAction() = BasicAction { implicit context: AnyBasicContext => WithFeature(cw) {
+  def configAction() = BasicAction { implicit context: AnyBasicContext ⇒ WithFeature(cw) {
       // First, figure out where we are, step wise, by computing the state.
       val (step,error,dbs) : (Step.Kind,Option[Throwable],DBConfig) = computeState(context)
       step match {
-        case Zero_Welcome          => {
+        case Zero_Welcome          ⇒ {
           getFormAction("how") {
-            how: String => how match {
-              case "shortcut"  => doShortCutConfiguration( context.config )
-              case "configure" => doInitialConfiguration( context.config )
-              case _  => {}
+            how: String ⇒ how match {
+              case "shortcut"  ⇒ doShortCutConfiguration( context.config )
+              case "configure" ⇒ doInitialConfiguration( context.config )
+              case _  ⇒ {}
             }
             Redirect( routes.ConfigWizard.configure )
           }
         }
 
         // They are posting database configuration data.
-        case One_Specify_Databases => {
+        case One_Specify_Databases ⇒ {
           databaseForm.bindFromRequest.fold(
-            formWithErrors => { // binding failure, send bad request
+            formWithErrors ⇒ { // binding failure, send bad request
               BadRequest(html.config.database(formWithErrors, step, error))
             },
-            dbData => { //binding success, build a new configuration file
+            dbData ⇒ { //binding success, build a new configuration file
               log.debug("DB Info Request: " + context.body.asFormUrlEncoded)
               log.debug("Converted to DBDATA: " + dbData)
               val dbConfig = makeConfiguration(dbData)
@@ -365,46 +362,46 @@ object ConfigWizard extends ScrupalComponent {
         }
 
         // They are testing database configuration
-        case Two_Connect_Databases => {
+        case Two_Connect_Databases ⇒ {
           getFormAction("how") {
-            how: String => how match {
-              case "configure" => {
+            how: String ⇒ how match {
+              case "configure" ⇒ {
                 doInitialConfiguration( context.config )
                 Redirect(routes.ConfigWizard.configure)
               }
-              case _ => Redirect(routes.ConfigWizard.configure)
+              case _ ⇒ Redirect(routes.ConfigWizard.configure)
             }
           }
         }
-        case Three_Install_Schemas => {
+        case Three_Install_Schemas ⇒ {
           getFormAction("action") {
-            case "proceed" => {
+            case "proceed" ⇒ {
               createSchemas(context.config)
               Redirect(routes.ConfigWizard.configure)
             }
-            case _ => Redirect(routes.ConfigWizard.configure)
+            case _ ⇒ Redirect(routes.ConfigWizard.configure)
           }
         }
-        case Four_Create_Site      => {
+        case Four_Create_Site      ⇒ {
           siteForm.bindFromRequest.fold(
-            formWithErrors => { BadRequest(html.config.site(formWithErrors, step, error)) },
-            siteData => {
+            formWithErrors ⇒ { BadRequest(html.config.site(formWithErrors, step, error)) },
+            siteData ⇒ {
               createSite(context.config, siteData)
               Redirect(routes.ConfigWizard.configure)
             }
           )
         }
-        case Five_Create_Page      => {
+        case Five_Create_Page      ⇒ {
           pageForm.bindFromRequest.fold(
-            formWithErrors => { BadRequest(html.config.page(formWithErrors, step, error)) },
-            pageData => {
+            formWithErrors ⇒ { BadRequest(html.config.page(formWithErrors, step, error)) },
+            pageData ⇒ {
               createPage(context.config, pageData)
             }
           )
 
           Redirect(routes.ConfigWizard.configure)
         }
-        case Six_Success           => {
+        case Six_Success           ⇒ {
 
           // NOTE: Set up the NEXT request to not configure any more. We tell Global to reload the sites. This
           // NOTE: makes the list of sites available and consequently the configuration is complete.
@@ -414,7 +411,7 @@ object ConfigWizard extends ScrupalComponent {
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
           Redirect(routes.Home.index)
         }
-        case _                     =>  {
+        case _                     ⇒  {
           // No matter what, the next action is to go to the configure page and let it figure out the new state.
           // This ensures that they get the config wizard page that matches their state AFTER the change made here
           Redirect(routes.ConfigWizard.configure)
@@ -423,10 +420,10 @@ object ConfigWizard extends ScrupalComponent {
     }
   }
 
-  def reconfigure() = BasicAction { implicit context : AnyBasicContext => WithFeature(cw) {
+  def reconfigure() = BasicAction { implicit context : AnyBasicContext ⇒ WithFeature(cw) {
       val ctxt = context
       // Just wipe out the initial configuration to get to step 0
-      ConfigHelper(ctxt.config).getDbConfigFile map { file: File =>
+      ConfigHelper(ctxt.config).getDbConfigFile map { file: File ⇒
         if (file.exists)
           file.delete()
         Global.unload(ctxt.config)
@@ -460,7 +457,7 @@ object ConfigWizard extends ScrupalComponent {
 
   def extractDatabaseUrl(cfgs: DBConfig) : String = {
     if (!cfgs.isEmpty) {
-      cfgs.head._2 map { config: Configuration =>
+      cfgs.head._2 map { config: Configuration ⇒
         config.getString("uri").getOrElse("")
       }
     }.getOrElse("")
@@ -485,7 +482,7 @@ object ConfigWizard extends ScrupalComponent {
   }
 */
   /** Information for one database */
-  case class DatabaseInfo(host:String, port: Int, name: String, user: String, pass: String ) {
+  case class DatabaseInfo(host : String, port : Int, name : String, user : String, pass : String) {
     def uri = { "mongodb://" + host + ":" + port + "/" + name }
   }
 
@@ -497,7 +494,7 @@ object ConfigWizard extends ScrupalComponent {
     PasswordFormField("Password", "The password for the MongoDB server authentication", Password_t)
   ))
 
-  case class SiteInfo(name:String="", description: String="", host:String="", requiresHttps: Boolean=false)
+  case class SiteInfo(name : String = "", description : String = "", host : String = "", requiresHttps : Boolean = false)
 
   val siteSection = FieldSet("Site", "Description", "Site", Seq(
     TextFormField("Name", "The name of the site you want to create", Identifier_t),
@@ -508,10 +505,10 @@ object ConfigWizard extends ScrupalComponent {
 
   // def makeSiteForm = siteSection.fill(SiteInfo())
 
-  case class PageInfo(name: String="", description: String="", body: String="")
+  case class PageInfo(name : String = "", description : String = "", body : String = "")
   val pageSection = FieldSet("Page", "Description", "Page", Seq(
     TextFormField("Name", "The name of the page you want to create", Identifier_t),
-    TextFormField("Description",  "A description or summary of your page", NonEmptyString_t),
+    TextFormField("Description", "A description or summary of your page", NonEmptyString_t),
     TextAreaFormField("Body", "The body of your page in markdown format", Markdown_t)
   ))
 

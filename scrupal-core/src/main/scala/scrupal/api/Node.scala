@@ -1,33 +1,27 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api
 
-import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson._
-import scrupal.api.BSONHandlers._
-import scrupal.api.Node.NodeDAO
-import scrupal.core.nodes._
-import scrupal.db._
-import spray.http.{MediaType, MediaTypes}
+import akka.http.scaladsl.model.MediaType
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.language.existentials
+
+import scrupal.storage.api.{StorageContext, Storable, Reference}
+import scrupal.utils.RegistryReference
 
 /** A function that generates content
   *
@@ -36,13 +30,8 @@ import scala.language.existentials
   * generating the content. All dynamic content in Scrupal is generated through a Generator.
   * The Result embodies the notion of completing a request with some content and a disposition.
   */
-trait Generator extends ((Context) => Future[Result[_]])
+trait Generator extends ((Context) ⇒ Future[Result[_]])
 
-case class NodeRef(kind: String, ref: DBRef)
-
-object NodeRef {
-  lazy val nodeRefHandler : BSONHandler[BSONDocument, NodeRef] = Macros.handler[NodeRef]
-}
 
 /** Content Generating Node
   *
@@ -52,31 +41,31 @@ object NodeRef {
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-trait Node extends VariantStorable[BSONObjectID]
-           with Describable with Modifiable with Generator with Bootstrappable
-{
+trait Node extends Storable
+  with Describable with Modifiable with Generator with Bootstrappable {
   def mediaType : MediaType
-  def reference(collection: String, db: Option[String] = None) : NodeRef = {
-    NodeRef(kind.name, DBRef(collection, _id, db))
+  def reference(schema: String, collection : String)(implicit sc : StorageContext) : Reference[Node] = {
+    Reference(schema, collection, this)
   }
 }
 
 object Node {
 
+  /*
   lazy val Empty = MessageNode("Empty Node", "text-danger", "This node is completely empty.")
 
   object variants extends VariantRegistry[Node]("Node")
 
   implicit lazy val NodeReader : VariantBSONDocumentReader[Node] = new VariantBSONDocumentReader[Node] {
-    def read(doc: BSONDocument) : Node = variants.read(doc)
+    def read(doc : BSONDocument) : Node = variants.read(doc)
   }
 
   implicit val NodeWriter : VariantBSONDocumentWriter[Node] = new VariantBSONDocumentWriter[Node] {
-    def write(node: Node) : BSONDocument = variants.write(node)
+    def write(node : Node) : BSONDocument = variants.write(node)
   }
 
-  case class NodeDAO(db: DefaultDB) extends VariantDataAccessObject[Node,BSONObjectID] {
-    final def collectionName: String = "nodes"
+  case class NodeDAO(db : DefaultDB) extends VariantDataAccessObject[Node, BSONObjectID] {
+    final def collectionName : String = "nodes"
     implicit val writer = new Writer(variants)
     implicit val reader = new Reader(variants)
     implicit val converter = BSONObjectIDConverter
@@ -86,53 +75,45 @@ object Node {
       Index(key = Seq("kind" -> IndexType.Ascending), name = Some("kind"))
     )
   }
+  */
 }
-
-
-
+/* FIXME: Reinstate when we need CompoundNodes
 abstract class CompoundNode extends Node {
-  def subordinates : Map[String, Either[NodeRef,Node]]
-  def resolve(ctxt: Context, tagged_data: Map[String, (Node,EnumeratorResult)]) : EnumeratorResult
-  def apply(ctxt: Context) : Future[Result[_]] = {
-    ctxt.withExecutionContext { implicit ec: ExecutionContext ⇒
-      ctxt.withSchema { case (dbc,schema) ⇒
-        schema.withDB { db: ScrupalDB ⇒
-          val futures_nested: Iterable[Future[(String, (Node,EnumeratorResult))]] = {
-            for ((name, nr) ← subordinates) yield {
-              if (nr.isLeft) {
-                val dao = NodeDAO(db)
-                val nodeRef = nr.left.get
-                val future = dao.fetch(nodeRef.ref.id).map {
-                  case Some(node) ⇒ name → node(ctxt).map { r ⇒ node → r() }
-                  case None ⇒ throw new Exception(s"$nodeRef not found.")
+  def subordinates : Map[String, Either[NodeRef, Node]]
+  def resolve(ctxt : Context, tagged_data : Map[String, (Node, EnumeratorResult)]) : EnumeratorResult
+  def apply(ctxt : Context) : Future[Result[_]] = {
+    ctxt.withExecutionContext { implicit ec : ExecutionContext ⇒
+      ctxt.withSchema {
+        case (dbc, schema) ⇒
+          schema.withDB { db : ScrupalDB ⇒
+            val futures_nested : Iterable[Future[(String, (Node, EnumeratorResult))]] = {
+              for ((name, nr) ← subordinates) yield {
+                if (nr.isLeft) {
+                  val dao = NodeDAO(db)
+                  val nodeRef = nr.left.get
+                  val future = dao.fetch(nodeRef.ref.id).map {
+                    case Some(node) ⇒ name → node(ctxt).map { r ⇒ node → r() }
+                    case None ⇒ throw new Exception(s"$nodeRef not found.")
+                  }
+                  val f = future.flatMap { case (key, value) ⇒ value.map { er ⇒ key → er } }
+                  f
+                } else {
+                  val node = nr.right.get
+                  val nested = node(ctxt).map { r ⇒ node → r() }
+                  val f = nested.map { x ⇒ name → x }
+                  f
                 }
-                val f = future.flatMap { case (key, value) ⇒ value.map { er ⇒ key → er } }
-                f
-              } else {
-                val node = nr.right.get
-                val nested = node(ctxt).map { r => node → r() }
-                val f = nested.map { x ⇒ name → x }
-                f
               }
             }
+            val futures_mapped = (Future sequence futures_nested).map { pairs ⇒ pairs.toMap }
+            futures_mapped.map { x ⇒ resolve(ctxt, x) }
           }
-          val futures_mapped = (Future sequence futures_nested).map { pairs ⇒ pairs.toMap }
-          futures_mapped.map { x ⇒ resolve(ctxt, x) }
-        }
       }
     }
   }
 }
 
-abstract class AbstractHtmlNode extends Node {
-  final val mediaType: MediaType = MediaTypes.`text/html`
-  def content(context: Context)(implicit ec: ExecutionContext) : Future[Html.Contents]
-  def apply(context: Context) : Future[Result[_]] = {
-    context.withExecutionContext { implicit ec: ExecutionContext ⇒
-      content(context)(ec).map { html ⇒ HtmlResult(Html.renderContents(html), Successful) }
-    }
-  }
-}
+*/
 
 /* FIXME: Reinstate  when we want generalized Layout
 case class LayoutProducer (

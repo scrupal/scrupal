@@ -1,70 +1,68 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api.types
 
-import reactivemongo.bson._
 import scrupal.api._
+import scrupal.utils.Validation._
 
-case class EnumValidator(enumerators: Map[Identifier, Int], name: String) extends BSONValidator {
+import shapeless.{Poly1, CNil, :+:}
 
-  def validate(ref: ValidationLocation, value: BSONValue): VR = {
-    simplify(ref, value, "Integer, Long or String") {
-      case BSONInteger(x) if !enumerators.exists { y => y._2 == x} => Some(s"Value $x not valid for '$name'")
-      case BSONInteger(x) => None
-      case BSONLong(x) if !enumerators.exists { y => y._2 == x} => Some(s"Value $x not valid for '$name'")
-      case BSONLong(x) => None
-      case BSONString(x) if !enumerators.contains(Symbol(x)) => Some(s"Value '$x' not valid for '$name'")
-      case BSONString(x) => None
-      case _ => Some("")
+case class EnumValidator(enumerators : Map[Identifier, Int], name : String) extends Validator[EnumType.ID_IS] {
+
+  object validator extends Poly1 {
+    implicit def caseIdentifier = at[Identifier] { id : Identifier ⇒
+      if (!enumerators.contains(id)) Some(s"Value '$id' not valid for '$name'") else None
+    }
+    implicit def caseString = at[String] { s : String ⇒
+      if (!enumerators.contains(Symbol(s))) Some(s"Value $s not valid for '$name'") else None
+    }
+    implicit def caseInt = at[Int] { i : Int ⇒
+      if (!enumerators.exists { y ⇒ y._2 == i }) Some(s"Value $i not valid for '$name'") else None
+    }
+    implicit def caseLong = at[Long] { l : Long ⇒
+      if (!enumerators.exists { y ⇒ y._2 == l }) Some(s"Value $l not valid for '$name'") else None
+    }
+    implicit def caseAny = at[Any] { x ⇒ Some("") }
+  }
+
+  def validate(ref : Location, value : EnumType.ID_IS) : VResult = {
+    simplify(ref, value, "Integer, Long or String") { value ⇒
+      value.map(validator).select[Option[String]].getOrElse(None)
     }
   }
 }
-
 
 /** An Enum type allows a selection of one enumerator from a list of enumerators.
   * Each enumerator is assigned an integer value.
   */
-case class EnumType  (
+case class EnumType(
   id : Identifier,
   description : String,
-  enumerators : Map[Identifier, Int]
-) extends Type {
-  override type ScalaValueType = Int
-  require(enumerators.nonEmpty)
-  val validator = EnumValidator(enumerators,label)
-  def validate(ref: ValidationLocation, value: BSONValue) = validator.validate(ref, value)
-  override def kind = 'Enum
-  def valueOf(enum: Symbol) = enumerators.get(enum)
-  def valueOf(enum: String) = enumerators.get(Symbol(enum))
-}
-
-case class MultiEnumType(
-  id : Identifier,
-  description: String,
-  enumerators: Map[Identifier, Int]
-  ) extends Type {
-  override type ScalaValueType = Seq[Int]
+  enumerators : Map[Identifier, Int]) extends Type[EnumType.ID_IS] {
+  override type ValueType = Int
   require(enumerators.nonEmpty)
   val validator = EnumValidator(enumerators, label)
-  def validate(ref: ValidationLocation, value: BSONValue) : VR = {
-    value match {
-      case a: BSONArray => validateArray(ref, a, validator )
-      case x: BSONValue => wrongClass(ref, x, "Array")
-    }
+  def validate(ref : Location, value : EnumType.ID_IS) = {
+    validator.validate(ref, value)
   }
+  override def kind = 'Enum
+  def valueOf(enum : Symbol) = enumerators.get(enum)
+  def valueOf(enum : String) = enumerators.get(Symbol(enum))
+}
+
+object EnumType {
+  type ID_IS = Identifier :+: Int :+: String :+: CNil
 }

@@ -1,32 +1,30 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.core.nodes
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{BSONDocument, BSONHandler, BSONObjectID, Macros}
+import reactivemongo.bson.{ BSONDocument, BSONHandler, BSONObjectID, Macros }
 import scrupal.core.api.AssetLocator.Directory
-import scrupal.core.api.Html.{ContentsArgs, Contents}
+import scrupal.core.api.Html.{ ContentsArgs, Contents }
 import scrupal.core.api._
 import scrupal.core.html.MarkedPageGenerator
 import scrupal.db.VariantReaderWriter
-import spray.http.{MediaType, MediaTypes}
+import spray.http.{ MediaType, MediaTypes }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.io.Source
 import scalatags.Text.all._
 
@@ -39,18 +37,17 @@ import scalatags.Text.all._
   * @param path The path to the specific document to show, relative to contextPath
   * @param modified Date of modification
   * @param created Date of creation
- */
+  */
 case class MarkedDocNode(
-  contextPath: String,
-  root: String,
-  path: List[String],
-  modified: Option[DateTime] = Some(DateTime.now()),
-  created: Option[DateTime] = Some(DateTime.now()),
-  _id: BSONObjectID = BSONObjectID.generate,
-  final val kind: Symbol = MarkedDocNode.kind
-) extends Node {
-  override def mediaType: MediaType = MediaTypes.`text/html`
-  override def description: String = "A node that provides a marked document from a resource as html."
+  contextPath : String,
+  root : String,
+  path : List[String],
+  modified : Option[DateTime] = Some(DateTime.now()),
+  created : Option[DateTime] = Some(DateTime.now()),
+  _id : BSONObjectID = BSONObjectID.generate,
+  final val kind : Symbol = MarkedDocNode.kind) extends Node {
+  override def mediaType : MediaType = MediaTypes.`text/html`
+  override def description : String = "A node that provides a marked document from a resource as html."
 
   /** Traverse the directories and generate the menu structure
     *
@@ -58,31 +55,31 @@ case class MarkedDocNode(
     * @param dir The directory to generate the menu from
     * @return A pair of maps, one for files, one for directories
     */
-  def menuItems(dirPath: String, dir: Directory) : (Map[String,String], Map[String,Map[String,String]]) = {
-      val fileMap = for ((filename,(title,url)) ← dir.files) yield {
-        title → (dirPath + "/" + filename)
+  def menuItems(dirPath : String, dir : Directory) : (Map[String, String], Map[String, Map[String, String]]) = {
+    val fileMap = for ((filename, (title, url)) ← dir.files) yield {
+      title → (dirPath + "/" + filename)
+    }
+    val dirMap = for ((dirName, optdir) ← dir.dirs if optdir.isDefined) yield {
+      val subdirPath = dirPath + "/" + dirName
+      val subfilesMap = optdir match {
+        case Some(d2) ⇒
+          for ((filename, (title, url)) ← d2.files) yield {
+            title → (subdirPath + "/" + filename)
+          }
+        case None ⇒ Map.empty[String, String]
       }
-      val dirMap = for ((dirName, optdir) ← dir.dirs if optdir.isDefined) yield {
-        val subdirPath = dirPath + "/" + dirName
-        val subfilesMap = optdir match {
-          case Some(d2) ⇒
-            for ((filename, (title, url)) ← d2.files) yield {
-              title → (subdirPath + "/" + filename)
-            }
-          case None ⇒ Map.empty[String,String]
-        }
-        dirName → subfilesMap
-      }
-      fileMap → dirMap
+      dirName → subfilesMap
+    }
+    fileMap → dirMap
   }
 
-  def apply(context: Context) : Future[Result[_]] = {
+  def apply(context : Context) : Future[Result[_]] = {
     val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
     val dirPath = if (path.isEmpty) root else root + "/" + relPath
     val locator = context.scrupal.assetsLocator
-    val directory = locator.fetchDirectory(dirPath, recurse=true)
+    val directory = locator.fetchDirectory(dirPath, recurse = true)
     directory match {
       case None ⇒ Future.successful(ErrorResult(s"Directory at $dirPath was not found", NotFound))
       case Some(dir) ⇒
@@ -96,7 +93,7 @@ case class MarkedDocNode(
         }
         dir.files.get(doc) match {
           case None ⇒ Future.successful(ErrorResult(s"Document at $dirPath/$doc was not found", NotFound))
-          case Some((docTitle,urlOpt)) ⇒ context.scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+          case Some((docTitle, urlOpt)) ⇒ context.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
             Future {
               urlOpt match {
                 case Some(url) ⇒
@@ -117,7 +114,7 @@ case class MarkedDocNode(
                   }
                   val (files, dirs) = menuItems(linkPath, dir)
                   val nav = Seq(MarkedDocNode.docNav(upLink, files, dirs))
-                  val footerText: String = dir.copyright.getOrElse("Footer")
+                  val footerText : String = dir.copyright.getOrElse("Footer")
                   val footer = Seq(div(cls := "footer", sub(sub(footerText))))
                   val contents = Source.fromInputStream(url.openStream()).mkString
                   val page = MarkedDocNode.DocPage(title, "Description", nav, contents, footer)
@@ -135,17 +132,16 @@ case class MarkedDocNode(
 object MarkedDocNode {
   import BSONHandlers._
   final val kind = 'MarkedDoc
-  object MarkedDocNodeBRW extends VariantReaderWriter[Node,MarkedDocNode] {
-    implicit val MarkedDocNodeHandler : BSONHandler[BSONDocument,MarkedDocNode] = Macros.handler[MarkedDocNode]
-    override def fromDoc(doc: BSONDocument): MarkedDocNode = MarkedDocNodeHandler.read(doc)
-    override def toDoc(obj: Node): BSONDocument = MarkedDocNodeHandler.write(obj.asInstanceOf[MarkedDocNode])
+  object MarkedDocNodeBRW extends VariantReaderWriter[Node, MarkedDocNode] {
+    implicit val MarkedDocNodeHandler : BSONHandler[BSONDocument, MarkedDocNode] = Macros.handler[MarkedDocNode]
+    override def fromDoc(doc : BSONDocument) : MarkedDocNode = MarkedDocNodeHandler.read(doc)
+    override def toDoc(obj : Node) : BSONDocument = MarkedDocNodeHandler.write(obj.asInstanceOf[MarkedDocNode])
   }
   Node.variants.register(kind, MarkedDocNodeBRW)
 
-  case class DocPage(title: String, description: String, menu: Html.Contents, content: String, footer: Html.Contents)
-    extends MarkedPageGenerator
-  {
-    override def bodyMain(context: Context, args: ContentsArgs): Contents = {
+  case class DocPage(title : String, description : String, menu : Html.Contents, content : String, footer : Html.Contents)
+    extends MarkedPageGenerator {
+    override def bodyMain(context : Context, args : ContentsArgs) : Contents = {
       Seq(
         div(cls := "container",
           div(cls := "panel panel-primary",
@@ -165,11 +161,11 @@ object MarkedDocNode {
     }
   }
 
-  def docNav(uplink: String, files: Map[String,String], dirs: Map[String,Map[String,String]]) = {
-    div(cls:="well-small col-md-2",
-      div(cls:="btn-toolbar-vertical", role:="group",
-        a(href:=uplink, cls:="btn btn-xs btn-primary active", role:="button", "Up"), {
-          for((title,link) ← files) yield {a(href:=link, cls:="btn btn-xs btn-primary", role:="button", title ) }
+  def docNav(uplink : String, files : Map[String, String], dirs : Map[String, Map[String, String]]) = {
+    div(cls := "well-small col-md-2",
+      div(cls := "btn-toolbar-vertical", role := "group",
+        a(href := uplink, cls := "btn btn-xs btn-primary active", role := "button", "Up"), {
+          for ((title, link) ← files) yield { a(href := link, cls := "btn btn-xs btn-primary", role := "button", title) }
         }.toSeq,
         {
           for ((title, map) ← dirs) yield {
@@ -177,7 +173,7 @@ object MarkedDocNode {
               button(`type` := "button", cls := "btn btn-xs btn-primary dropdown-toggle", data("toggle") := "dropdown",
                 aria.expanded := "false", title, span(cls := "caret")),
               ul(cls := "dropdown-menu", role := "menu", {
-                for ((label, link) ← map) yield {li(a(data("target") := "#", href := link, role := "button", label))}
+                for ((label, link) ← map) yield { li(a(data("target") := "#", href := link, role := "button", label)) }
               }.toSeq)
             )
           }

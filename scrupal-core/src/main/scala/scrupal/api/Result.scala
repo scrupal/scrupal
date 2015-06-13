@@ -1,33 +1,31 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software LLC                                                                            *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation,                                    *
- * either version 3 of the License, or (at your option) any later version.                                            *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;                               *
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                          *
- * See the GNU General Public License for more details.                                                               *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal.                              *
- * If not, see either: http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                         *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api
 
+import akka.http.scaladsl.model.{ MediaType, MediaTypes }
 import java.io.InputStream
 
+import play.api.http.ContentTypes
 import play.api.libs.iteratee.Enumerator
-import reactivemongo.api.BSONSerializationPack
-import reactivemongo.bson.buffer.ArrayBSONBuffer
-import reactivemongo.bson._
-import scrupal.api.Html.TagContent
-import scrupal.core.html.display_exception_result
-import spray.http.{ContentType, ContentTypes, MediaType, MediaTypes}
+import play.api.libs.json._
 
-trait Resolvable extends ( () ⇒ EnumeratorResult)
+import scrupal.api.Html.TagContent
+import scrupal.utils.Validation.Failure
+
+trait Resolvable extends (() ⇒ EnumeratorResult)
 
 /** Encapsulation of an Action's Result
   *
@@ -52,7 +50,7 @@ trait Result[P] extends Resolvable {
     * This is the actual result. It can be any Scala type but should correspond to the ContentType
     * @return
     */
-  def payload: P
+  def payload : P
 
   /** Type Of Media Returned.
     *
@@ -60,12 +58,12 @@ trait Result[P] extends Resolvable {
     * returned by the payload.
     * @return A ContentType corresponding to the content type of `payload`
     */
-  def contentType : ContentType
+  def mediaType : MediaType
 }
 
 trait ContainedResult[P] extends Result[P] {
   def body : Array[Byte]
-  def apply() : EnumeratorResult = EnumeratorResult(Enumerator(body), contentType, disposition)
+  def apply() : EnumeratorResult = EnumeratorResult(Enumerator(body), mediaType, disposition)
 }
 
 /** Result with a data Enumerator.
@@ -73,14 +71,13 @@ trait ContainedResult[P] extends Result[P] {
   * This kind of Result contains an Enumerator[Array[Byte]] for its payload. This allows clients of an action to receive
   * a result that can be used to asynchronously stream chunks of data as needed/pulled by the client.
   * @param payload The Enumerator of data
-  * @param contentType The ContentType of the `payload`
+  * @param mediaType The ContentType of the `payload`
   * @param disposition The disposition of the result
   */
-case class EnumeratorResult (
-  payload: Enumerator[Array[Byte]],
-  contentType: ContentType,
-  disposition: Disposition = Successful
-) extends Result[Enumerator[Array[Byte]]] {
+case class EnumeratorResult(
+  payload : Enumerator[Array[Byte]],
+  mediaType : MediaType,
+  disposition : Disposition = Successful) extends Result[Enumerator[Array[Byte]]] {
   def apply() : EnumeratorResult = this
 }
 
@@ -90,18 +87,17 @@ case class EnumeratorResult (
   * data. This is often a more convenient result than EnumeratorResult because Enumerator.fromStream(x) can be used to
   * turn the stream into an Enumerator; or, the client can just read the stream directly (and block!).
   * @param payload The InputStream to be read
-  * @param contentType The ContentType of the InputStream
+  * @param mediaType The ContentType of the InputStream
   * @param disposition The disposition of the result.
   */
-case class StreamResult (
-  payload: InputStream,
-  contentType: ContentType,
-  disposition: Disposition = Successful
-) extends Result[InputStream] {
+case class StreamResult(
+  payload : InputStream,
+  mediaType : MediaType,
+  disposition : Disposition = Successful) extends Result[InputStream] {
   def apply() : EnumeratorResult = {
     import scala.concurrent.ExecutionContext.Implicits.global
     val enum = Enumerator.fromStream(payload, 64 * 1024) // ISSUE: What's the right size for the chunks?
-    EnumeratorResult(enum, contentType, disposition)
+    EnumeratorResult(enum, mediaType, disposition)
   }
 }
 
@@ -110,14 +106,13 @@ case class StreamResult (
   * This kind of Result contains an array of data that the client of the OctetsResult can use.
   *
   * @param payload The data of the result
-  * @param contentType The ContentType of the data
+  * @param mediaType The ContentType of the data
   * @param disposition The disposition of the result.
   */
-case class OctetsResult (
-  payload: Array[Byte],
-  contentType: ContentType,
-  disposition: Disposition = Successful
-) extends ContainedResult[Array[Byte]] {
+case class OctetsResult(
+  payload : Array[Byte],
+  mediaType : MediaType,
+  disposition : Disposition = Successful) extends ContainedResult[Array[Byte]] {
   val body = payload
 }
 
@@ -130,11 +125,10 @@ case class OctetsResult (
   * @param payload The data of the result
   * @param disposition The disposition of the result.
   */
-case class StringResult (
-  payload: String,
-  disposition: Disposition = Successful
-) extends ContainedResult[String] {
-  val contentType: ContentType = ContentTypes.`text/plain(UTF-8)`
+case class StringResult(
+  payload : String,
+  disposition : Disposition = Successful) extends ContainedResult[String] {
+  val mediaType : MediaType = MediaTypes.`text/plain`
   val body = payload.getBytes(utf8)
 }
 
@@ -146,16 +140,15 @@ case class StringResult (
   * @param disposition The disposition of the result.
   */
 case class HtmlResult(
-  payload: String,
-  disposition: Disposition = Successful
-) extends ContainedResult[String] {
-  val contentType: ContentType = MediaTypes.`text/html`
+  payload : String,
+  disposition : Disposition = Successful) extends ContainedResult[String] {
+  val mediaType : MediaType = MediaTypes.`text/html`
   val body = payload.getBytes(utf8)
 }
 
 object HtmlResult {
-  def apply(tag: TagContent, disposition: Disposition) = new HtmlResult(tag.toString(), disposition)
-  def apply(contents: Html.Contents, disposition: Disposition) = {
+  def apply(tag : TagContent, disposition : Disposition) = new HtmlResult(tag.toString(), disposition)
+  def apply(contents : Html.Contents, disposition : Disposition) = {
     new HtmlResult(Html.renderContents(contents), disposition)
   }
 }
@@ -168,15 +161,13 @@ object HtmlResult {
   * @param payload The Html payload of the result.
   * @param disposition The disposition of the result.
   */
-case class BSONResult(
-  payload: BSONDocument,
-  disposition: Disposition = Successful
-) extends Result[BSONDocument] {
-  val contentType : ContentType = ScrupalMediaTypes.bson
+case class JsonResult(
+  payload : JsObject,
+  disposition : Disposition = Successful) extends Result[JsObject] {
+  val mediaType : MediaType = MediaTypes.`application/json`
   def apply() : EnumeratorResult = {
-    val buffer = new reactivemongo.bson.buffer.ArrayBSONBuffer
-    BSONSerializationPack.writeToBuffer(buffer,payload)
-    EnumeratorResult(Enumerator(buffer.array), contentType, disposition)
+    val buffer = Json.stringify(payload)
+    EnumeratorResult(Enumerator(buffer.getBytes(utf8)), mediaType, disposition)
   }
 }
 
@@ -186,29 +177,23 @@ case class BSONResult(
   * a result. Note that the Disposition is always an Exception
   *
   * @param payload The error that occurred
- */
-case class ExceptionResult(
-  payload: Throwable
-) extends ContainedResult[Throwable] {
-  val disposition: Disposition = Exception
-  val contentType = ContentTypes.`text/plain(UTF-8)`
-
-  def toBSONResult : BSONResult = {
-    val stack = payload.getStackTrace.map { elem ⇒ BSONString(elem.toString) }
-    BSONResult(
-      BSONDocument(
-        "$error" →BSONString(s"${payload.getClass.getName}: ${payload.getMessage}"),
-        "$stack" → BSONArray(stack)
-      ),
-      disposition
-    )
+  */
+case class ExceptionResult(payload : Throwable) extends ContainedResult[Throwable] {
+  val disposition : Disposition = Exception
+  val mediaType = MediaTypes.`text/plain`
+  def toJson : JsObject = {
+    JsObject(Seq(
+      "$error" → JsString(s"${payload.getClass.getName}: ${payload.getMessage}"),
+      "$stack" → JsArray(payload.getStackTrace.map { elem ⇒ JsString(elem.toString) })
+    ))
   }
 
-  def toHtmlResult(context: Context) : HtmlResult = {
-    HtmlResult(display_exception_result(this).render(context, Html.EmptyContentsArgs), disposition)
- }
+  def toJsonResult : JsonResult = {
+    JsonResult(toJson, disposition)
+  }
 
-  val body = display_exception_result(this)().toString().getBytes(utf8)
+  def body = Json.stringify(toJson).getBytes(utf8)
+
 }
 
 /** Result with a simple error payload.
@@ -220,33 +205,20 @@ case class ExceptionResult(
   * @param disposition The disposition of the result
   */
 case class ErrorResult(
-  payload: String,
-  disposition : Disposition = Unspecified
-) extends ContainedResult[String] {
-  val contentType = ContentTypes.`text/plain(UTF-8)`
-
-  def formatted = s"Error: ${disposition.id.name}: ${payload}"
-
+  payload : String,
+  disposition : Disposition = Unspecified) extends ContainedResult[String] {
+  val mediaType = ContentTypes.TEXT
+  def formatted = s"Error: ${disposition.id.name}: $payload"
   def body = formatted.getBytes(utf8)
 }
 
 case class FormErrorResult(
-  payload: ValidationFailed[BSONValue],
-  disposition: Disposition = Unacceptable
-) extends Result[ValidationFailed[BSONValue]] {
-  val contentType : ContentType = ScrupalMediaTypes.bson
+  payload : Failure[JsValue],
+  disposition : Disposition = Unacceptable) extends Result[Failure[JsValue]] {
+  val mediaType : MediaType = MediaTypes.`application/json`
   def apply() : EnumeratorResult = {
-    val buffer = new ArrayBSONBuffer()
-    BSONSerializationPack.writeToBuffer(buffer, payload.bsonMessage)
-    EnumeratorResult(Enumerator(buffer.array), contentType, disposition)
+    val buffer = Json.stringify(payload.jsonMessage)
+    EnumeratorResult(Enumerator(buffer.getBytes(utf8)), mediaType, disposition)
   }
-  def formatted: String = payload.message.toString()
-}
-
-// TODO: Support more Result types: JSON
-// case class JSONResult(payload: JsObject, disposition: Disposition = Successful) extends Result[JsObject]
-
-object ScrupalMediaTypes {
-  val bson = MediaType.custom("application", "vnd.bson", compressible=true, binary=true,
-    fileExtensions=Seq("bson"))
+  def formatted : String = payload.msgBldr.toString()
 }

@@ -1,41 +1,39 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 package scrupal.api
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{BSONValue, BSONDocument}
-import scrupal.core.types.BundleType
-import scrupal.utils.{Configuration, OSSLicense, Patterns, Version}
-
-import scala.concurrent.duration.Duration
+import play.api.Configuration
+import play.api.libs.json.{ JsValue, JsObject }
+import types.StructuredType
+import scrupal.api.types.BundleType
+import scrupal.utils.{ OSSLicense, Patterns, Version }
 
 trait Authorable {
   def author : String
   def copyright : String
-  def license: OSSLicense
+  def license : OSSLicense
 }
 
 /** Something that can be created and keeps track of its modification time.
-  * For reasons similar to [[scrupal.db.Storable]], the data provided by this trait is accessible to everyone
+  * For reasons similar to [[scrupal.storage.api.Storable]], the data provided by this trait is accessible to everyone
   * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Creatable uses
-  * the same justifications for this design as does [[scrupal.db.Storable]]
+  * the same justifications for this design as does [[scrupal.storage.api.Storable]]
   */
-trait Creatable  {
+trait Creatable {
   def created : Option[DateTime]
   def isCreated = created.isDefined
   def exists = isCreated
@@ -43,9 +41,9 @@ trait Creatable  {
 }
 
 /** Something that can be modified and keeps track of its times of modification and creation.
-  * For reasons similar to [[scrupal.db.Storable]], the data provided by this trait is accessible to everyone
+  * For reasons similar to [[scrupal.storage.api.Storable]], the data provided by this trait is accessible to everyone
   * but mutable by only the scrupal package. This limits the impact of making the created_var a var. Modifiable uses
-  * the same justifications for this design as does [[scrupal.db.Storable]]
+  * the same justifications for this design as does [[scrupal.storage.api.Storable]]
   */
 trait Modifiable extends Creatable {
   def modified : Option[DateTime]
@@ -59,7 +57,7 @@ trait ModuleOwned {
 }
 
 /** Something that can be named with a String  */
-trait Nameable  {
+trait Nameable {
   def name : String
   def isNamed : Boolean = name.nonEmpty
 }
@@ -72,8 +70,8 @@ trait Describable {
 
 /** Something that has settings that can be specified and changed */
 trait Settingsable extends SettingsInterface {
-  def settingsType : StructuredType = BundleType.Empty
-  def settingsDefault : BSONDocument = BSONDocument()
+  def settingsType : StructuredType[JsValue] = BundleType.Empty
+  def settingsDefault : JsObject = JsObject(Map.empty[String, JsValue])
 }
 
 /** Something that contains a path component for a URL */
@@ -82,11 +80,10 @@ trait Pathable {
   def pathIsValid : Boolean = Patterns.anchored(Patterns.URLPathable).pattern.matcher(path).matches()
 }
 
-
 /** Something that has a version and can obsolete other version */
 trait Versionable {
-  def version: Version
-  def obsoletes: Version
+  def version : Version
+  def obsoletes : Version
 }
 
 /** Something that has an expiration date */
@@ -94,7 +91,7 @@ trait Expirable {
   def expiry : Option[DateTime]
   def expires = expiry.isDefined
   def expired = expiry match {
-    case None ⇒ false
+    case None     ⇒ false
     case Some(dt) ⇒ dt.isBeforeNow
   }
   def unexpired : Boolean = !expired
@@ -103,11 +100,11 @@ trait Expirable {
 
 /** Something that contains facets */
 trait Facetable {
-  def facets : Map[String,Facet]
-  def facet(name:String): Option[Facet]= facets.get(name)
+  def facets : Map[String, Facet]
+  def facet(name : String) : Option[Facet] = facets.get(name)
 }
 
 /** Something that participates in runtime bootstrap at startup */
 trait Bootstrappable {
-  protected[scrupal] def bootstrap(config: Configuration) : Unit = {}
+  protected[scrupal] def bootstrap(config : Configuration) : Unit = {}
 }

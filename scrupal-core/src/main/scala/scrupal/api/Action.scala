@@ -1,28 +1,28 @@
 /**********************************************************************************************************************
- * Copyright © 2014 Reactific Software, Inc.                                                                          *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * This file is part of Scrupal, an Opinionated Web Application Framework.                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Scrupal is free software: you can redistribute it and/or modify it under the terms                                 *
- * of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License,   *
- * or (at your option) any later version.                                                                             *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- * Scrupal is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied      *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more      *
- * details.                                                                                                           *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * You should have received a copy of the GNU General Public License along with Scrupal. If not, see either:          *
- * http://www.gnu.org/licenses or http://opensource.org/licenses/GPL-3.0.                                             *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
+
 package scrupal.api
 
+import akka.http.scaladsl.model.Uri.Path.Slash
+import akka.http.scaladsl.model.{ HttpMethod, HttpMethods, Uri }
+import akka.http.scaladsl.server.{PathMatchers, PathMatcher}
+import akka.http.scaladsl.server.PathMatcher._
+import akka.http.scaladsl.server.util.Tuple
 import scrupal.core.actions.NodeAction
-import scrupal.utils.{Pluralizer, Patterns}
-import shapeless.{::, HNil, HList}
-import spray.http.{HttpMethods, HttpMethod, Uri}
-import spray.routing.PathMatcher
-import spray.routing.PathMatcher.{Matched, Unmatched}
-import spray.routing.PathMatchers._
+import scrupal.utils.{ ScrupalComponent, Pluralizer, Patterns }
+import shapeless.{ ::, HNil, HList }
 
 import scala.concurrent.Future
 
@@ -41,7 +41,7 @@ import scala.concurrent.Future
   * the ActionProcessor actor. Extensions of Action represent actual requests by adding parametric data to the Action
   * and implementing the `apply` function.
   */
-trait Action extends (() => Future[Result[_]]) {
+trait Action extends (() ⇒ Future[Result[_]]) {
   /** The action part of an Action object.
     *
     * Objects mixing in this trait will define apply to implement the Action. Note that the result type is a generic
@@ -78,11 +78,11 @@ trait Action extends (() => Future[Result[_]]) {
   * request. If the object cannot extract an action it should return None so other alternatives can be attempted.
   */
 trait ActionExtractor {
-  def extractAction(context: Context) : Option[Action]
+  def extractAction(context : Context) : Option[Action]
   def describe : String = ""
 }
 
-trait DelegatingActionExtractor {
+trait DelegatingActionExtractor extends ScrupalComponent {
   /** The ActionExtractors this one delegates to */
   def delegates : Seq[ActionExtractor]
 
@@ -91,9 +91,9 @@ trait DelegatingActionExtractor {
     * @param context The context of the request
     * @return Some(Action) if one is found, None if none are found, and throws an error if multiple are found.
     */
-  def delegateAction(context: Context) : Option[Action] = {
+  def delegateAction(context : Context) : Option[Action] = {
     val candidates = {
-      for (ap ← delegates; action = ap.extractAction(context) if action.isDefined ) yield { action.get }
+      for (ap ← delegates; action = ap.extractAction(context) if action.isDefined) yield { action.get }
     }
     if (candidates.isEmpty)
       None
@@ -106,11 +106,11 @@ trait DelegatingActionExtractor {
 
 trait PathMatcherActionExtractor[L <: HList] extends ActionExtractor {
   /** The PathMatcher to match against the context */
-  def pm: PathMatcher[L]
+  def pm : PathMatcher[L]
 
   override def describe : String = pm.toString()
 
-  def matches(path: Uri.Path) : Boolean = {
+  def matches(path : Uri.Path) : Boolean = {
     pm(path) match {
       case Matched(rest, value) ⇒ true
       case Unmatched ⇒ false
@@ -118,10 +118,10 @@ trait PathMatcherActionExtractor[L <: HList] extends ActionExtractor {
     }
   }
 
-  def extractAction(context: Context) : Option[Action] = {
+  def extractAction(context : Context) : Option[Action] = {
     pm(context.request.unmatchedPath) match {
       case Matched(rest, value) ⇒
-        val newRequestContext = context.request.withUnmatchedPathMapped { path ⇒ rest }
+        val newRequestContext = context.request.mapUnmatchedPath { path ⇒ rest }
         val newContext = context.withNewRequest(newRequestContext)
         actionFor(value, newContext)
       case Unmatched ⇒ None
@@ -136,26 +136,26 @@ trait PathMatcherActionExtractor[L <: HList] extends ActionExtractor {
     * @param context The context of the request
     * @return Some(Action) if the correponding context matches, or None if it doesn't
     */
-  def actionFor(list: L, context: Context) : Option[Action]
+  def actionFor(list : L, context : Context) : Option[Action]
 }
 
 /** Extract An Action From Context For PathMatcher And Method
   *
   * This trait encapsulates the extraction of an Action from a [[scrupal.api.Context]] by using a
-  * [[spray.routing.PathMatcher]] and an [[spray.http.HttpMethod]]. The context is used to obtain the method and the
+  * [[akka.http.scaladsl.server.PathMatcher]] and an [[akka.http.scaladsl.model.HttpMethod]]. The context is used to obtain the method and the
   * unmatchedPath which is then matched against the `pm` and `method` members of this. If a match is made then the
   * `actionFor` method is invoked to convert the extracted values, a [[shapeless.HList]], the remaining path and
   * the context into an action.
-  * particular shape of [[shapeless.HList]] and an [[scrupal.api.Action]]. If the [[spray.routing.PathMatcher]]
-  * successfully matches a [[spray.http.Uri.Path]] then this trait's `apply` method is invoked, with a
+  * particular shape of [[shapeless.HList]] and an [[scrupal.api.Action]]. If the [[akka.http.scaladsl.server.PathMatcher]]
+  * successfully matches a [[akka.http.scaladsl.model.Uri.Path]] then this trait's `apply` method is invoked, with a
   * [[scrupal.api.Context]], to obtain the Action.
   *
   * @tparam L The HList that the PathMatcher produces
   */
-trait PathAndMethodActionExtractor[L <: HList]  extends PathMatcherActionExtractor[L] {
+trait PathAndMethodActionExtractor[L <: HList] extends PathMatcherActionExtractor[L] {
 
   /** The method to match against the context */
-  def method: HttpMethod
+  def method : HttpMethod
 
   /** Return Matching Action
     * Match the context against the `pm` and the `method` and invoke `actionFor` to yield the corresponding Action.
@@ -163,7 +163,7 @@ trait PathAndMethodActionExtractor[L <: HList]  extends PathMatcherActionExtract
     * @param context The context of the request
     * @return Some(Action) if the corresponding context matches, or None if it doesn't
     */
-  override def extractAction(context: Context) : Option[Action] = {
+  override def extractAction(context : Context) : Option[Action] = {
     if (context.request.request.method == method) {
       super.extractAction(context)
     } else {
@@ -172,10 +172,10 @@ trait PathAndMethodActionExtractor[L <: HList]  extends PathMatcherActionExtract
   }
 }
 
-trait SingularActionExtractor extends PathMatcherActionExtractor[::[String,HNil]] {
+trait SingularActionExtractor extends PathMatcherActionExtractor[::[String, HNil]] {
 
   /** The path segment to match */
-  def segment: String
+  def segment : String
 
   /** Key For Identifying This Provider
     *
@@ -191,16 +191,18 @@ trait SingularActionExtractor extends PathMatcherActionExtractor[::[String,HNil]
     *
     * @return The constant string used to identify this ActionProvider
     */
-  def makeKey(name: String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern,"-")
+  def makeKey(name : String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern, "-")
 
   /** Singular form of the keyword */
   lazy val singularKey = makeKey(segment)
 
-  /** PathMatcher that matches the singular form of the keyword and extracts it. */
-  def pm : PathMatcher[::[String,HNil]] =
-    PathMatcher(Uri.Path(singularKey),singularKey::HNil) ~ Slash |
-      PathMatcher(Uri.Path(singularKey),singularKey::HNil)
+  //implicit val ev : akka.http.scaladsl.server.util.Tuple[shapeless.::[String,shapeless.HNil]]
 
+  /** PathMatcher that matches the singular form of the keyword and extracts it. */
+  def pm : PathMatcher[::[String, HNil]] = {
+    PathMatcher(Uri.Path(singularKey), singularKey :: HNil) ~ PathMatchers.Slash |
+      PathMatcher(Uri.Path(singularKey), singularKey :: HNil)
+  }
 
   /** Final Implementation of [[scrupal.api.PathAndMethodActionExtractor.actionFor()]]
     * This implementation just delegates to a more precise implementation that provides the keyword that was
@@ -209,7 +211,7 @@ trait SingularActionExtractor extends PathMatcherActionExtractor[::[String,HNil]
     * @param context The new context
     * @return The Action resulting from the delegated call to [[actionFor()]]
     */
-  final def actionFor(list: ::[String,HNil], context: Context) : Option[Action] = {
+  final def actionFor(list : ::[String, HNil], context : Context) : Option[Action] = {
     actionFor(list.head, context)
   }
 
@@ -220,35 +222,18 @@ trait SingularActionExtractor extends PathMatcherActionExtractor[::[String,HNil]
     * @param context The context of the request
     * @return The Action to process that corresponds to the context
     */
-  def actionFor(keyword: String, context: Context) : Option[Action]
+  def actionFor(keyword : String, context : Context) : Option[Action]
 }
 
-trait PluralActionExtractor extends SingularActionExtractor
-{
+trait PluralActionExtractor extends SingularActionExtractor {
   /** Plural form of the keyword */
   lazy val pluralKey = makeKey(Pluralizer.pluralize(segment))
 
   /** PathMatcher that matches either the singular or plural form of the keyword and extracts it. */
-  override def pm : PathMatcher[::[String,HNil]] = super.pm | PathMatcher(Uri.Path(pluralKey),pluralKey::HNil)
-}
-
-abstract class ActionProducer[L <: HList](val pm: PathMatcher[L]) extends PathMatcherActionExtractor[L]
-
-case class NodeActionProducer[L <: HList](pm: PathMatcher[L], node: Node, method: HttpMethod = HttpMethods.GET)
-  extends PathAndMethodActionExtractor[L]
-{
-  def actionFor(list: L, c: Context) : Option[Action] = {
-    Some(NodeAction(c,node))
+  override def pm : PathMatcher[::[String, HNil]] = {
+    super.pm | PathMatcher(Uri.Path(pluralKey), pluralKey :: HNil)
   }
 }
 
-case class FunctionalNodeActionProducer[L <: HList](
-  pm: PathMatcher[L],
-  nodeF: (L, Context) ⇒ Node,
-  method: HttpMethod = HttpMethods.GET
-) extends PathAndMethodActionExtractor[L] {
-  def actionFor(list: L, c: Context) : Option[Action] = {
-    Some(NodeAction(c,nodeF(list, c)))
-  }
-}
+abstract class ActionProducer[L <: HList](val pm : PathMatcher[L]) extends PathMatcherActionExtractor[L]
 
