@@ -47,7 +47,13 @@ case class FileSysCollection[S <: Storable] private[filesys] (schema : Schema, n
     content.get(id)
   }
 
-  override def delete(obj : S) : Future[WriteResult] = delete(obj.primaryId)
+  override def fetchAll() : Future[Iterable[S]] = Future {
+    content.values
+  }
+
+  override def delete(obj : S) : Future[WriteResult] = {
+    delete(obj.primaryId)
+  }
 
   override def delete(id : ID) : Future[WriteResult] = Future {
     if (content.contains(id)) {

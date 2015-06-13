@@ -56,7 +56,7 @@ trait Schema extends AutoCloseable with ScrupalComponent {
 
   final def validate : Results[Schema] = { design.validate(this) }
 
-  def construct = {
+  def construct : Unit = {
     // Construct this schemas contents
     design.construct(this).tossOnError
   }

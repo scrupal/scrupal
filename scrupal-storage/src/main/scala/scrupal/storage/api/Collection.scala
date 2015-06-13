@@ -31,6 +31,7 @@ trait Collection[S <: Storable] extends AutoCloseable with ScrupalComponent {
   def removeIndex(index : Index) : Future[WriteResult]
   def indices : Seq[Index]
   def fetch(id : ID) : Future[Option[S]]
+  def fetchAll() : Future[Iterable[S]]
   def find(query : Query) : Future[Seq[S]]
   def insert(obj : S, update : Boolean = false) : Future[WriteResult]
   def update(obj : S, update : Modification[S]) : Future[WriteResult]

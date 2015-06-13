@@ -19,7 +19,14 @@ package scrupal.storage.api
 
 import java.net.URI
 
+import com.typesafe.config.Config
+import play.api.Configuration
+import scrupal.storage.impl.StorageConfigHelper
+import scrupal.storage.mem.{MemoryStorageContext, MemoryStore}
 import scrupal.utils.{ ScrupalComponent, Registry, Registrable }
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.{FiniteDuration, Duration}
 
 trait StorageDriver extends AutoCloseable with Registrable[StorageDriver] with ScrupalComponent {
   def name : String
@@ -32,17 +39,41 @@ trait StorageDriver extends AutoCloseable with Registrable[StorageDriver] with S
     storeExists(url.getPath)
   }
   def storeExists(storage_name : String) : Boolean
-  def makeContext(id : Symbol) : StorageContext
+  def makeContext(id : Symbol, uri: URI) : StorageContext
   def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S]
   def makeStorage(uri : URI) : Store
   def makeSchema(store : Store, name : String, design : SchemaDesign) : Schema
   def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S]
   def registry = StorageDriver
+  def isOpen : Boolean = true
+  def closeF(implicit ec: ExecutionContext) = Future {
+    if (isOpen)
+      close()
+    isOpen
+  }
 }
 
 object StorageDriver extends Registry[StorageDriver] {
   override def registryName = "StorageDrivers"
   override def registrantsName = "driver"
+
+  def apply(config: Config) : StorageDriver = {
+    apply(Configuration(config))
+  }
+
+  def apply(config : Configuration) : StorageDriver = {
+    apply(config, "scrupal")
+  }
+
+  def apply(configuration : Configuration, name : String) : StorageDriver = {
+    val config = StorageConfigHelper(configuration).getStorageConfig
+    config.getString(name + ".uri") match {
+      case Some(str) ⇒
+        apply(new URI(str))
+      case None ⇒
+        toss(s"Configuration for StorageDriver $name not found")
+    }
+  }
 
   def apply(url : URI) : StorageDriver = {
     _registry.values.find { driver : StorageDriver ⇒ driver.canOpen(url) } match {

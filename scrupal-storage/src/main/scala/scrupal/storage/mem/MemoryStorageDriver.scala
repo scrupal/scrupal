@@ -50,7 +50,11 @@ object MemoryStorageDriver extends StorageDriver {
     MemoryReference[S](coll.asInstanceOf[MemoryCollection[S]], id)
   }
 
-  def makeContext(id : Symbol) : MemoryStorageContext = MemoryStorageContext(id)
+  def makeContext(id : Symbol, uri: URI) : StorageContext = {
+    withStore(uri) { store: Store ⇒
+      MemoryStorageContext(id, uri, store.asInstanceOf[MemoryStore])
+    }
+  }
 
   def makeStorage(uri : URI) : Store = MemoryStore(this, uri)
 
@@ -71,4 +75,5 @@ object MemoryStorageDriver extends StorageDriver {
 
   private val stores : mutable.HashMap[String, MemoryStore] = new mutable.HashMap[String, MemoryStore]
   private val authority : String = "localhost"
+
 }

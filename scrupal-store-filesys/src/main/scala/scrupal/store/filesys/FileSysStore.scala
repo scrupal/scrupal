@@ -42,6 +42,17 @@ case class FileSysStore private[filesys] (driver : StorageDriver, uri : URI) ext
   /** Returns the mapping of names to Schema instances for this kind of storage */
   def schemas : Map[String, Schema] = _schemas.toMap
 
+  override def hasSchema(name: String): Boolean = {
+    _schemas.contains(name)
+  }
+
+  /** Create a new collection for storing objects */
+  override def addSchema(design: SchemaDesign): Schema = {
+    val schema = driver.makeSchema(this, design.name, design).asInstanceOf[FileSysSchema]
+    _schemas.put(design.name, schema)
+    schema
+  }
+
   def addSchema(schema : Schema) : Schema = {
     _schemas.put(schema.name, schema.asInstanceOf[FileSysSchema])
     schema
@@ -60,4 +71,5 @@ case class FileSysStore private[filesys] (driver : StorageDriver, uri : URI) ext
       case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
     }
   }
+
 }

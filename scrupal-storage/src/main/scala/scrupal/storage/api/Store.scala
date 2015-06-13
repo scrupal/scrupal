@@ -28,8 +28,10 @@ trait Store extends AutoCloseable with ScrupalComponent {
   /** Returns the mapping of names to Schema instances for this kind of storage */
   def schemas : Map[String, Schema]
 
+  def hasSchema(name: String) : Boolean
+
   /** Create a new collection for storing objects */
-  def addSchema(schema : Schema) : Schema
+  def addSchema(design : SchemaDesign) : Schema
 
   def withSchema[T](schema : String)(f : (Schema) ⇒ T) : T
 

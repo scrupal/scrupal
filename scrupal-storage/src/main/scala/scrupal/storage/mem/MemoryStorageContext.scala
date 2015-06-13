@@ -1,11 +1,13 @@
 package scrupal.storage.mem
 
-import scrupal.storage.api.StorageContext
+import java.net.URI
+
+import scrupal.storage.api.{StorageContext}
 
 /** Title Of Thing.
   *
   * Description of thing
   */
-case class MemoryStorageContext private[mem] (id : Symbol) extends StorageContext {
+case class MemoryStorageContext private[mem] (id : Symbol, uri: URI, store: MemoryStore) extends StorageContext {
   val driver = MemoryStorageDriver
 }

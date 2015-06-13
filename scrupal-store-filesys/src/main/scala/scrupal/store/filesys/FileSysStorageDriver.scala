@@ -68,7 +68,11 @@ object FileSysStorageDriver extends StorageDriver {
     FileSysReference[S](coll.asInstanceOf[FileSysCollection[S]], id)
   }
 
-  def makeContext(id : Symbol) : FileSysStorageContext = FileSysStorageContext(id)
+  def makeContext(id : Symbol, uri : URI) : FileSysStorageContext = {
+    withStore(uri) { store ⇒
+      FileSysStorageContext(id, uri, store.asInstanceOf[FileSysStore])
+    }
+  }
 
   def makeStorage(uri : URI) : Store = FileSysStore(this, uri)
 

@@ -23,9 +23,12 @@ case class MemoryStore private[mem] (driver : StorageDriver, uri : URI) extends 
   /** Returns the mapping of names to Schema instances for this kind of storage */
   def schemas : Map[String, Schema] = _schemas.toMap
 
-  def addSchema(schema : Schema) : Schema = {
-    _schemas.put(schema.name, schema.asInstanceOf[MemorySchema])
-    schema
+  def hasSchema(name: String) : Boolean = _schemas.contains(name)
+
+  def addSchema(design: SchemaDesign) : Schema = {
+    val result = driver.makeSchema(this, design.name, design)
+    _schemas.put(design.name, result.asInstanceOf[MemorySchema])
+    result
   }
 
   def withSchema[T](schema : String)(f : Schema ⇒ T) : T = {

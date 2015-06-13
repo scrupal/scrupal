@@ -19,8 +19,6 @@ package scrupal.storage.api
 
 import java.io.Closeable
 import java.net.URI
-import java.util.concurrent.atomic.AtomicInteger
-
 import play.api.Configuration
 
 import scrupal.storage.impl.StorageConfigHelper
@@ -37,28 +35,17 @@ trait StorageContext extends Registrable[StorageContext] with Closeable with Scr
   implicit val executionContext : ExecutionContext = ExecutionContext.global
   def registry = StorageContext
   def driver : StorageDriver
+  def uri : URI
+  def store : Store
 
-  def withStore[T](uri : URI, create : Boolean = false)(f : (Store) ⇒ T) : T = {
-    driver.open(uri, create) match {
-      case Some(store) ⇒ f(store)
-      case None ⇒ toss(s"Store not found for $uri")
-    }
+  def withStore[T](f : (Store) ⇒ T) : T = { f(store) }
+
+  def withSchema[T](schema : String, create : Boolean = false)(f : (Schema) ⇒ T) : T = {
+    store.withSchema(schema)(f)
   }
 
-  def withSchema[T](uri : URI, schema : String, create : Boolean = false)(f : (Schema) ⇒ T) : T = {
-    driver.open(uri, create) match {
-      case Some(storage) ⇒ storage.withSchema(schema)(f)
-      case None ⇒ toss(s"Store not found for $uri")
-    }
-  }
-
-  def withCollection[T, S <: Storable](
-    uri : URI,
-    schema : String,
-    collection : String)(f : (Collection[S]) ⇒ T) : T = {
-    driver.withStore(uri) { store ⇒
-      store.withCollection[T, S](schema, collection)(f)
-    }
+  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
+    store.withCollection(schema,collection)(f)
   }
 
   def checkExists(storageNames : Seq[String]) : Seq[String] = {
@@ -78,12 +65,9 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
   val registrantsName : String = "storageContext"
   val registryName : String = "StorageContexts"
 
-  def apply(id : Symbol, url : URI) : StorageContext = {
-    StorageDriver.apply(url).makeContext(id)
+  def apply(id : Symbol, uri : URI) : StorageContext = {
+    StorageDriver.apply(uri).makeContext(id, uri)
   }
-
-  private case class State(driver : StorageDriver, counter : AtomicInteger = new AtomicInteger(1))
-  private var state : Option[State] = None
 
   def fromConfiguration(id : Symbol, conf : Option[Configuration] = None) : StorageContext = {
     val topConfig = conf.getOrElse(ConfigHelpers.default)
@@ -102,73 +86,14 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
     }
   }
 
-  def fromURI(id : Symbol, uri : String) : StorageContext = {
+  def fromURI(id : Symbol, uriStr : String) : StorageContext = {
     getRegistrant(id) match {
       case Some(context) ⇒
         context
       case None ⇒
-        StorageDriver.apply(new URI(uri)).makeContext(id)
+        val uri = new URI(uriStr)
+        StorageDriver.apply(uri).makeContext(id,uri)
     }
   }
-
-  /*
-  def numberOfStartups : Int = {
-    state match {
-      case None    ⇒ 0
-      case Some(s) ⇒ s.counter.get()
-    }
-  }
-
-  def isStartedUp : Boolean = {
-    state match {
-      case None    ⇒ false
-      case Some(s) ⇒ !s.driver.system.isTerminated
-    }
-  }
-
-  def startup() : Unit = Try {
-    state match {
-      case Some(s) ⇒
-        val startCount = s.counter.incrementAndGet()
-        log.debug("The mongoDB driver initialized " + startCount + " times.")
-      case None ⇒
-        val full_config = ConfigFactory.load()
-        val driver = MongoDriver(full_config)
-        val s = State(driver)
-        state = Some(State(driver))
-    }
-  } match {
-    case Success(x) ⇒ log.debug("Successful mongoDB startup.")
-    case Failure(x) ⇒ log.error("Failed to start up mongoDB", x)
-  }
-
-  def shutdown() : Unit = Try {
-    state match {
-      case Some(s) ⇒
-        s.counter.decrementAndGet() match {
-          case 0 ⇒
-            for (ctxt ← values) {
-              ctxt.close()
-              ctxt.unregister()
-            }
-            Try { s.driver.close(10.seconds) } match {
-              case Success(x) ⇒ log.debug("Successfully closed ReactiveMongo Driver")
-              case Failure(x) ⇒ log.error("Failed to close ReactiveMongo Driver", x)
-            }
-            for (connection ← s.driver.connections) {
-              log.debug("Connection remains open:" + connection)
-            }
-            state = None
-          case x : Int ⇒
-            log.debug("The DBContext requires " + x + " more shutdowns before MongoDB driver shut down.")
-        }
-      case None ⇒
-        log.debug("The MongoDB Driver has never been started up.")
-    }
-  } match {
-    case Success(x) ⇒ log.debug("Successful DBContext shutdown.")
-    case Failure(x) ⇒ log.error("Failed to shut down DBContext", x)
-  }
-  */
 }
 

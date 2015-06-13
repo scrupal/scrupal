@@ -45,7 +45,7 @@ class MemoryStorageDriverSpec extends ScrupalSpecification("MemoryStorageDriver"
       val driver = StorageDriver.apply(uri)
       driver.open(uri, create = true) match {
         case Some(store) ⇒
-          val schema = store.addSchema(driver.makeSchema(store, "dingbotsSchema", DingBotsSchema))
+          val schema = store.addSchema(DingBotsSchema)
           val coll = driver.makeCollection[DingBot](schema, "dingbots")
           val result = coll.insert(new DingBot(1, "ping", 42)) map { wr ⇒ wr.isSuccess must beTrue }
           Await.result(result, 3.seconds)
@@ -59,11 +59,10 @@ class MemoryStorageDriverSpec extends ScrupalSpecification("MemoryStorageDriver"
       MemoryStorageDriver.name must beEqualTo("Memory")
       val uri = new URI("scrupal-mem://localhost/access_via_context")
       uri.getScheme must beEqualTo ("scrupal-mem")
-      val driver = StorageDriver.apply(uri)
-      val context = driver.makeContext('test)
-      context.withStore(uri, create = true) { store ⇒
-        val schema = store.addSchema(driver.makeSchema(store, "dingbotsSchema", DingBotsSchema))
-        val coll = driver.makeCollection[DingBot](schema, "dingbots")
+      val context = StorageDriver(uri).makeContext('test, uri)
+      context.withStore { store ⇒
+        val schema = store.addSchema(DingBotsSchema)
+        val coll = schema.addCollection[DingBot]("dingbots")
         val result = coll.insert(new DingBot(1, "ping", 42)) map { wr ⇒ wr.isSuccess must beTrue }
         Await.result(result, 3.seconds)
       }
