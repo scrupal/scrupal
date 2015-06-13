@@ -56,18 +56,18 @@ case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
   def asT = this
 
   val parsedURI = MongoConnection.parseURI(mongo_uri) match {
-    case Success(uri) => uri
-    case Failure(xcptn) => throw xcptn
+    case Success(uri) ⇒ uri
+    case Failure(xcptn) ⇒ throw xcptn
   }
 
   val connection = driver.connection(parsedURI)
 
-  def withDatabase[T](dbName: String)(f: (ScrupalDB) => T) : T = {
+  def withDatabase[T](dbName: String)(f: (ScrupalDB) ⇒ T) : T = {
     implicit val database = new ScrupalDB(dbName, connection)
     f(database)
   }
 
-  def withCollection[T](db: ScrupalDB, collName: String)(f : (BSONCollection) => T) : T = {
+  def withCollection[T](db: ScrupalDB, collName: String)(f : (BSONCollection) ⇒ T) : T = {
     val coll = db.collection[BSONCollection](collName, DefaultFailoverStrategy)
     f(coll)
   }
@@ -83,8 +83,8 @@ case class DBContext(id: Symbol, mongo_uri: String, driver: MongoDriver,
       connection.askClose()(3.seconds)
     }
   } match {
-    case Success(x) => log.debug("Closed DBContext '" + id.name + "' successfully.")
-    case Failure(x) => log.error("Failed to close DBContext '" + id.name + "': ", x)
+    case Success(x) ⇒ log.debug("Closed DBContext '" + id.name + "' successfully.")
+    case Failure(x) ⇒ log.error("Failed to close DBContext '" + id.name + "': ", x)
   }
 
 }
@@ -101,27 +101,27 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
     val helper = new ConfigHelper(topConfig)
     val config = helper.getDbConfig
     config.getConfig("db.scrupal") match {
-      case Some(cfg) => fromSpecificConfig(id, cfg)
-      case None => fromURI(id, "mongodb://localhost/scrupal")
+      case Some(cfg) ⇒ fromSpecificConfig(id, cfg)
+      case None ⇒ fromURI(id, "mongodb://localhost/scrupal")
     }
   }
 
   def fromSpecificConfig(id: Symbol, config: Configuration) : DBContext = {
     config.getString("uri") match {
-      case Some(uri) => fromURI(id, uri)
-      case None => throw new Exception("Missing 'uri' in database configuration for '" + id.name + "'")
+      case Some(uri) ⇒ fromURI(id, uri)
+      case None ⇒ throw new Exception("Missing 'uri' in database configuration for '" + id.name + "'")
     }
   }
 
   def fromURI(id: Symbol, uri: String) : DBContext = {
     getRegistrant(id) match {
-      case Some(dbc) => dbc
-      case None =>
+      case Some(dbc) ⇒ dbc
+      case None ⇒
         state match {
-          case Some(s) =>
+          case Some(s) ⇒
             val result = new DBContext(id, uri, s.driver)
             result
-          case None =>
+          case None ⇒
             toss("The mongoDB driver has not been initialized")
         }
     }
@@ -129,39 +129,39 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
 
   def numberOfStartups : Int = {
     state match {
-      case None => 0
-      case Some(s) => s.counter.get()
+      case None ⇒ 0
+      case Some(s) ⇒ s.counter.get()
     }
   }
 
   def isStartedUp : Boolean = {
     state match {
-      case None => false
-      case Some(s) => ! s.driver.system.isTerminated
+      case None ⇒ false
+      case Some(s) ⇒ ! s.driver.system.isTerminated
     }
   }
 
   def startup() : Unit = Try {
     state match {
-      case Some(s) =>
+      case Some(s) ⇒
         val startCount = s.counter.incrementAndGet()
         log.debug("The mongoDB driver initialized " + startCount + " times.")
-      case None =>
+      case None ⇒
         val full_config = ConfigFactory.load()
         val driver = MongoDriver(full_config)
         val s = State(driver)
         state = Some(State(driver))
     }
   } match {
-    case Success(x) => log.debug("Successful mongoDB startup.")
-    case Failure(x) => log.error("Failed to start up mongoDB", x)
+    case Success(x) ⇒ log.debug("Successful mongoDB startup.")
+    case Failure(x) ⇒ log.error("Failed to start up mongoDB", x)
   }
 
   def shutdown() : Unit = Try {
     state match {
-      case Some(s) =>
+      case Some(s) ⇒
         s.counter.decrementAndGet() match {
-          case 0 =>
+          case 0 ⇒
             for (ctxt <- values) {
               ctxt.close()
               ctxt.unregister()
@@ -174,15 +174,15 @@ object DBContext extends Registry[DBContext] with ScrupalComponent {
               log.debug("Connection remains open:" + connection)
             }
             state = None
-          case x: Int =>
+          case x: Int ⇒
             log.debug("The DBContext requires " + x + " more shutdowns before MongoDB driver shut down.")
         }
-      case None =>
+      case None ⇒
         log.debug("The MongoDB Driver has never been started up.")
     }
   } match {
-    case Success(x) => log.debug("Successful DBContext shutdown.")
-    case Failure(x) => log.error("Failed to shut down DBContext", x)
+    case Success(x) ⇒ log.debug("Successful DBContext shutdown.")
+    case Failure(x) ⇒ log.error("Failed to shut down DBContext", x)
   }
 }
 

@@ -75,7 +75,7 @@ class VariantRegistrySpec extends DBContextSpecification("VariantRegistrySpec") 
   case class TestDao(db: DefaultDB, collectionName: String) extends VariantDataAccessObject[Noom,BSONObjectID] {
     val writer = new Writer(variants)
     val reader = new Reader(variants)
-    val converter = (id: BSONObjectID) => id
+    val converter = (id: BSONObjectID) ⇒ id
   }
 
   "VariantRegistryDAO" should {

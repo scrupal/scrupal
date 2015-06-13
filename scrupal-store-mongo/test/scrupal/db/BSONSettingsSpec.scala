@@ -51,7 +51,7 @@ class BSONSettingsSpec extends Specification {
   }
 
   val test_doc = new Fixture[BSONSettings] {
-    def apply[R : AsResult](f: BSONSettings => R) = {
+    def apply[R : AsResult](f: BSONSettings ⇒ R) = {
       val doc = BSONDocument(
         "string" → BSONString("This is a string"),
         "false" → BSONBoolean(value = false),

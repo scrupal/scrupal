@@ -35,7 +35,7 @@ abstract class Schema(val dbc: DBContext, val dbName: String) {
 
   def create(implicit context: DBContext) : Future[Seq[(String,Boolean)]] = {
     val futures = for (dao <- daos) yield {
-      dao.collection.create(true) map { b => dao.collection.name -> true }
+      dao.collection.create(true) map { b ⇒ dao.collection.name -> true }
     }
     Future.sequence(futures)
   }
@@ -43,14 +43,14 @@ abstract class Schema(val dbc: DBContext, val dbName: String) {
 
   def validateDao(dao: DataAccessInterface[_,_]) : Boolean
 
-  def collectionNames: Seq[String] = { daos.map { dao => dao.collection.name } }
+  def collectionNames: Seq[String] = { daos.map { dao ⇒ dao.collection.name } }
 
   final def validateSchema(implicit ec: ExecutionContext) : Future[Seq[String]] = {
     val futures = for (dao <- daos) yield { dao.validateSchema }
     Future sequence futures
   }
 
-  // FIXME: protected def countCollection(name: String) = { dbc.withDatabase { db => db.command(new Count(name)) } }
+  // FIXME: protected def countCollection(name: String) = { dbc.withDatabase { db ⇒ db.command(new Count(name)) } }
 }
 
 

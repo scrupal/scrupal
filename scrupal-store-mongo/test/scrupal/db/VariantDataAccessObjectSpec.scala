@@ -51,13 +51,13 @@ class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAcc
   implicit val WoonReader = new VariantBSONDocumentReader[Noom] {
     def read(doc: BSONDocument) : Noom = {
       doc.getAs[BSONString]("kind") match {
-        case Some(str) =>
+        case Some(str) ⇒
           str.value match {
-            case "Woon"  => WoonHandler.read(doc)
-            case "Twoo"  => TwooHandler.read(doc)
-            case "Tree"  => TreeHandler.read(doc)
+            case "Woon"  ⇒ WoonHandler.read(doc)
+            case "Twoo"  ⇒ TwooHandler.read(doc)
+            case "Tree"  ⇒ TreeHandler.read(doc)
           }
-        case None => throw new Exception(s"Field 'kind' is missing from Node: ${doc.toString()}")
+        case None ⇒ throw new Exception(s"Field 'kind' is missing from Node: ${doc.toString()}")
       }
     }
   }
@@ -65,9 +65,9 @@ class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAcc
   implicit val WoonWriter = new VariantBSONDocumentWriter[Noom] {
     def write(node: Noom) : BSONDocument = {
       node.kind.name match {
-        case "Woon" => WoonHandler.write(node.asInstanceOf[Woon])
-        case "Twoo" => TwooHandler.write(node.asInstanceOf[Twoo])
-        case "Tree" => TreeHandler.write(node.asInstanceOf[Tree])
+        case "Woon" ⇒ WoonHandler.write(node.asInstanceOf[Woon])
+        case "Twoo" ⇒ TwooHandler.write(node.asInstanceOf[Twoo])
+        case "Tree" ⇒ TreeHandler.write(node.asInstanceOf[Tree])
       }
     }
   }
@@ -75,7 +75,7 @@ class VariantDataAccessObjectSpec extends DBContextSpecification("VariantDataAcc
   case class TestDao(db: DefaultDB, collectionName: String) extends VariantDataAccessObject[Noom,BSONObjectID] {
     val writer = new Writer(WoonWriter)
     val reader = new Reader(WoonReader)
-    val converter = (id: BSONObjectID) => id
+    val converter = (id: BSONObjectID) ⇒ id
   }
 
   "VariantDataAccessObject" should {

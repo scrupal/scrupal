@@ -42,12 +42,12 @@ case class VariantRegistry[B <: VariantStorable[_]](name: String)
 
   def read(doc: BSONDocument) : B = {
     doc.getAs[BSONString]("kind") match {
-      case Some(str) =>
+      case Some(str) ⇒
         super.lookup(Symbol(str.value)) match {
           case Some(handler) ⇒ handler.fromDoc(doc)
           case None ⇒ toss(s"Unknown kind of $name: '${str.value}")
         }
-      case None => toss(s"Field 'kind' is missing from Node: ${doc.toString()}")
+      case None ⇒ toss(s"Field 'kind' is missing from Node: ${doc.toString()}")
     }
   }
 

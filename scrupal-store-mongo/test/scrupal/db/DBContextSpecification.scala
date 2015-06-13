@@ -46,7 +46,7 @@ abstract class DBContextSpecification(val specName: String,
   }
 
   lazy val dbActions = dbContextActions
-  override def map(fs: => Fragments) = Step(dbActions.startDB) ^ fs ^ Step(dbActions.stopDB)
+  override def map(fs: ⇒ Fragments) = Step(dbActions.startDB) ^ fs ^ Step(dbActions.stopDB)
 
   override def logger_identity = specName
 
@@ -59,7 +59,7 @@ abstract class DBContextSpecification(val specName: String,
     DBContext.fromURI(name, uri)
   }
 
-  private def doWithDBC[T]( f: (DBContext) => T) : T = {
+  private def doWithDBC[T]( f: (DBContext) ⇒ T) : T = {
     val dbc = getDBContext()
     try {
       f (dbc)
@@ -70,23 +70,23 @@ abstract class DBContextSpecification(val specName: String,
   }
 
 
-  def withDBContext[T]( f: (DBContext) => T ) : T = {
-    doWithDBC { implicit dbc =>
+  def withDBContext[T]( f: (DBContext) ⇒ T ) : T = {
+    doWithDBC { implicit dbc ⇒
       f(dbc)
     }
   }
 
   def withDB[T](dbName: String) ( f : (DefaultDB) ⇒ T) : T = {
-    doWithDBC { dbc =>
-      dbc.withDatabase(dbName) { implicit db =>
+    doWithDBC { dbc ⇒
+      dbc.withDatabase(dbName) { implicit db ⇒
         f(db)
       }
     }
   }
 
-  def withEmptyDB[T](dbName: String)( f : (ScrupalDB) => T) : T = {
-    doWithDBC { dbc =>
-      dbc.withDatabase(dbName) { implicit db =>
+  def withEmptyDB[T](dbName: String)( f : (ScrupalDB) ⇒ T) : T = {
+    doWithDBC { dbc ⇒
+      dbc.withDatabase(dbName) { implicit db ⇒
         val future = db.emptyDatabase
         Await.result(future, timeout)
         f(db)

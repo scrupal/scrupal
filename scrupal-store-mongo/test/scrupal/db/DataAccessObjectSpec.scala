@@ -32,7 +32,7 @@ class DataAccessObjectSpec extends DBContextSpecification("DataAccessObjectSpec"
   case class TestDao(db: DefaultDB, collectionName: String) extends DataAccessObject[TestData,Long] {
     val reader = Macros.reader[TestData]
     val writer = Macros.writer[TestData]
-    val converter = (id: Long) => BSONLong(id)
+    val converter = (id: Long) ⇒ BSONLong(id)
   }
 
   case class TestData2(_id: BSONObjectID = BSONObjectID.generate, int: Int = (Math.random*1000).toInt)
@@ -41,7 +41,7 @@ class DataAccessObjectSpec extends DBContextSpecification("DataAccessObjectSpec"
   case class TestDao2(db: DefaultDB, collectionName: String) extends DataAccessObject[TestData2,BSONObjectID] {
     val reader = Macros.reader[TestData2]
     val writer = Macros.writer[TestData2]
-    val converter = (id: BSONObjectID) => id
+    val converter = (id: BSONObjectID) ⇒ id
   }
 
 

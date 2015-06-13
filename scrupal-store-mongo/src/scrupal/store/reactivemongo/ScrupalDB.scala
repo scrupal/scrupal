@@ -30,17 +30,17 @@ class ScrupalDB(name: String, connection: MongoConnection,
   failoverStrategy : FailoverStrategy = DefaultFailoverStrategy) extends DefaultDB(name, connection, failoverStrategy) {
 
   def emptyDatabase(implicit ec: ExecutionContext) : Future[List[(String, Boolean)]] = {
-    collectionNames flatMap { names =>
+    collectionNames flatMap { names ⇒
       val futures = for (cName <- names if !cName.startsWith("system.")) yield {
         val coll = collection[BSONCollection](cName)
-        coll.drop() map { b => cName -> true }
+        coll.drop() map { b ⇒ cName -> true }
       }
       Future sequence futures
     }
   }
 
   def dropCollection(collName: String)(implicit ec: ExecutionContext) : Future[Boolean] = {
-    collection[BSONCollection](collName).drop map { foo => true } // FIXME: Deal with result code better here
+    collection[BSONCollection](collName).drop map { foo ⇒ true } // FIXME: Deal with result code better here
   }
 
   def hasCollection(collName: String)(implicit ec: ExecutionContext) : Future[Boolean] = {
@@ -48,7 +48,7 @@ class ScrupalDB(name: String, connection: MongoConnection,
   }
 
   def isEmpty(implicit ec: ExecutionContext) : Future[Boolean] = {
-    collectionNames.map { list =>
+    collectionNames.map { list ⇒
       val names = list.filterNot { name ⇒ name.startsWith("system.") }
       names.isEmpty
     }

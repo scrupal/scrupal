@@ -41,7 +41,7 @@ trait BSONValueBuilder {
     */
   type AnyBSONWriter[T,B <: BSONValue] = BSONWriter[T, B]
 
-  type BSONValueConverter[T] = (T) => BSONValue
+  type BSONValueConverter[T] = (T) ⇒ BSONValue
 
   /** Generate an empty document. Sometimes useful */
   def $empty: BSONDocument = BSONDocument.empty
@@ -282,12 +282,12 @@ trait ComparisonQueryOperators extends BSONValueBuilder {
 
   /** Matches any of the values that exist in an array specified in the query.*/
   def $in[T](values: T*)(implicit convert: BSONValueConverter[T]) = {
-    BSONDocument( "$in" -> $array(values.map { v => convert(v) }) )
+    BSONDocument( "$in" -> $array(values.map { v ⇒ convert(v) }) )
   }
 
   /** Matches values that do not exist in an array specified to the query. */
   def $nin[T](values: T*)(implicit convert: BSONValueConverter[T]) = {
-    BSONDocument("$nin" -> $array(values.map { v => convert(v) }))
+    BSONDocument("$nin" -> $array(values.map { v ⇒ convert(v) }))
   }
 }
 
@@ -311,26 +311,26 @@ trait ElementQueryOperators extends BSONValueBuilder {
   def $type[T <: BSONValue: TypeTag] = BSONDocument("$type" -> bsonTypeNumberOf[T])
 
   def bsonTypeNumberOf[T <: BSONValue: TypeTag]: Int = typeOf[T] match {
-    case t if t =:= typeOf[BSONDouble] => 1
-    case t if t =:= typeOf[BSONString] => 2
-    case t if t =:= typeOf[BSONDocument] => 3
-    case t if t =:= typeOf[BSONArray] => 4
-    case t if t =:= typeOf[BSONBinary] => 5
-    case t if t =:= typeOf[BSONUndefined.type] => 6
-    case t if t =:= typeOf[BSONObjectID] => 7
-    case t if t =:= typeOf[BSONBoolean] => 8
-    case t if t =:= typeOf[BSONDateTime] => 9
-    case t if t =:= typeOf[BSONNull.type] => 10
-    case t if t =:= typeOf[BSONRegex] => 11
-    case t if t =:= typeOf[BSONDBPointer] => 12
-    case t if t =:= typeOf[BSONJavaScript] => 13
-    case t if t =:= typeOf[BSONSymbol] => 14
-    case t if t =:= typeOf[BSONJavaScriptWS] => 15
-    case t if t =:= typeOf[BSONInteger] => 16
-    case t if t =:= typeOf[BSONTimestamp] => 17
-    case t if t =:= typeOf[BSONLong] => 18
-    case t if t =:= typeOf[BSONMinKey.type] => 255
-    case t if t =:= typeOf[BSONMaxKey.type] => 127
+    case t if t =:= typeOf[BSONDouble] ⇒ 1
+    case t if t =:= typeOf[BSONString] ⇒ 2
+    case t if t =:= typeOf[BSONDocument] ⇒ 3
+    case t if t =:= typeOf[BSONArray] ⇒ 4
+    case t if t =:= typeOf[BSONBinary] ⇒ 5
+    case t if t =:= typeOf[BSONUndefined.type] ⇒ 6
+    case t if t =:= typeOf[BSONObjectID] ⇒ 7
+    case t if t =:= typeOf[BSONBoolean] ⇒ 8
+    case t if t =:= typeOf[BSONDateTime] ⇒ 9
+    case t if t =:= typeOf[BSONNull.type] ⇒ 10
+    case t if t =:= typeOf[BSONRegex] ⇒ 11
+    case t if t =:= typeOf[BSONDBPointer] ⇒ 12
+    case t if t =:= typeOf[BSONJavaScript] ⇒ 13
+    case t if t =:= typeOf[BSONSymbol] ⇒ 14
+    case t if t =:= typeOf[BSONJavaScriptWS] ⇒ 15
+    case t if t =:= typeOf[BSONInteger] ⇒ 16
+    case t if t =:= typeOf[BSONTimestamp] ⇒ 17
+    case t if t =:= typeOf[BSONLong] ⇒ 18
+    case t if t =:= typeOf[BSONMinKey.type] ⇒ 255
+    case t if t =:= typeOf[BSONMaxKey.type] ⇒ 127
   }
 }
 
@@ -458,11 +458,11 @@ trait GeospatialQueryOperators extends BSONValueBuilder {
     */
   def $nearSphere(point: Coordinate, maxDistance: Option[Double] = None, minDistance: Option[Double] = None) = {
     BSONDocument( "$nearSphere" -> $point(point).++(maxDistance match {
-      case Some(max) => BSONDocument("$maxDistance" -> BSONDouble(max))
-      case None => $empty
+      case Some(max) ⇒ BSONDocument("$maxDistance" -> BSONDouble(max))
+      case None ⇒ $empty
     }).++(minDistance match {
-      case Some(min) => BSONDocument("$minDistance" -> BSONDouble(min))
-      case None => $empty
+      case Some(min) ⇒ BSONDocument("$minDistance" -> BSONDouble(min))
+      case None ⇒ $empty
     }))
   }
 
@@ -470,11 +470,11 @@ trait GeospatialQueryOperators extends BSONValueBuilder {
     */
   def $near(point: Coordinate, maxDistance: Option[Double] = None, minDistance: Option[Double] = None) = {
     BSONDocument( "$near" -> $point(point).++(maxDistance match {
-      case Some(max) => BSONDocument("$maxDistance" -> BSONDouble(max))
-      case None => $empty
+      case Some(max) ⇒ BSONDocument("$maxDistance" -> BSONDouble(max))
+      case None ⇒ $empty
     }).++(minDistance match {
-      case Some(min) => BSONDocument("$minDistance" -> BSONDouble(min))
-      case None => $empty
+      case Some(min) ⇒ BSONDocument("$minDistance" -> BSONDouble(min))
+      case None ⇒ $empty
     }))
   }
 }
@@ -579,7 +579,7 @@ trait FieldUpdateOperators extends BSONValueBuilder {
   }
 
   def $currentDate(items: (String, CurrentDateValueProducer[_])*): BSONDocument = {
-    BSONDocument("$currentDate" -> BSONDocument(items.map(item => item._1 -> item._2.produce)))
+    BSONDocument("$currentDate" -> BSONDocument(items.map(item ⇒ item._1 -> item._2.produce)))
   }
 }
 
@@ -606,7 +606,7 @@ trait ArrayUpdateOperators extends BSONValueBuilder {
     BSONDocument(
       "$push" -> BSONDocument(
         field -> BSONDocument(
-          "$each" -> BSONArray(values.map { v => convert(v) })
+          "$each" -> BSONArray(values.map { v ⇒ convert(v) })
         )
       )
     )

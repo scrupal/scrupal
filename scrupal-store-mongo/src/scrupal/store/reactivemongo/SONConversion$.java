@@ -80,14 +80,14 @@ object SONConversion {
 
   trait DoubleReader extends BSONReader[BSONDouble] {
     def pReads: PartialReader[BSONDouble] = {
-      case JsNumber(f)                               => JsSuccess(BSONDouble(f.toDouble))
-      case JsObject(("$double", JsNumber(v)) +: Nil) => JsSuccess(BSONDouble(v.toDouble))
+      case JsNumber(f)                               ⇒ JsSuccess(BSONDouble(f.toDouble))
+      case JsObject(("$double", JsNumber(v)) +: Nil) ⇒ JsSuccess(BSONDouble(v.toDouble))
     }
   }
 
   trait DoubleWriter extends BSONWriter[BSONDouble] {
     def pWrites: PartialWriter[BSONDouble] = {
-      case double: BSONDouble => JsNumber(double.value)
+      case double: BSONDouble ⇒ JsNumber(double.value)
     }
   }
 
@@ -95,7 +95,7 @@ object SONConversion {
 
   trait StringReader extends BSONReader[BSONString] {
     def pReads: PartialReader[BSONString] = {
-      case str:JsString => JsSuccess(BSONString(str.value))
+      case str:JsString ⇒ JsSuccess(BSONString(str.value))
     }
   }
 
@@ -109,7 +109,7 @@ object SONConversion {
 
   trait DocumentReader extends BSONReader[BSONDocument] {
     def pReads: PartialReader[BSONDocument] = {
-      case obj: JsObject => Try {
+      case obj: JsObject ⇒ Try {
         val fields = obj.fields.map { pair ⇒
           val bsonValue = toBSON(pair._2) match {
             case JsSuccess(bson, _) ⇒ bson
@@ -127,7 +127,7 @@ object SONConversion {
 
   trait DocumentWriter extends BSONWriter[BSONDocument] {
     def pWrites: PartialWriter[BSONDocument] = {
-      case doc: BSONDocument =>
+      case doc: BSONDocument ⇒
         val fields = doc.elements.map { elem ⇒ elem._1 → toJSON(elem._2) }
         JsObject(fields)
     }
@@ -137,7 +137,7 @@ object SONConversion {
 
   trait ArrayReader extends BSONReader[BSONArray] {
     def pReads: PartialReader[BSONArray] = {
-      case arr: JsArray => Try {
+      case arr: JsArray ⇒ Try {
         val items = arr.value.map { item ⇒
           toBSON(item) match {
             case JsSuccess(bson, _) ⇒ bson
@@ -154,8 +154,8 @@ object SONConversion {
 
   trait ArrayWriter extends BSONWriter[BSONArray] {
     def pWrites: PartialFunction[BSONValue, JsValue] = {
-      case array: BSONArray => {
-        val items = array.values.map { value => toJSON(value) }
+      case array: BSONArray ⇒ {
+        val items = array.values.map { value ⇒ toJSON(value) }
         JsArray(items)
       }
     }
@@ -183,7 +183,7 @@ object SONConversion {
         case Success(x) ⇒ JsSuccess(x)
         case Failure(x) ⇒ x
       }
-      case js: JsObject if js.fields.size == 2 && objhas(js, "$binary", "$type") => Try {
+      case js: JsObject if js.fields.size == 2 && objhas(js, "$binary", "$type") ⇒ Try {
         val data = (js \ "$binary").as[String]
         val typ = (js \ "$type").as[String]
         val subtype = Subtype(Converters.str2Hex(typ)(0))
@@ -197,7 +197,7 @@ object SONConversion {
 
   trait BinaryWriter extends BSONWriter[BSONBinary] {
     def pWrites: PartialWriter[BSONBinary] = {
-      case binary: BSONBinary => {
+      case binary: BSONBinary ⇒ {
         val remaining = binary.value.readable()
         Json.obj(
           "$binary" -> Converters.hex2Str(binary.value.slice(remaining).readArray(remaining)),
@@ -210,13 +210,13 @@ object SONConversion {
 
   trait UndefinedReader extends BSONReader[BSONUndefined.type] {
     def pReads: PartialReader[BSONUndefined.type] = {
-      case _: JsUndefined => JsSuccess(BSONUndefined)
+      case _: JsUndefined ⇒ JsSuccess(BSONUndefined)
     }
   }
 
   trait UndefinedWriter extends BSONWriter[BSONUndefined.type] {
     def pWrites: PartialWriter[BSONUndefined.type] = {
-      case BSONUndefined => JsUndefined("")
+      case BSONUndefined ⇒ JsUndefined("")
     }
   }
 
@@ -258,7 +258,7 @@ object SONConversion {
 
   trait DateTimeWriter extends BSONWriter[BSONDateTime] {
     def pWrites: PartialWriter[BSONDateTime] = {
-      case dateTime: BSONDateTime => Json.obj("$datetime" -> dateTime.value)
+      case dateTime: BSONDateTime ⇒ Json.obj("$datetime" -> dateTime.value)
     }
   }
 
@@ -266,13 +266,13 @@ object SONConversion {
 
   trait NullReader extends BSONReader[BSONNull.type] {
     def pReads: PartialReader[BSONNull.type] = {
-      case JsNull => JsSuccess(BSONNull)
+      case JsNull ⇒ JsSuccess(BSONNull)
     }
   }
 
   trait NullWriter extends BSONWriter[BSONNull.type] {
     def pWrites: PartialWriter[BSONNull.type] = {
-      case BSONNull => JsNull
+      case BSONNull ⇒ JsNull
     }
   }
 
@@ -404,14 +404,14 @@ object SONConversion {
 
   trait IntegerReader extends BSONReader[BSONInteger] {
     def pReads: PartialReader[BSONInteger] = {
-      case JsNumber(i) => JsSuccess(BSONInteger(i.toInt))
-      case JsObject(("$int", JsNumber(v)) +: Nil) => JsSuccess(BSONInteger(v.toInt))
+      case JsNumber(i) ⇒ JsSuccess(BSONInteger(i.toInt))
+      case JsObject(("$int", JsNumber(v)) +: Nil) ⇒ JsSuccess(BSONInteger(v.toInt))
     }
   }
 
   trait IntegerWriter extends BSONWriter[BSONInteger] {
     def pWrites: PartialWriter[BSONInteger] = {
-      case int: BSONInteger => JsObject(Seq("$int" → JsNumber(int.value)))
+      case int: BSONInteger ⇒ JsObject(Seq("$int" → JsNumber(int.value)))
     }
   }
 
@@ -419,14 +419,14 @@ object SONConversion {
 
   trait LongReader extends BSONReader[BSONLong] {
     def pReads: PartialReader[BSONLong] = {
-      case JsNumber(long) => JsSuccess(BSONLong(long.toLong))
-      case JsObject(("$long", JsNumber(v)) +: Nil) => JsSuccess(BSONLong(v.toLong))
+      case JsNumber(long) ⇒ JsSuccess(BSONLong(long.toLong))
+      case JsObject(("$long", JsNumber(v)) +: Nil) ⇒ JsSuccess(BSONLong(v.toLong))
     }
   }
 
   trait LongWriter extends BSONWriter[BSONLong] {
     def pWrites: PartialWriter[BSONValue] = {
-      case long: BSONLong => JsObject(Seq("$long" → JsNumber(long.value)))
+      case long: BSONLong ⇒ JsObject(Seq("$long" → JsNumber(long.value)))
     }
   }
 

@@ -169,7 +169,7 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
                 (implicit ec: ExecutionContext): Future[Int] = {
     /*
     val enumerator = Enumerator.enumerate(objs)
-    collection.bulkInsert(enumerator, bulkSize, bulkByteSize) map { result =>
+    collection.bulkInsert(enumerator, bulkSize, bulkByteSize) map { result ⇒
       mappedDocuments.map(lifeCycle.postPersist)
       result
     }
@@ -249,12 +249,12 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @param f Folding function.
    * @tparam A Type of fold result.
    */
-  def fold[A](selector: BSONDocument, sort: BSONDocument, state: A)(f: (A, Model) => A)
+  def fold[A](selector: BSONDocument, sort: BSONDocument, state: A)(f: (A, Model) ⇒ A)
              (implicit ec: ExecutionContext): Future[A] = {
     collection.find(selector).sort(sort).cursor[Model]
       .enumerate()
       .apply(Iteratee.fold(state)(f))
-      .flatMap(i => i.run)
+      .flatMap(i ⇒ i.run)
 
   }
 
@@ -265,12 +265,12 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
    * @param sort Sorting document.
    * @param f function to be applied.
    */
-  def foreach(selector: BSONDocument, sort: BSONDocument)(f: (Model) => Unit)
+  def foreach(selector: BSONDocument, sort: BSONDocument)(f: (Model) ⇒ Unit)
              (implicit ec: ExecutionContext): Future[Unit] = {
     collection.find(selector).sort(sort).cursor[Model]
       .enumerate()
       .apply(Iteratee.foreach(f))
-      .flatMap(i => i.run)
+      .flatMap(i ⇒ i.run)
   }
 
   /**
@@ -313,7 +313,7 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
   /** Ensures indexes defined by `autoIndexes`. */
   def ensureIndices(implicit ec: ExecutionContext): Future[Traversable[Boolean]] = {
     Future sequence {
-      indices map { index =>
+      indices map { index ⇒
         collection.indexesManager.ensure(index)
       }
     }
@@ -321,5 +321,5 @@ abstract class DataAccessObject[Model <: Storable[Id],Id] extends DataAccessInte
 }
 
 abstract class IdentifierDAO[Model <: Storable[Symbol]] extends DataAccessObject[Model,Symbol] {
-  implicit val converter = (id: Symbol) => BSONString(id.name)
+  implicit val converter = (id: Symbol) ⇒ BSONString(id.name)
 }

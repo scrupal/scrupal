@@ -48,7 +48,7 @@ trait DataAccessInterface[Model <: Storable[Id],Id] extends ScrupalComponent {
   import scrupal.db.BSONValueBuilder._
 
   type Codec <: Codec[Model,BSONObject]
-  type Converter = (Id) => BSONValue
+  type Converter = (Id) ⇒ BSONValue
 
   implicit def codec : Codec
   implicit def converter : Converter
@@ -275,7 +275,7 @@ trait DataAccessInterface[Model <: Storable[Id],Id] extends ScrupalComponent {
    * @param f Folding function.
    * @tparam A Type of fold result.
    */
-  def fold[A](selector: BSONDocument, sort: BSONDocument, state: A)(f: (A, Model) => A)
+  def fold[A](selector: BSONDocument, sort: BSONDocument, state: A)(f: (A, Model) ⇒ A)
       (implicit ec: ExecutionContext): Future[A]
 
   /**
@@ -285,7 +285,7 @@ trait DataAccessInterface[Model <: Storable[Id],Id] extends ScrupalComponent {
    * @param sort Sorting document.
    * @param f function to be applied.
    */
-  def foreach(selector: BSONDocument, sort: BSONDocument)(f: (Model) => Unit)
+  def foreach(selector: BSONDocument, sort: BSONDocument)(f: (Model) ⇒ Unit)
       (implicit ec: ExecutionContext): Future[Unit]
 
   /**

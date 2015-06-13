@@ -65,7 +65,7 @@ package object db {
   type DB = reactivemongo.api.DefaultDB
 
   object DefaultFailoverStrategy extends FailoverStrategy(
-    initialDelay=1.seconds, retries=3, delayFactor = { i => Math.log10(i) }
+    initialDelay=1.seconds, retries=3, delayFactor = { i ⇒ Math.log10(i) }
   )
 
 
