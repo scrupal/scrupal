@@ -15,6 +15,6 @@
 
 @import views.html.helper._
 
-@input(field, args:_*) { (id, name, value, htmlArgs) =>
+@input(field, args:_*) { (id, name, value, htmlArgs) ⇒
     <input type="url" id="@id" name="@name" value="@value" @toHtmlArgs(htmlArgs)>
 }
