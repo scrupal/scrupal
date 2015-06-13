@@ -38,6 +38,7 @@ trait Registrable[T <: Registrable[T]] extends IdentifiedWithRegistry { self : T
   def register() : Unit = registry.register(self)
   def unregister() : Unit = registry.unregister(self)
   def isRegistered : Boolean = registry.isRegistered(id)
+  def reference : RegistryReference[T] = RegistryReference(registry,id)
   override def finalize() : Unit = {
     try {
       unregister()
@@ -167,3 +168,29 @@ trait Registry[T <: Registrable[T]] extends AbstractRegistry[Symbol, T] {
   }
 }
 
+/** Reference A Memory Object From The Database
+  *
+  * Many of the objects used in Scrupal are not stored in the database. Essentially those things coming from a Module
+  * are just retained in memory: Module, Feature, Entity, Type, Handler, etc. However, we need to reference these
+  * things from objects that are stored in the database. We do not want to be loading the low level memory objects
+  * all the time but would just like to "find" them. That's what the RegistryReference is for. We can register
+  * long-lived immutable objects in a registry and find them later, by name. But, there is a registry per
+  * object type, by design. So, we need a way to capture a reference to a named object in one of the registries. We
+  * do that by simply caching the registry object and the registrable object's id. This information is then stored
+  * in the database and reconstructed into the referenced object with the apply method.
+  */
+case class RegistryReference[T <: Registrable[T]] private[utils] (
+  registry : Registry[T],
+  id : Symbol
+) extends (() ⇒ Option[T]) {
+  def as[C]() = this.apply().map { x ⇒ x.asInstanceOf[C] }
+  def apply() : Option[T] = {
+    registry.lookup(id)
+  }
+}
+
+object RegistryReference {
+  def to[T <: Registrable[T]](o : T) : RegistryReference[T] = {
+    RegistryReference[T](o.registry, o.id)
+  }
+}
