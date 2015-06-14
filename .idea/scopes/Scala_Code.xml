@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Scala Code" pattern="(test[scrupal]:*..*||test[scrupal-config]:*..*||test[scrupal-core]:*..*||test[scrupal-storage]:*..*||test[scrupal-utils]:*..*||src[scrupal]:*..*||src[scrupal-core]:*..*||src[scrupal-utils]:*..*||src[scrupal-config]:*..*||src[scrupal-storage]:*..*)&amp;&amp;!file[scrupal-storage]:src/test/resources//*||file[scrupal-storage]:src/main/scala//*||file[scrupal-storage]:src/test/scala//*" />
+</component>
