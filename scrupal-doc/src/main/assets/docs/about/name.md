@@ -17,9 +17,17 @@
 
 # About The Name
 You might be wondering about how we came up with Scrupal's name. It had a number of incarnations over a few years but
-eventually the idea for Scrupal was: *do what drupal did 15 years ago but make it much better*. The *make it much
-better* part has a lot to do with the Scala programming language's emphasis on scalability which is also the key
-emphasis in Scrupal. So, I'm sure you've caught on by now: ```SCRUPAL = SCalaable + dRUPAL```. We also like that it
-has a pun with the word scruple. We profess a disciplined, scrupulous approach to software development. 
+eventually the idea for Scrupal was: *do what Drupal did 15 years ago but make it much better*. We combined the 
+following elements: 
+
+* SCalable: Our goal is to far exceed Drupal's scalability and we use Scala as the primary programming language
+* Reactive: Our goal is to support the [reactive manifesto](http://www.reactivemanifesto.org/).
+* drUPAL: Our goal is to be a best of breed modular content management system
+
+So, I'm sure you've caught on by now: ```SCRUPAL = SCalable + Reactive + drUPAL```. We also like 
+that it has a pun with the word scruple since we profess a disciplined, scrupulous approach to software development.
+Also, for humility's sake, the 
+[Urban Dictionary defines the word](http://www.urbandictionary.com/define.php?term=scrupal&defid=1265651) this way:
+> *A small bit of any material or object*
 
 And, no, sorry to disappoint, but this has nothing to do with screwing your pals!
