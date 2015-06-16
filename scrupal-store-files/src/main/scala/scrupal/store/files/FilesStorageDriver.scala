@@ -50,7 +50,7 @@ object FilesStorageDriver extends CommonStorageDriver {
     StorableReference[S](coll, id)
   }
 
-  def makeContext(id : Symbol, uri : URI, create: Boolean) : FilesStorageContext = {
+  def makeContext(id : Symbol, uri : URI, create: Boolean = false) : FilesStorageContext = {
     withStore(uri, create) { store ⇒
       FilesStorageContext(id, uri, store.asInstanceOf[FilesStore])
     }

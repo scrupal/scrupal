@@ -49,8 +49,7 @@ class FilesStorageDriverSpec extends ScrupalSpecification("FilesStorageDriver") 
 
   def getContext(id: Symbol, file : String, name: String) = {
     StorageContext.fromConfigFile(id,
-      "scrupal-store-files/src/test/resources/storage/config/" + file,
-      name
+      "scrupal-store-files/src/test/resources/storage/config/" + file, name, create=true
     )
   }
 
