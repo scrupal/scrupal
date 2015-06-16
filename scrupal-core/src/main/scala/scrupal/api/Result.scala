@@ -18,7 +18,6 @@ package scrupal.api
 import akka.http.scaladsl.model.{ MediaType, MediaTypes }
 import java.io.InputStream
 
-import play.api.http.ContentTypes
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 
@@ -207,7 +206,7 @@ case class ExceptionResult(payload : Throwable) extends ContainedResult[Throwabl
 case class ErrorResult(
   payload : String,
   disposition : Disposition = Unspecified) extends ContainedResult[String] {
-  val mediaType = ContentTypes.TEXT
+  val mediaType = MediaTypes.`text/plain`
   def formatted = s"Error: ${disposition.id.name}: $payload"
   def body = formatted.getBytes(utf8)
 }
