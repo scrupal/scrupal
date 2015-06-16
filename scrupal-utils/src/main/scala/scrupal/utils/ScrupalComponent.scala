@@ -83,6 +83,10 @@ case class ScrupalException(component : ScrupalComponent, message : String, caus
   extends java.lang.Exception(message, cause) {
   def this(comp : ScrupalComponent, message : String) = { this(comp, message, null) }
   override def getMessage = {
-    super.getMessage + " in " + component.logger_identity
+    s"${super.getMessage} (@${component.logger_identity})"
+  }
+  override def getStackTrace : Array[StackTraceElement] = {
+    val st = super.getStackTrace
+    st.drop(1)
   }
 }
