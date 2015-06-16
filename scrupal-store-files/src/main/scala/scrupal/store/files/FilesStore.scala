@@ -20,23 +20,26 @@ import java.io.{FilenameFilter, File}
 import java.net.URI
 
 import scrupal.storage.api._
-
-import scala.collection.mutable
+import scrupal.storage.impl.CommonStore
 
 /** Title Of Thing.
   *
   * Description of thing
   */
-case class FilesStore private[files] (driver : StorageDriver, uri : URI) extends Store {
+case class FilesStore private[files] (driver : StorageDriver, uri : URI) extends CommonStore {
   require(driver == FilesStorageDriver)
+
+  private final val storeDirectory : File = new File(uri.getPath)
+
+  if (!storeDirectory.exists)
+    if (!storeDirectory.mkdirs())
+      toss(s"Storage directory for ${uri.toASCIIString} could not be created")
 
   private final val specialFiles = Seq(".scrupal")
 
   private[files] object SpecialFilesFilter extends FilenameFilter {
     def accept(dir: File, name: String): Boolean = specialFiles.contains(name)
   }
-
-  private val _schemas = new mutable.HashMap[String, FilesSchema]
 
   def exists : Boolean = {
     val file = new File(uri.getPath)
@@ -48,42 +51,16 @@ case class FilesStore private[files] (driver : StorageDriver, uri : URI) extends
       false
   }
 
-  override def close : Unit = {
-    for ((name, s) ← _schemas) { s.close() }
-    _schemas.clear()
-  }
-
-  /** Returns the mapping of names to Schema instances for this kind of storage */
-  def schemas : Map[String, Schema] = _schemas.toMap
-
-  override def hasSchema(name: String): Boolean = {
-    _schemas.contains(name)
-  }
-
   /** Create a new collection for storing objects */
   override def addSchema(design: SchemaDesign): Schema = {
     val schema = driver.makeSchema(this, design.name, design).asInstanceOf[FilesSchema]
+    val dir = new File(storeDirectory, design.name)
+    if (!dir.isDirectory)
+      if (!dir.mkdir)
+        toss(s"Storage directory for schema '${design.name}' could not be created in ${storeDirectory.getAbsolutePath}")
     _schemas.put(design.name, schema)
     schema
   }
 
-  def addSchema(schema : Schema) : Schema = {
-    _schemas.put(schema.name, schema.asInstanceOf[FilesSchema])
-    schema
-  }
-
-  def withSchema[T](schema : String)(f : Schema ⇒ T) : T = {
-    _schemas.get(schema) match {
-      case Some(s) ⇒ f(s.asInstanceOf[FilesSchema])
-      case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
-    }
-  }
-
-  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
-    _schemas.get(schema) match {
-      case Some(s) ⇒ s.withCollection[T, S](collection)(f)
-      case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
-    }
-  }
 
 }

@@ -21,7 +21,7 @@ import java.io.{ PrintWriter, File }
 
 import com.typesafe.config.{ ConfigRenderOptions, ConfigFactory }
 import play.api.Configuration
-import scrupal.utils.{ ScrupalComponent, ConfigHelpers }
+import scrupal.utils.ScrupalComponent
 
 import scala.util.Try
 
@@ -157,5 +157,11 @@ object StorageConfigHelper {
 
   // The configuration key that says where to get the database configuration data.
   val scrupal_storage_config_file_key = "scrupal.storage.config.file"
+
+  def fromConfigFile(localPath: String) : StorageConfigHelper = {
+    val params = Map(scrupal_storage_config_file_key → localPath)
+    val config = Configuration.from(params)
+    StorageConfigHelper(config)
+  }
 
 }

@@ -3,6 +3,7 @@ package scrupal.storage.mem
 import java.net.URI
 
 import scrupal.storage.api._
+import scrupal.storage.impl.CommonStore
 
 import scala.collection.mutable
 
@@ -10,40 +11,10 @@ import scala.collection.mutable
   *
   * Description of thing
   */
-case class MemoryStore private[mem] (driver : StorageDriver, uri : URI) extends Store {
+case class MemoryStore private[mem] (driver : StorageDriver, uri : URI) extends CommonStore {
   require(driver == MemoryStorageDriver)
 
-  private val _schemas = new mutable.HashMap[String, MemorySchema]
 
-  override def close : Unit = {
-    for ((name, s) ← _schemas) { s.close() }
-    _schemas.clear()
-  }
+  def exists = true
 
-  /** Returns the mapping of names to Schema instances for this kind of storage */
-  def schemas : Map[String, Schema] = _schemas.toMap
-
-  def hasSchema(name: String) : Boolean = _schemas.contains(name)
-
-  def addSchema(design: SchemaDesign) : Schema = {
-    val result = driver.makeSchema(this, design.name, design)
-    _schemas.put(design.name, result.asInstanceOf[MemorySchema])
-    result
-  }
-
-  def withSchema[T](schema : String)(f : Schema ⇒ T) : T = {
-    _schemas.get(schema) match {
-      case Some(s) ⇒
-        f(s.asInstanceOf[MemorySchema])
-      case None  ⇒
-        toss(s"Schema '$schema' not found in $uri ")
-    }
-  }
-
-  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
-    _schemas.get(schema) match {
-      case Some(s) ⇒ s.withCollection[T, S](collection)(f)
-      case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
-    }
-  }
 }

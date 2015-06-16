@@ -19,6 +19,7 @@ package scrupal.storage.api
 
 import java.io.Closeable
 import java.net.URI
+import com.typesafe.config.Config
 import play.api.Configuration
 
 import scrupal.storage.impl.StorageConfigHelper
@@ -69,12 +70,21 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
     StorageDriver(uri) map { driver ⇒ driver.makeContext(id, uri, create) }
   }
 
-  def fromConfiguration(id : Symbol, conf : Option[Configuration] = None) : Option[StorageContext] = {
+  def fromConfigFile(id : Symbol, path: String, name : String = "scrupal") : Option[StorageContext] = {
+    val helper = StorageConfigHelper.fromConfigFile(path)
+    val config = helper.getStorageConfig
+    config.getConfig("storage." + name) flatMap { cfg ⇒ fromSpecificConfig(id, cfg ) } orElse {
+      fromURI(id, "scrupal_mem//localhost/" + name)
+    }
+  }
+
+  def fromConfiguration(id : Symbol,
+      conf: Option[Configuration] = None, name : String = "scrupal") : Option[StorageContext] = {
     val topConfig = conf.getOrElse(ConfigHelpers.default())
     val helper = new StorageConfigHelper(topConfig)
     val config = helper.getStorageConfig
-    config.getConfig("db.scrupal") flatMap { cfg ⇒ fromSpecificConfig(id, cfg) } orElse {
-      fromURI(id, "scrupal_mem://localhost/scrupal")
+    config.getConfig("storage." + name) flatMap { cfg ⇒ fromSpecificConfig(id, cfg) } orElse {
+      fromURI(id, "scrupal_mem://localhost/" + name)
     }
   }
 

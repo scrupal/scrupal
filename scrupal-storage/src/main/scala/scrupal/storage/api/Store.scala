@@ -25,6 +25,8 @@ trait Store extends AutoCloseable with ScrupalComponent {
   def driver : StorageDriver
   def uri : URI
 
+  def exists : Boolean
+
   /** Returns the mapping of names to Schema instances for this kind of storage */
   def schemas : Map[String, Schema]
 

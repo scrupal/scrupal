@@ -13,19 +13,22 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.store.filesys
+package scrupal.storage.api
 
 import scrupal.test.ScrupalSpecification
 
-/** Title Of Thing.
-  *
-  * Description of thing
-  */
-class FileSysDriverSpec extends ScrupalSpecification("FileSysDriver") {
+class ReferenceSpec extends ScrupalSpecification("MemoryStoreReference") {
 
-  "FileSysDriver" should {
-    "do some work" in {
-      pending("Need to implement FileSys Storage")
+  "FastReference" should {
+    "implement some tests" in {
+      pending("unimplemented")
     }
   }
+
+  "StorageReference" should {
+    "implement some test" in {
+      pending("unimplemented")
+    }
+  }
+
 }

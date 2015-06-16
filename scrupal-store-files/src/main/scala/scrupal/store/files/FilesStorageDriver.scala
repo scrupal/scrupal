@@ -19,60 +19,29 @@ package scrupal.store.files
 import java.net.URI
 
 import scrupal.storage.api._
-import scrupal.storage.mem.MemoryStorageDriver._
+import scrupal.storage.impl.CommonStorageDriver
 
-import scala.collection.mutable
 
 /** Title Of Thing.
   *
   * Description of thing
   */
-object FilesStorageDriver extends StorageDriver {
+object FilesStorageDriver extends CommonStorageDriver {
   def id = 'files
   override val name : String = "Files"
   override val scheme : String = "scrupal-files"
   private val authority : String = "localhost"
-  private val stores : mutable.HashMap[URI, FilesStore] = new mutable.HashMap[URI, FilesStore]
 
-  override def canOpen(uri : URI) : Boolean = {
-    super.canOpen(uri) && uri.getAuthority == authority && uri.getPort == -1 && storeExists(uri)
+  override def isDriverFor(uri: URI) : Boolean = {
+    super.isDriverFor(uri) && uri.getAuthority == authority && uri.getPort == -1
   }
 
-  def storeExists(uri : URI) : Boolean = {
+  override def storeExists(uri : URI) : Boolean = {
     stores.get(uri) match {
       case Some(fileStore) ⇒ fileStore.exists
       case None ⇒
         val fs = FilesStore(this, uri)
         fs. exists
-    }
-  }
-
-  def open(uri : URI, create : Boolean = false) : Option[FilesStore] = {
-    if (!canOpen(uri))
-      return None
-    stores.get(uri) match {
-      case Some(s) ⇒ Some(s)
-      case None ⇒
-        if (create) {
-          val result = new FilesStore(this, uri)
-          stores.put(uri, result)
-          Some(result)
-        } else {
-          None
-        }
-    }
-  }
-
-  def withStore[T](uri : URI, create: Boolean = false)(f : Store ⇒ T) : T = {
-    stores.get(uri) match {
-      case Some(s) ⇒ f(s)
-      case None ⇒
-        open(uri, create) match {
-          case Some(store) ⇒ f(store)
-          case None ⇒
-            toss(s"No store found for $uri")
-        }
-
     }
   }
 
@@ -87,21 +56,16 @@ object FilesStorageDriver extends StorageDriver {
     }
   }
 
-  def makeStorage(uri : URI) : Store = FilesStore(this, uri)
+  def makeStore(uri : URI) : Store = FilesStore(this, uri)
 
   def makeSchema(store : Store, name : String, design : SchemaDesign) = {
     require(store.isInstanceOf[FilesStore])
-    FilesSchema(store, name, design)
+    FilesSchema(store.asInstanceOf[FilesStore], name, design)
   }
 
   def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S] = {
     require(schema.isInstanceOf[FilesSchema])
     FilesCollection[S](schema, name)
-  }
-
-  override def close() : Unit = {
-    for ((name, s) ← stores) s.close
-    stores.clear()
   }
 
 }
