@@ -27,7 +27,7 @@ object Validation {
 
     def index(i : Int) : IndexedLocation = IndexedLocation(this, i)
 
-    def select(s : String) : SelectedLocation = SelectedLocation(this, s)
+    def select[KT](s : KT) : SelectedLocation[KT]= SelectedLocation[KT](this, s)
   }
 
   /** The default valication location */
@@ -46,8 +46,8 @@ object Validation {
   }
 
   /** A member selected valication location */
-  case class SelectedLocation(parent : Location, key : String) extends Location {
-    def location : String = s"${parent.location}.$key"
+  case class SelectedLocation[KT](parent : Location, key : KT) extends Location {
+    def location : String = s"${parent.location}.${key.toString}"
   }
 
   case class Exception[VR](result : Results[VR]) extends java.lang.Exception(result.message)
@@ -211,13 +211,13 @@ object Validation {
   trait MapValidator[KT, ET, MT] extends Validator[MT] {
     def toMap(mt : MT) : scala.collection.Map[KT, ET]
 
-    def validateElement(ref : SelectedLocation, k: KT, v : ET) : Results[ET]
+    def validateElement(ref : SelectedLocation[KT], k: KT, v : ET) : Results[ET]
 
     def validate(ref : Location, value : MT) : VResult = {
       val errors : Seq[Failure[ET]] = {
         for (
           (k, v) ← toMap(value);
-          e = validateElement(ref.select(k.toString), k, v) if e.isError
+          e = validateElement(ref.select(k), k, v) if e.isError
         ) yield { e.asInstanceOf[Failure[ET]] }
       }.toSeq
 
@@ -244,7 +244,7 @@ object Validation {
 
     override def toMap(mt : JsObject) : scala.collection.Map[String, JsValue] = mt.value
 
-    def validateElement(ref : SelectedLocation, k: String, v : JsValue) : Results[JsValue]
+    def validateElement(ref : SelectedLocation[String], k: String, v : JsValue) : Results[JsValue]
   }
 
 }
