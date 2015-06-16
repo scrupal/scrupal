@@ -67,7 +67,8 @@ abstract class CommonStorageDriver extends StorageDriver {
         f(store)
       case None ⇒
         open(uri, create) match {
-          case Some(store) ⇒ f(store)
+          case Some(store) ⇒
+            f(store)
           case None ⇒
             toss(s"No store found for $uri")
         }

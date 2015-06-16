@@ -67,36 +67,37 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
   val registryName : String = "StorageContexts"
 
   def apply(id : Symbol, uri : URI, create: Boolean = true) : Option[StorageContext] = {
-    StorageDriver(uri) map { driver ⇒ driver.makeContext(id, uri, create) }
+    fromURI(id, uri, create)
   }
 
-  def fromConfigFile(id : Symbol, path: String, name : String = "scrupal") : Option[StorageContext] = {
+  def fromConfigFile(id : Symbol, path: String, name : String = "scrupal", create: Boolean = false) : Option[StorageContext] = {
     val helper = StorageConfigHelper.fromConfigFile(path)
     val config = helper.getStorageConfig
-    config.getConfig("storage." + name) flatMap { cfg ⇒ fromSpecificConfig(id, cfg ) } orElse {
-      fromURI(id, "scrupal_mem//localhost/" + name)
+    config.getConfig("storage." + name) flatMap { cfg ⇒ fromSpecificConfig(id, cfg, create ) } orElse {
+      fromURI(id, "scrupal_mem//localhost/" + name, create)
     }
   }
 
   def fromConfiguration(id : Symbol,
-      conf: Option[Configuration] = None, name : String = "scrupal") : Option[StorageContext] = {
+      conf: Option[Configuration] = None, name : String = "scrupal", create: Boolean = false) : Option[StorageContext] = {
     val topConfig = conf.getOrElse(ConfigHelpers.default())
     val helper = new StorageConfigHelper(topConfig)
     val config = helper.getStorageConfig
     config.getConfig("storage." + name) flatMap { cfg ⇒ fromSpecificConfig(id, cfg) } orElse {
-      fromURI(id, "scrupal_mem://localhost/" + name)
+      fromURI(id, "scrupal_mem://localhost/" + name, create)
     }
   }
 
-  def fromSpecificConfig(id : Symbol, config : Configuration) : Option[StorageContext] = {
-    config.getString("uri") flatMap { uri ⇒ fromURI(id, uri) }
+  def fromSpecificConfig(id : Symbol, config : Configuration, create: Boolean = false) : Option[StorageContext] = {
+    config.getString("uri") flatMap { uri ⇒ fromURI(id, uri, create) }
   }
 
-  def fromURI(id : Symbol, uriStr : String) : Option[StorageContext] = {
-    getRegistrant(id) filter { ctxt ⇒ ctxt.uri.toString == uriStr } orElse {
-      val uri = new URI(uriStr)
-      StorageDriver.apply(uri).map { driver ⇒ driver.makeContext(id,uri) }
-    }
+  def fromURI(id : Symbol, uriStr : String, create: Boolean) : Option[StorageContext] = {
+    fromURI(id, new URI(uriStr), create)
+  }
+
+  def fromURI(id : Symbol, uri: URI, create: Boolean = false) : Option[StorageContext] = {
+    StorageDriver.apply(uri).map { driver ⇒ driver.makeContext(id, uri, create) }
   }
 }
 
