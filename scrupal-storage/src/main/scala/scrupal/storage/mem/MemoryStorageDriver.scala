@@ -14,23 +14,33 @@ object MemoryStorageDriver extends StorageDriver {
   def id = 'memory
   override val name : String = "Memory"
   override val scheme : String = "scrupal-mem"
-  override def canOpen(url : URI) : Boolean = {
-    url.getScheme == scheme && url.getAuthority == authority && url.getPort == -1 && url.getPath.length > 0
+  private val authority : String = "localhost"
+  private val stores : mutable.HashMap[URI, MemoryStore] = new mutable.HashMap[URI, MemoryStore]
+
+  private[mem] def storeExists(uri: URI) : Boolean = {
+    stores.contains(uri)
   }
 
-  override def storeExists(name : String) : Boolean = {
-    stores.contains(name)
+  override def isDriverFor(uri : URI) : Boolean = {
+    super.isDriverFor(uri) && uri.getAuthority == authority && uri.getPort == -1
   }
 
-  def open(url : URI, create : Boolean = false) : Option[MemoryStore] = {
-    if (!canOpen(url))
-      return None
-    stores.get(url.getPath) match {
+  override def canOpen(uri : URI) : Boolean = {
+    super.canOpen(uri) && storeExists(uri)
+  }
+
+  def open(uri : URI, create : Boolean = false) : Option[MemoryStore] = {
+    if (!isDriverFor(uri))
+      None
+    if (!storeExists(uri) && !create)
+      None
+
+    stores.get(uri) match {
       case Some(s) ⇒ Some(s)
       case None ⇒
         if (create) {
-          val result = new MemoryStore(this, url)
-          stores.put(url.getPath, result)
+          val result = new MemoryStore(this, uri)
+          stores.put(uri, result)
           Some(result)
         } else {
           None
@@ -38,20 +48,25 @@ object MemoryStorageDriver extends StorageDriver {
     }
   }
 
-  def withStore[T](uri : URI)(f : Store ⇒ T) : T = {
-    stores.get(uri.getPath) match {
-      case Some(s) ⇒ f(s)
-      case None    ⇒ toss(s"No store found for $uri")
+  def withStore[T](uri : URI, create : Boolean = false)(f : Store ⇒ T) : T = {
+    stores.get(uri) match {
+      case Some(store) ⇒ f(store)
+      case None ⇒
+        open(uri, create) match {
+          case Some(store) ⇒ f(store)
+          case None ⇒
+            toss(s"No store found for $uri")
+        }
     }
   }
 
   def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S] = {
     require(coll.isInstanceOf[MemoryCollection[S]])
-    MemoryReference[S](coll.asInstanceOf[MemoryCollection[S]], id)
+    StorableReference[S](coll, id)
   }
 
-  def makeContext(id : Symbol, uri: URI) : StorageContext = {
-    withStore(uri) { store: Store ⇒
+  def makeContext(id : Symbol, uri: URI, create: Boolean = false) : StorageContext = {
+    withStore(uri, create) { store: Store ⇒
       MemoryStorageContext(id, uri, store.asInstanceOf[MemoryStore])
     }
   }
@@ -72,8 +87,5 @@ object MemoryStorageDriver extends StorageDriver {
     for ((name, s) ← stores) s.close
     stores.clear()
   }
-
-  private val stores : mutable.HashMap[String, MemoryStore] = new mutable.HashMap[String, MemoryStore]
-  private val authority : String = "localhost"
 
 }

@@ -25,7 +25,7 @@ import scrupal.utils.ScrupalComponent
   */
 @SerialVersionUID(1L)
 trait Storable extends Serializable with Equals {
-  private[storage] var primaryId : Long = Storable.undefined_primary_id
+  private[scrupal] var primaryId : Long = Storable.undefined_primary_id
   def getPrimaryId() : Long = primaryId
   def canEqual(other : Any) : Boolean = { other.isInstanceOf[Storable] }
   override def equals(other : Any) : Boolean = {
@@ -36,11 +36,11 @@ trait Storable extends Serializable with Equals {
   }
 }
 
-trait StoredFormat {
+trait StorageFormat {
   def toBytes : Array[Byte]
 }
 
-trait StorableTransformer[F <: StoredFormat, S <: Storable] {
+trait StorageFormatter[F <: StorageFormat, S <: Storable] {
   def write(s : S) : F
   def read(data : F) : S
 }
@@ -50,19 +50,19 @@ object Storable extends ScrupalComponent {
 
   val undefined_primary_id : Long = Long.MinValue
 
-  def apply[S <: Storable, F <: StoredFormat](data : F)(implicit trans : StorableTransformer[F, S]) : S = {
+  def apply[S <: Storable, F <: StorageFormat](data : F)(implicit trans : StorageFormatter[F, S]) : S = {
     trans.read(data)
   }
 
-  def unapply[S <: Storable, F <: StoredFormat](s: S)(implicit trans: StorableTransformer[F, S]) : F = {
+  def unapply[S <: Storable, F <: StorageFormat](s: S)(implicit trans: StorageFormatter[F, S]) : F = {
     trans.write(s)
   }
 
   implicit class StorablePimps[S <: Storable](storable : S) {
-    final def payload[F <: StoredFormat](implicit trans : StorableTransformer[F, S]) : F = {
+    final def payload[F <: StorageFormat](implicit trans : StorageFormatter[F, S]) : F = {
       trans.write(storable)
     }
-    final def toBytes[F <: StoredFormat](implicit trans : StorableTransformer[F,S]) : Array[Byte] = {
+    final def toBytes[F <: StorageFormat](implicit trans : StorageFormatter[F,S]) : Array[Byte] = {
       trans.write(storable).toBytes
     }
   }

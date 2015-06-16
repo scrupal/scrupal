@@ -41,7 +41,7 @@ trait Store extends AutoCloseable with ScrupalComponent {
 object Store {
 
   def open(uri : URI) : Option[Store] = {
-    StorageDriver.apply(uri).open(uri)
+    StorageDriver.apply(uri) flatMap { driver ⇒ driver.open(uri) }
   }
 }
 

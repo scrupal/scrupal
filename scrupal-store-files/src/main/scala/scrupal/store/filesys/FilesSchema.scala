@@ -14,7 +14,7 @@
   * ********************************************************************************************************************
   */
 
-package scrupal.storage.filesys
+package scrupal.store.files
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -22,10 +22,10 @@ import scala.util.matching.Regex
 import scrupal.storage.api._
 
 /** A Schema type for the Memory storage system */
-case class FileSysSchema private[filesys] (store : Store, name : String, design : SchemaDesign) extends Schema {
-  require(store.isInstanceOf[FileSysStore])
+case class FilesSchema private[files] (store : Store, name : String, design : SchemaDesign) extends Schema {
+  require(store.isInstanceOf[FilesStore])
 
-  private val colls = new mutable.HashMap[String, FileSysCollection[_]]
+  private val colls = new mutable.HashMap[String, FilesCollection[_]]
 
   /** Returns the set of collections that this Storage instance knows about */
   def collections : Map[String, Collection[_]] = colls.toMap
@@ -43,7 +43,7 @@ case class FileSysSchema private[filesys] (store : Store, name : String, design 
   }.toMap
 
   override def addCollection[S <: Storable](name : String) : Collection[S] = {
-    val coll = store.driver.makeCollection(this, name).asInstanceOf[FileSysCollection[S]]
+    val coll = store.driver.makeCollection(this, name).asInstanceOf[FilesCollection[S]]
     colls.put(name, coll).asInstanceOf[Collection[S]]
   }
 

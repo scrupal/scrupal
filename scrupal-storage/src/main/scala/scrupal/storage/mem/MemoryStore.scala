@@ -33,8 +33,10 @@ case class MemoryStore private[mem] (driver : StorageDriver, uri : URI) extends 
 
   def withSchema[T](schema : String)(f : Schema ⇒ T) : T = {
     _schemas.get(schema) match {
-      case Some(s) ⇒ f(s.asInstanceOf[MemorySchema])
-      case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
+      case Some(s) ⇒
+        f(s.asInstanceOf[MemorySchema])
+      case None  ⇒
+        toss(s"Schema '$schema' not found in $uri ")
     }
   }
 

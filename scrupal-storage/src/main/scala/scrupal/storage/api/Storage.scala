@@ -55,9 +55,13 @@ object Storage extends ScrupalComponent {
         log.debug("Storage initialized " + startCount + " times.")
       case None ⇒
         val full_config = ConfigFactory.load()
-        val driver : StorageDriver = StorageDriver(full_config)
-        val s = State(driver)
-        state = Some(State(driver))
+        StorageDriver(full_config) match {
+          case Some(driver: StorageDriver) ⇒
+            val s = State(driver)
+            state = Some(State(driver))
+          case None ⇒
+            toss(s"Unable to locate default storage to open from configuration")
+        }
     }
   } match {
     case Success(x) ⇒ log.debug("Successful mongoDB startup.")

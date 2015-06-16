@@ -44,7 +44,8 @@ case class MemorySchema private[mem] (store : Store, name : String, design : Sch
 
   override def addCollection[S <: Storable](name : String) : Collection[S] = {
     val coll = store.driver.makeCollection(this, name).asInstanceOf[MemoryCollection[S]]
-    colls.put(name, coll).asInstanceOf[Collection[S]]
+    colls.put(name, coll)
+    coll.asInstanceOf[Collection[S]]
   }
 
   override def close() : Unit = {

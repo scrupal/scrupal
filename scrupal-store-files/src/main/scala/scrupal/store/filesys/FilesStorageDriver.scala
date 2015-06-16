@@ -14,41 +14,48 @@
   * ********************************************************************************************************************
   */
 
-package scrupal.storage.filesys
+package scrupal.store.files
 
 import java.net.URI
 
 import scrupal.storage.api._
-import scrupal.utils.{ TryWith, ScrupalComponent }
+import scrupal.storage.mem.MemoryStorageDriver._
 
 import scala.collection.mutable
-import scala.util.{ Failure, Success, Try }
 
 /** Title Of Thing.
   *
   * Description of thing
   */
-object FileSysStorageDriver extends StorageDriver {
-  def id = 'memory
-  override val name : String = "Memory"
-  override val scheme : String = "scrupal-mem"
-  override def canOpen(url : URI) : Boolean = {
-    url.getScheme == scheme && url.getAuthority == authority && url.getPort == -1 && url.getPath.length > 0
+object FilesStorageDriver extends StorageDriver {
+  def id = 'files
+  override val name : String = "Files"
+  override val scheme : String = "scrupal-files"
+  private val authority : String = "localhost"
+  private val stores : mutable.HashMap[URI, FilesStore] = new mutable.HashMap[URI, FilesStore]
+
+  override def canOpen(uri : URI) : Boolean = {
+    super.canOpen(uri) && uri.getAuthority == authority && uri.getPort == -1 && storeExists(uri)
   }
 
-  override def storeExists(name : String) : Boolean = {
-    stores.contains(name)
+  def storeExists(uri : URI) : Boolean = {
+    stores.get(uri) match {
+      case Some(fileStore) ⇒ fileStore.exists
+      case None ⇒
+        val fs = FilesStore(this, uri)
+        fs. exists
+    }
   }
 
-  def open(url : URI, create : Boolean = false) : Option[FileSysStore] = {
-    if (!canOpen(url))
+  def open(uri : URI, create : Boolean = false) : Option[FilesStore] = {
+    if (!canOpen(uri))
       return None
-    stores.get(url.getPath) match {
+    stores.get(uri) match {
       case Some(s) ⇒ Some(s)
       case None ⇒
         if (create) {
-          val result = new FileSysStore(this, url)
-          stores.put(url.getPath, result)
+          val result = new FilesStore(this, uri)
+          stores.put(uri, result)
           Some(result)
         } else {
           None
@@ -56,34 +63,40 @@ object FileSysStorageDriver extends StorageDriver {
     }
   }
 
-  def withStore[T](uri : URI)(f : Store ⇒ T) : T = {
-    stores.get(uri.getPath) match {
+  def withStore[T](uri : URI, create: Boolean = false)(f : Store ⇒ T) : T = {
+    stores.get(uri) match {
       case Some(s) ⇒ f(s)
-      case None    ⇒ toss(s"No store found for $uri")
+      case None ⇒
+        open(uri, create) match {
+          case Some(store) ⇒ f(store)
+          case None ⇒
+            toss(s"No store found for $uri")
+        }
+
     }
   }
 
   def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S] = {
-    require(coll.isInstanceOf[FileSysCollection[S]])
-    FileSysReference[S](coll.asInstanceOf[FileSysCollection[S]], id)
+    require(coll.isInstanceOf[FilesCollection[S]])
+    StorableReference[S](coll, id)
   }
 
-  def makeContext(id : Symbol, uri : URI) : FileSysStorageContext = {
-    withStore(uri) { store ⇒
-      FileSysStorageContext(id, uri, store.asInstanceOf[FileSysStore])
+  def makeContext(id : Symbol, uri : URI, create: Boolean) : FilesStorageContext = {
+    withStore(uri, create) { store ⇒
+      FilesStorageContext(id, uri, store.asInstanceOf[FilesStore])
     }
   }
 
-  def makeStorage(uri : URI) : Store = FileSysStore(this, uri)
+  def makeStorage(uri : URI) : Store = FilesStore(this, uri)
 
   def makeSchema(store : Store, name : String, design : SchemaDesign) = {
-    require(store.isInstanceOf[FileSysStore])
-    FileSysSchema(store, name, design)
+    require(store.isInstanceOf[FilesStore])
+    FilesSchema(store, name, design)
   }
 
   def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S] = {
-    require(schema.isInstanceOf[FileSysSchema])
-    FileSysCollection[S](schema, name)
+    require(schema.isInstanceOf[FilesSchema])
+    FilesCollection[S](schema, name)
   }
 
   override def close() : Unit = {
@@ -91,6 +104,4 @@ object FileSysStorageDriver extends StorageDriver {
     stores.clear()
   }
 
-  private val stores : mutable.HashMap[String, FileSysStore] = new mutable.HashMap[String, FileSysStore]
-  private val authority : String = "localhost"
 }

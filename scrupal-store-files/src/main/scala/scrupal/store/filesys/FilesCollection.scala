@@ -1,16 +1,20 @@
-package scrupal.storage.filesys
+package scrupal.store.files
 
 import java.util.concurrent.atomic.AtomicLong
 
 import scrupal.storage.api._
+import scrupal.storage.impl.{KryoFormatter, KryoFormat}
 
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
-case class FileSysCollection[S <: Storable] private[filesys] (schema : Schema, name : String) extends Collection[S] {
-  require(schema.isInstanceOf[FileSysSchema])
+case class FilesCollection[S <: Storable] private[files] (schema : Schema, name : String) extends Collection[S] {
+  require(schema.isInstanceOf[FilesSchema])
+
+  type SF = KryoFormat
+  implicit val formatter: StorageFormatter[SF, S] = KryoFormatter.StorableFormatter.asInstanceOf[StorageFormatter[SF,S]]
 
   def count : Long = content.size
 
@@ -107,5 +111,4 @@ case class FileSysCollection[S <: Storable] private[filesys] (schema : Schema, n
   }
   private val pids = new AtomicLong(0)
   private val content = mutable.HashMap.empty[Long, S]
-
 }

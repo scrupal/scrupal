@@ -3,6 +3,7 @@ package scrupal.storage.mem
 import java.util.concurrent.atomic.AtomicLong
 
 import scrupal.storage.api._
+import scrupal.storage.impl.{IdentityFormat, IdentityFormatter}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -10,6 +11,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
 case class MemoryCollection[S <: Storable] private[mem] (schema : Schema, name : String) extends Collection[S] {
+
+  type SF = IdentityFormat[S]
+  implicit val formatter = new IdentityFormatter[S]
+
   require(schema.isInstanceOf[MemorySchema])
 
   def count : Long = content.size

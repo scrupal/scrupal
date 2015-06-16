@@ -22,6 +22,8 @@ import scrupal.utils.ScrupalComponent
 import scala.concurrent.Future
 
 trait Collection[S <: Storable] extends AutoCloseable with ScrupalComponent {
+  type SF <: StorageFormat
+  implicit val formatter : StorageFormatter[SF,S]
   def name : String
   def schema : Schema
   override def toString = { s"Collection $name in $schema" }

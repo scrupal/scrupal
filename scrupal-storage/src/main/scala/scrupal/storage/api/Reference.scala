@@ -23,15 +23,62 @@ import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.Future
 
-/** A reference to a specific object */
-abstract class Reference[S <: Storable](collection : Collection[S], id : ID) extends AutoCloseable {
-  def fetch : Future[Option[S]]
+/** An abstract trait for a reference to something that is fetchable back to its original type */
+trait Reference[S <: Storable] {
+  def fetch(implicit sc: StorageContext) : Future[Option[S]]
 }
 
-object Reference extends ScrupalComponent {
-  def apply[T, S <: Storable](schema : String, collection : String, obj : S)(implicit sc: StorageContext) : Reference[S] = {
+class FastReference[S <: Storable](collection : Collection[S], id : ID) extends Reference[S] {
+  def fetch(implicit sc: StorageContext) : Future[Option[S]] = {
+    collection.asInstanceOf[Collection[S]].fetch(id)
+  }
+}
+
+object FastReference extends ScrupalComponent {
+
+  def apply[S <: Storable](collection: Collection[S], id: ID) : FastReference[S] = {
+    new FastReference(collection, id)
+  }
+
+  def apply[S <: Storable](collection: Collection[S], obj : S) : FastReference[S] = {
+    new FastReference(collection, obj.getPrimaryId())
+  }
+
+  def apply[S <: Storable](schema : String, collection : String, obj : S)(implicit sc: StorageContext) : Reference[S]= {
     sc.withCollection(schema, collection) { coll : Collection[_] ⇒
-      sc.driver.makeReference[S](coll.asInstanceOf[Collection[S]], obj.primaryId)
+      new FastReference(coll.asInstanceOf[Collection[S]], obj.getPrimaryId())
     }
   }
 }
+
+case class StorableReference[S <: Storable](
+  uri: URI,
+  schemaName: String,
+  collectionName: String,
+  id : ID
+) extends Reference[S] with Storable {
+  def fetch(implicit sc: StorageContext) : Future[Option[S]] = {
+    sc.withCollection(schemaName, collectionName) { coll : Collection[_] ⇒
+      coll.asInstanceOf[Collection[S]].fetch(id)
+    }
+  }
+}
+
+object StorableReference {
+  def apply[S <: Storable](schema : Schema, collection : String, obj : S) : StorableReference[S]= {
+    StorableReference(schema.store.uri, schema.name, collection, obj.getPrimaryId())
+  }
+
+  def apply[S <: Storable](store: Store, schema: String, collection: String, obj: S) : StorableReference[S] = {
+   StorableReference(store.uri, schema, collection, obj.getPrimaryId())
+  }
+
+  def apply[S <:Storable](coll: Collection[S], obj: S) : StorableReference[S] = {
+    StorableReference[S](coll.schema.store.uri, coll.schema.name, coll.name, obj.getPrimaryId())
+  }
+
+  def apply[S <:Storable](coll: Collection[S], objId: ID) : StorableReference[S] = {
+    StorableReference[S](coll.schema.store.uri, coll.schema.name, coll.name, objId)
+  }
+}
+

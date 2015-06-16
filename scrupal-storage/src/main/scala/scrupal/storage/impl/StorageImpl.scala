@@ -1,14 +1,14 @@
 package scrupal.storage.impl
 
-import java.net.URL
+import java.net.{URI}
 
 import scrupal.storage.api.{ StorageDriver, StorageContext }
 
-/** Title Of Thing.
-  *
-  * Description of thing
+/** Storage Implementation Details
   */
 object StorageImpl {
 
-  def contextForURL(url : URL) : StorageContext = ???
+  def contextForURL(id: Symbol, uri : URI) : Option[StorageContext] = {
+    StorageDriver(uri).map { driver ⇒ driver.makeContext(id, uri) }
+  }
 }

@@ -40,16 +40,16 @@ trait StorageContext extends Registrable[StorageContext] with Closeable with Scr
 
   def withStore[T](f : (Store) ⇒ T) : T = { f(store) }
 
-  def withSchema[T](schema : String, create : Boolean = false)(f : (Schema) ⇒ T) : T = {
+  def hasSchema(name: String) : Boolean = store.hasSchema(name)
+
+  def addSchema(design: SchemaDesign) = store.addSchema(design)
+
+  def withSchema[T](schema : String)(f : (Schema) ⇒ T) : T = {
     store.withSchema(schema)(f)
   }
 
   def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
     store.withCollection(schema,collection)(f)
-  }
-
-  def checkExists(storageNames : Seq[String]) : Seq[String] = {
-    storageNames.filter { name ⇒ driver.storeExists(name) }
   }
 
   def close() = Try {
@@ -65,34 +65,27 @@ object StorageContext extends Registry[StorageContext] with ScrupalComponent {
   val registrantsName : String = "storageContext"
   val registryName : String = "StorageContexts"
 
-  def apply(id : Symbol, uri : URI) : StorageContext = {
-    StorageDriver.apply(uri).makeContext(id, uri)
+  def apply(id : Symbol, uri : URI, create: Boolean = true) : Option[StorageContext] = {
+    StorageDriver(uri) map { driver ⇒ driver.makeContext(id, uri, create) }
   }
 
-  def fromConfiguration(id : Symbol, conf : Option[Configuration] = None) : StorageContext = {
-    val topConfig = conf.getOrElse(ConfigHelpers.default)
+  def fromConfiguration(id : Symbol, conf : Option[Configuration] = None) : Option[StorageContext] = {
+    val topConfig = conf.getOrElse(ConfigHelpers.default())
     val helper = new StorageConfigHelper(topConfig)
     val config = helper.getStorageConfig
-    config.getConfig("db.scrupal") match {
-      case Some(cfg) ⇒ fromSpecificConfig(id, cfg)
-      case None ⇒ fromURI(id, "scrupal_mem://localhost/scrupal")
+    config.getConfig("db.scrupal") flatMap { cfg ⇒ fromSpecificConfig(id, cfg) } orElse {
+      fromURI(id, "scrupal_mem://localhost/scrupal")
     }
   }
 
-  def fromSpecificConfig(id : Symbol, config : Configuration) : StorageContext = {
-    config.getString("uri") match {
-      case Some(uri) ⇒ fromURI(id, uri)
-      case None ⇒ toss("Missing 'uri' in database configuration for '" + id.name + "'")
-    }
+  def fromSpecificConfig(id : Symbol, config : Configuration) : Option[StorageContext] = {
+    config.getString("uri") flatMap { uri ⇒ fromURI(id, uri) }
   }
 
-  def fromURI(id : Symbol, uriStr : String) : StorageContext = {
-    getRegistrant(id) match {
-      case Some(context) ⇒
-        context
-      case None ⇒
-        val uri = new URI(uriStr)
-        StorageDriver.apply(uri).makeContext(id,uri)
+  def fromURI(id : Symbol, uriStr : String) : Option[StorageContext] = {
+    getRegistrant(id) filter { ctxt ⇒ ctxt.uri.toString == uriStr } orElse {
+      val uri = new URI(uriStr)
+      StorageDriver.apply(uri).map { driver ⇒ driver.makeContext(id,uri) }
     }
   }
 }

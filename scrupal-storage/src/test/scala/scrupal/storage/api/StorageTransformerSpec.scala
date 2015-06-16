@@ -15,23 +15,17 @@
 
 package scrupal.storage.api
 
-import java.net.URI
-
 import play.api.libs.json.Json
-import scrupal.storage.impl.Kryo.KryoTransformer
 
-import scala.pickling.Defaults._
-import scala.pickling.{Unpickler, Pickler}
-import scala.pickling.binary._
 
 import scrupal.test.ScrupalSpecification
-import scrupal.storage.impl.{IdentityTransformer, JsonTransformer, PickleTransformer}
+import scrupal.storage.impl.{IdentityFormatter, JsonFormatter}
 
 case class DoubleVal(value: Double = 42.0) extends Storable
 case class Simple(a: Double = 42.0, b: Long = 42, c: String = "42") extends Storable
 object MyEnum extends Enumeration { type Kind = Value; val v1=Value; val v2=Value; val v3=Value }
 case class Enum(e : MyEnum.Kind = MyEnum.v2) extends Storable
-case class Collections(list :List[Int] = List(42,21), seq : Seq[Long] = Seq(42L,21L) ) extends Storable
+case class Collections(list :List[Int] = List(42,21), seq : Seq[Long] = Seq(42L,21L), map: Map[String,Int] = Map("foo"→23) ) extends Storable
 case class Uri(scheme: String, rest: String) extends Storable
 case class Complex(
   a: Double = 42.0,
@@ -42,89 +36,50 @@ case class Complex(
 
 class StorageTransformerSpec extends ScrupalSpecification("StorageTransformer") {
 
-  implicit val MyEnumPickler = Pickler.generate[MyEnum.Kind]
-  implicit val UriPickler = Pickler.generate[Uri]
-
-  def applyTransformer(transformer: StorableTransformer[StoredFormat,Storable], value: Storable) = {
+  def applyTransformer(transformer: StorageFormatter[StorageFormat,Storable], value: Storable) = {
     val result = transformer.read(transformer.write(value))
-    if (!result.equals(value))
-      result must beEqualTo(value)
-    success
+    result must beEqualTo(value)
   }
 
-  "PicklerTransformer" should {
-    "handle DoubleVal" in {
-      val transformer = PickleTransformer(Pickler.generate[DoubleVal], Unpickler.generate[DoubleVal])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], DoubleVal())
-    }
-    "handle Simple" in {
-      val transformer = PickleTransformer(Pickler.generate[Simple], Unpickler.generate[Simple])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Simple())
-    }
-    "handle Enum" in {
-      val transformer = PickleTransformer(Pickler.generate[Enum], Unpickler.generate[Enum])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Enum())
-    }
-    "handle Collections" in {
-      val transformer = PickleTransformer(Pickler.generate[Collections], Unpickler.generate[Collections])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Collections())
-    }
-    "handle Uri" in {
-      val transformer = PickleTransformer(Pickler.generate[Uri], Unpickler.generate[Uri])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Uri("scrupal-mem","foo"))
-    }
-    "handle Complex" in {
-      val transformer = PickleTransformer(Pickler.generate[Complex], Unpickler.generate[Complex])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Complex())
+  import scrupal.storage.impl.KryoFormatter.StorableFormatter
 
-    }
-  }
+  val kryoF = StorableFormatter
 
   "KryoTransformer" should {
     "handle DoubleVal" in {
-      val transformer = KryoTransformer()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], DoubleVal())
+      applyTransformer(kryoF.asInstanceOf[StorageFormatter[StorageFormat,Storable]], DoubleVal())
     }
     "handle Simple" in {
-      val transformer = KryoTransformer()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Simple())
+      applyTransformer(kryoF.asInstanceOf[StorageFormatter[StorageFormat,Storable]], Simple())
     }
     "handle Enum" in {
-      val transformer = KryoTransformer()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Enum())
+      val f = StorableFormatter
+      applyTransformer(kryoF.asInstanceOf[StorageFormatter[StorageFormat,Storable]], Enum())
     }
     "handle Collections" in {
-      val transformer = KryoTransformer()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Collections())
+      applyTransformer(kryoF.asInstanceOf[StorageFormatter[StorageFormat,Storable]], Collections())
     }
     "handle Uri" in {
-      val transformer = KryoTransformer()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Uri("scrupal-mem","foo"))
+      applyTransformer(kryoF.asInstanceOf[StorageFormatter[StorageFormat,Storable]], Uri("scrupal-mem","foo"))
     }
     "handle Complex" in {
-      val transformer = KryoTransformer()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat,Storable]], Complex())
+      applyTransformer(kryoF.asInstanceOf[StorageFormatter[StorageFormat,Storable]], Complex())
 
     }
-
   }
 /*
-  val EnumKindWriter = Json.writes[MyEnum.Kind]
-  val EnumKindReader = Json.reads[MyEnum.Kind]
-  val EnumWriter = Json.writes[Enum]
-  val EnumReader = Json.reads[Enum]
-  val SeqAnyWriter = Json.writes[Seq[Any]]
-  val SeqAnyReader = Json.reads[Seq[Any]]
+  implicit val EnumKindFormat = Json.format[MyEnum.Kind]
+  implicit val EnumFormat = Json.format[Enum]
+  implicit val SeqAnyFormat = Json.format[Seq[Any]]
 */
-
   "JsonTransformer" should {
     "handle DoubleVal" in {
-      val transformer = JsonTransformer(Json.reads[DoubleVal], Json.writes[DoubleVal])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], DoubleVal())
+      val transformer = JsonFormatter(Json.format[DoubleVal])
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], DoubleVal())
     }
     "handle Simple" in {
-      val transformer = JsonTransformer(Json.reads[Simple], Json.writes[Simple])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Simple())
+      val transformer = JsonFormatter(Json.format[Simple])
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Simple())
     }
     "handle Enum" in {
       pending("Figure out how to do enums with Json")
@@ -134,46 +89,46 @@ class StorageTransformerSpec extends ScrupalSpecification("StorageTransformer") 
       */
     }
     "handle Collections" in {
-      val transformer = JsonTransformer(Json.reads[Collections], Json.writes[Collections])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Collections())
+      val transformer = JsonFormatter(Json.format[Collections])
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Collections())
     }
     "handle Uri" in {
-      val transformer = JsonTransformer(Json.reads[Uri], Json.writes[Uri])
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Uri("scrupal-mem", "foo"))
+      val transformer = JsonFormatter(Json.format[Uri])
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Uri("scrupal-mem", "foo"))
     }
     "handle Complex" in {
-      pending("Figure out how to do scala collections wiht Json")
+      pending("Figure out how to do Complex with Json")
       /*
       val transformer = JsonTransformer(Json.reads[Complex], Json.writes[Complex])
       applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Complex())
-*/
+      */
     }
   }
 
   "IdentityTransformer" should {
     "handle DoubleVal" in {
-      val transformer = IdentityTransformer[DoubleVal]()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], DoubleVal())
+      val transformer = IdentityFormatter[DoubleVal]()
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], DoubleVal())
     }
     "handle Simple" in {
-      val transformer = IdentityTransformer[Simple]()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Simple())
+      val transformer = IdentityFormatter[Simple]()
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Simple())
     }
     "handle Enum" in {
-      val transformer = IdentityTransformer[Enum]()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Enum())
+      val transformer = IdentityFormatter[Enum]()
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Enum())
     }
     "handle Collections" in {
-      val transformer = IdentityTransformer[Collections]()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Collections())
+      val transformer = IdentityFormatter[Collections]()
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Collections())
     }
     "handle Uri" in {
-      val transformer = IdentityTransformer[Uri]()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Uri("scrupal-mem", "foo"))
+      val transformer = IdentityFormatter[Uri]()
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Uri("scrupal-mem", "foo"))
     }
     "handle Complex" in {
-      val transformer = IdentityTransformer[Complex]()
-      applyTransformer(transformer.asInstanceOf[StorableTransformer[StoredFormat, Storable]], Complex())
+      val transformer = IdentityFormatter[Complex]()
+      applyTransformer(transformer.asInstanceOf[StorageFormatter[StorageFormat, Storable]], Complex())
     }
   }
 

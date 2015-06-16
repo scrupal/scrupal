@@ -59,6 +59,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps)
   lazy val storage_deps = storage_proj % "compile->compile;test->test"
 
+  /*
   lazy val api_proj = Project(base_name + "-api", file("./scrupal-api"))
     .settings(buildSettings:_*)
     .settings(
@@ -69,11 +70,12 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(storage_deps, utils_deps)
   lazy val api_deps = api_proj % "compile->compile;test->test"
+  */
 
-  lazy val filesys_proj = Project(base_name + "-store-filesys", file("./scrupal-store-filesys"))
+  lazy val filesys_proj = Project(base_name + "-store-files", file("./scrupal-store-files"))
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal FileSystem Store",
+      scrupalTitle := "Scrupal File Store",
       resolvers ++= all_resolvers,
       libraryDependencies ++= filesys_dependencies
     )
@@ -93,7 +95,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       libraryDependencies ++= core_dependencies
     )
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
-    .dependsOn(api_deps, storage_deps, utils_deps)
+    .dependsOn(storage_deps, utils_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
@@ -114,8 +116,8 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       libraryDependencies ++= root_dependencies
     )
     .enablePlugins(ScrupalPlugin)
-    .dependsOn(config_deps, core_deps, api_deps, filesys_deps, storage_deps, utils_deps)
-    .aggregate(config_proj, core_proj, api_proj, filesys_proj, storage_proj, utils_proj)
+    .dependsOn(config_deps, core_deps, filesys_deps, storage_deps, utils_deps)
+    .aggregate(config_proj, core_proj, filesys_proj, storage_proj, utils_proj)
 
   override def rootProject = Some(root)
 }
