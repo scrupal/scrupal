@@ -16,14 +16,7 @@ case class MemoryStore private[mem] (uri : URI) extends CommonStore {
   def driver : StorageDriver = MemoryStorageDriver
   def created: Instant = Instant.now
 
-  /** Create a new collection for storing objects */
-  def addSchema(design: SchemaDesign)(implicit ec: ExecutionContext) : Future[Schema] = Future {
-    val schema = MemorySchema(this, design.name, design)
-    _schemas.put(design.name, schema)
-    design.construct(schema)
-    schema
-  }
-
+  protected def makeNewSchema(design: SchemaDesign) : Schema = MemorySchema(this, design.name, design)
 
   override def dropSchema(name: String)(implicit ec: ExecutionContext) : Future[WriteResult] = {
     super.dropSchema(name)

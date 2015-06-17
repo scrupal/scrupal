@@ -42,5 +42,5 @@ trait Store extends StorageLayer  {
 
   def withSchema[T](schema : String)(f : (Schema) ⇒ T) : T
 
-  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T
+  def withCollection[S <: Storable,T](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T
 }

@@ -80,9 +80,12 @@ case class MemoryCollection[S <: Storable] private[mem] (schema : MemorySchema, 
     }
   }
 
-  override def delete(ids : Seq[ID]) : Future[Seq[WriteResult]] = {
-    val futures = for (id ← ids) yield { delete(id) }
-    Future sequence futures
+  override def delete(ids : Seq[ID]) : Future[WriteResult] = {
+    WriteResult.coalesce {
+      for (id ← ids) yield {
+        delete(id)
+      }
+    }
   }
 
   override def find(query : Query) : Future[Seq[S]] = Future {

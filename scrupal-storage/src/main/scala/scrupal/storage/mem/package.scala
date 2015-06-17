@@ -13,19 +13,15 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.store.files
+package scrupal.storage
 
-import scrupal.storage.api._
+/** Scrupal Storage Implementation In Transient Memory
+  *
+  * This package implements the Scrupal Storage API [[scrpual.storage.api]] using only transient memory as the
+  * store. It is intended to be used as a handy cache for Scrupal modules that don't need to persist data. The
+  * implementation is efficient as it just retains objects directly by reference in ConcurrentHashMap collections.
+  * Indexes provide alternative maps into the same referenced objects.
+  */
+package object mem {
 
-
-/** File Storage Driver Test Suite */
-class FilesStorageDriverSpec extends StorageTestSuite("FilesStorageDriver") {
-
-  def driver: StorageDriver = FilesStorageDriver
-
-  def driverName : String = "Files"
-
-  def scheme: String = "scrupal-files"
-
-  def configDir: String = "scrupal-store-files/src/test/resources/storage/config/"
 }

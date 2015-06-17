@@ -15,9 +15,8 @@
 
 package scrupal.storage.api
 
-import java.net.URI
-
-import org.specs2.execute.Result
+import org.specs2.execute.{Success, ResultLike, Result}
+import org.specs2.matcher.MatchResult
 import play.api.libs.json.Json
 import scrupal.storage.impl.JsonFormatter
 import scrupal.test.ScrupalSpecification
@@ -31,7 +30,7 @@ case class DingBot(id : Long, ding : String, bot : Long) extends Storable
 object DingBotFormatter$ extends JsonFormatter[DingBot](Json.format[DingBot])
 
 object DingBotsSchema extends SchemaDesign {
-  override def name : String = "DingBotSchemaDesign"
+  override def name : String = "dingbots"
 
   override def requiredNames : Seq[String] = Seq("dingbots")
 
@@ -91,12 +90,25 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
       }
     }
 
-    "create a collection" in {
-      getContext('collection, "testing.conf", "testing")  { context ⇒
+    "not allow duplication of a collection" in {
+      getContext('noduplicate, "testing.conf", "testing")  { context ⇒
+        val result = context.withSchema(DingBotsSchema.name) { schema ⇒
+          val future = schema.addCollection[DingBot]("dingbots")
+          future.map { coll ⇒ failure("schema.addCollection should have failed") } recover {
+            case x: Throwable ⇒ success
+          }
+        }
+        context.close()
+        result
+      }
+    }
+
+    "insert a dingbot in a collection" in {
+      getContext('insert, "testing.conf", "testing")  { context ⇒
         context.withSchema(DingBotsSchema.name) { schema ⇒
-          schema.addCollection[DingBot]("dingbots") flatMap { coll ⇒
+          schema.withCollection[DingBot,Future[Result]]("dingbots") { coll ⇒
             coll.insert(new DingBot(1, "ping", 42)) map { wr: WriteResult ⇒
-              wr.isSuccess must beTrue
+              (wr.isSuccess must beTrue).toResult
             }
           }
         }

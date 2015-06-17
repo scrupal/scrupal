@@ -38,7 +38,7 @@ trait Collection[S <: Storable] extends StorageLayer {
   def updateWhere(query : Query, update : Modification[S]) : Future[Seq[WriteResult]]
   def delete(obj : S) : Future[WriteResult]
   def delete(id : ID) : Future[WriteResult]
-  def delete(ids : Seq[ID]) : Future[Seq[WriteResult]]
+  def delete(ids : Seq[ID]) : Future[WriteResult]
 }
 
 trait IndexKind

@@ -13,19 +13,16 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.store.files
+package scrupal.store
 
-import scrupal.storage.api._
+/** Scrupal Storage In Flat Files
+  *
+  * This package implements the Scrupal Storage API [[scrupal.storage.api]] using flat files. Stores, Schemas and
+  * Collections are stored in nested directories. Each directory has a hidden "info" file that contains meta-information
+  * about the StorageLayer. Objects in collections are stored in nested directories that are four levels deep. Each
+  * level corresponds to 16 bits of the 64-bit identifier for an object. This means there can be 65536 object files in
+  * each of the leaf directories and the same number of branch directories at each level.
+  */
+package object files {
 
-
-/** File Storage Driver Test Suite */
-class FilesStorageDriverSpec extends StorageTestSuite("FilesStorageDriver") {
-
-  def driver: StorageDriver = FilesStorageDriver
-
-  def driverName : String = "Files"
-
-  def scheme: String = "scrupal-files"
-
-  def configDir: String = "scrupal-store-files/src/test/resources/storage/config/"
 }

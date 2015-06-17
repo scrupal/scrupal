@@ -16,51 +16,66 @@
 
 package scrupal.store.files
 
-import java.io.{FilenameFilter, File}
+import java.io.File
 import java.net.URI
 
-import scrupal.storage.api._
+import scrupal.storage.api.{WriteResult, Schema, SchemaDesign}
 import scrupal.storage.impl.CommonStore
+import scrupal.store.files.FilesStorageInfo._
 
-/** Title Of Thing.
-  *
-  * Description of thing
-  */
-case class FilesStore private[files] (driver : StorageDriver, uri : URI) extends CommonStore {
-  require(driver == FilesStorageDriver)
+import scala.concurrent.{ExecutionContext, Future}
 
-  private final val storeDirectory : File = new File(uri.getPath)
+/** A Data Store In Files */
+case class FilesStore private (uri : URI, info : FilesStoreInfo) extends CommonStore with FilesInfo[FilesStoreInfo] {
+  def driver = FilesStorageDriver
 
-  if (!storeDirectory.exists)
-    if (!storeDirectory.mkdirs())
-      toss(s"Storage directory for ${uri.toASCIIString} could not be created")
+  private [files] final val kind : String = "Store"
 
-  private final val specialFiles = Seq(".scrupal")
+  private [files] final val dir : File = new File(uri.getPath)
 
-  private[files] object SpecialFilesFilter extends FilenameFilter {
-    def accept(dir: File, name: String): Boolean = specialFiles.contains(name)
+  private [files] final val fileName : String = FilesStorageInfo.store_info_file_name
+
+  protected def makeNewSchema(design: SchemaDesign) : Schema = {
+    FilesSchema(this, design)
   }
 
-  def exists : Boolean = {
-    val file = new File(uri.getPath)
-    if (!file.isDirectory)
-      return false
-    if (file.list(SpecialFilesFilter).size == specialFiles.size)
-      true
-    else
-      false
+  override def dropSchema(name : String)(implicit ec: ExecutionContext) : Future[WriteResult] = {
+    _schemas.get(name) match {
+      case Some(schema) ⇒
+        _schemas.remove(name)
+        schema.drop
+      case None ⇒
+        Future { toss(s"Schema named '$name' not found") }
+    }
   }
 
-  /** Create a new collection for storing objects */
-  override def addSchema(design: SchemaDesign): Schema = {
-    val schema = driver.makeSchema(this, design.name, design).asInstanceOf[FilesSchema]
-    val dir = new File(storeDirectory, design.name)
-    if (!dir.isDirectory)
-      if (!dir.mkdir)
-        toss(s"Storage directory for schema '${design.name}' could not be created in ${storeDirectory.getAbsolutePath}")
-    _schemas.put(design.name, schema)
-    schema
+  private def insertSchema(schema: FilesSchema) = _schemas.put(schema.name, schema)
+}
+
+object FilesStore {
+  def apply(uri : URI) : FilesStore = {
+    val storeDir = new File(uri.getPath)
+    val info = {
+      if (!storeDir.exists) {
+        if (!storeDir.mkdirs())
+          toss(s"Storage directory ${storeDir.getAbsolutePath} for $uri could not be created.")
+      }
+      val infoFile = new File(storeDir, FilesStorageInfo.store_info_file_name)
+      if (infoFile.isFile && infoFile.canRead) {
+        FilesStorageInfo.from[FilesStoreInfo](infoFile)
+      } else {
+        val info = FilesStoreInfo(uri.getPath)
+        FilesStorageInfo.saveInfo(infoFile, info)
+        info
+      }
+    }
+    val store = FilesStore(uri, info)
+    for (d ← store.dir.listFiles()) {
+      if (d.isDirectory) {
+        val schema = FilesSchema(store, d)
+        store.insertSchema(schema)
+      }
+    }
+    store
   }
-
-
 }

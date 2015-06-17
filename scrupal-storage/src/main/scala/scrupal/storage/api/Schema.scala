@@ -47,7 +47,7 @@ trait Schema extends StorageLayer {
   /** Get the set of collection names */
   def collectionNames : Iterable[String]
 
-  def withCollection[T, S <: Storable](name : String)(f : Collection[S] ⇒ T) : T
+  def withCollection[S <: Storable,T](name : String)(f : Collection[S] ⇒ T) : T
 
 
   def construct : Future[Results[Schema]] = {

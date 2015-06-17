@@ -57,8 +57,7 @@ trait CommonSchema extends Schema {
     }
   }.toMap
 
-
-  def withCollection[T, S <: Storable](name : String)(f : Collection[S] ⇒ T) : T = {
+  def withCollection[S <: Storable,T](name : String)(f : Collection[S] ⇒ T) : T = {
     colls.get(name) match {
       case Some(coll) ⇒ f(coll.asInstanceOf[Collection[S]])
       case None ⇒ toss(s"Collection '$name' in schema '${this.name} does not exist")

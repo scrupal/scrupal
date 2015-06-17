@@ -21,6 +21,9 @@ import java.net.URI
 import scrupal.storage.api._
 import scrupal.storage.impl.CommonStorageDriver
 
+import java.io.File
+
+import scala.concurrent.{Future, ExecutionContext}
 
 /** Title Of Thing.
   *
@@ -32,40 +35,49 @@ object FilesStorageDriver extends CommonStorageDriver {
   override val scheme : String = "scrupal-files"
   private val authority : String = "localhost"
 
+  {
+    FilesStorageInfo.registerSerializers
+  }
+
   override def isDriverFor(uri: URI) : Boolean = {
     super.isDriverFor(uri) && uri.getAuthority == authority && uri.getPort == -1
   }
 
   override def storeExists(uri : URI) : Boolean = {
     stores.get(uri) match {
-      case Some(fileStore) ⇒ fileStore.exists
+      case Some(fileStore) ⇒
+        fileStore.asInstanceOf[FilesStore].dir.canRead
       case None ⇒
-        val fs = FilesStore(this, uri)
-        fs. exists
+        val dir = new File(uri.getPath)
+        dir.canRead
     }
   }
 
-  def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S] = {
-    require(coll.isInstanceOf[FilesCollection[S]])
-    StorableReference[S](coll, id)
-  }
-
-  def makeContext(id : Symbol, uri : URI, create: Boolean = false) : FilesStorageContext = {
-    withStore(uri, create) { store ⇒
-      FilesStorageContext(id, uri, store.asInstanceOf[FilesStore])
+  def addStore(uri: URI)(implicit ec: ExecutionContext) : Future[Store] = Future {
+    stores.get(uri) match {
+      case Some(store) ⇒
+        toss("Store at $uri already exists")
+      case None ⇒
+        val result = FilesStore(uri)
+        stores.put(uri, result)
+        result
     }
   }
 
-  def makeStore(uri : URI) : Store = FilesStore(this, uri)
-
-  def makeSchema(store : Store, name : String, design : SchemaDesign) = {
-    require(store.isInstanceOf[FilesStore])
-    FilesSchema(store.asInstanceOf[FilesStore], name, design)
+  def open(uri : URI, create : Boolean = false)(implicit ec: ExecutionContext) : Future[Store] = Future {
+    if (!isDriverFor(uri))
+      toss(s"Wrong URI type for FilesStorageDriver. Expected '$scheme' scheme but got: $uri")
+    stores.get(uri) match {
+      case Some(store) ⇒
+        store
+      case None ⇒
+        if (!create)
+          toss(s"Store at $uri does not exist and create was not requested")
+        else {
+          val result = FilesStore(uri)
+          stores.put(uri, result)
+          result
+        }
+    }
   }
-
-  def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S] = {
-    require(schema.isInstanceOf[FilesSchema])
-    FilesCollection[S](schema, name)
-  }
-
 }

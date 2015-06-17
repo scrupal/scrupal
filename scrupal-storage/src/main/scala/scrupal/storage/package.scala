@@ -34,7 +34,7 @@ package scrupal
   * - Collections must have one primary index that uses the document's identifier type.
   * - Collections may have additional keys or even multi-field keys based on named fields in the objects.
   * - Documents without an optional key simply don't get put in that index (but will still be in the primary index)
-  * - Serialization is done with Scala Pickling to/from either binary or string (JSON) formats.
+  * - Serialization is done with Chill (Kryo)
   * - Management of the storage is beyond the scope of Scrupal. This is only a data manipulation interface
   */
 package object storage {

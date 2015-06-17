@@ -16,40 +16,109 @@
 
 package scrupal.store.files
 
-import scala.collection.mutable
-import scala.util.matching.Regex
+import java.io.File
+import java.nio.file.Files
+
+import scrupal.storage.impl.CommonSchema
 
 import scrupal.storage.api._
+import scrupal.utils.ScrupalComponent
 
-/** A Schema type for the Memory storage system */
-case class FilesSchema private[files] (store : FilesStore, name : String, design : SchemaDesign) extends Schema {
-  require(store.isInstanceOf[FilesStore])
+import scala.concurrent.{Future, ExecutionContext}
 
-  private val colls = new mutable.HashMap[String, FilesCollection[_]]
+/** A Schema Of Collections stored in files
+  *
+  * @param store The FileStore in which the schema is located
+  * @param info The Schema information including its design object
+  */
+case class FilesSchema private (
+  store : FilesStore,
+  info : FilesSchemaInfo
+) extends CommonSchema with FilesInfo[FilesSchemaInfo] {
 
+  final val design : SchemaDesign = info.design
 
-  /** Returns the set of collections that this Storage instance knows about */
-  def collections : Map[String, Collection[_]] = colls.toMap
+  final val name : String = design.name
 
-  /** Find and return a Collection of a specific name */
-  def collectionFor[S <: Storable](name : String) : Option[Collection[S]] = {
-    colls.get(name).asInstanceOf[Option[Collection[S]]]
+  private[files] final val kind : String = "Schema"
+
+  private[files] final val dir : File = new File(store.dir, name)
+
+  private[files] final val fileName : String = FilesStorageInfo.store_info_file_name
+
+  /** FIXME: Find and return a Collection of a specific name */
+  override def collectionFor[S <: Storable](name : String) : Option[Collection[S]] = {
+    super.collectionFor[S](name) orElse {
+      val collDir = new File(dir, name)
+      if (collDir.exists) {
+        val coll = FilesCollection[S](this, name)
+        colls.put(name, coll)
+        Some(coll)
+      } else {
+        None
+      }
+    }
   }
 
-  /** Find collections matching a specific name pattern and return a Map of them */
-  def collectionsFor(namePattern : Regex) : Map[String, Collection[_]] = {
-    colls.filter {
-      case (name : String, coll : Collection[_]) ⇒ namePattern.findFirstIn(name).isDefined
+  def addCollection[S <: Storable](name : String)(implicit ec: ExecutionContext) : Future[Collection[S]] = Future {
+    colls.get(name) match {
+      case Some(coll) ⇒
+        toss(s"Collection $name already exists.")
+      case None ⇒
+        val coll = FilesCollection[S](this, name)
+        colls.put(name, coll)
+        coll
     }
-  }.toMap
-
-  override def addCollection[S <: Storable](name : String) : Collection[S] = {
-    val coll = store.driver.makeCollection(this, name).asInstanceOf[FilesCollection[S]]
-    colls.put(name, coll)
-    coll.asInstanceOf[Collection[S]]
   }
 
   override def close() : Unit = {
-    for ((name, coll) ← colls) { coll.close() }
+    for ((name, coll) ← colls) {
+      coll.close()
+    }
+  }
+
+  def dropCollection[S <: Storable](name: String)(implicit ec: ExecutionContext): Future[WriteResult] = Future {
+    withCollection(name) { coll : Collection[S] ⇒
+      coll.drop
+      Files.delete(infoPath)
+      Files.delete(dir.toPath)
+      WriteResult.success()
+    }
+  }
+
+  private def insertCollection(coll: Collection[_]) = {
+    colls.put(coll.name, coll)
+  }
+}
+
+object FilesSchema extends ScrupalComponent {
+  def apply(store: FilesStore, design: SchemaDesign) : FilesSchema = {
+    require(store.dir.isDirectory)
+    require(design.name.nonEmpty)
+    val schemaDir = new File(store.dir, design.name)
+    if (!(schemaDir.isDirectory && schemaDir.canRead)) {
+      if (!schemaDir.mkdirs)
+        toss(s"Could not create schema directory at ${schemaDir.getAbsolutePath}")
+    }
+    val schemaFile = new File(schemaDir, FilesStorageInfo.schema_info_file_name)
+    val info = FilesSchemaInfo(design)
+    FilesStorageInfo.saveInfo(schemaFile, info, overwrite=false)
+    FilesSchema(store, info)
+  }
+
+  def apply(store: FilesStore, schemaDir: File) : FilesSchema = {
+    require(store.dir.isDirectory)
+    require(schemaDir.isDirectory)
+    val infoFile = new File(schemaDir, FilesStorageInfo.schema_info_file_name)
+    require(infoFile.canRead)
+    val info = FilesStorageInfo.from[FilesSchemaInfo](infoFile)
+    val schema = FilesSchema(store, info)
+    for (d ← schema.dir.listFiles()) {
+      if (d.isDirectory) {
+        val coll = FilesCollection(schema, d)
+        schema.insertCollection(coll)
+      }
+    }
+    schema
   }
 }

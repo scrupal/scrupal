@@ -48,6 +48,21 @@ trait CommonStore extends Store {
 
   def hasSchema(name: String) : Boolean = _schemas.contains(name)
 
+  protected def makeNewSchema(design: SchemaDesign) : Schema
+
+  /** Create a new collection for storing objects */
+  def addSchema(design: SchemaDesign)(implicit ec: ExecutionContext) : Future[Schema] = Future {
+    _schemas.get(design.name) match {
+      case Some(s) ⇒
+        toss(s"Schema ${design.name} already exists.")
+      case None ⇒
+        val schema = makeNewSchema(design)
+        _schemas.put(design.name, schema)
+        design.construct(schema)
+        schema
+    }
+  }
+
   def dropSchema(name : String)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
     _schemas.remove(name) match {
       case Some(schema) ⇒
@@ -66,9 +81,9 @@ trait CommonStore extends Store {
     }
   }
 
-  def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
+  def withCollection[S <: Storable,T](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {
     _schemas.get(schema) match {
-      case Some(s) ⇒ s.withCollection[T, S](collection)(f)
+      case Some(s) ⇒ s.withCollection[S,T](collection)(f)
       case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
     }
   }
