@@ -13,50 +13,39 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.storage.impl
+package scrupal.storage.api
 
-import java.net.URI
-import java.time.Instant
-import java.util.concurrent.ConcurrentHashMap
+import scrupal.utils.ScrupalComponent
 
-import scrupal.storage.api._
-
-import scala.collection.JavaConverters._
-import scala.collection.concurrent
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-trait CommonStorageDriver extends StorageDriver {
-
-  protected val stores : concurrent.Map[URI,Store] = new ConcurrentHashMap[URI,Store]().asScala
-
-  def isDriverFor(uri : URI) : Boolean = {
-    uri.getScheme == scheme && uri.getPath.length > 0
+sealed trait WriteResult {
+  def isSuccess : Boolean;
+  def isFailure : Boolean = !isSuccess
+  def tossOnError : Unit = {
+    if (isFailure)
+      WriteResult.toss(s"Write operation failed: $this")
   }
-
-  def storeExists(uri: URI) : Boolean = {
-    stores.contains(uri)
-  }
-
-  def canOpen(uri : URI) : Boolean = {
-    isDriverFor(uri) && storeExists(uri)
-  }
-
-  override def close() : Unit = {
-    for ((name, s) ← stores)
-      s.close()
-    stores.clear()
-  }
-
-  def exists: Boolean = true
-
-  def created: Instant = Instant.now
-
-  def size: ID = stores.size
-
-  def drop: Future[WriteResult] = {
-    toss("Cannot drop a driver singleton")
-  }
-
 }
 
+case class WriteSuccess() extends WriteResult { val isSuccess = true }
+case class WriteFailure(failure : Throwable) extends WriteResult { val isSuccess = false }
+case class WriteError(error : String) extends WriteResult { val isSuccess = false }
+case class WriteResults(results: Iterable[WriteResult]) extends WriteResult {
+  def isSuccess = {
+    results.isEmpty || results.forall(_.isSuccess)
+  }
+}
 
+object WriteResult extends ScrupalComponent {
+  def failure(x : Throwable) : WriteResult = { WriteFailure(x) }
+  def error(x : String) : WriteResult = { WriteError(x) }
+  def success() : WriteResult = WriteSuccess()
+  def coalesce(results: Iterable[Future[WriteResult]]) : Future[WriteResult] = {
+    val invert = Future sequence results
+    invert map { seq ⇒
+      WriteResults(seq filter { _.isSuccess })
+    }
+  }
+}

@@ -25,7 +25,7 @@ package scrupal
   * storage mechanisms. The model imposes few constraints on the underlying storage system. It makes some assumptions
   * about the structure of the information that must be maintained by the concrete implementation. Those assumptions
   * are:
-  * - A given type of storage system is represented by the [[scrupal.storage.api.StorageContext]] class
+  * - A given type of storage system is represented by the [[scrupal.storage.api.StoreContext]] class
   * - A StorageContext allows [[scrupal.storage.api.Store]] objects to be opened and closed.
   * - The [[scrupal.storage.api.Store]] objects contain named [[scrupal.storage.api.Schema]] instances.
   * - The [[scrupal.storage.api.Schema]] objects contain named [[scrupal.storage.api.Collection]] instances.

@@ -1,23 +1,32 @@
 package scrupal.storage.mem
 
-import java.util.concurrent.atomic.AtomicLong
+import java.time.Instant
 
 import scrupal.storage.api._
-import scrupal.storage.impl.{IdentityFormat, IdentityFormatter}
+import scrupal.storage.impl.{CommonCollection, IdentityFormat, IdentityFormatter}
 
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
-case class MemoryCollection[S <: Storable] private[mem] (schema : Schema, name : String) extends Collection[S] {
+case class MemoryCollection[S <: Storable] private[mem] (schema : MemorySchema, name : String) extends CommonCollection[S] {
 
   type SF = IdentityFormat[S]
   implicit val formatter = new IdentityFormatter[S]
 
-  require(schema.isInstanceOf[MemorySchema])
+  private val content = mutable.HashMap.empty[Long, S]
 
-  def count : Long = content.size
+  def created: Instant = Instant.now()
+
+  def drop: Future[WriteResult] = Future {
+    content.clear()
+    WriteResult.success()
+  }
+
+  def size: Long = content.size
+
+  override def close() : Unit = { content.clear(); super.close() }
 
   override def update(obj : S, upd : Modification[S]) : Future[WriteResult] = update(obj.primaryId, upd)
 
@@ -43,6 +52,7 @@ case class MemoryCollection[S <: Storable] private[mem] (schema : Schema, name :
           WriteResult.error(s"Update not permitted during insert of #${obj.primaryId} in collection '$name")
         }
       case None ⇒
+        ensureUniquePrimaryId(obj)
         content.put(obj.primaryId, obj)
         WriteResult.success()
     }
@@ -57,7 +67,8 @@ case class MemoryCollection[S <: Storable] private[mem] (schema : Schema, name :
   }
 
   override def delete(obj : S) : Future[WriteResult] = {
-    delete(obj.primaryId)
+    val id = super.erasePrimaryId(obj)
+    delete(id)
   }
 
   override def delete(id : ID) : Future[WriteResult] = Future {
@@ -103,14 +114,5 @@ case class MemoryCollection[S <: Storable] private[mem] (schema : Schema, name :
     // TODO: Implement MemoryCollection.updateWhere
     Seq.empty[WriteResult]
   }
-
-  override def close() : Unit = { content.empty; pids.set(0) }
-
-  private def ensurePrimaryId(s : S) : Unit = {
-    if (s.primaryId == Storable.undefined_primary_id)
-      s.primaryId = pids.getAndIncrement()
-  }
-  private val pids = new AtomicLong(0)
-  private val content = mutable.HashMap.empty[Long, S]
 
 }

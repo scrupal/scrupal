@@ -15,17 +15,32 @@
 
 package scrupal.storage.impl
 
+import java.util.concurrent.ConcurrentHashMap
+
+import scala.collection.concurrent
+import scala.collection.convert.decorateAsScala._
+
 import scrupal.storage.api._
 
-import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
-abstract class CommonStore extends Store {
+trait CommonStore extends Store {
 
-  protected val _schemas = new mutable.HashMap[String, Schema]
+  protected val _schemas : concurrent.Map[String,Schema] = new ConcurrentHashMap[String,Schema]().asScala
 
   override def close : Unit = {
-    for ((name, s) ← _schemas) { s.close() }
+    for ((name, s) ← _schemas) {
+      s.close()
+    }
     _schemas.clear()
+  }
+
+  def size : Long = _schemas.size
+
+  def drop : Future[WriteResult] = Future {
+    _schemas.clear()
+    WriteResult.success()
   }
 
   /** Returns the mapping of names to Schema instances for this kind of storage */
@@ -33,10 +48,13 @@ abstract class CommonStore extends Store {
 
   def hasSchema(name: String) : Boolean = _schemas.contains(name)
 
-  def addSchema(design: SchemaDesign) : Schema = {
-    val result = driver.makeSchema(this, design.name, design)
-    _schemas.put(design.name, result)
-    result
+  def dropSchema(name : String)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
+    _schemas.remove(name) match {
+      case Some(schema) ⇒
+        WriteResult.success()
+      case None ⇒
+        WriteResult.error(s"No schema named $name to remove")
+    }
   }
 
   def withSchema[T](schema : String)(f : Schema ⇒ T) : T = {

@@ -15,48 +15,59 @@
 
 package scrupal.storage.impl
 
-import java.net.URI
-import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 import scrupal.storage.api._
+import scrupal.utils.Validation.Results
 
-import scala.collection.JavaConverters._
 import scala.collection.concurrent
+import scala.collection.convert.decorateAsScala._
 import scala.concurrent.Future
+import scala.util.matching.Regex
 
-trait CommonStorageDriver extends StorageDriver {
+trait CommonSchema extends Schema {
 
-  protected val stores : concurrent.Map[URI,Store] = new ConcurrentHashMap[URI,Store]().asScala
+  protected val colls : concurrent.Map[String,Collection[_]] = new ConcurrentHashMap[String,Collection[_]]().asScala
 
-  def isDriverFor(uri : URI) : Boolean = {
-    uri.getScheme == scheme && uri.getPath.length > 0
+  override def toString = { s"Schema '$name' in ${store.uri}" }
+
+  def drop: Future[WriteResult] = {
+    WriteResult.coalesce { for ( (name, coll) <- colls) yield { coll.drop } }
   }
 
-  def storeExists(uri: URI) : Boolean = {
-    stores.contains(uri)
+  def size: ID = colls.size
+
+  def validate : Results[Schema] = { design.validate(this) }
+
+  /** Returns the set of collections that this Storage instance knows about */
+  def collections : Map[String, Collection[_]] = colls.toMap
+
+  /** Find and return a Collection of a specific name */
+  def collectionFor[S <: Storable](name : String) : Option[Collection[S]] = {
+    colls.get(name).asInstanceOf[Option[Collection[S]]]
   }
 
-  def canOpen(uri : URI) : Boolean = {
-    isDriverFor(uri) && storeExists(uri)
+  /** Get the set of collection names */
+  def collectionNames : Iterable[String] = { colls.keys }
+
+  /** Find collections matching a specific name pattern and return a Map of them */
+  def collectionsFor(namePattern : Regex) : Map[String, Collection[_]] = {
+    colls.filter {
+      case (name : String, coll : Collection[_]) ⇒ namePattern.findFirstIn(name).isDefined
+    }
+  }.toMap
+
+
+  def withCollection[T, S <: Storable](name : String)(f : Collection[S] ⇒ T) : T = {
+    colls.get(name) match {
+      case Some(coll) ⇒ f(coll.asInstanceOf[Collection[S]])
+      case None ⇒ toss(s"Collection '$name' in schema '${this.name} does not exist")
+    }
   }
 
   override def close() : Unit = {
-    for ((name, s) ← stores)
-      s.close()
-    stores.clear()
+    for ((name, coll) ← colls) {
+      coll.close()
+    }
   }
-
-  def exists: Boolean = true
-
-  def created: Instant = Instant.now
-
-  def size: ID = stores.size
-
-  def drop: Future[WriteResult] = {
-    toss("Cannot drop a driver singleton")
-  }
-
 }
-
-

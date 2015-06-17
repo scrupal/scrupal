@@ -16,39 +16,23 @@
 
 package scrupal.storage.mem
 
-import scala.collection.mutable
-import scala.util.matching.Regex
+import java.time.Instant
+
+import scrupal.storage.impl.CommonSchema
 
 import scrupal.storage.api._
 
-/** A Schema type for the Memory storage system */
-case class MemorySchema private[mem] (store : Store, name : String, design : SchemaDesign) extends Schema {
-  require(store.isInstanceOf[MemoryStore])
+import scala.concurrent.{ExecutionContext, Future}
 
-  private val colls = new mutable.HashMap[String, MemoryCollection[_]]
+/** A Schema of Collections Stored In Memory */
+case class MemorySchema private[mem] (store : MemoryStore, name : String, design : SchemaDesign) extends CommonSchema {
+  val created = Instant.now()
 
-  /** Returns the set of collections that this Storage instance knows about */
-  def collections : Map[String, Collection[_]] = colls.toMap
+  def dropCollection[S <: Storable](name: String)(implicit ec: ExecutionContext): Future[WriteResult] = ???
 
-  /** Find and return a Collection of a specific name */
-  def collectionFor[S <: Storable](name : String) : Option[Collection[S]] = {
-    colls.get(name).asInstanceOf[Option[Collection[S]]]
-  }
-
-  /** Find collections matching a specific name pattern and return a Map of them */
-  def collectionsFor(namePattern : Regex) : Map[String, Collection[_]] = {
-    colls.filter {
-      case (name : String, coll : Collection[_]) ⇒ namePattern.findFirstIn(name).isDefined
-    }
-  }.toMap
-
-  override def addCollection[S <: Storable](name : String) : Collection[S] = {
-    val coll = store.driver.makeCollection(this, name).asInstanceOf[MemoryCollection[S]]
+  def addCollection[S <: Storable](name: String)(implicit ec: ExecutionContext): Future[Collection[S]] = Future {
+    val coll = MemoryCollection[S](this, name)
     colls.put(name, coll)
-    coll.asInstanceOf[Collection[S]]
-  }
-
-  override def close() : Unit = {
-    for ((name, coll) ← colls) { coll.close() }
+    coll
   }
 }

@@ -15,48 +15,41 @@
 
 package scrupal.storage.impl
 
-import java.net.URI
-import java.time.Instant
-import java.util.concurrent.ConcurrentHashMap
+import scala.collection.mutable
 
 import scrupal.storage.api._
 
-import scala.collection.JavaConverters._
-import scala.collection.concurrent
-import scala.concurrent.Future
 
-trait CommonStorageDriver extends StorageDriver {
+trait CommonCollection[S <: Storable] extends Collection[S] {
 
-  protected val stores : concurrent.Map[URI,Store] = new ConcurrentHashMap[URI,Store]().asScala
-
-  def isDriverFor(uri : URI) : Boolean = {
-    uri.getScheme == scheme && uri.getPath.length > 0
+  protected def ensureUniquePrimaryId(s : S) : Unit = {
+    pidHoles.synchronized {
+      if (s.primaryId == Storable.undefined_primary_id || s.primaryId > pidHWM) {
+        s.primaryId = pidHoles.headOption match {
+          case Some(l) ⇒
+            pidHoles.remove(l)
+            l
+          case None ⇒
+            pidHWM += 1
+            pidHWM
+        }
+      } else if (pidHoles.contains(s.primaryId)) {
+        pidHoles.remove(s.primaryId)
+      }
+    }
   }
 
-  def storeExists(uri: URI) : Boolean = {
-    stores.contains(uri)
+  protected def erasePrimaryId(s: S) : ID = {
+    val pid = s.getPrimaryId()
+    pidHoles.synchronized { pidHoles.add( pid ) }
+    s.primaryId = Storable.undefined_primary_id
+    pid
   }
 
-  def canOpen(uri : URI) : Boolean = {
-    isDriverFor(uri) && storeExists(uri)
-  }
+  private var pidHWM : Long = 0
 
-  override def close() : Unit = {
-    for ((name, s) ← stores)
-      s.close()
-    stores.clear()
-  }
+  private val pidHoles = mutable.HashSet.empty[ID]
 
-  def exists: Boolean = true
-
-  def created: Instant = Instant.now
-
-  def size: ID = stores.size
-
-  def drop: Future[WriteResult] = {
-    toss("Cannot drop a driver singleton")
-  }
+  def close() : Unit = { pidHWM = 0; pidHoles.clear()  }
 
 }
-
-

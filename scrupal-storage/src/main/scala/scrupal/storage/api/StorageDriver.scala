@@ -19,34 +19,29 @@ package scrupal.storage.api
 
 import java.net.URI
 
-import com.typesafe.config.Config
-import play.api.Configuration
-import scrupal.storage.impl.StorageConfigHelper
-import scrupal.utils.{ ScrupalComponent, Registry, Registrable }
+import scrupal.utils.{Registry, Registrable }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Future,ExecutionContext}
 
-trait StorageDriver extends AutoCloseable with Registrable[StorageDriver] with ScrupalComponent {
+trait StorageDriver extends StorageLayer with Registrable[StorageDriver] {
+  def registry = StorageDriver
+
   def name : String
+
   def scheme : String
 
-  def isDriverFor(uri : URI) : Boolean = {
-    uri.getScheme == scheme && uri.getPath.length > 0
-  }
+  def isDriverFor(uri : URI) : Boolean
 
-  def canOpen(uri : URI) : Boolean = {
-    isDriverFor(uri)
-  }
+  def storeExists(uri: URI) : Boolean
 
-  def open(uri : URI, create : Boolean = false) : Option[Store]
-  def withStore[T](uri : URI, create : Boolean = false)(f : (Store) ⇒ T) : T
-  def makeContext(id : Symbol, uri: URI, create: Boolean = false) : StorageContext
-  def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S]
-  def makeStore(uri : URI) : Store
-  def makeSchema(store : Store, name : String, design : SchemaDesign) : Schema
-  def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S]
-  def registry = StorageDriver
+  def canOpen(uri : URI) : Boolean
+
+  def open(uri : URI, create : Boolean = false)(implicit ec: ExecutionContext) : Future[Store]
+
+  def addStore(uri: URI)(implicit ec: ExecutionContext) : Future[Store]
+
   def isOpen : Boolean = true
+
   def closeF(implicit ec: ExecutionContext) = Future {
     if (isOpen)
       close()
@@ -58,25 +53,10 @@ object StorageDriver extends Registry[StorageDriver] {
   override def registryName = "StorageDrivers"
   override def registrantsName = "driver"
 
-  def apply(config: Config) : Option[StorageDriver] = {
-    apply(Configuration(config))
-  }
-
-  def apply(config : Configuration) : Option[StorageDriver] = {
-    apply(config, "scrupal")
-  }
-
-  def apply(configuration : Configuration, name : String) : Option[StorageDriver] = {
-    val config = StorageConfigHelper(configuration).getStorageConfig
-    config.getString(name + ".uri") match {
-      case Some(str) ⇒
-        apply(new URI(str))
-      case None ⇒
-        None
+  def apply(uri : URI)(implicit ec: ExecutionContext) : Future[StorageDriver] = Future {
+    _registry.values.find { driver : StorageDriver ⇒ driver.isDriverFor(uri) } match {
+      case Some(driver) ⇒ driver
+      case None ⇒ toss(s"No storage driver found for $uri")
     }
-  }
-
-  def apply(uri : URI) : Option[StorageDriver] = {
-    _registry.values.find { driver : StorageDriver ⇒ driver.isDriverFor(uri) }
   }
 }

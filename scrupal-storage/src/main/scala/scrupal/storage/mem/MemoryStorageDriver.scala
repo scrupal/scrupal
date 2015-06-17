@@ -5,6 +5,8 @@ import java.net.URI
 import scrupal.storage.api._
 import scrupal.storage.impl.CommonStorageDriver
 
+import scala.concurrent.{Future, ExecutionContext}
+
 /** Title Of Thing.
   *
   * Description of thing
@@ -19,8 +21,37 @@ object MemoryStorageDriver extends CommonStorageDriver {
     super.isDriverFor(uri) && uri.getAuthority == authority && uri.getPort == -1
   }
 
+  def open(uri : URI, create : Boolean = false)(implicit ec: ExecutionContext) : Future[Store] = Future {
+    if (!isDriverFor(uri))
+      toss(s"Wrong URI type for MemoryStorageDriver. Expected '$scheme' scheme but got: $uri")
+    stores.get(uri) match {
+      case Some(store) ⇒
+        store
+      case None ⇒
+        if (!create)
+          toss(s"Store at $uri does not exist and create was not requested")
+        else {
+          val result = MemoryStore(uri)
+          stores.put(uri, result)
+          result
+        }
+    }
+  }
+
+  def addStore(uri: URI)(implicit ec: ExecutionContext): Future[Store] = Future {
+    stores.get(uri) match {
+      case Some(store) ⇒
+        toss("Store at $uri already exists")
+      case None ⇒
+        val result = MemoryStore(uri)
+        stores.put(uri, result)
+        result
+    }
+  }
+
+
   def makeStore(uri: URI) : Store = {
-    MemoryStore(this, uri)
+    MemoryStore(uri)
   }
 
   def makeReference[S <: Storable](coll : Collection[S], id : ID) : Reference[S] = {
@@ -28,20 +59,14 @@ object MemoryStorageDriver extends CommonStorageDriver {
     StorableReference[S](coll, id)
   }
 
-  def makeContext(id : Symbol, uri: URI, create: Boolean = false) : StorageContext = {
-    withStore(uri, create) { store: Store ⇒
-      MemoryStorageContext(id, uri, store.asInstanceOf[MemoryStore])
-    }
-  }
-
   def makeSchema(store : Store, name : String, design : SchemaDesign) = {
     require(store.isInstanceOf[MemoryStore])
-    MemorySchema(store, name, design)
+    MemorySchema(store.asInstanceOf[MemoryStore], name, design)
   }
 
   def makeCollection[S <: Storable](schema : Schema, name : String) : Collection[S] = {
     require(schema.isInstanceOf[MemorySchema])
-    MemoryCollection[S](schema, name)
+    MemoryCollection[S](schema.asInstanceOf[MemorySchema], name)
   }
 
 }

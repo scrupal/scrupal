@@ -25,11 +25,11 @@ import scala.concurrent.Future
 
 /** An abstract trait for a reference to something that is fetchable back to its original type */
 trait Reference[S <: Storable] {
-  def fetch(implicit sc: StorageContext) : Future[Option[S]]
+  def fetch(implicit sc: StoreContext) : Future[Option[S]]
 }
 
 class FastReference[S <: Storable](collection : Collection[S], id : ID) extends Reference[S] {
-  def fetch(implicit sc: StorageContext) : Future[Option[S]] = {
+  def fetch(implicit sc: StoreContext) : Future[Option[S]] = {
     collection.asInstanceOf[Collection[S]].fetch(id)
   }
 }
@@ -44,7 +44,7 @@ object FastReference extends ScrupalComponent {
     new FastReference(collection, obj.getPrimaryId())
   }
 
-  def apply[S <: Storable](schema : String, collection : String, obj : S)(implicit sc: StorageContext) : Reference[S]= {
+  def apply[S <: Storable](schema : String, collection : String, obj : S)(implicit sc: StoreContext) : Reference[S]= {
     sc.withCollection(schema, collection) { coll : Collection[_] ⇒
       new FastReference(coll.asInstanceOf[Collection[S]], obj.getPrimaryId())
     }
@@ -57,7 +57,7 @@ case class StorableReference[S <: Storable](
   collectionName: String,
   id : ID
 ) extends Reference[S] with Storable {
-  def fetch(implicit sc: StorageContext) : Future[Option[S]] = {
+  def fetch(implicit sc: StoreContext) : Future[Option[S]] = {
     sc.withCollection(schemaName, collectionName) { coll : Collection[_] ⇒
       coll.asInstanceOf[Collection[S]].fetch(id)
     }

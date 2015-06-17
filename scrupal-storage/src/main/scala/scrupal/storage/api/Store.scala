@@ -19,13 +19,16 @@ package scrupal.storage.api
 
 import java.net.URI
 
-import scrupal.utils.ScrupalComponent
+import scala.concurrent.{ExecutionContext, Future}
 
-trait Store extends AutoCloseable with ScrupalComponent {
+trait Store extends StorageLayer  {
   def driver : StorageDriver
+
   def uri : URI
 
-  def exists : Boolean
+  def name = uri.getPath
+
+  override def toString = s"Store at $uri"
 
   /** Returns the mapping of names to Schema instances for this kind of storage */
   def schemas : Map[String, Schema]
@@ -33,17 +36,11 @@ trait Store extends AutoCloseable with ScrupalComponent {
   def hasSchema(name: String) : Boolean
 
   /** Create a new collection for storing objects */
-  def addSchema(design : SchemaDesign) : Schema
+  def addSchema(design : SchemaDesign)(implicit ec: ExecutionContext) : Future[Schema]
+
+  def dropSchema(name: String)(implicit ec: ExecutionContext) : Future[WriteResult]
 
   def withSchema[T](schema : String)(f : (Schema) ⇒ T) : T
 
   def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T
 }
-
-object Store {
-
-  def open(uri : URI) : Option[Store] = {
-    StorageDriver.apply(uri) flatMap { driver ⇒ driver.open(uri) }
-  }
-}
-

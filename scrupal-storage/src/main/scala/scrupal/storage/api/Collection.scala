@@ -17,17 +17,14 @@
 
 package scrupal.storage.api
 
-import scrupal.utils.ScrupalComponent
-
 import scala.concurrent.Future
 
-trait Collection[S <: Storable] extends AutoCloseable with ScrupalComponent {
+trait Collection[S <: Storable] extends StorageLayer {
   type SF <: StorageFormat
   implicit val formatter : StorageFormatter[SF,S]
   def name : String
   def schema : Schema
-  override def toString = { s"Collection $name in $schema" }
-  def count : Long
+  override def toString = { s"Collection $name in ${schema.name}" }
   def indexOf(field : Seq[Indexable]) : Option[Index]
   def addIndex(index : Index) : Future[WriteResult]
   def removeIndex(index : Index) : Future[WriteResult]
@@ -42,17 +39,6 @@ trait Collection[S <: Storable] extends AutoCloseable with ScrupalComponent {
   def delete(obj : S) : Future[WriteResult]
   def delete(id : ID) : Future[WriteResult]
   def delete(ids : Seq[ID]) : Future[Seq[WriteResult]]
-}
-
-sealed trait WriteResult { def isSuccess : Boolean; def isFailure : Boolean = !isSuccess }
-case class WriteSuccess() extends WriteResult { val isSuccess = true }
-case class WriteFailure(failure : Throwable) extends WriteResult { val isSuccess = false }
-case class WriteError(error : String) extends WriteResult { val isSuccess = false }
-
-object WriteResult {
-  def failure(x : Throwable) : WriteResult = { WriteFailure(x) }
-  def error(x : String) : WriteResult = { WriteError(x) }
-  def success() : WriteResult = WriteSuccess()
 }
 
 trait IndexKind

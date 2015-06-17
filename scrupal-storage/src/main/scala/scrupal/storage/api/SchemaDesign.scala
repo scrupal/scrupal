@@ -18,6 +18,9 @@ package scrupal.storage.api
 
 import scrupal.utils.Validation._
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 /** A Schema Design
   *
   * This provides a pattern for a schema which is simply a group of related Collections, their indices,
@@ -46,21 +49,23 @@ abstract class SchemaDesign extends Validator[Schema] {
     None
   }
 
-  def construct(schema : Schema) : Results[Schema] = {
+  def construct(schema : Schema) : Future[Results[Schema]] = {
     val collNames = schema.collectionNames.toSeq
-    for (name ← requiredNames) {
-      val collection = schema.collectionFor(name) match {
-        case Some(coll) ⇒ coll
-        case None ⇒ schema.store.driver.makeCollection(schema, name)
+    val futures = for (name ← requiredNames) yield {
+      schema.collectionFor(name) match {
+        case Some(coll) ⇒ Future.successful(coll)
+        case None ⇒ schema.addCollection(name)
       }
+    } /* TODO: Support index creation from schema design
+      map { collection ⇒
       for (index ← indicesFor(name)) {
-        collection.indexOf(index.indexables) match {
+        collection.indexOf(index.indexables) map {
           case Some(idx) ⇒ // nothing to do
           case None ⇒ collection.addIndex(index)
         }
       }
-    }
-    validate(schema)
+    }*/
+    Future.sequence(futures).map { fs ⇒ validate(schema) }
   }
 
   final def validate(schema : Schema) : Results[Schema] = {

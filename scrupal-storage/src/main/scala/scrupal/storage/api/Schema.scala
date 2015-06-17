@@ -16,27 +16,27 @@
 
 package scrupal.storage.api
 
-import scrupal.utils.Validation.{ TypedLocation, Results }
-import scrupal.utils._
+import scrupal.utils.Validation.Results
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.matching.Regex
 
 /** A group of related collections that are treated as an entity */
-trait Schema extends AutoCloseable with ScrupalComponent {
-  def name : String
+trait Schema extends StorageLayer {
 
   /** The storage entity that this schema lives in */
   def store : Store
 
   def design : SchemaDesign
 
-  override def toString = { s"Schema '$name' in ${store.uri}" }
+  override def toString = { s"Schema $name in $store" }
 
   /** The set of collections that this schema provides */
   def collections : Map[String, Collection[_]]
 
-  def addCollection[S <: Storable](name : String) : Collection[S]
+  def addCollection[S <: Storable](name : String)(implicit ec: ExecutionContext) : Future[Collection[S]]
+
+  def dropCollection[S <:Storable](name : String)(implicit ec: ExecutionContext) : Future[WriteResult]
 
   /** Find and return a Collection of a specific name */
   def collectionFor[S <: Storable](name : String) : Option[Collection[S]]
@@ -45,20 +45,14 @@ trait Schema extends AutoCloseable with ScrupalComponent {
   def collectionsFor(namePattern : Regex) : Map[String, Collection[_]]
 
   /** Get the set of collection names */
-  def collectionNames : Iterable[String] = { collections.keys }
+  def collectionNames : Iterable[String]
 
-  def withCollection[T, S <: Storable](name : String)(f : Collection[S] ⇒ T) : T = {
-    collections.get(name) match {
-      case Some(coll) ⇒ f(coll.asInstanceOf[Collection[S]])
-      case None ⇒ toss(s"Collection '$name' in schema '${this.name} does not exist")
-    }
-  }
+  def withCollection[T, S <: Storable](name : String)(f : Collection[S] ⇒ T) : T
 
-  final def validate : Results[Schema] = { design.validate(this) }
 
-  def construct : Unit = {
-    // Construct this schemas contents
-    design.construct(this).tossOnError
+  def construct : Future[Results[Schema]] = {
+    // Construct this schema's contents
+    design.construct(this)
   }
 
 }
