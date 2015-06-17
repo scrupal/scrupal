@@ -21,7 +21,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ HttpHeader, HttpProtocols, Uri, HttpMethod }
 import akka.http.scaladsl.server.RequestContext
 import play.api.Configuration
-import scrupal.storage.api.{Schema, StorageContext}
+import scrupal.storage.api.{Schema, StoreContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -59,9 +59,9 @@ trait Context {
 
   def withConfiguration[T](f : (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
 
-  def withStorageContext[T](f : (StorageContext) ⇒ T) : T = { scrupal.withStorageContext(f) }
+  def withStorageContext[T](f : (StoreContext) ⇒ T) : T = { scrupal.withStorageContext(f) }
 
-  def withSchema[T](name : String)(f : (StorageContext, Schema) ⇒ T) : T = {
+  def withSchema[T](name : String)(f : (StoreContext, Schema) ⇒ T) : T = {
     withStorageContext { ctxt ⇒
       ctxt.withSchema(name) { schema ⇒ f(ctxt, schema) }
     }

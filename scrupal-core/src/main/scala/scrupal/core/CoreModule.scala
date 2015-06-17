@@ -22,7 +22,7 @@ import play.api.libs.json.{JsString, JsObject}
 import scrupal.api._
 import scrupal.core.entities.EchoEntity
 import scrupal.api.types._
-import scrupal.storage.api.StorageContext
+import scrupal.storage.api.SchemaDesign
 import scrupal.utils.{ OSSLicense, Version }
 
 /** Scrupal's Core Module.
@@ -125,7 +125,7 @@ object CoreModule extends Module {
 
   def handlers = Seq()
 
-  override def schemas(implicit dbc : StorageContext) : Seq[CoreSchemaDesign] = Seq(new CoreSchemaDesign(dbc, "Scrupal"))
+  override def schemas : Seq[SchemaDesign] = Seq(CoreSchemaDesign())
 
   override protected[scrupal] def bootstrap(config : Configuration) = {
     super.bootstrap(config)

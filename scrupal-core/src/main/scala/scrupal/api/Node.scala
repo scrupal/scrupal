@@ -20,7 +20,7 @@ import akka.http.scaladsl.model.MediaType
 import scala.concurrent.Future
 import scala.language.existentials
 
-import scrupal.storage.api.{StorageContext, Storable, Reference}
+import scrupal.storage.api.{StorableReference, StoreContext, Storable, Reference}
 import scrupal.utils.RegistryReference
 
 /** A function that generates content
@@ -44,8 +44,8 @@ trait Generator extends ((Context) ⇒ Future[Result[_]])
 trait Node extends Storable
   with Describable with Modifiable with Generator with Bootstrappable {
   def mediaType : MediaType
-  def reference(schema: String, collection : String)(implicit sc : StorageContext) : Reference[Node] = {
-    Reference(schema, collection, this)
+  def reference(schema: String, collection : String)(implicit sc : StoreContext) : Reference[Node] = {
+    StorableReference(sc.store, schema, collection, this)
   }
 }
 

@@ -15,14 +15,14 @@
 
 package scrupal.api
 
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.{ ActorSystem }
 import akka.util.Timeout
 
 import java.util.concurrent.TimeUnit
 
 import play.api.Configuration
 
-import scrupal.storage.api.StorageContext
+import scrupal.storage.api.StoreContext
 import scrupal.utils._
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -48,7 +48,7 @@ trait Scrupal extends ScrupalComponent with AutoCloseable with Enablement[Scrupa
 
   implicit val _executionContext : ExecutionContext
 
-  val _storageContext : StorageContext
+  val _storageContext : StoreContext
 
   val assetsLocator : AssetsLocator
 
@@ -56,7 +56,7 @@ trait Scrupal extends ScrupalComponent with AutoCloseable with Enablement[Scrupa
     f(_configuration)
   }
 
-  def withStorageContext[T](f : StorageContext ⇒ T) : T = {
+  def withStorageContext[T](f : StoreContext ⇒ T) : T = {
     f(_storageContext)
   }
 
@@ -91,7 +91,7 @@ trait Scrupal extends ScrupalComponent with AutoCloseable with Enablement[Scrupa
     * Resources managed by plugins, such as database connections, are likely not available at this point.
     *
     */
-  def open() : (Configuration, StorageContext)
+  def open() : (Configuration, StoreContext)
 
   def close() : Unit
 
@@ -102,7 +102,7 @@ trait Scrupal extends ScrupalComponent with AutoCloseable with Enablement[Scrupa
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  protected def load(config : Configuration, context : StorageContext) : Future[Map[String, Site]]
+  protected def load(config : Configuration, context : StoreContext) : Future[Map[String, Site]]
 
   /** Handle An Action
     * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to

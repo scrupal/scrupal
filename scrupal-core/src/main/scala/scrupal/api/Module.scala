@@ -18,7 +18,7 @@ package scrupal.api
 import java.net.URL
 
 import play.api.Configuration
-import scrupal.storage.api.{Store, SchemaDesign, StorageContext}
+import scrupal.storage.api.{Store, SchemaDesign, StoreContext}
 
 import scala.collection.immutable.HashMap
 import scala.concurrent.ExecutionContext
@@ -101,7 +101,7 @@ trait Module
     * Modules may need to have their own special database tables. This is where a module tells Scrupal about those
     * schemas.
     */
-  def schemas(implicit dbc : StorageContext) : Seq[SchemaDesign] = Seq()
+  def schemas : Seq[SchemaDesign] = Seq()
 
   /** Determine compatibility between `this` [[scrupal.api.Module]] and `that`.
     * This module is compatible with `that` if either `that` does not depend on `this` or the version `that` requires
@@ -149,7 +149,7 @@ object Module extends Registry[Module] {
   val registryName = "Modules"
   val registrantsName = "module"
 
-  private[scrupal] def installSchemas(implicit context : StorageContext, ec : ExecutionContext) : Unit = {
+  private[scrupal] def installSchemas(implicit context : StoreContext, ec : ExecutionContext) : Unit = {
     // For each module ...
     values foreach { mod : Module ⇒
       // In a database session ...

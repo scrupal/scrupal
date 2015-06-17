@@ -15,20 +15,18 @@
 
 package scrupal.core.impl
 
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.scaladsl.server.RequestContext
 import akka.pattern.ask
-import akka.util.Timeout
 import com.typesafe.config.{ ConfigRenderOptions, ConfigValue }
 import play.api.Configuration
 import scrupal.api._
 import scrupal.core.CoreModule
 import scrupal.core.apps.AdminApp
 import scrupal.core.sites.WelcomeSite
-import scrupal.storage.api.{Schema, Storage, StorageContext}
+import scrupal.storage.api.{Schema, Storage, StoreContext}
 import scrupal.utils._
 
 import scala.collection.immutable.TreeMap
@@ -41,7 +39,7 @@ case class Scrupal(
   config : Option[Configuration] = None,
   ec : Option[ExecutionContext] = None,
   disp : Option[ActorRef] = None,
-  dbc : Option[StorageContext] = None,
+  dbc : Option[StoreContext] = None,
   actSys : Option[ActorSystem] = None)
   extends scrupal.api.Scrupal with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
 
@@ -62,7 +60,7 @@ case class Scrupal(
 
   lazy val _dispatcher = disp.getOrElse(ActionProcessor.makeSingletonRef(_actorSystem))
 
-  val _storageContext = new AtomicReference[StorageContext](dbc.orNull)
+  val _storageContext = new AtomicReference[StoreContext](dbc.orNull)
 
   val assetsLocator = new ConfiguredAssetsLocator(_configuration)
 
@@ -95,32 +93,34 @@ case class Scrupal(
     val config = onLoadConfig(ConfigHelpers.default)
 
     // Get the database started up
-    Storage.startup()
+    //Storage.startup()
 
-    val sc = StorageContext.fromConfiguration(Symbol(name + "-DB"), Some(config))
-    _storageContext.set(sc)
+    val future = Storage.fromConfiguration(Symbol(name + "-DB"), Some(config)) map { sc ⇒
+      _storageContext.set(sc)
 
-    // TODO: scan classpath for additional modules
-    val configured_modules = Seq.empty[String]
+      // TODO: scan classpath for additional modules
+      val configured_modules = Seq.empty[String]
 
-    // Now we go through the configured modules and bootstrap them
-    for (class_name ← configured_modules) {
-      Scrupal.findModuleOnClasspath(class_name) match {
-        case Some(module) ⇒ module.bootstrap(config)
-        case None ⇒ log.warn("Could not locate module with class name: " + class_name)
+      // Now we go through the configured modules and bootstrap them
+      for (class_name ← configured_modules) {
+        Scrupal.findModuleOnClasspath(class_name) match {
+          case Some(module) ⇒ module.bootstrap(config)
+          case None ⇒ log.warn("Could not locate module with class name: " + class_name)
+        }
       }
+
+      // Load the configuration and wait at most 10 seconds for it
+      val load_result = Await.result(load(config, _storageContext.get), 10.seconds)
+
+      /* TODO: Implement this so it doesn't thwart startup and test failures
+      if (load_result.isEmpty)
+        toss("Refusing to start because of load errors. Check logs for details.")
+      else {
+        log.info("Loaded Sites:\n" + load_result.map { case(x,y) ⇒ s"$x:${y.host}"})
+      }*/
+      config -> sc
     }
-
-    // Load the configuration and wait at most 10 seconds for it
-    val load_result = Await.result(load(config, sc), 10.seconds)
-    /* TODO: Implement this so it doesn't thwart startup and test failures
-    if (load_result.isEmpty)
-      toss("Refusing to start because of load errors. Check logs for details.")
-    else {
-      log.info("Loaded Sites:\n" + load_result.map { case(x,y) ⇒ s"$x:${y.host}"})
-    }*/
-
-    config -> sc
+    Await.result(future, 10.seconds)
   }
 
   def close() = {
@@ -150,7 +150,7 @@ case class Scrupal(
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  protected def load(config: Configuration, context: StorageContext): Future[Map[String, Site]] = {
+  protected def load(config: Configuration, context: StoreContext): Future[Map[String, Site]] = {
     context.withSchema("core") { schema: Schema ⇒
       try {
         schema.construct
