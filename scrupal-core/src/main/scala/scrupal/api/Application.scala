@@ -17,6 +17,9 @@ package scrupal.api
 
 import akka.http.scaladsl.model.{ HttpMethods, HttpMethod }
 import org.joda.time.DateTime
+import play.api.mvc.{Action, RequestHeader}
+import play.api.routing.Router.Routes
+import play.api.mvc.Results.Ok
 import scrupal.storage.api.Storable
 import scrupal.utils._
 
@@ -46,6 +49,10 @@ abstract class Application(sym : Identifier) extends {
   def entities = forEach[Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e, this) } { e ⇒ e.asInstanceOf[Entity] }
 
   def isChildScope(e : Enablement[_]) : Boolean = entities.contains(e)
+
+  def hasRouteFor(request: RequestHeader) : Boolean = false
+
+  def routeFor(request: RequestHeader) : Routes = ???
 
 }
 

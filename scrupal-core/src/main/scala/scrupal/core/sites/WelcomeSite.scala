@@ -33,7 +33,7 @@ case class WelcomeSite(sym : Identifier) extends Site(sym) {
   val modified : Option[DateTime] = Some(DateTime.now)
   val created : Option[DateTime] = Some(new DateTime(2014, 11, 18, 17, 40))
   override val themeName = "cyborg"
-  def host : String = ".*"
+  def hostnames : String = ".*"
   val siteRoot : Node =
     new HtmlNode(
       "Main index page for Welcome To Scrupal Site",

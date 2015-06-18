@@ -31,7 +31,7 @@ trait DocumentType[ET, MT] extends Type[MT] with MapValidator[String, ET, MT] {
   def allowExtraFields : Boolean = false
   def toMap(mt : MT) : scala.collection.Map[String, ET]
 
-  def validateElement(ref : SelectedLocation, k: String, v : ET) : Results[ET] = {
+  def validateElement(ref : SelectedLocation[String], k: String, v : ET) : Results[ET] = {
     validatorFor(k) match {
       case Some(validator) ⇒
         validator.asInstanceOf[Validator[ET]].validate(ref, v)
@@ -48,9 +48,9 @@ trait DocumentType[ET, MT] extends Type[MT] with MapValidator[String, ET, MT] {
   override def validate(ref : Location, value : MT) : Results[MT] = {
     super.validate(ref, value) match {
       case x: Failure[MT] ⇒ x
-      case r: Success ⇒
+      case r: Success[MT] ⇒
         val elements = toMap(value) // Collect the values only once in case there is a cost for traversing it
-      val missing_results: Iterable[Failure[ET]] = if (!allowMissingFields) {
+        val missing_results: Iterable[Failure[ET]] = if (!allowMissingFields) {
           for (
             fieldName ← fieldNames if !elements.contains(fieldName)
           ) yield {

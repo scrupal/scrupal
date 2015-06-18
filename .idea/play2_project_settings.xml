@@ -167,7 +167,7 @@
         <entry key="scrupal-store-files">
           <value>
             <ProjectSettingsEntry>
-              <option name="sourceDir" value="$PROJECT_DIR$/app" />
+              <option name="confDir" value="$PROJECT_DIR$/app" />
               <option name="templateImports">
                 <list>
                   <option value="models._" />
@@ -230,7 +230,7 @@
         <entry key="scrupal-types">
           <value>
             <ProjectSettingsEntry>
-              <option name="confDir" value="$PROJECT_DIR$/app" />
+              <option name="sourceDir" value="$PROJECT_DIR$/app" />
               <option name="templateImports">
                 <list>
                   <option value="models._" />

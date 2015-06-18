@@ -116,7 +116,7 @@ trait MapableType[KT, ET, ST] extends Type[ST] with MapValidator[KT, ET, ST] {
 
 trait JsObjectType extends MapableType[String,JsValue,JsObject] {
   override def toMap(mt: JsObject): Map[String, JsValue] = mt.value
-  override def validateElement(ref: SelectedLocation, k: String, v: JsValue): Results[JsValue] = {
+  override def validateElement(ref: SelectedLocation[String], k: String, v: JsValue): Results[JsValue] = {
     elemType.validate(ref, v)
   }
 }

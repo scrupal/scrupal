@@ -125,7 +125,6 @@ case class Scrupal(
 
   def close() = {
     withExecutionContext { implicit ec : ExecutionContext ⇒
-      Storage.shutdown
       _actorSystem.shutdown()
     }
   }
@@ -164,9 +163,9 @@ case class Scrupal(
           sitesCollection.fetchAll().map {
             sites ⇒ {
               for (site ← sites) yield {
-                log.debug(s"Loading site '${site.name}' for host ${site.host}, enabled=${site.isEnabled(this)}")
+                log.debug(s"Loading site '${site.name}' for host ${site.hostnames}, enabled=${site.isEnabled(this)}")
                 site.enable(this)
-                site.host → site
+                site.hostnames → site
               }
             }.toMap
           } recover {
@@ -181,7 +180,7 @@ case class Scrupal(
             DataCache.update(this, schema)
             AdminApp.enable(ws)
             CoreModule.enable(AdminApp)
-            Map(ws.host → ws)
+            Map(ws.hostnames → ws)
           } else {
             DataCache.update(this, schema)
             sites

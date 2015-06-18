@@ -25,14 +25,16 @@ import scrupal.utils._
   * Scrupal manages sites.
   * Created by reidspencer on 11/3/14.
   */
-abstract class Site(sym : Identifier) extends { val id : Identifier = sym; val _id : Identifier = sym } with Settingsable with EnablementActionExtractor[Site] with Storable with Registrable[Site]
-  with Nameable with Describable with Modifiable {
+abstract class Site(sym : Identifier) extends { val id : Identifier = sym; val _id : Identifier = sym }
+    with Settingsable with EnablementActionExtractor[Site] with Storable with Registrable[Site]
+    with Nameable with Describable with Modifiable {
+
   val kind = 'Site
   def registry = Site
 
   def requireHttps : Boolean = false // = getBoolean("requireHttps").get
 
-  def host : String // = getString("host").get
+  def hostnames : Regex // = getString("host").get
 
   def themeProvider : String = "bootswatch"
 
@@ -59,30 +61,15 @@ object Site extends Registry[Site] {
   // def kinds : Seq[String] = { variants.kinds }
 
   //  implicit val dtHandler = DateTimeBSONHandler
-  private[this] val _byhost = new AbstractRegistry[String, Site] {
-    def reg(site : Site) = _register(site.host, site)
-    def unreg(site : Site) = _unregister(site.host)
-    def registry = _registry
-  }
-
-  override def register(site : Site) : Unit = {
-    _byhost.reg(site)
-    super.register(site)
-  }
-
-  override def unregister(site : Site) : Unit = {
-    _byhost.unreg(site)
-    super.unregister(site)
-  }
 
   def forHost(hostName : String) : Iterable[Site] = {
     for (
-      (host, site) ← _byhost.registry;
-      regex = new Regex(host) if regex.pattern.matcher(hostName).matches()
+      (id, site) ← _registry if site.hostnames.findFirstMatchIn(hostName).nonEmpty
     ) yield {
       site
     }
   }
+
   /*
   import BSONHandlers._
 

@@ -103,7 +103,7 @@ trait Container extends FormItem {
     value match {
       case x : JsObject ⇒
         val validator = new JsObjectValidator {
-          override def validateElement(ref: SelectedLocation, k: String, v: JsValue): Results[JsValue] = {
+          def validateElement(ref : SelectedLocation[String], k: String, v : JsValue) : Results[JsValue] = {
             fieldMap.get(k) match {
               case Some(dator) ⇒ dator.validate(ref, v)
               case None ⇒ StringFailure(ref, v, s"No validator for field '$k'")
