@@ -157,6 +157,10 @@ trait Dependencies
     play_json, scala_pickling, chill
   ) ++ common_dependencies
 
+  val store_reactivemongo_dependencies : Seq[ModuleID] = Seq(
+    reactivemongo
+  )
+
   val types_dependencies : Seq[ModuleID] = Seq(
     play_json, shapeless
   ) ++ common_dependencies
