@@ -157,8 +157,6 @@ trait Dependencies
     play_json, scala_pickling, chill
   ) ++ common_dependencies
 
-  val filesys_dependencies : Seq[ModuleID] = Seq( )
-
   val types_dependencies : Seq[ModuleID] = Seq(
     play_json, shapeless
   ) ++ common_dependencies

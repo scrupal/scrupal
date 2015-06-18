@@ -72,17 +72,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
   lazy val api_deps = api_proj % "compile->compile;test->test"
   */
 
-  lazy val filesys_proj = Project(base_name + "-store-files", file("./scrupal-store-files"))
-    .settings(buildSettings:_*)
-    .settings(
-      scrupalTitle := "Scrupal File Store",
-      resolvers ++= all_resolvers,
-      libraryDependencies ++= filesys_dependencies
-    )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
-    .dependsOn(storage_deps, utils_deps)
-  lazy val filesys_deps = filesys_proj % "compile->compile;test->test"
-
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
     .settings(buildSettings:_*)
     // .settings(sbt_web_settings:_*)
@@ -116,8 +105,8 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       libraryDependencies ++= root_dependencies
     )
     .enablePlugins(ScrupalPlugin)
-    .dependsOn(config_deps, core_deps, filesys_deps, storage_deps, utils_deps)
-    .aggregate(config_proj, core_proj, filesys_proj, storage_proj, utils_proj)
+    .dependsOn(config_deps, core_deps, storage_deps, utils_deps)
+    .aggregate(config_proj, core_proj, storage_proj, utils_proj)
 
   override def rootProject = Some(root)
 }

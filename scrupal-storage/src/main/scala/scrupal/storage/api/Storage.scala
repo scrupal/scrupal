@@ -29,23 +29,23 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object Storage extends ScrupalComponent {
 
-  def apply(id : Symbol, uri : URI, create: Boolean = true)(implicit ec: ExecutionContext)  : Future[StoreContext] = {
-    fromURI(id, uri, create)
+  def apply(uri : URI, create: Boolean = true)(implicit ec: ExecutionContext)  : Future[StoreContext] = {
+    fromURI(uri, create)
   }
 
-  def fromConfigFile(id : Symbol, path: String, name : String = "scrupal", create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
+  def fromConfigFile(path: String, name : String = "scrupal", create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
     val helper = StorageConfigHelper.fromConfigFile(path)
     val config = helper.getStorageConfig
     val config_name = s"storage.$name"
     config.getConfig(config_name) match {
       case Some(cfg) ⇒
-        fromSpecificConfig(id, cfg, create )
+        fromSpecificConfig(cfg, create )
       case None ⇒
         Future { toss(s"Failed to find storage configuration for $config_name") }
     }
   }
 
-  def fromConfiguration(id : Symbol,
+  def fromConfiguration(
     conf: Option[Configuration] = None, name : String = "scrupal", create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
     val topConfig = conf.getOrElse(ConfigHelpers.default())
     val helper = new StorageConfigHelper(topConfig)
@@ -53,29 +53,29 @@ object Storage extends ScrupalComponent {
     val config_name = s"storage.$name"
     config.getConfig(config_name) match {
       case Some(cfg) ⇒
-        fromSpecificConfig(id, cfg)
+        fromSpecificConfig(cfg)
       case None ⇒
         Future { toss(s"Failed to find storage configuration for $config_name") }
     }
   }
 
-  def fromSpecificConfig(id : Symbol, config : Configuration, create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
+  def fromSpecificConfig(config : Configuration, create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
     config.getString("uri") match {
       case Some(uri) ⇒
-        fromURI(id, uri, create)
+        fromURI(uri, create)
       case None ⇒
         Future { toss("No 'uri' element of configuration") }
     }
   }
 
-  def fromURI(id : Symbol, uriStr : String, create: Boolean)(implicit ec: ExecutionContext) : Future[StoreContext] = {
-    fromURI(id, new URI(uriStr), create)
+  def fromURI(uriStr : String, create: Boolean)(implicit ec: ExecutionContext) : Future[StoreContext] = {
+    fromURI(new URI(uriStr), create)
   }
 
-  def fromURI(id : Symbol, uri: URI, create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
+  def fromURI(uri: URI, create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
     StorageDriver(uri).flatMap { driver ⇒
       driver.open(uri, create) map { store ⇒
-        StoreContext(id, driver, store)(ec)
+        StoreContext(driver, store)(ec)
       }
     }
   }

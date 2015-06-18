@@ -1,4 +1,4 @@
-package scrupal.storage.mem
+package scrupal.store.mem
 
 import java.net.URI
 import java.time.Instant

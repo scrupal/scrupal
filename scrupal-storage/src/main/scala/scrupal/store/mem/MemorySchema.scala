@@ -14,7 +14,7 @@
   * ********************************************************************************************************************
   */
 
-package scrupal.storage.mem
+package scrupal.store.mem
 
 import java.time.Instant
 
@@ -28,7 +28,10 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MemorySchema private[mem] (store : MemoryStore, name : String, design : SchemaDesign) extends CommonSchema {
   val created = Instant.now()
 
-  def dropCollection[S <: Storable](name: String)(implicit ec: ExecutionContext): Future[WriteResult] = ???
+  def dropCollection[S <: Storable](name: String)(implicit ec: ExecutionContext): Future[WriteResult] = Future {
+    colls.remove(name)
+    WriteResult.success()
+  }
 
   def addCollection[S <: Storable](name: String)(implicit ec: ExecutionContext): Future[Collection[S]] = Future {
     val coll = MemoryCollection[S](this, name)

@@ -13,11 +13,11 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.storage
+package scrupal.store
 
 /** Scrupal Storage Implementation In Transient Memory
   *
-  * This package implements the Scrupal Storage API [[scrpual.storage.api]] using only transient memory as the
+  * This package implements the Scrupal Storage API [[scrupal.storage.api]] using only transient memory as the
   * store. It is intended to be used as a handy cache for Scrupal modules that don't need to persist data. The
   * implementation is efficient as it just retains objects directly by reference in ConcurrentHashMap collections.
   * Indexes provide alternative maps into the same referenced objects.

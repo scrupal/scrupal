@@ -8,7 +8,7 @@ import scrupal.storage.api._
 import scrupal.storage.impl.{CommonCollection, KryoFormatter, KryoFormat}
 import scrupal.utils.ScrupalComponent
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
@@ -32,16 +32,9 @@ case class FilesCollection[S <: Storable] private[files] (
     Files.walk(dir.toPath).count()
   }
 
-  def drop: Future[WriteResult] = Future {
-    infoFile.delete
-    WriteResults {
-      for (f ← dir.listFiles) yield {
-        f.delete() match {
-          case true ⇒ WriteResult.success()
-          case false ⇒ WriteResult.error(s"Did not delete ${f.getAbsolutePath}")
-        }
-      }
-    }
+  def drop(implicit ec: ExecutionContext): Future[WriteResult] = Future {
+    FilesStorageUtils.recursivelyDeleteDirectory(dir)
+    WriteResult.success()
   }
 
   final private val low16Mask = 0x000000000000FFFFL
@@ -212,11 +205,17 @@ case class FilesCollection[S <: Storable] private[files] (
 object FilesCollection extends ScrupalComponent {
 
   def apply(schema: FilesSchema, collDir: File) : FilesCollection[_] = {
-    require(schema.dir.isDirectory)
-    require(collDir.isDirectory)
+    require(schema.dir.isDirectory, "Schema.dir is not a directory")
+    require(collDir.isDirectory, "Collections dir is not a direction")
     val infoFile = new File(collDir, FilesStorageInfo.collection_info_file_name)
-    require(infoFile.canRead)
-    val info = FilesStorageInfo.from[FilesCollectionInfo](infoFile)
+    val info = if (infoFile.isFile && infoFile.canRead) {
+      FilesStorageInfo.from[FilesCollectionInfo](infoFile)
+    } else {
+      val info = FilesCollectionInfo(collDir.getName)
+      FilesStorageInfo.saveInfo(infoFile, info, overwrite=true)
+      info
+    }
+    require(infoFile.isFile && infoFile.canRead, "Cannot read the Collection's info file")
     FilesCollection(schema, info)
   }
 

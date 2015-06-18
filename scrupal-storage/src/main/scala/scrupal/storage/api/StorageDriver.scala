@@ -55,8 +55,10 @@ object StorageDriver extends Registry[StorageDriver] {
 
   def apply(uri : URI)(implicit ec: ExecutionContext) : Future[StorageDriver] = Future {
     _registry.values.find { driver : StorageDriver ⇒ driver.isDriverFor(uri) } match {
-      case Some(driver) ⇒ driver
-      case None ⇒ toss(s"No storage driver found for $uri")
+      case Some(driver) ⇒
+        driver
+      case None ⇒
+        toss(s"No storage driver found for $uri")
     }
   }
 }

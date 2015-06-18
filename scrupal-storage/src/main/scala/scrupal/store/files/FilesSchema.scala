@@ -71,6 +71,13 @@ case class FilesSchema private (
     }
   }
 
+  override def drop(implicit ec: ExecutionContext): Future[WriteResult] = {
+    super.drop.map { wr ⇒
+      FilesStorageUtils.recursivelyDeleteDirectory(dir)
+      WriteResult.success()
+    }
+  }
+
   override def close() : Unit = {
     for ((name, coll) ← colls) {
       coll.close()

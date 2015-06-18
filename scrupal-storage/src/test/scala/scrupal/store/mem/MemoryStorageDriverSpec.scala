@@ -1,4 +1,4 @@
-package scrupal.storage.mem
+package scrupal.store.mem
 
 import scrupal.storage.api._
 
@@ -14,5 +14,5 @@ class MemoryStorageDriverSpec extends StorageTestSuite("MemoryStorageDriver") {
 
   def scheme: String = "scrupal-mem"
 
-  def configDir: String = "scrupal-storage/src/test/resources/storage/config/"
+  def configFile: String = "scrupal-storage/src/test/resources/storage/config/mem_testing.conf"
 }

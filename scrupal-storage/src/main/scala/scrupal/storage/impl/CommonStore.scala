@@ -15,7 +15,8 @@
 
 package scrupal.storage.impl
 
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.{Semaphore, ConcurrentHashMap}
+import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.concurrent
 import scala.collection.convert.decorateAsScala._
@@ -29,18 +30,16 @@ trait CommonStore extends Store {
 
   protected val _schemas : concurrent.Map[String,Schema] = new ConcurrentHashMap[String,Schema]().asScala
 
-  override def close : Unit = {
-    for ((name, s) ← _schemas) {
-      s.close()
-    }
-    _schemas.clear()
-  }
-
   def size : Long = _schemas.size
 
-  def drop : Future[WriteResult] = Future {
+  def drop(implicit ec: ExecutionContext) : Future[WriteResult] = {
+    val result = WriteResult.coalesce {
+      for ( (name, schema) <- _schemas) yield {
+        schema.drop
+      }
+    }
     _schemas.clear()
-    WriteResult.success()
+    result
   }
 
   /** Returns the mapping of names to Schema instances for this kind of storage */
@@ -86,5 +85,13 @@ trait CommonStore extends Store {
       case Some(s) ⇒ s.withCollection[S,T](collection)(f)
       case None    ⇒ toss(s"Schema '$schema' not found in $uri ")
     }
+  }
+
+  override def close() : Unit = {
+    // TODO: Implement a semaphore or something to prevent closing this while there are active contexts
+    for ((name, s) ← _schemas) {
+      s.close()
+    }
+    _schemas.clear()
   }
 }

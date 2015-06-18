@@ -27,5 +27,5 @@ class FilesStorageDriverSpec extends StorageTestSuite("FilesStorageDriver") {
 
   def scheme: String = "scrupal-files"
 
-  def configDir: String = "scrupal-store-files/src/test/resources/storage/config/"
+  def configFile: String = "scrupal-storage/src/test/resources/storage/config/files_testing.conf"
 }

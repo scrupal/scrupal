@@ -13,22 +13,28 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.storage.api
+package scrupal.store.files
 
-import java.time.Instant
+import java.io.{IOException, File}
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file._
 
-import scrupal.utils.ScrupalComponent
+object FilesStorageUtils {
 
-import scala.concurrent.{ExecutionContext, Future}
-
-trait StorageLayer extends AutoCloseable with ScrupalComponent {
-
-  def name : String
-
-  def created : Instant
-
-  def size : Long
-
-  def drop(implicit ec: ExecutionContext) : Future[WriteResult]
-
+  def recursivelyDeleteDirectory(dir : File) : Unit = {
+    require(dir.isDirectory && dir.canWrite)
+    val directory = dir.toPath
+    Files.walkFileTree(directory, new SimpleFileVisitor[Path]() {
+      override def visitFile(filePath: Path, attrs: BasicFileAttributes) : FileVisitResult = {
+        Files.delete(filePath)
+        FileVisitResult.CONTINUE
+      }
+      override def postVisitDirectory(dirPath: Path, exc: IOException) : FileVisitResult  = {
+        if (exc != null)
+          throw exc
+        Files.delete(dirPath)
+        FileVisitResult.CONTINUE
+      }
+    })
+  }
 }

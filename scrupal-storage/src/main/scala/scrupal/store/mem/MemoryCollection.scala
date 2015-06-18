@@ -1,4 +1,4 @@
-package scrupal.storage.mem
+package scrupal.store.mem
 
 import java.time.Instant
 
@@ -6,7 +6,7 @@ import scrupal.storage.api._
 import scrupal.storage.impl.{CommonCollection, IdentityFormat, IdentityFormatter}
 
 import scala.collection.mutable
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
@@ -19,7 +19,7 @@ case class MemoryCollection[S <: Storable] private[mem] (schema : MemorySchema, 
 
   def created: Instant = Instant.now()
 
-  def drop: Future[WriteResult] = Future {
+  def drop(implicit ec: ExecutionContext): Future[WriteResult] = Future {
     content.clear()
     WriteResult.success()
   }

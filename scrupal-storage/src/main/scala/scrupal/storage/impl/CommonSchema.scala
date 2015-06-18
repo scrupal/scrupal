@@ -22,7 +22,7 @@ import scrupal.utils.Validation.Results
 
 import scala.collection.concurrent
 import scala.collection.convert.decorateAsScala._
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.matching.Regex
 
 trait CommonSchema extends Schema {
@@ -31,8 +31,14 @@ trait CommonSchema extends Schema {
 
   override def toString = { s"Schema '$name' in ${store.uri}" }
 
-  def drop: Future[WriteResult] = {
-    WriteResult.coalesce { for ( (name, coll) <- colls) yield { coll.drop } }
+  def drop(implicit ec: ExecutionContext): Future[WriteResult] = {
+    val result = WriteResult.coalesce {
+      for ( (name, coll) <- colls) yield {
+        coll.drop
+      }
+    }
+    colls.clear()
+    result
   }
 
   def size: ID = colls.size

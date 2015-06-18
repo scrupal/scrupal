@@ -39,6 +39,13 @@ case class FilesStore private (uri : URI, info : FilesStoreInfo) extends CommonS
     FilesSchema(this, design)
   }
 
+  override def drop(implicit ec: ExecutionContext): Future[WriteResult] = {
+    super.drop.map { wr ⇒
+      FilesStorageUtils.recursivelyDeleteDirectory(dir)
+      WriteResult.success()
+    }
+  }
+
   override def dropSchema(name : String)(implicit ec: ExecutionContext) : Future[WriteResult] = {
     _schemas.get(name) match {
       case Some(schema) ⇒

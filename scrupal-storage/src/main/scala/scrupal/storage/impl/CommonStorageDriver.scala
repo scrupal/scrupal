@@ -23,7 +23,7 @@ import scrupal.storage.api._
 
 import scala.collection.JavaConverters._
 import scala.collection.concurrent
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait CommonStorageDriver extends StorageDriver {
 
@@ -53,7 +53,7 @@ trait CommonStorageDriver extends StorageDriver {
 
   def size: ID = stores.size
 
-  def drop: Future[WriteResult] = {
+  def drop(implicit ec: ExecutionContext) : Future[WriteResult] = {
     toss("Cannot drop a driver singleton")
   }
 

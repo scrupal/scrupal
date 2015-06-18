@@ -19,7 +19,7 @@ package scrupal.storage.api
 
 import java.io.Closeable
 import java.net.URI
-import scrupal.utils.{ Registry, ScrupalComponent, Registrable }
+import scrupal.utils.ScrupalComponent
 import scala.concurrent.{Future, ExecutionContext}
 
 /** Context For Storage
@@ -27,10 +27,10 @@ import scala.concurrent.{Future, ExecutionContext}
   * When connecting to a storage provider, subclasses of this instance provide all the details
   */
 case class StoreContext(
-  id: Symbol,
   driver: StorageDriver,
   store: Store)(implicit val ec: ExecutionContext
-) extends Registrable[StoreContext] with Closeable with ScrupalComponent {
+) extends Closeable with ScrupalComponent {
+
   def registry = StoreContext
   def uri : URI = store.uri
 
@@ -55,12 +55,5 @@ case class StoreContext(
   }
 
   def close() = {
-    // Nothing to do
   }
 }
-
-object StoreContext extends Registry[StoreContext] with ScrupalComponent {
-  val registrantsName : String = "storageContext"
-  val registryName : String = "StorageContexts"
-}
-

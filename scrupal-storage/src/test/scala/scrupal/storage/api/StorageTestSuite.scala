@@ -15,7 +15,7 @@
 
 package scrupal.storage.api
 
-import org.specs2.execute.{Success, ResultLike, Result}
+import org.specs2.execute.{Error, Success, ResultLike, Result}
 import org.specs2.matcher.MatchResult
 import play.api.libs.json.Json
 import scrupal.storage.impl.JsonFormatter
@@ -43,18 +43,23 @@ object DingBotsSchema extends SchemaDesign {
   * and fills in the blanks. All test must pass these tests before the implementation is considered conforming.
   * Note that in addition to implementing the missing definitions, a number of configuration files will be needed
   * as well.
-  * @param name
+  * @param name The name of the test suite being run
   */
 abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name) {
 
   def driver: StorageDriver
   def driverName : String
   def scheme: String
-  def configDir: String
+  def configFile: String
 
-  def getContext(id: Symbol, file : String, name: String)(func : StoreContext ⇒ Future[Result]) : Result = {
-    val f = Storage.fromConfigFile(id, configDir + "/" + file, name, create=true) flatMap { context ⇒ func(context) }
-    Await.result(f, 2.seconds)
+  def getContext(name: String, create : Boolean=true)(func : StoreContext ⇒ Future[Result]) : Result = {
+    val f = Storage.fromConfigFile(configFile, name, create) flatMap { context ⇒
+      func(context)
+    }
+    val g = f.recover { case x: Throwable ⇒
+      Error(s"Unexpected exception: ${x.getClass.getSimpleName}: ${x.getMessage}", x)
+    }
+    Await.result(g, 2.seconds)
   }
 
   sequential
@@ -69,18 +74,39 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
     }
 
     "obtain a context to the main test database" in {
-      getContext('context, "testing.conf", "testing") { context ⇒ Future { success } }
+      getContext("testing") { context ⇒
+        Future {
+          success
+        }
+      }
+    }
+
+    "obtain a store from the context" in {
+      getContext("testing") { context ⇒
+        Future {
+          context.withStore { store ⇒
+            (store.name must beEqualTo(store.uri.getPath)).toResult
+          }
+        }
+      }
     }
 
     "create the DingBotsSchema" in {
-      getContext('schema, "testing.conf", "testing")  { context ⇒
+      getContext("testing")  { context ⇒
         if (context.hasSchema(DingBotsSchema.name)) {
-          val wr = Await.result(context.dropSchema(DingBotsSchema.name), 1.second)
-          Future { wr.tossOnError }
-        }
-        if (context.hasSchema(DingBotsSchema.name))
-          Future { toss("Dropping schema failed") }
-        else {
+          context.dropSchema(DingBotsSchema.name) flatMap { wr ⇒
+            wr.tossOnError
+            if (context.hasSchema(DingBotsSchema.name))
+              toss("Dropping schema failed")
+            else {
+              context.addSchema(DingBotsSchema) map { schema ⇒
+                if (!context.hasSchema(DingBotsSchema.name))
+                  toss("Adding schema failed")
+                success
+              }
+            }
+          }
+        } else {
           context.addSchema(DingBotsSchema) map { schema ⇒
             if (!context.hasSchema(DingBotsSchema.name))
               toss("Adding schema failed")
@@ -91,10 +117,11 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
     }
 
     "not allow duplication of a collection" in {
-      getContext('noduplicate, "testing.conf", "testing")  { context ⇒
+      getContext("testing")  { context ⇒
         val result = context.withSchema(DingBotsSchema.name) { schema ⇒
-          val future = schema.addCollection[DingBot]("dingbots")
-          future.map { coll ⇒ failure("schema.addCollection should have failed") } recover {
+          schema.addCollection[DingBot]("dingbots") map { coll ⇒
+            failure("schema.addCollection should have failed")
+          } recover {
             case x: Throwable ⇒ success
           }
         }
@@ -104,7 +131,7 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
     }
 
     "insert a dingbot in a collection" in {
-      getContext('insert, "testing.conf", "testing")  { context ⇒
+      getContext("testing")  { context ⇒
         context.withSchema(DingBotsSchema.name) { schema ⇒
           schema.withCollection[DingBot,Future[Result]]("dingbots") { coll ⇒
             coll.insert(new DingBot(1, "ping", 42)) map { wr: WriteResult ⇒
