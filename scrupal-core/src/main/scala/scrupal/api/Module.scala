@@ -93,7 +93,7 @@ trait Module
     * the module's handler will be invoked. Multiple modules can register for interest in the same event but there is
     * no defined order in which the handlers are invoked.
     */
-  def handlers : Seq[HandlerFor[Event]]
+  def handlers : Seq[EventHandlerFor[Event]]
 
   final def isChildScope(e : Enablement[_]) : Boolean = false
 

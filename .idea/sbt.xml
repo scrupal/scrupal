@@ -17,6 +17,8 @@
             <option value="$PROJECT_DIR$/scrupal-core/project" />
             <option value="$PROJECT_DIR$/scrupal-storage" />
             <option value="$PROJECT_DIR$/scrupal-storage/project" />
+            <option value="$PROJECT_DIR$/scrupal-store-reactivemongo" />
+            <option value="$PROJECT_DIR$/scrupal-store-reactivemongo/project" />
             <option value="$PROJECT_DIR$/scrupal-utils" />
             <option value="$PROJECT_DIR$/scrupal-utils/project" />
           </set>

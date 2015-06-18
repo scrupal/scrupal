@@ -78,10 +78,4 @@ object Layout extends Registry[Layout] {
 
   lazy val default = HtmlLayout('default, "Default Layout", DefaultLayoutTemplate)
 
-  /*
-  class BSONHandlerForLayout[T <: Layout] extends BSONHandler[BSONString, T] {
-    override def write(t : T) : BSONString = BSONString(t.id.name)
-    override def read(bson : BSONString) : T = Layout.as(Symbol(bson.value))
-  }
-  */
 }

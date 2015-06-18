@@ -18,21 +18,25 @@ package scrupal.api
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-import org.joda.time.Instant
-import play.api.libs.json._
-import scrupal.api.types._
+import java.time.Instant
 
-import scrupal.api.types.StructuredType
-import scrupal.utils.Validation._
-import scrupal.utils.{ ScrupalComponent, PathWalker, JsonPathWalker }
+import play.api.libs.json._
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.concurrent.duration.Duration
+
+import scrupal.api.types._
+import scrupal.api.types.StructuredType
+import scrupal.storage.api.Storable
+import scrupal.utils.Validation._
+import scrupal.utils.{ ScrupalComponent, PathWalker, JsonPathWalker }
 
 /** Interface To Settings
   * This defines the interface to value extraction from some cache of settings
   */
-trait SettingsInterface {
+trait SettingsInterface extends JsObject with Storable  {
+
 
   type ObjectType
   type ArrayType
@@ -41,25 +45,28 @@ trait SettingsInterface {
   def settingsDefault : ObjectType
   def settings : ObjectType
 
-  def keySet : Set[String] = ???
   def entrySet : Set[ValueType] = ???
 
-  def getString(path : String) : Option[String]
-  def getBoolean(path : String) : Option[Boolean]
-  def getByte(path : String) : Option[Byte]
-  def getInt(path : String) : Option[Int]
-  def getLong(path : String) : Option[Long]
-  def getDouble(path : String) : Option[Double]
-  def getNumber(path : String) : Option[Number]
-  def getInstant(path : String) : Option[Instant]
-  def getDuration(path : String) : Option[Duration]
-  def getMilliseconds(path : String) : Option[Long]
-  def getMicroseconds(path : String) : Option[Long]
-  def getNanoseconds(path : String) : Option[Long]
+  def getValue(path: String)
 
-  def getSettings(path : String) : Option[SettingsInterface] = ???
+  def getString(path : String) : Option[String] = get(path)
+  def getBoolean(path : String) : Option[Boolean] = get(path).map{_.toBoolean}
+  def getByte(path : String) : Option[Byte] = get(path).map{_.toByte}
+  def getInt(path : String) : Option[Int] = get(path).map{_.toInt}
+  def getLong(path : String) : Option[Long] = get(path).map{_.toLong}
+  def getDouble(path : String) : Option[Double] = get(path).map{_.toDouble}
+  def getInstant(path : String) : Option[Instant] = get(path).map { x ⇒
+    val parts = x.split('.')
+    new Instant(parts(0), parts(1))
+  }
+  def getDuration(path : String) : Option[Duration] = get(path).map { Duration(_) }
+  def getMilliseconds(path : String) : Option[Duration] = get(path).map { x ⇒ Duration(x.toLong, TimeUnit.MILLISECONDS)}
+  def getMicroseconds(path : String) : Option[Duration] = get(path).map { x ⇒ Duration(x.toLong, TimeUnit.MICROSECONDS)}
+  def getNanoseconds(path : String) : Option[Duration]  = get(path).map { x ⇒ Duration(x.toLong, TimeUnit.NANOSECONDS)}
 
-  def getStrings(path : String) : Option[Seq[String]] = ???
+  def getSettings(path : String) : Option[SettingsInterface]
+
+  def getStrings(path : String) : Option[Seq[String]] =
   def getBooleans(path : String) : Option[Seq[Boolean]] = ???
   def getBytes(path : String) : Option[Seq[Long]] = ???
   def getInts(path : String) : Option[Seq[Int]] = ???
@@ -166,9 +173,9 @@ abstract class JsonSettingsImpl extends ScrupalComponent with JsonSettingsInterf
 }
 
 trait JsonSettings extends JsonSettingsImpl with JsObjectValidator {
-  def settingsType : StructuredType[JsValue]
+  def settingsType : StructuredType[Type[JsValue]]
 
-  def validateElement(ref : SelectedLocation, path: String, v : JsValue) : Results[JsValue] = {
+  def validateElement(ref : SelectedLocation, path: String, v : Type[JsValue]) : Results[Type[JsValue]] = {
     JsonPathWalker(path, settings) match {
       case None ⇒ StringFailure(ref, settings, s"Path '$path' was not found amongst the values.")
       case Some(bv) ⇒
@@ -188,30 +195,33 @@ trait JsonSettings extends JsonSettingsImpl with JsObjectValidator {
   * Created by reidspencer on 11/10/14.
   */
 case class Settings(
-  settingsType : StructuredType[JsValue],
+  settingsType : StructuredType[Type[JsValue]],
   initialValue : JsObject,
-  override val settingsDefault : JsObject = emptyJsObject) extends JsonSettings(initialValue, settingsDefault) with SettingsInterface {
+  override val settingsDefault : JsObject = emptyJsObject) extends JsonSettings with SettingsInterface {
   require(settingsType.size == settingsDefault.value.size)
 }
 
-object TypePathWalker extends PathWalker[JsObjectType, JsArrayType, Type[JsValue]] {
-  protected def isDocument(v : Type[_]) : Boolean = v.isInstanceOf[JsObjectType]
-  protected def isArray(v : Type[_]) : Boolean = v.isInstanceOf[JsArrayType]
-  protected def asArray(v : Type[_]) : IndexableType = v.kind match {
+object TypePathWalker extends PathWalker[StructuredType[Type[JsValue]], Seq[Type[JsValue]], Type[JsValue]] {
+  type VType = Type[JsValue]
+  type DType = StructuredType[VType]
+  type AType = Seq[VType]
+  protected def isDocument(v : VType) : Boolean = v.isInstanceOf[DType]
+  protected def isArray(v : VType) : Boolean = v.isInstanceOf[AType]
+  protected def asArray(v : VType) : IndexableType = v.kind match {
     case 'List ⇒ v.asInstanceOf[ListType[_]]
     case 'Set  ⇒ v.asInstanceOf[SetType[_]]
     case _     ⇒ toss("Attempt to coerce a non-array type into an array type")
   }
-  protected def asDocument(v : Type[_]) : DocumentType = v.kind match {
-    case 'Bundle ⇒ v.asInstanceOf[BundleType]
-    case 'Map ⇒ v.asInstanceOf[MapType]
-    case 'Node ⇒ v.asInstanceOf[NodeType]
+  protected def asDocument(v : VType) : DType = v.kind match {
+    case 'Bundle ⇒ v.asInstanceOf[BundleType[VType]]
+    case 'Map    ⇒ v.asInstanceOf[MapType[VType]]
+    case 'Node   ⇒ v.asInstanceOf[NodeType[VType]]
     case _ ⇒ toss("Attempt to coerce a non-array type into an array type")
   }
-  protected def indexDoc(key : String, d : MapType[JsValue]) : Option[Type[JsValue]] = d.validatorFor(key)
-  protected def indexArray(index : Int, a : JsArrayType) : Option[Type[JsValue]] = Some(a.elemType)
-  protected def arrayLength(a : JsArrayType) : Int = Int.MaxValue // WARNING: Really? MaxValue?
-  def apply(path : String, doc : DocumentType) : Option[Type[_]] = lookup(path, doc)
+  protected def indexDoc(key : String, d : DType) : Option[_] = d.validatorFor(key)
+  protected def indexArray(index : Int, a : AType) : Option[VType] = Some(a(index))
+  protected def arrayLength(a : AType) : Int = Int.MaxValue // WARNING: Really? MaxValue?
+  def apply(path : String, doc : DType) : Option[Type[_]] = lookup(path, doc)
 }
 
 object Settings {

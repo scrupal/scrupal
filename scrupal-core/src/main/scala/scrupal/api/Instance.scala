@@ -55,21 +55,4 @@ case class Instance[PT](
 }
 
 object Instance {
-  /*
-  import BSONHandlers._
-
-  /** Data Access Object For Instances
-    * This DataAccessObject sublcass represents the "instances" collection in the database and permits management of
-    * that collection as well as conversion to and from BSON format.
-    * @param db A parameterless function returning a [[reactivemongo.api.DefaultDB]] instance.
-    */
-  case class InstanceDAO(db : DefaultDB) extends IdentifierDAO[Instance] {
-    final def collectionName = "instances"
-    implicit val reader : IdentifierDAO[Instance]#Reader = Macros.reader[Instance]
-    implicit val writer : IdentifierDAO[Instance]#Writer = Macros.writer[Instance]
-    override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("entity" -> IndexType.Ascending), name = Some("Entity"))
-    )
-  }
-*/
 }

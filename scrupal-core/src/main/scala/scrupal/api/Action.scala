@@ -15,10 +15,10 @@
 
 package scrupal.api
 
-import akka.http.scaladsl.model.Uri.Path.Slash
 import akka.http.scaladsl.model.{ HttpMethod, HttpMethods, Uri }
 import akka.http.scaladsl.server.{PathMatchers, PathMatcher}
 import akka.http.scaladsl.server.PathMatcher._
+import akka.http.scaladsl.server.PathMatchers.Slash
 import akka.http.scaladsl.server.util.Tuple
 import scrupal.core.actions.NodeAction
 import scrupal.utils.{ ScrupalComponent, Pluralizer, Patterns }
@@ -196,11 +196,11 @@ trait SingularActionExtractor extends PathMatcherActionExtractor[::[String, HNil
   /** Singular form of the keyword */
   lazy val singularKey = makeKey(segment)
 
-  //implicit val ev : akka.http.scaladsl.server.util.Tuple[shapeless.::[String,shapeless.HNil]]
+  implicit val ev : akka.http.scaladsl.server.util.Tuple[shapeless.::[String,shapeless.HNil]]
 
   /** PathMatcher that matches the singular form of the keyword and extracts it. */
   def pm : PathMatcher[::[String, HNil]] = {
-    PathMatcher(Uri.Path(singularKey), singularKey :: HNil) ~ PathMatchers.Slash |
+    PathMatcher(Uri.Path(singularKey), singularKey :: HNil) ~ Slash |
       PathMatcher(Uri.Path(singularKey), singularKey :: HNil)
   }
 

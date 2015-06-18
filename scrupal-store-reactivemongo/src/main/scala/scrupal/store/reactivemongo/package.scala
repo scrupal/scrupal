@@ -37,7 +37,7 @@ import akka.actor.ActorSystem
 
 import scala.concurrent.duration._
 
-import reactivemongo.api.FailoverStrategy
+import _root_.reactivemongo.api.{FailoverStrategy, DefaultDB}
 
 
 
@@ -62,7 +62,7 @@ package object reactivemongo {
 
   // NOTE: If needed: val system = ActorSystem("Scrupal-DB")
 
-  type DB = reactivemongo.api.DefaultDB
+  type DB = DefaultDB
 
   object DefaultFailoverStrategy extends FailoverStrategy(
     initialDelay=1.seconds, retries=3, delayFactor = { i ⇒ Math.log10(i) }

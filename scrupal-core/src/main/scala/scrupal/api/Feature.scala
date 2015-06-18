@@ -69,14 +69,4 @@ object Feature extends Registry[Feature] {
   def apply(name : Symbol, scope : Enablement[_]) : Boolean = enabled(name, scope)
   def apply(f : Feature, scope : Enablement[_]) : Boolean = enabled(f.id, scope)
 
-  /*
-  case class FeatureDAO(db: DefaultDB) extends IdentifierDAO[Feature] {
-    final def collectionName = "features"
-    implicit val reader : IdentifierDAO[Feature]#Reader = Macros.reader[Feature]
-    implicit val writer : IdentifierDAO[Feature]#Writer  = Macros.writer[Feature]
-    override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("module" -> IndexType.Ascending), name = Some("Module"))
-    )
-  }
-*/
 }

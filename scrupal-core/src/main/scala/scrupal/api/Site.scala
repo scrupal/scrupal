@@ -56,11 +56,7 @@ object Site extends Registry[Site] {
   val registrantsName : String = "site"
   val registryName : String = "Sites"
 
-  //  object variants extends VariantRegistry[Site]("Site")
 
-  // def kinds : Seq[String] = { variants.kinds }
-
-  //  implicit val dtHandler = DateTimeBSONHandler
 
   def forHost(hostName : String) : Iterable[Site] = {
     for (
@@ -70,30 +66,4 @@ object Site extends Registry[Site] {
     }
   }
 
-  /*
-  import BSONHandlers._
-
-  implicit lazy val SiteReader : VariantBSONDocumentReader[Site] = new VariantBSONDocumentReader[Site] {
-    def read(doc : BSONDocument) : Site = variants.read(doc)
-  }
-
-  implicit val SiteWriter : VariantBSONDocumentWriter[Site] = new VariantBSONDocumentWriter[Site] {
-    def write(site : Site) : BSONDocument = variants.write(site)
-  }
-
-  /** Data Access Object For Sites
-    * This DataAccessObject sublcass represents the "sites" collection in the database and permits management of
-    * that collection as well as conversion to and from BSON format.
-    * @param db A [[reactivemongo.api.DefaultDB]] instance in which to find the collection
-    */
-  case class SiteDAO(db : DefaultDB) extends VariantIdentifierDAO[Site] {
-    final def collectionName : String = "sites"
-    implicit val writer = new Writer(variants)
-    implicit val reader = new Reader(variants)
-
-    override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("path" -> IndexType.Ascending), name = Some("path")),
-      Index(key = Seq("kind" -> IndexType.Ascending), name = Some("kind"))
-    )
-  }*/
 }

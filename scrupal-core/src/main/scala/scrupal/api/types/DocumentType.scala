@@ -24,14 +24,14 @@ import scrupal.api._
   * @tparam ET The Element Type
   * @tparam MT The Document Type
   */
-trait DocumentType[ET, MT] extends Type[MT] with MapValidator[String, ET, MT] {
-  def validatorFor(id : String) : Option[Type[_]]
-  def fieldNames : Iterable[String]
+trait DocumentType[KT, ET, MT] extends Type[MT] with MapValidator[KT, ET, MT] {
+  def validatorFor(id : KT) : Option[Type[_]]
+  def fieldNames : Iterable[KT]
   def allowMissingFields : Boolean = false
   def allowExtraFields : Boolean = false
-  def toMap(mt : MT) : scala.collection.Map[String, ET]
+  def toMap(mt : MT) : scala.collection.Map[KT, ET]
 
-  def validateElement(ref : SelectedLocation[String], k: String, v : ET) : Results[ET] = {
+  def validateElement(ref : SelectedLocation[KT], k: KT, v : ET) : Results[ET] = {
     validatorFor(k) match {
       case Some(validator) ⇒
         validator.asInstanceOf[Validator[ET]].validate(ref, v)
@@ -47,10 +47,10 @@ trait DocumentType[ET, MT] extends Type[MT] with MapValidator[String, ET, MT] {
 
   override def validate(ref : Location, value : MT) : Results[MT] = {
     super.validate(ref, value) match {
-      case x: Failure[MT] ⇒ x
-      case r: Success[MT] ⇒
+      case x: Failure[VResult] ⇒ x
+      case r: Success[VResult] ⇒
         val elements = toMap(value) // Collect the values only once in case there is a cost for traversing it
-        val missing_results: Iterable[Failure[ET]] = if (!allowMissingFields) {
+      val missing_results: Iterable[Failure[ET]] = if (!allowMissingFields) {
           for (
             fieldName ← fieldNames if !elements.contains(fieldName)
           ) yield {
@@ -67,11 +67,39 @@ trait DocumentType[ET, MT] extends Type[MT] with MapValidator[String, ET, MT] {
   }
 }
 
-trait StructuredType[ET] extends DocumentType[ET, Map[String, ET]] {
+trait StructuredType[ET] extends DocumentType[String, ET, Map[String, ET]] {
   override type ValueType = Map[String, ET]
   def fields : Map[String, Type[_]]
   def validatorFor(id : String) : Option[Type[_]] = fields.get(id)
   def fieldNames : Iterable[String] = fields.keys
   def size = fields.size
   def toMap(mt : Map[String, ET]) : Map[String, ET] = mt
+}
+
+/** A Map is a set whose elements are named with an arbitrary string
+  *
+  * @param id
+  * @param description
+  * @param elemType
+  */
+case class MapType[ET](
+  override val id : Identifier,
+  description : String,
+  elemType : Type[ET]
+  ) extends StructuredType[ET] {
+  override def kind = 'Map
+
+  def validatorFor(id: String): Option[Type[ET]] = Some(elemType)
+
+  def fieldNames: Seq[String] = Seq.empty[String]
+
+  def toMap(mt: Map[String, ET]): collection.Map[String, ET] = mt
+
+  def fields : Map[String, Type[_]]
+  def validatorFor(id : String) : Option[Type[_]] = fields.get(id)
+  def fieldNames : Iterable[String] = fields.keys
+  def size = fields.size
+  def toMap(mt : Map[String, ET]) : Map[String, ET] = mt
+
+
 }

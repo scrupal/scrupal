@@ -17,12 +17,12 @@ package scrupal.core.http
 
 import akka.actor.{ Actor, Props }
 import akka.util.Timeout
-import scrupal.core.api.Html.ContentsArgs
-import scrupal.core.api._
+import scrupal.api.Html.ContentsArgs
+import scrupal.api._
 import scrupal.core.html.{ PlainPageGenerator, PlainPage }
 import scrupal.utils.ScrupalComponent
-import spray.http.MediaTypes._
-import spray.routing.{ Route, _ }
+import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.server._
 
 import scala.util.{ Failure, Success, Try }
 import scalatags.Text.all._

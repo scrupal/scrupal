@@ -16,11 +16,10 @@
 package scrupal.core.http
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.MediaType
 import reactivemongo.bson.{ BSONDocument, BSONHandler }
 import scredis._
-import scrupal.core.api.Scrupal
-import spray.caching.Cache
-import spray.http.MediaType
+import scrupal.api.Scrupal
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future }

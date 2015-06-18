@@ -17,8 +17,8 @@ package scrupal.api.types
 
 import scrupal.api._
 import scrupal.api.IndexableType
-import scrupal.utils.Validation.{Results, Failure, IndexedLocation, SeqValidator}
-import shapeless.{ Poly1, :+:, Coproduct }
+import scrupal.utils.Validation.{Results, Failure, IndexedLocation}
+import shapeless.Coproduct
 
 /** A Homogenous List type allows a non-exclusive list of elements of other types to be constructed
   *

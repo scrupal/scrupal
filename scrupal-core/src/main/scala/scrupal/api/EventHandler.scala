@@ -22,7 +22,7 @@ import scala.collection.mutable
   * @param category The category of events this handler handles
   * @param name THe specific event kind that this handler handles
   */
-abstract class Handler(
+abstract class EventHandler(
   val category : EventCategory.Type,
   val name : Symbol) {
   def check(event : Event) {
@@ -38,17 +38,17 @@ abstract class Handler(
   * @param name The name of the event this Handler handles
   * @tparam E kind of Event this handler is for
   */
-abstract class HandlerFor[E <: Event](
+abstract class EventHandlerFor[E <: Event](
   category : EventCategory.Type,
-  name : Symbol) extends Handler(category, name) {
+  name : Symbol) extends EventHandler(category, name) {
   def handle(event : E) = {
     check(event)
   }
 }
 
-object Handler {
+object EventHandler {
 
-  private[scrupal] def apply(event : Event) : Option[Handler] = {
+  private[scrupal] def apply(event : Event) : Option[EventHandler] = {
     handlers.get(event.category) match {
       case Some(x) ⇒ x.get(event.name) match {
         case Some(h) ⇒ Some(h)
@@ -58,14 +58,14 @@ object Handler {
     }
   }
 
-  private[api] def apply(handler : Handler) = {
+  private[api] def apply(handler : EventHandler) = {
     handlers.getOrElse(handler.category, {
-      val newMap = new mutable.HashMap[Symbol, Handler]()
+      val newMap = new mutable.HashMap[Symbol, EventHandler]()
       handlers.put(handler.category, newMap);
       newMap
     }).put(handler.name, handler)
   }
 
-  private val handlers = mutable.HashMap[EventCategory.Type, mutable.HashMap[Symbol, Handler]]()
+  private val handlers = mutable.HashMap[EventCategory.Type, mutable.HashMap[Symbol, EventHandler]]()
 
 }

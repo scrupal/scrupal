@@ -40,13 +40,4 @@ case class Principal(
   override val created : Option[DateTime] = None) extends Storable with Creatable
 
 object Principal {
-  /*
-  import BSONHandlers._
-
-  case class PrincipalDAO(db : ScrupalDB) extends IdentifierDAO[Principal] {
-    final def collectionName = "principals"
-    implicit val reader : IdentifierDAO[Principal]#Reader = Macros.reader[Principal]
-    implicit val writer : IdentifierDAO[Principal]#Writer = Macros.writer[Principal]
-  }
-  */
 }

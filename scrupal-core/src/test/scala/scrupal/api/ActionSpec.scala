@@ -17,12 +17,9 @@ package scrupal.api
 
 import java.util.concurrent.TimeUnit
 
+import akka.http.scaladsl.server.PathMatcher
 import scrupal.test.{ScrupalSpecification, FakeContext}
 import shapeless.{::, HList, HNil}
-import spray.http.Uri
-import spray.routing.PathMatcher
-import spray.routing.PathMatcher.{Unmatched, Matched}
-import spray.routing.PathMatchers._
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration

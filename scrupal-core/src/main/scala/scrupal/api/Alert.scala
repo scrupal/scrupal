@@ -66,15 +66,5 @@ object Alert {
   /*
   import BSONHandlers._
 
-  implicit val AlertHandler = handler[Alert]
-
-  case class AlertDAO(db : DefaultDB) extends IdentifierDAO[Alert] {
-    implicit val reader : IdentifierDAO[Alert]#Reader = Macros.reader[Alert]
-    implicit val writer : IdentifierDAO[Alert]#Writer = Macros.writer[Alert]
-    final def collectionName : String = "alerts"
-    override def indices : Traversable[Index] = super.indices ++ Seq(
-      Index(key = Seq("_id" -> IndexType.Ascending), name = Some("UniqueId"))
-    )
-  }
   */
 }
