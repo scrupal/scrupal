@@ -98,18 +98,18 @@ trait AssetsLocator {
     * @param mediaType The MediaType to associate with the Result
     * @return ErrorResult if the resource could not be located, EnumeratorResult if it could
     */
-  def fetch(path : String, mediaType : MediaType, minified : Boolean = true) : Result[_] = {
+  def fetch(path : String, mediaType : MediaType, minified : Boolean = true) : Response[_] = {
     (if (minified) minifiedResourceOf(path) else resourceOf(path)) match {
       case Some(url) ⇒
         val stream = url.openStream()
         val length = stream.available
-        StreamResult(stream, mediaType)
+        StreamResponse(stream, mediaType)
       case None ⇒
-        ErrorResult(s"Asset '$path' could not be found", NotFound)
+        ErrorResponse(s"Asset '$path' could not be found", NotFound)
     }
   }
 
-  def fetch(path : String) : Result[_] = {
+  def fetch(path : String) : Response[_] = {
     val mediaType = MediaTypes.forExtension(extensionOf(path)).getOrElse(MediaTypes.`application/octet-stream`)
     fetch(path, mediaType)
   }

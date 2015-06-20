@@ -153,6 +153,10 @@ trait Dependencies
     scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config, shapeless
   ) ++ common_dependencies
 
+  val api_dependencies : Seq[ModuleID] = Seq(
+    play_json, shapeless, akka_http, akka_actor
+  ) ++ common_dependencies
+
   val storage_dependencies : Seq[ModuleID] = Seq(
     play_json, scala_pickling, chill
   ) ++ common_dependencies
@@ -163,10 +167,6 @@ trait Dependencies
 
   val types_dependencies : Seq[ModuleID] = Seq(
     play_json, shapeless
-  ) ++ common_dependencies
-
-  val api_dependencies : Seq[ModuleID] = Seq(
-    play_json, scala_pickling, shapeless, akka_http
   ) ++ common_dependencies
 
   val db_dependencies : Seq[ModuleID] = Seq(

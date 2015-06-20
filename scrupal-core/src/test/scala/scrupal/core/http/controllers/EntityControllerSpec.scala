@@ -16,12 +16,12 @@
 package scrupal.core.http.controllers
 
 import scrupal.core.http.SiteDirectives
-import scrupal.test.{ ScenarioGenerator, ScrupalSpecification }
+import scrupal.test.{ ScenarioGenerator, ScrupalApiSpecification }
 import spray.routing.HttpService
 import spray.testkit.Specs2RouteTest
 
 /** Test Suite for EntityController */
-class EntityControllerSpec extends ScrupalSpecification("EntityControllerSpec")
+class EntityControllerSpec extends ScrupalApiSpecification("EntityControllerSpec")
   with Specs2RouteTest with HttpService with SiteDirectives {
 
   def actorRefFactory = system

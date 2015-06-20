@@ -205,8 +205,8 @@ case class Scrupal(
     * @param action The action to act upon (a Request ⇒ Result[P] function).
     * @return A Future to the eventual Result[P]
     */
-  def dispatch(action: Action): Future[Result[_]] = {
-    _dispatcher.ask(action)(_timeout) flatMap { any ⇒ any.asInstanceOf[Future[Result[_]]] }
+  def dispatch(action: Reaction): Future[Response[_]] = {
+    _dispatcher.ask(action)(_timeout) flatMap { any ⇒ any.asInstanceOf[Future[Response[_]]] }
   }
 
   /** Called on application stop.
@@ -237,7 +237,7 @@ case class Scrupal(
   /** Called Just before the action is used.
     *
     */
-  def doFilter(a: Action): Action = {
+  def doFilter(a: Reaction): Reaction = {
     a
   }
 
@@ -248,7 +248,7 @@ case class Scrupal(
     * @param ex The exception
     * @return The result to send to the client
     */
-  def onError(action: Action, ex: Throwable) = {
+  def onError(action: Reaction, ex: Throwable) = {
 
     /*
   try {
@@ -277,7 +277,7 @@ case class Scrupal(
     * @param request the HTTP request header
     * @return the result to send to the client
     */
-  def onHandlerNotFound(request: Action) = {
+  def onHandlerNotFound(request: Reaction) = {
     /*
   NotFound(Play.maybeApplication.map {
     case app if app.mode != Mode.Prod ⇒ views.html.defaultpages.devNotFound.f
@@ -293,13 +293,13 @@ case class Scrupal(
     * @param request the HTTP request header
     * @return the result to send to the client
     */
-  def onBadRequest(request: Action, error: String) = {
+  def onBadRequest(request: Reaction, error: String) = {
     /*
   BadRequest(views.html.defaultpages.badRequest(request, error))
   */
   }
 
-  def onActionCompletion(request: Action) = {
+  def onActionCompletion(request: Reaction) = {
   }
 }
 

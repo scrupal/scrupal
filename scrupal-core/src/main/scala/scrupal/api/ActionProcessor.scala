@@ -100,7 +100,7 @@ object ActionProcessor extends ScrupalComponent {
 class ActionProcessor extends Actor with ActorLogging {
 
   def receive : Receive = {
-    case action : Action ⇒
+    case action : Reaction ⇒
       try {
         val result = action()
         sender ! result

@@ -49,14 +49,14 @@ trait ActionProvider extends SingularActionExtractor with DelegatingActionExtrac
     * @param context The context to use to match the PathToAction function
     * @return
     */
-  final def actionFor(matchingSegment : String, context : Context) : Option[Action] = {
+  final def actionFor(matchingSegment : String, context : Context) : Option[Reaction] = {
     provideAction(matchingSegment, context) match {
       case Some(action) ⇒ Some(action)
       case None ⇒ delegateAction(context)
     }
   }
 
-  def provideAction(matchingSegment : String, context : Context) : Option[Action] = None
+  def provideAction(matchingSegment : String, context : Context) : Option[Reaction] = None
 }
 
 trait PluralActionProvider extends ActionProvider with PluralActionExtractor
@@ -81,7 +81,7 @@ trait EnablementActionExtractor[T <: EnablementActionExtractor[T]]
     e.asInstanceOf[ActionExtractor]
   }
 
-  def extractAction(context : Context) : Option[Action] = { delegateAction(context) }
+  def extractAction(context : Context) : Option[Reaction] = { delegateAction(context) }
 }
 
 trait EnablementActionProvider[T <: EnablementActionProvider[T]] extends ActionProvider with Enablement[T] with Enablee {

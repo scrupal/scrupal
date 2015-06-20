@@ -75,42 +75,42 @@ object EchoEntity extends Entity('Echo) {
     }
   }
 
-  override def create(context : Context, id : String, instance : JsObject) : Create = {
-    new Create(context, id, instance) {
-      override def apply() : Future[Result[_]] = {
-        Future.successful(HtmlResult(echo_doc("Create", id, instance).render(context)))
+  override def create(context : Context, id : String, instance : JsObject) : CreateReaction = {
+    new CreateReaction(context, id, instance) {
+      override def apply() : Future[Response[_]] = {
+        Future.successful(HtmlResponse(echo_doc("Create", id, instance).render(context)))
       }
     }
   }
 
-  override def retrieve(context : Context, id : String) : Retrieve = {
-    new Retrieve(context, id) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(echo_request("Retrieve", id).render(context)))
+  override def retrieve(context : Context, id : String) : RetrieveReaction = {
+    new RetrieveReaction(context, id) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(echo_request("Retrieve", id).render(context)))
       }
     }
   }
 
-  override def update(context : Context, id : String, fields : JsObject) : Update = {
-    new Update(context, id, fields) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(echo_doc("Update", id, fields).render(context)))
+  override def update(context : Context, id : String, fields : JsObject) : UpdateReaction = {
+    new UpdateReaction(context, id, fields) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(echo_doc("Update", id, fields).render(context)))
       }
     }
   }
 
-  override def delete(context : Context, id : String) : Delete = {
-    new Delete(context, id) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(echo_request("Delete", id).render(context)))
+  override def delete(context : Context, id : String) : DeleteReaction = {
+    new DeleteReaction(context, id) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(echo_request("Delete", id).render(context)))
       }
     }
   }
 
   override def query(context : Context, id : String, fields : JsObject) : Query = {
     new Query(context, id, fields) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(echo_doc("Query", id, fields).render(context)))
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(echo_doc("Query", id, fields).render(context)))
       }
     }
   }
@@ -142,42 +142,42 @@ object EchoEntity extends Entity('Echo) {
     }
   }
 
-  override def createFacet(context : Context, what : Seq[String], instance : JsObject) : CreateFacet = {
-    new CreateFacet(context, what, instance) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(facet_doc("Create", what, instance).render(context)))
+  override def createFacet(context : Context, what : Seq[String], instance : JsObject) : AddReaction = {
+    new AddReaction(context, what, instance) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(facet_doc("Create", what, instance).render(context)))
       }
     }
   }
 
-  override def retrieveFacet(context : Context, what : Seq[String]) : RetrieveFacet = {
-    new RetrieveFacet(context, what) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(facet_request("Retrieve", what).render(context)))
+  override def retrieveFacet(context : Context, what : Seq[String]) : GetReaction = {
+    new GetReaction(context, what) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(facet_request("Retrieve", what).render(context)))
       }
     }
   }
 
-  override def updateFacet(context : Context, what : Seq[String], fields : JsObject) : UpdateFacet = {
-    new UpdateFacet(context, what, fields) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(facet_doc("Update", what, fields).render(context)))
+  override def updateFacet(context : Context, what : Seq[String], fields : JsObject) : SetReaction = {
+    new SetReaction(context, what, fields) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(facet_doc("Update", what, fields).render(context)))
       }
     }
   }
 
-  override def deleteFacet(context : Context, what : Seq[String]) : DeleteFacet = {
-    new DeleteFacet(context, what) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(facet_request("Delete", what).render(context)))
+  override def deleteFacet(context : Context, what : Seq[String]) : RemoveReaction = {
+    new RemoveReaction(context, what) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(facet_request("Delete", what).render(context)))
       }
     }
   }
 
-  override def queryFacet(context : Context, what : Seq[String], args : JsObject) : QueryFacet = {
-    new QueryFacet(context, what, args) {
-      override def apply : Future[Result[_]] = {
-        Future.successful(HtmlResult(facet_doc("Query", what, args).render(context)))
+  override def queryFacet(context : Context, what : Seq[String], args : JsObject) : FindReaction = {
+    new FindReaction(context, what, args) {
+      override def apply : Future[Response[_]] = {
+        Future.successful(HtmlResponse(facet_doc("Query", what, args).render(context)))
       }
     }
   }

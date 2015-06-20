@@ -15,13 +15,13 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalSpecification
+import scrupal.test.ScrupalApiSpecification
 
 
 /** One line sentence description here.
   * Further description here.
   */
-class SchemaSpec extends ScrupalSpecification("CoreSchemaSpec") {
+class SchemaSpec extends ScrupalApiSpecification("CoreSchemaSpec") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {

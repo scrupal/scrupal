@@ -16,12 +16,12 @@
 
 package scrupal.config
 
-import scrupal.test.ScrupalSpecification
+import scrupal.test.ScrupalApiSpecification
 
 /** This is the test suite for the Config.Step class
   *
   */
-class ConfigWizardSpec extends ScrupalSpecification("ConfigWizardSpec") {
+class ConfigWizardSpec extends ScrupalApiSpecification("ConfigWizardSpec") {
 
   "ConfigWizard" should {
     "be ready to test" in {

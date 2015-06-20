@@ -18,7 +18,7 @@ package scrupal.api
 import java.util.concurrent.TimeUnit
 
 import org.joda.time.DateTime
-import scrupal.test.ScrupalSpecification
+import scrupal.test.ScrupalApiSpecification
 import scrupal.utils.Icons
 import scrupal.utils.AlertKind
 
@@ -29,7 +29,7 @@ import scala.concurrent.duration.Duration
  * One line sentence description here.
  * Further description here.
  */
-class AlertSpec extends ScrupalSpecification("AlertSpec") {
+class AlertSpec extends ScrupalApiSpecification("AlertSpec") {
 
 
 	"Alert" should {

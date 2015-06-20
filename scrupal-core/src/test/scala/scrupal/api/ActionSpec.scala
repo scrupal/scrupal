@@ -18,7 +18,7 @@ package scrupal.api
 import java.util.concurrent.TimeUnit
 
 import akka.http.scaladsl.server.PathMatcher
-import scrupal.test.{ScrupalSpecification, FakeContext}
+import scrupal.test.{ScrupalApiSpecification, FakeContext}
 import shapeless.{::, HList, HNil}
 
 import scala.concurrent.{Await, Future}
@@ -26,16 +26,16 @@ import scala.concurrent.duration.Duration
 
 
 /** Test Suite for Actions and Related Traits */
-class ActionSpec extends ScrupalSpecification("ActionSpec") {
+class ActionSpec extends ScrupalApiSpecification("ActionSpec") {
 
   case class Fixture(name: String, path: String) extends FakeContext(name,path) {
 
     class TestActionProducer[L <: HList](pm: PathMatcher[L]) extends ActionProducer(pm) {
-      def actionFor(list: L, ctxt: Context) : Option[Action] = {
-        Some(new Action {
+      def actionFor(list: L, ctxt: Context) : Option[Reaction] = {
+        Some(new Reaction {
           val context = ctxt
-          def apply() : Future[Result[_]] = {
-            Future.successful(StringResult(list.toString))
+          def apply() : Future[Response[_]] = {
+            Future.successful(StringResponse(list.toString))
           }
         })
       }
@@ -44,11 +44,11 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
     val int_p2a = new TestActionProducer(PathMatcher("foo")/IntNumber)
 
     val empty_p2a = new ActionProducer(PathMatcher("bar")) {
-      def actionFor(list: HNil, ctxt: Context): Option[Action] = {
-        Some(new Action {
+      def actionFor(list: HNil, ctxt: Context): Option[Reaction] = {
+        Some(new Reaction {
           val context = ctxt;
-          def apply(): Future[Result[_]] = Future {
-            StringResult("")
+          def apply(): Future[Response[_]] = Future {
+            StringResponse("")
           }
         })
       }
@@ -99,7 +99,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
     "map integer to string" in Fixture("p2a1", "foo/42") { fix : Fixture ⇒
       val matched = fix.int_p2a.extractAction(fix) match {
         case Some(action) ⇒
-          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          val f = action().map { r: Response[_] ⇒ r.asInstanceOf[StringResponse].payload  }
           Await.result(f, Duration(1,TimeUnit.SECONDS))
         case None ⇒ "0"
       }
@@ -109,7 +109,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
     "map empty to nothing" in Fixture("p2a2", "bar") { fix : Fixture ⇒
       val matched = fix.empty_p2a.extractAction(fix) match {
         case Some(action) ⇒
-          val f2 = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload }
+          val f2 = action().map { r: Response[_] ⇒ r.asInstanceOf[StringResponse].payload }
           Await.result(f2, Duration(1, TimeUnit.SECONDS))
         case None ⇒ "Nope"
       }
@@ -125,7 +125,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
       val result = fix.provider1.actionFor("", fix)
       val str = result match {
         case Some(action) ⇒
-          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          val f = action().map { r: Response[_] ⇒ r.asInstanceOf[StringResponse].payload  }
           Await.result(f, Duration(1,TimeUnit.SECONDS))
         case None ⇒ ""
       }
@@ -135,7 +135,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
       val result = fix.provider2.actionFor("", fix)
       val str = result match {
         case Some(action) ⇒
-          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload}
+          val f = action().map { r: Response[_] ⇒ r.asInstanceOf[StringResponse].payload}
           Await.result(f, Duration(1, TimeUnit.SECONDS))
         case None ⇒ "Nope"
       }
@@ -145,7 +145,7 @@ class ActionSpec extends ScrupalSpecification("ActionSpec") {
       val r2 = fix.provider2.actionFor("", fix)
       val s2 = r2 match {
         case Some(action) ⇒
-          val f = action().map { r: Result[_] ⇒ r.asInstanceOf[StringResult].payload  }
+          val f = action().map { r: Response[_] ⇒ r.asInstanceOf[StringResponse].payload  }
           Await.result(f, Duration(1,TimeUnit.SECONDS))
         case None ⇒ "Nope"
       }

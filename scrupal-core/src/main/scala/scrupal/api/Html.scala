@@ -146,4 +146,11 @@ object Html {
 
   abstract class TemplatePage(_id : Symbol, val title : String, val description : String)
     extends Template(_id) with PageGenerator
+
+  object Response {
+    def apply(tag : TagContent, disposition : Disposition) = new HtmlResponse(tag.toString(), disposition)
+    def apply(contents : Html.Contents, disposition : Disposition) = {
+      new HtmlResponse(Html.renderContents(contents), disposition)
+    }
+  }
 }

@@ -319,4 +319,14 @@ class BSONHandlerForTemplate[T <: Registrable[_]] extends BSONHandler[BSONString
 }
   */
 
+  /*
+ import BSONHandlers._
+
+ case class EntityDao(db : ScrupalDB) extends IdentifierDAO[Entity] {
+   implicit val reader : Reader = EntityHandler.asInstanceOf[Reader]
+   implicit val writer : Writer = EntityHandler.asInstanceOf[Writer]
+
+   def collectionName : String = "entities"
+ }
+*/
 }

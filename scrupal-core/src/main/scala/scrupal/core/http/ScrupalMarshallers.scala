@@ -34,17 +34,17 @@ import scala.util.control.NonFatal
 
 trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
 
-  def makeMarshallable(fr : Future[Result[_]])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
+  def makeMarshallable(fr : Future[Response[_]])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
     scrupal.withActorExec { (as, ec, to) ⇒
-      val marshaller1 : ToResponseMarshaller[Result[_]] = mystery_marshaller(as, ec, to)
-      val marshaller2 = futureMarshaller[Result[_]](marshaller1, ec)
+      val marshaller1 : ToResponseMarshaller[Response[_]] = mystery_marshaller(as, ec, to)
+      val marshaller2 = futureMarshaller[Response[_]](marshaller1, ec)
       ToResponseMarshallable.isMarshallable(fr)(marshaller2)
     }
   }
 
-  def makeMarshallable(r : Result[_])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
+  def makeMarshallable(r : Response[_])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
     scrupal.withActorExec { (as, ec, to) ⇒
-      val marshaller1 : ToResponseMarshaller[Result[_]] = mystery_marshaller(as, ec, to)
+      val marshaller1 : ToResponseMarshaller[Response[_]] = mystery_marshaller(as, ec, to)
       ToResponseMarshallable.isMarshallable(r)(marshaller1)
     }
   }
@@ -52,19 +52,19 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
   val html_ct = ContentType(MediaTypes.`text/html`, HttpCharsets.`UTF-8`)
   val text_ct = ContentType(MediaTypes.`text/plain`, HttpCharsets.`UTF-8`)
 
-  implicit val html_marshaller : ToResponseMarshaller[HtmlResult] =
-    ToResponseMarshaller.delegate[HtmlResult, String](html_ct) { h ⇒ h.payload.toString() }
+  implicit val html_marshaller : ToResponseMarshaller[HtmlResponse] =
+    ToResponseMarshaller.delegate[HtmlResponse, String](html_ct) { h ⇒ h.payload.toString() }
 
-  implicit val string_marshaller : ToResponseMarshaller[StringResult] =
-    ToResponseMarshaller.delegate[StringResult, String](text_ct) { h ⇒ h.payload }
+  implicit val string_marshaller : ToResponseMarshaller[StringResponse] =
+    ToResponseMarshaller.delegate[StringResponse, String](text_ct) { h ⇒ h.payload }
 
   implicit def octets_marshaller(ct : ContentType)(
-    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[OctetsResult] =
-    ToResponseMarshaller.delegate[OctetsResult, EnumeratorResult](ct) { or : OctetsResult ⇒ or() } (enumerator_marshaller(arf, ec, timeout))
+    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[OctetsResponse] =
+    ToResponseMarshaller.delegate[OctetsResponse, EnumeratorResponse](ct) { or : OctetsResponse ⇒ or() } (enumerator_marshaller(arf, ec, timeout))
 
   implicit def stream_marshaller(ct : ContentType)(
-    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[StreamResult] =
-    ToResponseMarshaller.delegate[StreamResult, EnumeratorResult](ct) { s : StreamResult ⇒ s() } (enumerator_marshaller(arf, ec, timeout))
+    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[StreamResponse] =
+    ToResponseMarshaller.delegate[StreamResponse, EnumeratorResponse](ct) { s : StreamResponse ⇒ s() } (enumerator_marshaller(arf, ec, timeout))
 
   implicit def futureMarshaller[T](implicit m : ToResponseMarshaller[T], ec : ExecutionContext) : ToResponseMarshaller[Future[T]] =
     ToResponseMarshaller[Future[T]] { (value, ctx) ⇒
@@ -74,8 +74,8 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
       }
     }
 
-  implicit def enumerator_marshaller(implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[EnumeratorResult] = {
-    ToResponseMarshaller[EnumeratorResult] { (value, trmc) ⇒
+  implicit def enumerator_marshaller(implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[EnumeratorResponse] = {
+    ToResponseMarshaller[EnumeratorResponse] { (value, trmc) ⇒
         def consumePayload(streamActor : ActorRef) : Iteratee[Array[Byte], Unit] = {
             def continue(input : Input[Array[Byte]]) : Iteratee[Array[Byte], Unit] = input match {
               case Input.Empty ⇒ Cont[Array[Byte], Unit](continue)
@@ -143,41 +143,41 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
     }
   }
 
-  implicit val error_marshaller : ToResponseMarshaller[ErrorResult] =
-    ToResponseMarshaller[ErrorResult] { (value, context) ⇒
+  implicit val error_marshaller : ToResponseMarshaller[ErrorResponse] =
+    ToResponseMarshaller[ErrorResponse] { (value, context) ⇒
       val status_code = disposition2StatusCode(value.disposition)
       context.marshalTo(HttpResponse(status_code, HttpEntity(value.contentType, value.formatted)))
     }
 
-  implicit val form_error_marshaller : ToResponseMarshaller[FormErrorResult] =
-    ToResponseMarshaller[FormErrorResult] { (value, context) ⇒
+  implicit val form_error_marshaller : ToResponseMarshaller[FormErrorResponse] =
+    ToResponseMarshaller[FormErrorResponse] { (value, context) ⇒
       val status_code = disposition2StatusCode(value.disposition)
       context.marshalTo(HttpResponse(status_code, HttpEntity(text_ct, value.formatted)))
     }
 
-  implicit val exception_marshaller : ToResponseMarshaller[ExceptionResult] =
-    ToResponseMarshaller[ExceptionResult] { (value, ctxt) ⇒
+  implicit val exception_marshaller : ToResponseMarshaller[ExceptionResponse] =
+    ToResponseMarshaller[ExceptionResponse] { (value, ctxt) ⇒
       ctxt.handleError(value.payload)
     }
 
   implicit def mystery_marshaller(
-    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[Result[_]] = {
-    ToResponseMarshaller[Result[_]] {
+    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[Response[_]] = {
+    ToResponseMarshaller[Response[_]] {
       (value, trmc) ⇒
         {
           value match {
-            case h : HtmlResult ⇒ html_marshaller(h, trmc)
-            case s : StringResult ⇒ string_marshaller(s, trmc)
-            case e : ErrorResult ⇒ error_marshaller(e, trmc)
-            case f : FormErrorResult ⇒ form_error_marshaller(f, trmc)
-            case x : ExceptionResult ⇒ exception_marshaller(x, trmc)
-            case o : OctetsResult ⇒
+            case h : HtmlResponse ⇒ html_marshaller(h, trmc)
+            case s : StringResponse ⇒ string_marshaller(s, trmc)
+            case e : ErrorResponse ⇒ error_marshaller(e, trmc)
+            case f : FormErrorResponse ⇒ form_error_marshaller(f, trmc)
+            case x : ExceptionResponse ⇒ exception_marshaller(x, trmc)
+            case o : OctetsResponse ⇒
               val m = octets_marshaller(o.contentType)
               m(o, trmc)
-            case s : StreamResult ⇒
+            case s : StreamResponse ⇒
               val m = stream_marshaller(s.contentType)
               m(s, trmc)
-            case e : EnumeratorResult ⇒
+            case e : EnumeratorResponse ⇒
               val m = enumerator_marshaller
               m(e, trmc)
             case b : BSONResult ⇒

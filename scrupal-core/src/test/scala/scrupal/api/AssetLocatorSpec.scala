@@ -19,7 +19,7 @@ package scrupal.api
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import scrupal.test.{FakeContext, ScrupalSpecification}
+import scrupal.test.{FakeContext, ScrupalApiSpecification}
 import scrupal.utils.{OSSLicense, Configuration}
 import spray.http.MediaTypes
 
@@ -27,7 +27,7 @@ class TestAssetLocator(config: Configuration) extends ConfiguredAssetsLocator(co
   override def assets_path = super.assets_path ++ Seq("scrupal-core/test/resources")
 }
 
-class AssetLocatorSpec extends ScrupalSpecification("AssetLocatorSpec") {
+class AssetLocatorSpec extends ScrupalApiSpecification("AssetLocatorSpec") {
 sequential
   case class Assets(name: String) extends FakeContext[Assets](name) {
 
@@ -65,7 +65,7 @@ sequential
       val stream = a.locator.fetch("fake.js")
       Some(stream.contentType.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
       stream match {
-        case s: StreamResult ⇒
+        case s: StreamResponse ⇒
           s.payload.available() === 0
         case _ ⇒ failure("unexpected result type")
       }
