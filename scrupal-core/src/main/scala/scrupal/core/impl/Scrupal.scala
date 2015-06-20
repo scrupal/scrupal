@@ -39,7 +39,7 @@ case class Scrupal(
   config : Option[Configuration] = None,
   ec : Option[ExecutionContext] = None,
   disp : Option[ActorRef] = None,
-  dbc : Option[StoreContext] = None,
+  sc : Option[StoreContext] = None,
   actSys : Option[ActorSystem] = None)
   extends scrupal.api.Scrupal with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
 
@@ -60,7 +60,7 @@ case class Scrupal(
 
   lazy val _dispatcher = disp.getOrElse(ActionProcessor.makeSingletonRef(_actorSystem))
 
-  val _storageContext = new AtomicReference[StoreContext](dbc.orNull)
+  val _storageContext = new AtomicReference[StoreContext](sc.orNull)
 
   val assetsLocator = new ConfiguredAssetsLocator(_configuration)
 

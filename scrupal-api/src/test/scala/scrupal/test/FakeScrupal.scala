@@ -22,12 +22,22 @@ import scrupal.storage.api.StoreContext
 
 import scala.concurrent.{Future, ExecutionContext}
 
-case class FakeScrupal(name: String) extends Scrupal {
+class FakeScrupal(
+  name : String,
+  config : Option[Configuration],
+  ec : Option[ExecutionContext] ,
+  sc : Option[StoreContext] ,
+  actSys : Option[ActorSystem]) extends Scrupal(name, config, ec, sc, actSys) {
+
   def Copyright: String = "Copyright 2015, Reactific Software LLC"
 
-  def dispatch(action: Reaction): Future[Response] = ???
+  def dispatch(reaction: Reaction): Future[Response] = {
+    reaction()
+  }
 
-  protected def load(config: Configuration, context: StoreContext): Future[Map[String, Site]] = ???
+  protected def load(config: Configuration, context: StoreContext): Future[Map[String, Site]] = {
+    Future.successful ( Map.empty[String, Site] )
+  }
 
   def onStart(): Unit = {}
 
@@ -40,8 +50,15 @@ case class FakeScrupal(name: String) extends Scrupal {
     */
   def open(): (Configuration, StoreContext) = { _configuration → _storageContext }
 
-  implicit val _configuration: Configuration = ???
-  implicit val _storageContext: StoreContext = ???
-  implicit val _executionContext: ExecutionContext = ???
-  implicit val _actorSystem: ActorSystem = ???
+}
+
+object FakeScrupal {
+  def apply(   nm : String = "Scrupal",
+    config : Option[Configuration] = None,
+    ec : Option[ExecutionContext] = None,
+    sc : Option[StoreContext] = None,
+    actSys : Option[ActorSystem] = None
+    ) : FakeScrupal = {
+    new FakeScrupal(nm, config, ec, sc, actSys)
+  }
 }

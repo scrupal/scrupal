@@ -21,7 +21,7 @@ import scrupal.utils.ConfigHelpers
 
 object Boot extends Scrupal with App {
 
-  override val (config, dbc) = open()
+  override val (config, sc) = open()
 
   val http = scrupal.core.http.Boot(this, config)
 

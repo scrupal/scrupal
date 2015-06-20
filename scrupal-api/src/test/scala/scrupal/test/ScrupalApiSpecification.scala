@@ -30,7 +30,7 @@ abstract class ScrupalApiSpecification(specName : String, timeout : FiniteDurati
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
-  implicit lazy val scrupal = new FakeScrupal(ScrupalSpecification.next(specName))
+  implicit lazy val scrupal = FakeScrupal(ScrupalSpecification.next(specName))
 
   override protected def beforeAll() = {}
 
