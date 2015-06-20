@@ -32,9 +32,12 @@ case class BLOBType(
   mediaType : MediaType,
   maxLen : Long = Long.MaxValue) extends Type[Array[Byte]] {
   assert(maxLen >= 0)
-  def validate(ref : Location, value : Array[Byte]) : VResult = simplify(ref, value, "Array[Byte]") {
-    case b : Array[Byte] if b.length > maxLen ⇒ Some(s"BLOB of length ${b.length} exceeds maximum length of $maxLen")
-    case b : Array[Byte] ⇒ Some("")
+  def validate(ref : Location, value : Array[Byte]) : VResult = {
+    simplify(ref, value, "Array[Byte]") {
+      case b: Array[Byte] if b.length > maxLen ⇒ Some(s"BLOB of length ${b.length} exceeds maximum length of $maxLen")
+      case b: Array[Byte] ⇒ None
+      case _ ⇒ Some("")
+    }
   }
   override def kind = 'BLOB
 

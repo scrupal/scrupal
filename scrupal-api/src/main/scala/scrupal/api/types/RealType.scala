@@ -17,9 +17,9 @@ package scrupal.api.types
 
 import scrupal.api._
 import scrupal.utils.Validation.Location
-import shapeless.{Coproduct, Poly1, CNil, :+:}
 
-import scala.language.implicitConversions
+import shapeless._
+
 
 /** A Real type constrains Double values between a minimum and maximum value
   *
@@ -32,94 +32,56 @@ case class RealType(
   id : Identifier,
   description : String,
   min : Double = Double.MinValue,
-  max : Double = Double.MaxValue) extends Type[RealType.ILDFS] {
+  max : Double = Double.MaxValue) extends Type[Atom] {
   require(min <= max)
-  def validate(ref : Location, value : RealType.ILDFS) : VResult = {
-    simplify(ref, value, "Double, Long or Integer") { value ⇒
-      object validator extends Poly1 {
-        implicit def caseInt = at[Int] { i : Int ⇒
-          if (i < min)
-            Some(s"Value $i is out of range, below minimum of $min")
-          else if (i > max)
-            Some(s"Value $i is out of range, above maximum of $max")
-          else
-            None
-        }
-        implicit def caseLong = at[Long] { l : Long ⇒
-          if (l < min)
-            Some(s"Value $l is out of range, below minimum of $min")
-          else if (l > max)
-            Some(s"Value $l is out of range, above maximum of $max")
-          else
-            None
-        }
-        implicit def caseDouble = at[Double] { d : Double ⇒
-          if (d < min)
-            Some(s"Value $d is out of range, below minimum of $min")
-          else if (d > max)
-            Some(s"Value $d is out of range, above maximum of $max")
-          else
-            None
-        }
-        implicit def caseFloat = at[Float] { f : Float ⇒
-          if (f < min)
-            Some(s"Value $f is out of range, below minimum of $min")
-          else if (f > max)
-            Some(s"Value $f is out of range, above maximum of $max")
-          else
-            None
-        }
-        implicit def caseString = at[String] { s: String ⇒
-          try {
-            val num = s.toDouble
-            if (num > max)
-              Some(s"Value $s is out of range, above maximum of $max")
-            else if (num < min)
-              Some(s"Value $s is out of range, below minimum of $min")
-            else
-              None
-          } catch{
-            case x : Throwable ⇒
-              Some(s"Value '$s' is not convertible to a number: ${x.getClass.getSimpleName}: ${x.getMessage}")
-          }
-        }
-        implicit def caseOther = at[Any] { x ⇒ Some("") }
+
+  override def kind = 'Real
+
+  private object validation extends Poly1 {
+    def check[T](value: Double, orig: T): Option[String] = {
+      if (value < min)
+        Some(s"Value $orig ($value) is out of range, below minimum of $min")
+      else if (value > max)
+        Some(s"Value $orig ($value) is out of range, above maximum of $max")
+      else
+        None
+    }
+
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(if (b) 1.0D else 0.0D, b) }
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toDouble, b) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toDouble, s) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i.toDouble, i) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toDouble, l) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toDouble, f) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d, d) }
+
+    implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ checkString(s.name) }
+
+    implicit def caseString = at[String] { s : String ⇒ checkString(s) }
+
+    def checkString(s: String) : Option[String] = {
+      try {
+        check(s.toLong, s)
+      } catch {
+        case x: Throwable ⇒
+          Some(s"Value '$s' is not convertible to a number: ${x.getClass.getSimpleName}: ${x.getMessage}")
       }
-      val mapped = value.map(validator)
-      val selected = mapped.select[Option[String]]
-      selected.getOrElse(None)
     }
   }
-  override def kind = 'Real
+
+  def validate(ref : Location, value : Atom) : VResult = {
+    simplify(ref, value, "Double, Long or Integer") { value ⇒
+      value.map(validation).unify
+    }
+  }
 }
 
-object RealType {
-  type ILDFS = Int :+: Long :+: Double :+: Float :+: String :+: CNil
-  implicit def stringWrapper(str : String) : ILDFS = Coproduct[ILDFS](str)
-  implicit def intWrapper(int: Int) : ILDFS = Coproduct[ILDFS](int)
-  implicit def longWrapper(long: Long) : ILDFS = Coproduct[ILDFS](long)
-  implicit def floatWrapper(flt: Float) : ILDFS = Coproduct[ILDFS](flt)
-  implicit def doubleWrapper(dbl: Double) : ILDFS = Coproduct[ILDFS](dbl)
-
-  implicit def strSeqWrapper(ids: Seq[String]) : Seq[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def intSeqWrapper(ids: Seq[Int]) : Seq[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def longSeqErapper(ids: Seq[Long]) : Seq[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def doubleSeqErapper(ids: Seq[Double]) : Seq[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def floatSeqErapper(ids: Seq[Float]) : Seq[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-
-  implicit def strSetWrapper(ids: Set[String]) : Set[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def intSetWrapper(ids: Set[Int]) : Set[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def longSetErapper(ids: Set[Long]) : Set[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def doubleSetErapper(ids: Set[Double]) : Set[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-  implicit def floatSetErapper(ids: Set[Float]) : Set[ILDFS] = ids.map { x ⇒ Coproduct[ILDFS](x) }
-
-  implicit def strMapWrapper(ids: Map[String,String]) : Map[String,ILDFS] = ids.map { case (k,v) ⇒ k → Coproduct[ILDFS](v) }
-  implicit def intMapWrapper(ids: Map[String,Int]) : Map[String,ILDFS] = ids.map { case (k,v) ⇒ k → Coproduct[ILDFS](v) }
-  implicit def longMapErapper(ids: Map[String,Long]) : Map[String,ILDFS] = ids.map { case (k,v) ⇒ k → Coproduct[ILDFS](v) }
-  implicit def doubleMapErapper(ids: Map[String,Double]) : Map[String,ILDFS] = ids.map { case (k,v) ⇒ k → Coproduct[ILDFS](v) }
-  implicit def floatMapErapper(ids: Map[String,Float]) : Map[String,ILDFS] = ids.map { case (k,v) ⇒ k → Coproduct[ILDFS](v) }
-
-}
 
 object AnyReal_t
   extends RealType('AnyReal, "A type that accepts any double floating point value", Double.MinValue, Double.MaxValue)

@@ -58,7 +58,7 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
 
     object setTy extends SetType(sym("setTy"), "Set example", rangeTy)
 
-    object mapTy extends MapType[RealType.ILDFS](sym("mapTy"), "Map example", Seq("foo"), realTy)
+    object mapTy extends MapType[Atom](sym("mapTy"), "Map example", Seq("foo"), realTy)
 
     object emailTy extends StringType(sym("EmailAddress"), "An email address", anchored(EmailAddress), 253)
 
@@ -99,8 +99,6 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     )
   }
 
-
-
   "MiddlePeriod" should {
     "accept 'foo.bar'" in TestTypes() { t : TestTypes ⇒
       val result = t.MiddlePeriod.validate(t.vLoc, "foo.bar")
@@ -114,9 +112,7 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     }
   }
 
-
   "RangeType(10,20)" should {
-    import RangeType._
     "accept 17" in TestTypes() { t: TestTypes ⇒
       t.rangeTy.validate(t.vLoc, 17).isError must beFalse
     }
@@ -134,9 +130,7 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     }
   }
 
-
   "RealType(10.1,20.9)" should {
-    import RealType._
     "accept 17.0" in TestTypes() { t: TestTypes ⇒
       t.realTy.validate(t.vLoc, 17.0).isError must beFalse
     }
@@ -153,8 +147,6 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
       t.realTy.validate(t.vLoc, 20.91).isError must beTrue
     }
   }
-
-  import EnumType._
 
   "EnumType(fibonacci)" should {
     import EnumType._
@@ -185,62 +177,63 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
   }
 
   "ListType(enumTy)" should {
-    import EnumType._
     "reject Seq(6,7)" in TestTypes() { t: TestTypes ⇒
-      val js = Seq( 6, 7 )
+      val js = Seq[Atom]( 6, 7 )
       t.listTy.validate(t.vLoc, js).isError must beTrue
     }
     "accept Seq('six')" in TestTypes() { t: TestTypes ⇒
-      val js = Seq("six")
+      val js = Seq[Atom]("six")
       t.listTy.validate(t.vLoc, js).isError must beFalse
     }
     "accept Seq()" in TestTypes() { t: TestTypes ⇒
-      val js = Seq()
+      val js = Seq[Atom]()
       t.listTy.validate(t.vLoc, js).isError must beFalse
     }
     "accept Seq(\"one\", \"three\", \"five\")" in TestTypes() { t: TestTypes ⇒
-      val js = Seq("one", "three", "five")
+      val js = Seq[Atom]("one", "three", "five")
       t.listTy.validate(t.vLoc, js).isError must beFalse
     }
     "reject BSONArray('nine')" in TestTypes() { t: TestTypes ⇒
-      val js = Seq("nine")
+      val js = Seq[Atom]("nine")
       t.listTy.validate(t.vLoc, js).isError must beTrue
     }
   }
 
   "SetType(t.rangeTy)" should {
-    import RangeType._
     "reject Set(\"foo\")" in TestTypes() { t: TestTypes ⇒
-      val js = Set("foo")
+      val js = Set[Atom]("foo")
       t.setTy.validate(t.vLoc, js).isError must beTrue
     }
     "accept Set(17)" in TestTypes() { t: TestTypes ⇒
-      val js = Set(17)
+      val js = Set[Atom](17)
       t.setTy.validate(t.vLoc, js).isError must beFalse
     }
     "accept Set(17,18)" in TestTypes() { t: TestTypes ⇒
-      val js = Set(17, 18)
+      val js = Set[Atom](17, 18)
       t.setTy.validate(t.vLoc, js).isError must beFalse
     }
     "accept Set(17,17)" in TestTypes() { t: TestTypes ⇒
-      val js = Set(17, 17)
+      val js = Set[Atom](17, 17)
       val result = t.setTy.validate(t.vLoc, js)
       result.isError must beFalse
     }
     "reject Set(21)" in TestTypes() { t: TestTypes ⇒
-      val js = Set(21)
+      val js = Set[Atom](21)
       t.setTy.validate(t.vLoc, js).isError must beTrue
     }
   }
 
   "MapType(realTy)" should {
-    import RealType._
-    "reject Map('foo' -> 17)" in TestTypes() { t: TestTypes ⇒
-      val js = Map("foo" -> 7.0)
-      t.mapTy.validate(t.vLoc, js).isError must beFalse
+    "reject Map('foo' -> 7.0)" in TestTypes() { t: TestTypes ⇒
+      val js = Map[String,Atom]("foo" -> 7.0)
+      t.mapTy.validate(t.vLoc, js).isError must beTrue
+    }
+    "reject Map('foo' -> \"7.0\")" in TestTypes() { t : TestTypes ⇒
+      val js = Map[String,Atom]("foo" → "7.0")
+      t.mapTy.validate(t.vLoc, js).isError must beTrue
     }
     "accept Map('foo' -> 17.0)" in TestTypes() { t: TestTypes ⇒
-      val js = Map("foo" -> 17.0)
+      val js = Map[String,Atom]("foo" -> 17.0)
       t.mapTy.validate(t.vLoc, js).isError must beFalse
     }
   }

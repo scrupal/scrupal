@@ -22,31 +22,6 @@ import shapeless._
 
 import scala.language.implicitConversions
 
-case class EnumValidator(enumerators : Map[Identifier, Int], name : String) extends Validator[EnumType.ISILA] {
-
-  def validate(ref : Location, value : EnumType.ISILA) : VResult = {
-    simplify(ref, value, "Integer, Long or String") { value ⇒
-      object validator extends Poly1 {
-        implicit def caseInt = at[Int] { i : Int ⇒
-          if (!enumerators.exists { y ⇒ y._2 == i }) Some(s"Value $i not valid for '$name'") else None
-        }
-        implicit def caseLong = at[Long] { l : Long ⇒
-          if (!enumerators.exists { y ⇒ y._2 == l }) Some(s"Value $l not valid for '$name'") else None
-        }
-        implicit def caseString = at[String] { s : String ⇒
-          if (!enumerators.contains(Symbol(s))) Some(s"Value $s not valid for '$name'") else None
-        }
-        implicit def caseIdentifier = at[Identifier] { id : Identifier ⇒
-          if (!enumerators.contains(id)) Some(s"Value '$id' not valid for '$name'") else None
-        }
-        implicit def caseAny = at[Any] { x ⇒ Some("") }
-      }
-      val mapped = value.map(validator)
-      val selected = mapped.select[Option[String]]
-      selected.getOrElse(None)
-    }
-  }
-}
 
 /** An Enum type allows a selection of one enumerator from a list of enumerators.
   * Each enumerator is assigned an integer value.
@@ -54,15 +29,53 @@ case class EnumValidator(enumerators : Map[Identifier, Int], name : String) exte
 case class EnumType(
   id : Identifier,
   description : String,
-  enumerators : Map[Identifier, Int]) extends Type[EnumType.ISILA] {
+  enumerators : Map[Identifier, Int]) extends Type[Atom] {
   require(enumerators.nonEmpty)
-  val validator = EnumValidator(enumerators, label)
-  def validate(ref : Location, value : EnumType.ISILA) = {
-    validator.validate(ref, value)
-  }
   override def kind = 'Enum
+
   def valueOf(enum : Symbol) = enumerators.get(enum)
   def valueOf(enum : String) = enumerators.get(Symbol(enum))
+
+  private object validator extends Poly1 {
+    def check[T](value: Int, orig: T): Option[String] = {
+      if (!enumerators.exists { case (key,v) ⇒ v == value } )
+        Some(s"Value $orig ($value) is not valid for enumeration '${id.name}'")
+      else
+        None
+    }
+
+    def check(s: Symbol) : Option[String] = {
+      if (!enumerators.contains(s))
+        Some(s"Value '${id.name}' is not valid for enumeration '${id.name}")
+      else
+        None
+    }
+
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(if (b) 1 else 0, b) }
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toInt, b) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toInt, s) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i, i) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toInt, l) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toInt, f) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toInt, d) }
+
+    implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ check(s) }
+
+    implicit def caseString = at[String] { s : String ⇒ check(Symbol(s)) }
+  }
+
+  def validate(ref : Location, value : Atom) = {
+    simplify(ref, value, "Atom") { value ⇒
+      value.map(validator).unify
+    }
+  }
+
 }
 
 object EnumType {

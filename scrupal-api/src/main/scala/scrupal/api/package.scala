@@ -19,6 +19,9 @@ import java.nio.charset.StandardCharsets
 
 import play.api.libs.json.JsObject
 
+
+import shapeless._
+
 /** Scrupal API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the main abstractions
   * needed to write an application with Scrupal. We use the Acronym *MANIFEST*(O) to remember the key types of
@@ -57,4 +60,23 @@ package object api {
 
   val emptyJsObject = JsObject(Seq())
 
+  import scala.language.implicitConversions
+
+  /** Atom Type
+    * This Shapeless type is used to provide a union of the basic atomic types in Scala. Various data structures in
+    * Scrupal use Atom as the value type in the structure so that the elements of the structure can have a variety of
+    * types. In particular, the Type validator uses Atom as the value type frequently so that numbers can be represented
+    * as strings, etc.
+    */
+  type Atom = Boolean :+: Byte :+: Short :+: Int :+: Long :+: Float :+: Double :+: String :+: Symbol :+: CNil
+
+  implicit def atomFromBoolean(b: Boolean) : Atom = Coproduct[Atom](b)
+  implicit def atomFromByte(b : Byte) : Atom = Coproduct[Atom](b)
+  implicit def atomFromShort(s : Short) : Atom = Coproduct[Atom](s)
+  implicit def atomFromInt(i: Int) : Atom = Coproduct[Atom](i)
+  implicit def atomFromLong(l: Long) : Atom = Coproduct[Atom](l)
+  implicit def atomFromFloat(f: Float) : Atom = Coproduct[Atom](f)
+  implicit def atomFromDouble(d: Double) : Atom = Coproduct[Atom](d)
+  implicit def atomFromString(str : String) : Atom = Coproduct[Atom](str)
+  implicit def atomFromSymbol(sym : Symbol) : Atom = Coproduct[Atom](sym)
 }

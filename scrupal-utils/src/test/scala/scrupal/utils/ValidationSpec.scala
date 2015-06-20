@@ -16,9 +16,11 @@
 
 package scrupal.utils
 
+import org.specs2.execute.{Failure, Result}
 import scrupal.utils.Validation._
 
 import scrupal.test.ScrupalSpecification
+import shapeless._
 
 /** Test Spec for Validator */
 class ValidationSpec extends ScrupalSpecification("Validator") {
@@ -88,4 +90,82 @@ class ValidationSpec extends ScrupalSpecification("Validator") {
       vr2.message must beEqualTo("Validation succeeded, at 7.")
     }
   }
+
+  "Shapeless Coproduct" should {
+    object TestType {
+      type RealNumber = Int :+: Long :+: Float :+: Double :+: String :+: CNil
+    }
+    def validate(value : TestType.RealNumber, min: Double = 10.0, max : Double = 20.0): Result = {
+      object validator extends Poly1 {
+        implicit def caseInt = at[Int] { i : Int ⇒
+          if (i < min) Some(s"Value $i is out of range, below minimum of $min")
+          else if (i > max) Some(s"Value $i is out of range, above maximum of $max")
+          else None
+        }
+        implicit def caseLong = at[Long] { l : Long ⇒
+          if (l < min) Some(s"Value $l is out of range, below minimum of $min")
+          else if (l > max) Some(s"Value $l is out of range, above maximum of $max")
+          else None
+        }
+        implicit def caseDouble = at[Double] { d : Double ⇒
+          if (d < min) Some(s"Value $d is out of range, below minimum of $min")
+          else if (d > max) Some(s"Value $d is out of range, above maximum of $max")
+          else None
+        }
+        implicit def caseFloat = at[Float] { f : Float ⇒
+          if (f < min) Some(s"Value $f is out of range, below minimum of $min")
+          else if (f > max) Some(s"Value $f is out of range, above maximum of $max")
+          else None
+        }
+        implicit def caseString = at[String] { s: String ⇒
+          try {
+            val num = s.toDouble
+            if (num > max) Some(s"Value $s is out of range, above maximum of $max")
+            else if (num < min) Some(s"Value $s is out of range, below minimum of $min")
+            else None
+          } catch{
+            case x : Throwable ⇒
+              Some(s"Value '$s' is not convertible to a number: ${x.getClass.getSimpleName}: ${x.getMessage}")
+          }
+        }
+      }
+      val msg = value.map(validator).unify
+      msg match {
+        case Some(result: String) ⇒ Failure(result)
+        case None ⇒ org.specs2.execute.Success("validation passed")
+      }
+    }
+
+    "succeed on 10.0 <= 15.0D <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](15.0D))
+    }
+    "succeed on 10.0 <= 15.0F <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](15.0F))
+    }
+    "succeed on 10.0 <= 15L <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](15L))
+    }
+    "succeed on 10.0 <= 15 <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](15))
+    }
+    "succeed on 10.0 <= \"15.0\" <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber]("15.0"))
+    }
+    "fail on 10 <= 5.0D <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](5.0D)).isFailure must beTrue
+    }
+    "fail on 10 <= 5.0F <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](5.0F)).isFailure must beTrue
+    }
+    "fail on 10 <= 5L <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](5L)).isFailure must beTrue
+    }
+    "fail on 10 <= 5 <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber](5)).isFailure must beTrue
+    }
+    "fail on 10 <= \"5.0\" <= 20.0" in {
+      validate(Coproduct[TestType.RealNumber]("5.0")).isFailure must beTrue
+    }
+  }
 }
+

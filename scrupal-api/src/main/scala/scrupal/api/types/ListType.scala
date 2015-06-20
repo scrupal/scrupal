@@ -17,8 +17,7 @@ package scrupal.api.types
 
 import scrupal.api._
 import scrupal.api.IndexableType
-import scrupal.utils.Validation.{Results, Failure, IndexedLocation}
-import shapeless.Coproduct
+import scrupal.utils.Validation.{Results, IndexedLocation}
 
 /** A Homogenous List type allows a non-exclusive list of elements of other types to be constructed
   *
@@ -32,26 +31,7 @@ case class ListType[EType](
   elemType : Type[EType]) extends IndexableType[EType, Seq[EType]] {
   override def kind = 'List
   def toSeq(st : Seq[EType]) : Seq[EType] = st
-  def validateElement(ref : IndexedLocation, v : EType) = {
-    elemType.validate(ref, v).asInstanceOf[Failure[EType]]
-  }
-}
-
-/** A Heterogenous List type  */
-abstract class HeteroListType[EType <: Coproduct] extends IndexableType[EType, Seq[EType]] {
-  override def kind = 'HeteroList
-  def toSeq(st : Seq[EType]) : Seq[EType] = st
-  def validateElement(ref : IndexedLocation, v : EType) : Results[EType]
-}
-
-/** A List Type that accepts any kind of numeric value */
-case class NumbersListType(
-  id : Identifier,
-  description : String,
-  minValue : Long,
-  maxValue : Long) extends HeteroListType[NumbersType.Numbers] {
-  override val elemType : Type[NumbersType.Numbers] = NumbersType(Symbol(id.name + "-Elem"), "", minValue, maxValue)
-  def validateElement(ref : IndexedLocation, v : NumbersType.Numbers) : Results[NumbersType.Numbers] = {
+  def validateElement(ref : IndexedLocation, v : EType) : Results[EType]= {
     elemType.validate(ref, v)
   }
 }
