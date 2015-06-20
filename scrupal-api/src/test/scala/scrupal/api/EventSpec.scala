@@ -15,50 +15,14 @@
 
 package scrupal.api
 
-import java.util.concurrent.TimeUnit
-
 import scrupal.test.ScrupalApiSpecification
-import scrupal.utils.HasherKinds
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+class EventSpec extends ScrupalApiSpecification("Event") {
 
-
-/**
- * Test that our basic abstractions for accessing the database hold water.
- */
-
-class PrincipalSpec extends ScrupalApiSpecification("PrincipalSpec")
-{
-  sequential
-
-	"Principal" should {
-		"save, load and delete from DB" in {
-      pending("reinstatement")
-      /* FIXME: Reinstate Principal test case
-      withSchema { schema: Schema =>
-        withEmptyDB(schema.dbName) { database ⇒
-          val p = new Principal('id, "nobody@nowhere.ex", List("Nobody"), "openpw",
-            HasherKinds.SCrypt.toString, "", 0L, None)
-          p._id must beEqualTo('id)
-          val f1 = schema.principals.insert(p).flatMap { writeResult ⇒
-            writeResult.ok must beTrue
-            schema.principals.fetch('id) map {
-              case Some(principal) ⇒
-                principal._id must beEqualTo('id)
-                principal.aliases must beEqualTo(List("Nobody"))
-                principal.password must beEqualTo(p.password)
-                schema.principals.removeById(principal._id) map { writeResult ⇒
-                  writeResult.ok must beTrue
-                }
-                true
-              case None ⇒ failure("No principal fetched"); false
-            }
-          }
-          val r = Await.result(f1, Duration(1,TimeUnit.SECONDS))
-          r must beTrue
-        }
-      } */
+  "Event" should {
+    "have some test examples" in {
+      pending
     }
   }
+
 }

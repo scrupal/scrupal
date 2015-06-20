@@ -36,7 +36,7 @@ class NodeSpec extends ScrupalSpecification("NodeSpec") {
 
   sequential
 
-  /* TODO: Figure out how to reinstate NodeSpec
+  /* FIXME: Figure out how to reinstate NodeSpec
   case class Fixture(name: String) extends FakeContext[Fixture](name) {
     val template = new Html.Template(Symbol(name)) {
       val description = "Describe me"

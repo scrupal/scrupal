@@ -19,7 +19,6 @@ import org.joda.time.DateTime
 import org.specs2.execute.{Error, Result}
 
 import scrupal.storage.api._
-import scrupal.store.mem.MemoryStorageDriver
 import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.{Future, Await}

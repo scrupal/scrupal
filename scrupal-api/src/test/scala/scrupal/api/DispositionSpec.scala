@@ -37,4 +37,35 @@ class DispositionSpec extends Specification {
       Indeterminate.isFailure must beFalse
     }
   }
+
+  "Received" should {
+    "be successful" in {
+      Received.code must beGreaterThan(0)
+      Received.isSuccessful must beTrue
+    }
+  }
+  "Pending" should {
+    "be successful" in {
+      Pending.code must beGreaterThan(0)
+      Pending.isSuccessful must beTrue
+    }
+  }
+  "Promise" should {
+    "be successful" in {
+      Promise.code must beGreaterThan(0)
+      Promise.isSuccessful must beTrue
+    }
+  }
+
+  "Dispositions" should {
+    "have no duplicate values" in {
+      val seq = Seq (
+        Indeterminate, Successful, Received, Pending, Promise, Unspecified, TimedOut, Unintelligible, Unimplemented,
+        Unsupported, Unauthorized, Unavailable, NotFound, Ambiguous, Conflict, TooComplex, Exhausted, Exception,
+        Unacceptable
+      )
+      val set : Set[Int] = {seq.map { x ⇒ x.code }}.toSet
+      set.size must beEqualTo(seq.size)
+    }
+  }
 }

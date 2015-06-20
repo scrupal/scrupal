@@ -15,50 +15,39 @@
 
 package scrupal.api
 
-import java.util.concurrent.TimeUnit
+import org.specs2.mutable.Specification
 
-import scrupal.test.ScrupalApiSpecification
-import scrupal.utils.HasherKinds
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+class ProviderSpec extends Specification {
 
+  case object NullReaction extends Reaction {
+    def request: Request = Request.empty
+    def apply() : Future[Response] = Future.successful { NoopResponse }
+  }
+  case class SimpleProvider(id : Symbol) extends Provider {
+    def canProvide(request: Request): Boolean = true
+    def provide(request: Request): Option[Reaction] = Some(NullReaction)
+  }
 
-/**
- * Test that our basic abstractions for accessing the database hold water.
- */
+  val provider1 = SimpleProvider('One)
+  val provider2 = SimpleProvider('Two)
 
-class PrincipalSpec extends ScrupalApiSpecification("PrincipalSpec")
-{
-  sequential
-
-	"Principal" should {
-		"save, load and delete from DB" in {
-      pending("reinstatement")
-      /* FIXME: Reinstate Principal test case
-      withSchema { schema: Schema =>
-        withEmptyDB(schema.dbName) { database ⇒
-          val p = new Principal('id, "nobody@nowhere.ex", List("Nobody"), "openpw",
-            HasherKinds.SCrypt.toString, "", 0L, None)
-          p._id must beEqualTo('id)
-          val f1 = schema.principals.insert(p).flatMap { writeResult ⇒
-            writeResult.ok must beTrue
-            schema.principals.fetch('id) map {
-              case Some(principal) ⇒
-                principal._id must beEqualTo('id)
-                principal.aliases must beEqualTo(List("Nobody"))
-                principal.password must beEqualTo(p.password)
-                schema.principals.removeById(principal._id) map { writeResult ⇒
-                  writeResult.ok must beTrue
-                }
-                true
-              case None ⇒ failure("No principal fetched"); false
-            }
-          }
-          val r = Await.result(f1, Duration(1,TimeUnit.SECONDS))
-          r must beTrue
-        }
-      } */
+  "DelegatingProvider" should {
+    "delegate" in {
+      val dp = new DelegatingProvider {
+        def id: Identifier = 'DelegatingProvider
+        def delegates: Iterable[Provider] = Seq(provider1, provider2)
+      }
+      dp.canProvide(Request.empty) must beTrue
+      val maybe_reaction = dp.provide(Request.empty)
+      maybe_reaction.isDefined must beTrue
+      val reaction = maybe_reaction.get
+      reaction must beEqualTo(NullReaction)
+      val future = reaction().map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
+      Await.result(future, 1.seconds)
     }
   }
 }

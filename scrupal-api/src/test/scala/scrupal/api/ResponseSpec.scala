@@ -15,50 +15,63 @@
 
 package scrupal.api
 
-import java.util.concurrent.TimeUnit
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import play.api.libs.iteratee.Enumerator
 import scrupal.test.ScrupalApiSpecification
-import scrupal.utils.HasherKinds
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 
+class ResponseSpec extends ScrupalApiSpecification("Response") {
 
-/**
- * Test that our basic abstractions for accessing the database hold water.
- */
-
-class PrincipalSpec extends ScrupalApiSpecification("PrincipalSpec")
-{
-  sequential
-
-	"Principal" should {
-		"save, load and delete from DB" in {
-      pending("reinstatement")
-      /* FIXME: Reinstate Principal test case
-      withSchema { schema: Schema =>
-        withEmptyDB(schema.dbName) { database ⇒
-          val p = new Principal('id, "nobody@nowhere.ex", List("Nobody"), "openpw",
-            HasherKinds.SCrypt.toString, "", 0L, None)
-          p._id must beEqualTo('id)
-          val f1 = schema.principals.insert(p).flatMap { writeResult ⇒
-            writeResult.ok must beTrue
-            schema.principals.fetch('id) map {
-              case Some(principal) ⇒
-                principal._id must beEqualTo('id)
-                principal.aliases must beEqualTo(List("Nobody"))
-                principal.password must beEqualTo(p.password)
-                schema.principals.removeById(principal._id) map { writeResult ⇒
-                  writeResult.ok must beTrue
-                }
-                true
-              case None ⇒ failure("No principal fetched"); false
-            }
-          }
-          val r = Await.result(f1, Duration(1,TimeUnit.SECONDS))
-          r must beTrue
-        }
-      } */
+  "Response" should {
+    "have payload, mediaType and disposition" in {
+      val response = new Response {
+        def disposition: Disposition = Successful
+        def mediaType: MediaType = MediaTypes.`application/octet-stream`
+        def payload(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]
+      }
+      success
     }
+  }
+  "NoopResponse" should {
+    "be unimplemented" in {
+      NoopResponse.disposition must beEqualTo(Unimplemented)
+    }
+    "have application/octet-stream media type" in {
+      NoopResponse.mediaType must beEqualTo(MediaTypes.`application/octet-stream`)
+    }
+  }
+
+  "StreamResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "OctetsResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "StringResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "HtmlResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "JsonResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "ExceptionResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "ErrorResponse" should {
+    "have some tests" in { pending }
+  }
+
+  "FormErrorResponse" should {
+    "have some tests" in { pending }
   }
 }

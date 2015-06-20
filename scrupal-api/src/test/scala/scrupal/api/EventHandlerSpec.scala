@@ -15,11 +15,11 @@
 
 package scrupal.api
 
-import org.specs2.mutable.Specification
+import scrupal.test.ScrupalApiSpecification
 
-class ResultSpec extends Specification {
+class EventHandlerSpec extends ScrupalApiSpecification("EventHandler") {
 
-  "ResultSpec" should {
+  "EventHandler" should {
     "have some test examples" in {
       pending
     }

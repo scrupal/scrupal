@@ -35,7 +35,7 @@ class InstanceSpec extends ScrupalApiSpecification("InstanceSpec") {
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in { pending("Revision")
-      /** TODO: Reinstate test case for Instances
+      /* FIXME: Reinstate test case for Instances
       withEmptyDB(specName) { db =>
         withSchema { schema : Schema =>
           val foo = new TestModule(specName)

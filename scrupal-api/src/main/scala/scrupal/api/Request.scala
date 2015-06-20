@@ -32,3 +32,7 @@ trait Request {
 case class SimpleRequest(context : Context, entity: String, instance: String, msg: String) extends Request {
   override val message = Seq(msg)
 }
+
+object Request {
+  val empty = SimpleRequest(null, "", "", "")
+}
