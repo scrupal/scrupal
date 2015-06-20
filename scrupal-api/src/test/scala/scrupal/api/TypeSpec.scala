@@ -149,8 +149,8 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     "reject 10.01" in TestTypes() { t: TestTypes ⇒
       t.realTy.validate(t.vLoc, 10.01).isError must beTrue
     }
-    "reject 20.99" in TestTypes() { t: TestTypes ⇒
-      t.realTy.validate(t.vLoc, 20.99).isError must beTrue
+    "reject 20.91" in TestTypes() { t: TestTypes ⇒
+      t.realTy.validate(t.vLoc, 20.91).isError must beTrue
     }
   }
 
@@ -225,8 +225,7 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     "accept Set(17,17)" in TestTypes() { t: TestTypes ⇒
       val js = Set(17, 17)
       val result = t.setTy.validate(t.vLoc, js)
-      result.isError must beTrue
-      result.message.toString must contain("non-distinct")
+      result.isError must beFalse
     }
     "reject Set(21)" in TestTypes() { t: TestTypes ⇒
       val js = Set(21)

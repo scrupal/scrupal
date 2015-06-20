@@ -32,9 +32,9 @@ case class RangeType(
   id : Identifier,
   description : String,
   min : Long = Long.MinValue,
-  max : Long = Long.MaxValue) extends Type[RangeType.SIL] {
+  max : Long = Long.MaxValue) extends Type[RangeType.ILDS] {
   require(min <= max)
-  def validate(ref : Location, value : RangeType.SIL) : VResult = {
+  def validate(ref : Location, value : RangeType.ILDS) : VResult = {
     simplify(ref, value, "String, Integer or Long") { value ⇒
       object validation extends Poly1 {
         implicit def caseString = at[String] { s: String ⇒
@@ -78,28 +78,30 @@ case class RangeType(
             None
         }
       }
-      value.map(validation).select[Option[String]].getOrElse(None)
+      val mapped = value.map(validation)
+      val selected = mapped.select[Option[String]]
+      selected getOrElse None
     }
   }
   override def kind = 'Range
 }
 
 object RangeType {
-  type SIL = String :+: Int :+: Long :+: Double :+: CNil
-  implicit def stringWrapper(str : String) : SIL = Coproduct[SIL](str)
-  implicit def intWrapper(int: Int) : SIL = Coproduct[SIL](int)
-  implicit def longWrapper(long: Long) : SIL = Coproduct[SIL](long)
-  implicit def doubleWrapper(dbl: Double) : SIL = Coproduct[SIL](dbl)
+  type ILDS = Int :+: Long :+: Double :+: String :+: CNil
+  implicit def stringWrapper(str : String) : ILDS = Coproduct[ILDS](str)
+  implicit def intWrapper(int: Int) : ILDS = Coproduct[ILDS](int)
+  implicit def longWrapper(long: Long) : ILDS = Coproduct[ILDS](long)
+  implicit def doubleWrapper(dbl: Double) : ILDS = Coproduct[ILDS](dbl)
 
-  implicit def strSeqWrapper(ids: Seq[String]) : Seq[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
-  implicit def intSeqWrapper(ids: Seq[Int]) : Seq[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
-  implicit def longSeqErapper(ids: Seq[Long]) : Seq[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
-  implicit def doubleSeqErapper(ids: Seq[Double]) : Seq[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
+  implicit def strSeqWrapper(ids: Seq[String]) : Seq[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
+  implicit def intSeqWrapper(ids: Seq[Int]) : Seq[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
+  implicit def longSeqErapper(ids: Seq[Long]) : Seq[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
+  implicit def doubleSeqErapper(ids: Seq[Double]) : Seq[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
 
-  implicit def strSetWrapper(ids: Set[String]) : Set[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
-  implicit def intSetWrapper(ids: Set[Int]) : Set[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
-  implicit def longSetErapper(ids: Set[Long]) : Set[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
-  implicit def doubleSetErapper(ids: Set[Double]) : Set[SIL] = ids.map { x ⇒ Coproduct[SIL](x) }
+  implicit def strSetWrapper(ids: Set[String]) : Set[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
+  implicit def intSetWrapper(ids: Set[Int]) : Set[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
+  implicit def longSetErapper(ids: Set[Long]) : Set[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
+  implicit def doubleSetErapper(ids: Set[Double]) : Set[ILDS] = ids.map { x ⇒ Coproduct[ILDS](x) }
 
 }
 

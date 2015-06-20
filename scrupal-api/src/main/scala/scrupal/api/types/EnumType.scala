@@ -18,31 +18,32 @@ package scrupal.api.types
 import scrupal.api._
 import scrupal.utils.Validation._
 
-import shapeless.{Coproduct, Poly1, CNil, :+:}
+import shapeless._
 
 import scala.language.implicitConversions
 
-case class EnumValidator(enumerators : Map[Identifier, Int], name : String) extends Validator[EnumType.ID_IS] {
+case class EnumValidator(enumerators : Map[Identifier, Int], name : String) extends Validator[EnumType.ISILA] {
 
-  object validator extends Poly1 {
-    implicit def caseIdentifier = at[Identifier] { id : Identifier ⇒
-      if (!enumerators.contains(id)) Some(s"Value '$id' not valid for '$name'") else None
-    }
-    implicit def caseString = at[String] { s : String ⇒
-      if (!enumerators.contains(Symbol(s))) Some(s"Value $s not valid for '$name'") else None
-    }
-    implicit def caseInt = at[Int] { i : Int ⇒
-      if (!enumerators.exists { y ⇒ y._2 == i }) Some(s"Value $i not valid for '$name'") else None
-    }
-    implicit def caseLong = at[Long] { l : Long ⇒
-      if (!enumerators.exists { y ⇒ y._2 == l }) Some(s"Value $l not valid for '$name'") else None
-    }
-    implicit def caseAny = at[Any] { x ⇒ Some("") }
-  }
-
-  def validate(ref : Location, value : EnumType.ID_IS) : VResult = {
+  def validate(ref : Location, value : EnumType.ISILA) : VResult = {
     simplify(ref, value, "Integer, Long or String") { value ⇒
-      value.map(validator).select[Option[String]].getOrElse(None)
+      object validator extends Poly1 {
+        implicit def caseInt = at[Int] { i : Int ⇒
+          if (!enumerators.exists { y ⇒ y._2 == i }) Some(s"Value $i not valid for '$name'") else None
+        }
+        implicit def caseLong = at[Long] { l : Long ⇒
+          if (!enumerators.exists { y ⇒ y._2 == l }) Some(s"Value $l not valid for '$name'") else None
+        }
+        implicit def caseString = at[String] { s : String ⇒
+          if (!enumerators.contains(Symbol(s))) Some(s"Value $s not valid for '$name'") else None
+        }
+        implicit def caseIdentifier = at[Identifier] { id : Identifier ⇒
+          if (!enumerators.contains(id)) Some(s"Value '$id' not valid for '$name'") else None
+        }
+        implicit def caseAny = at[Any] { x ⇒ Some("") }
+      }
+      val mapped = value.map(validator)
+      val selected = mapped.select[Option[String]]
+      selected.getOrElse(None)
     }
   }
 }
@@ -53,10 +54,10 @@ case class EnumValidator(enumerators : Map[Identifier, Int], name : String) exte
 case class EnumType(
   id : Identifier,
   description : String,
-  enumerators : Map[Identifier, Int]) extends Type[EnumType.ID_IS] {
+  enumerators : Map[Identifier, Int]) extends Type[EnumType.ISILA] {
   require(enumerators.nonEmpty)
   val validator = EnumValidator(enumerators, label)
-  def validate(ref : Location, value : EnumType.ID_IS) = {
+  def validate(ref : Location, value : EnumType.ISILA) = {
     validator.validate(ref, value)
   }
   override def kind = 'Enum
@@ -65,14 +66,14 @@ case class EnumType(
 }
 
 object EnumType {
-  type ID_IS = Identifier :+: Int :+: String :+: CNil
-  implicit def idWrapper(id: Identifier) : ID_IS = Coproduct[ID_IS](id)
-  implicit def strWrapper(str: String) : ID_IS = Coproduct[ID_IS](str)
-  implicit def intWrapper(int: Int) : ID_IS = Coproduct[ID_IS](int)
-  implicit def idSetWrapper(ids: Set[Identifier]) : Set[ID_IS] = ids.map { x ⇒ Coproduct[ID_IS](x) }
-  implicit def strSetWrapper(ids: Set[String]) : Set[ID_IS] = ids.map { x ⇒ Coproduct[ID_IS](x) }
-  implicit def intSetWrapper(ids: Set[Int]) : Set[ID_IS] = ids.map { x ⇒ Coproduct[ID_IS](x) }
-  implicit def idSeqWrapper(ids: Seq[Identifier]) : Seq[ID_IS] = ids.map { x ⇒ Coproduct[ID_IS](x) }
-  implicit def strSeqWrapper(ids: Seq[String]) : Seq[ID_IS] = ids.map { x ⇒ Coproduct[ID_IS](x) }
-  implicit def intSeqWrapper(ids: Seq[Int]) : Seq[ID_IS] = ids.map { x ⇒ Coproduct[ID_IS](x) }
+  type ISILA = Int :+: Long :+: String :+: Identifier :+: Any :+: CNil
+  implicit def idWrapper(id: Identifier) : ISILA = Coproduct[ISILA](id)
+  implicit def strWrapper(str: String) : ISILA = Coproduct[ISILA](str)
+  implicit def intWrapper(int: Int) : ISILA = Coproduct[ISILA](int)
+  implicit def idSetWrapper(ids: Set[Identifier]) : Set[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
+  implicit def strSetWrapper(ids: Set[String]) : Set[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
+  implicit def intSetWrapper(ids: Set[Int]) : Set[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
+  implicit def idSeqWrapper(ids: Seq[Identifier]) : Seq[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
+  implicit def strSeqWrapper(ids: Seq[String]) : Seq[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
+  implicit def intSeqWrapper(ids: Seq[Int]) : Seq[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
 }

@@ -39,7 +39,7 @@ case class RealType(
       object validator extends Poly1 {
         implicit def caseInt = at[Int] { i : Int ⇒
           if (i < min)
-            Some(s"Value $i is out of range, below minimum of $max")
+            Some(s"Value $i is out of range, below minimum of $min")
           else if (i > max)
             Some(s"Value $i is out of range, above maximum of $max")
           else
@@ -47,25 +47,25 @@ case class RealType(
         }
         implicit def caseLong = at[Long] { l : Long ⇒
           if (l < min)
-            Some(s"Value $l is out of range, below minimum of $max")
+            Some(s"Value $l is out of range, below minimum of $min")
           else if (l > max)
             Some(s"Value $l is out of range, above maximum of $max")
           else
             None
         }
-        implicit def caseFloat = at[Float] { f : Float ⇒
-          if (f < min)
-            Some(s"Value $f is out of range, below minimum of $max")
-          else if (f > max)
-            Some(s"Value $f is out of range, above maximum of $max")
+        implicit def caseDouble = at[Double] { d : Double ⇒
+          if (d < min)
+            Some(s"Value $d is out of range, below minimum of $min")
+          else if (d > max)
+            Some(s"Value $d is out of range, above maximum of $max")
           else
             None
         }
-        implicit def caseDouble = at[Double] { d : Double ⇒
-          if (d < min)
-            Some(s"Value $d is out of range, below minimum of $max")
-          else if (d > max)
-            Some(s"Value $d is out of range, above maximum of $max")
+        implicit def caseFloat = at[Float] { f : Float ⇒
+          if (f < min)
+            Some(s"Value $f is out of range, below minimum of $min")
+          else if (f > max)
+            Some(s"Value $f is out of range, above maximum of $max")
           else
             None
         }
@@ -85,7 +85,9 @@ case class RealType(
         }
         implicit def caseOther = at[Any] { x ⇒ Some("") }
       }
-      value.map(validator).select[Option[String]].getOrElse(None)
+      val mapped = value.map(validator)
+      val selected = mapped.select[Option[String]]
+      selected.getOrElse(None)
     }
   }
   override def kind = 'Real

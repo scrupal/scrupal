@@ -199,7 +199,9 @@ object Validation {
         for (
           v ← toSeq(value);
           e = validateElement(ref.index({ idx += 1; idx }), v) if e.isError
-        ) yield { e.asInstanceOf[Failure[ET]] }
+        ) yield {
+          e.asInstanceOf[Failure[ET]]
+        }
       }
       if (errors.isEmpty)
         Success(ref, value)

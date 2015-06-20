@@ -70,9 +70,12 @@ trait Type[VT] extends Registrable[Type[_]] with Describable with Validator[VT] 
     validator : (VT) ⇒ Option[String]) : VResult =
     {
       validator(value) match {
-        case Some("") ⇒ wrongClass(ref, value, classes)
-        case Some(msg : String) ⇒ TypeFailure(ref, value, this, msg)
-        case None ⇒ Success(ref, value)
+        case Some("") ⇒
+          wrongClass(ref, value, classes)
+        case Some(msg : String) ⇒
+          TypeFailure(ref, value, this, msg)
+        case None ⇒
+          Success(ref, value)
       }
     }
 }
