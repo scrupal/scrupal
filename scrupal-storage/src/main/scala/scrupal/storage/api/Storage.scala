@@ -19,6 +19,7 @@ import java.net.URI
 
 import play.api.Configuration
 import scrupal.storage.impl.StorageConfigHelper
+import scrupal.store.mem.MemoryStorageDriver
 import scrupal.utils.{ConfigHelpers, ScrupalComponent}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,6 +29,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * Description of thing
   */
 object Storage extends ScrupalComponent {
+
+  require(MemoryStorageDriver.isRegistered, "MemoryStorageDriver failed to register")
 
   def apply(uri : URI, create: Boolean = true)(implicit ec: ExecutionContext)  : Future[StoreContext] = {
     fromURI(uri, create)

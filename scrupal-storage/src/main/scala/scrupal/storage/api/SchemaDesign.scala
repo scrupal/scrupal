@@ -50,7 +50,6 @@ abstract class SchemaDesign extends Validator[Schema] {
   }
 
   def construct(schema : Schema) : Future[Results[Schema]] = {
-    val collNames = schema.collectionNames.toSeq
     val futures = for (name ← requiredNames) yield {
       schema.collectionFor(name) match {
         case Some(coll) ⇒ Future.successful(coll)
@@ -65,7 +64,9 @@ abstract class SchemaDesign extends Validator[Schema] {
         }
       }
     }*/
-    Future.sequence(futures).map { fs ⇒ validate(schema) }
+    Future.sequence(futures).map {
+      fs ⇒ validate(schema)
+    }
   }
 
   final def validate(schema : Schema) : Results[Schema] = {

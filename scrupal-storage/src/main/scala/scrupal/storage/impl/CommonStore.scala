@@ -50,15 +50,17 @@ trait CommonStore extends Store {
   protected def makeNewSchema(design: SchemaDesign) : Schema
 
   /** Create a new collection for storing objects */
-  def addSchema(design: SchemaDesign)(implicit ec: ExecutionContext) : Future[Schema] = Future {
+  def addSchema(design: SchemaDesign)(implicit ec: ExecutionContext) : Future[Schema] = {
     _schemas.get(design.name) match {
       case Some(s) ⇒
-        toss(s"Schema ${design.name} already exists.")
+        Future { toss(s"Schema ${design.name} already exists.") }
       case None ⇒
         val schema = makeNewSchema(design)
         _schemas.put(design.name, schema)
-        design.construct(schema)
-        schema
+        design.construct(schema).map { results ⇒
+          results.tossOnError
+          schema
+        }
     }
   }
 

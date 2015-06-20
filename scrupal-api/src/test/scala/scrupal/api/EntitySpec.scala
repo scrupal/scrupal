@@ -19,6 +19,7 @@ import org.joda.time.DateTime
 import org.specs2.execute.{Error, Result}
 
 import scrupal.storage.api._
+import scrupal.store.mem.MemoryStorageDriver
 import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.{Future, Await}
@@ -54,14 +55,13 @@ class EntitySpec extends ScrupalSpecification("EntitySpec")
 
   def withTestSchema[T <: Result](name: String)(func : Schema ⇒ Future[T]) : Result = {
     val f = Storage.fromURI(s"scrupal-mem://localhost/$name",create=true) flatMap { context ⇒
-      context.withSchema(TestSchemaDesign.name) { schema ⇒ func(schema) }
+      context.addSchema(TestSchemaDesign) flatMap { schema ⇒ func(schema) }
     }
     val g = f.recover { case x: Throwable ⇒
       Error(s"Unexpected exception: ${x.getClass.getSimpleName}: ${x.getMessage}", x)
     }
     Await.result(g, 2.seconds)
   }
-
 
   "Entity" should {
 		"fail to compare against a non-entity" in {
