@@ -184,4 +184,9 @@ trait Dependencies
     Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies
 
+  val config_dependencies : Seq[ModuleID] = Seq()
+
+  val admin_dependencies : Seq[ModuleID] = Seq()
+
+  val welcome_dependencies : Seq[ModuleID] = Seq()
 }

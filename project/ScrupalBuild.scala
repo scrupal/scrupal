@@ -97,12 +97,32 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(storage_deps, api_deps, utils_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
 
+  lazy val admin_proj = Project(base_name + "-admin", file("./scrupal-admin"))
+    .settings(buildSettings:_*)
+    .settings(
+      scrupalTitle := "Scrupal Administration Module",
+      resolvers ++= all_resolvers,
+      libraryDependencies ++= admin_dependencies)
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
+    .dependsOn(utils_deps, core_deps)
+  lazy val admin_deps = admin_proj % "compile->compile;test->test"
+
+  lazy val welcome_proj = Project(base_name + "-welcome", file("./scrupal-welcome"))
+    .settings(buildSettings:_*)
+    .settings(
+      scrupalTitle := "Scrupal Welcome Module",
+      resolvers ++= all_resolvers,
+      libraryDependencies ++= welcome_dependencies)
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
+    .dependsOn(utils_deps, core_deps)
+  lazy val welcome_deps = config_proj % "compile->compile;test->test"
+
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Configuration",
+      scrupalTitle := "Scrupal Configuration Module",
       resolvers ++= all_resolvers,
-      libraryDependencies ++= core_dependencies)
+      libraryDependencies ++= config_dependencies)
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps, core_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
