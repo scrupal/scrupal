@@ -13,16 +13,16 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.apps
+package scrupal.admin
 
+import akka.http.scaladsl.server.PathMatchers.PathEnd
 import org.joda.time.DateTime
-import scrupal.api.{Entity, ActionExtractor, Application, Html}
-import scrupal.api.Html.{ Generator, ContentsArgs, EmptyContentsArgs, Contents }
+import scrupal.api.Html.{Contents, ContentsArgs, EmptyContentsArgs}
+import scrupal.api.types._
+import scrupal.api.{Application, Entity, Html}
 import scrupal.core.html.BootstrapPage
 import scrupal.core.impl.NodeActionProducer
 import scrupal.core.nodes.HtmlNode
-import scrupal.api.types._
-import akka.http.scaladsl.server.PathMatchers.PathEnd
 
 import scalatags.Text.all._
 
