@@ -15,10 +15,14 @@
 
 package scrupal.api.types
 
+import java.time.Instant
+
 import scrupal.api._
 import scrupal.utils.Validation.Location
 
 import shapeless._
+
+import scala.concurrent.duration.Duration
 
 
 /** A Real type constrains Double values between a minimum and maximum value
@@ -64,6 +68,11 @@ case class RealType(
     implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ checkString(s.name) }
 
     implicit def caseString = at[String] { s : String ⇒ checkString(s) }
+
+    implicit def caseInstant = at[Instant] { i : Instant ⇒ check(i.toEpochMilli.toDouble, i) }
+
+    implicit def caseDuration = at[Duration] { i : Duration ⇒ check(i.toMillis.toDouble, i)  }
+
 
     def checkString(s: String) : Option[String] = {
       try {

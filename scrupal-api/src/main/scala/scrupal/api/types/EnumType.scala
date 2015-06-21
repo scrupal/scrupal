@@ -15,11 +15,14 @@
 
 package scrupal.api.types
 
+import java.time.Instant
+
 import scrupal.api._
 import scrupal.utils.Validation._
 
 import shapeless._
 
+import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 
@@ -68,6 +71,10 @@ case class EnumType(
     implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ check(s) }
 
     implicit def caseString = at[String] { s : String ⇒ check(Symbol(s)) }
+
+    implicit def caseInstant = at[Instant] { i : Instant ⇒ Some(s"Instant values are not compatible with enums") }
+
+    implicit def caseDuration = at[Duration] { i : Duration ⇒ Some(s"Duration values are not compatible with enums") }
   }
 
   def validate(ref : Location, value : Atom) = {
@@ -75,18 +82,4 @@ case class EnumType(
       value.map(validator).unify
     }
   }
-
-}
-
-object EnumType {
-  type ISILA = Int :+: Long :+: String :+: Identifier :+: Any :+: CNil
-  implicit def idWrapper(id: Identifier) : ISILA = Coproduct[ISILA](id)
-  implicit def strWrapper(str: String) : ISILA = Coproduct[ISILA](str)
-  implicit def intWrapper(int: Int) : ISILA = Coproduct[ISILA](int)
-  implicit def idSetWrapper(ids: Set[Identifier]) : Set[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
-  implicit def strSetWrapper(ids: Set[String]) : Set[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
-  implicit def intSetWrapper(ids: Set[Int]) : Set[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
-  implicit def idSeqWrapper(ids: Seq[Identifier]) : Seq[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
-  implicit def strSeqWrapper(ids: Seq[String]) : Seq[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
-  implicit def intSeqWrapper(ids: Seq[Int]) : Seq[ISILA] = ids.map { x ⇒ Coproduct[ISILA](x) }
 }

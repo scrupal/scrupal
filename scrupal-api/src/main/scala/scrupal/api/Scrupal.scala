@@ -30,15 +30,13 @@ import scrupal.utils._
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class Scrupal(
-  nm : String = "Scrupal",
+  val name : String = "Scrupal",
   config : Option[Configuration] = None,
   ec : Option[ExecutionContext] = None,
   sc : Option[StoreContext] = None,
   actSys : Option[ActorSystem] = None
-) extends { final val id : Symbol = Symbol(nm); final val registry = Scrupal }
+) extends { final val id : Symbol = Symbol(name); final val registry = Scrupal }
   with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
-
-  final val name : String = nm
 
   def Copyright : String
 

@@ -17,9 +17,7 @@ package scrupal.api
 
 import scrupal.test.ScrupalSpecification
 
-/**
- * Created by reid on 11/11/14.
- */
+/** Test case for the Scrupal object */
 class ScrupalSpec extends ScrupalSpecification("ScrupalSpec") {
 
   "Scrupal" should {

@@ -68,9 +68,9 @@ trait Describable {
 }
 
 /** Something that has settings that can be specified and changed */
-trait Settingsable extends Settings {
-  def settingsType : StructuredType[JsValue] = BundleType.Empty
-  def settingsDefault : JsObject = JsObject(Map.empty[String, JsValue])
+trait Settingsable extends SettingsInterface {
+  def settingsType : Map[String,Type[Atom]] = Map.empty[String,Type[Atom]]
+  def settingsDefaults : Map[String,Atom]  = Map.empty[String,Atom]
 }
 
 /** Something that contains a path component for a URL */

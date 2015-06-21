@@ -15,8 +15,11 @@
 
 package scrupal.api.types
 
+import java.time.Instant
+
 import scrupal.api._
 
+import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 import scrupal.utils.Validation.Location
@@ -66,6 +69,10 @@ case class RangeType(
     implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ checkString(s.name) }
 
     implicit def caseString = at[String] { s : String ⇒ checkString(s) }
+
+    implicit def caseInstant = at[Instant] { i : Instant ⇒ check(i.toEpochMilli, i) }
+
+    implicit def caseDuration = at[Duration] { i : Duration ⇒ check(i.toMillis, i)  }
 
     def checkString(s: String) : Option[String] = {
       try {

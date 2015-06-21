@@ -16,11 +16,14 @@
 package scrupal
 
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 
 import play.api.libs.json.JsObject
 
 
 import shapeless._
+
+import scala.concurrent.duration.Duration
 
 /** Scrupal API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the main abstractions
@@ -68,7 +71,8 @@ package object api {
     * types. In particular, the Type validator uses Atom as the value type frequently so that numbers can be represented
     * as strings, etc.
     */
-  type Atom = Boolean :+: Byte :+: Short :+: Int :+: Long :+: Float :+: Double :+: String :+: Symbol :+: CNil
+  type Atom = Boolean :+: Byte :+: Short :+: Int :+: Long :+: Float :+: Double :+:
+              String :+: Symbol :+: Instant :+: Duration :+:CNil
 
   implicit def atomFromBoolean(b: Boolean) : Atom = Coproduct[Atom](b)
   implicit def atomFromByte(b : Byte) : Atom = Coproduct[Atom](b)
@@ -79,4 +83,6 @@ package object api {
   implicit def atomFromDouble(d: Double) : Atom = Coproduct[Atom](d)
   implicit def atomFromString(str : String) : Atom = Coproduct[Atom](str)
   implicit def atomFromSymbol(sym : Symbol) : Atom = Coproduct[Atom](sym)
+  implicit def atomFromInstant(inst : Instant) : Atom = Coproduct[Atom](inst)
+  implicit def atomFromDuration(dur: Duration) : Atom = Coproduct[Atom](dur)
 }

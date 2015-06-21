@@ -17,83 +17,100 @@ package scrupal.api
 
 import java.time.Instant
 
+import play.api.libs.json.JsValue
+import scrupal.utils.Validation
+
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
+import scala.language.implicitConversions
+
+import scrupal.utils.Validation._
+
 import shapeless._
 
 /** Interface To Settings
   * This defines the interface to value extraction from some cache of settings
   */
-trait Settings {
+trait SettingsInterface extends MapValidator[String,Atom,mutable.HashMap[String,Atom]] {
 
-  type ValueType = Boolean :+: Byte :+: Int :+: Long :+: Double :+: String :+: Instant :+: Duration :+: Settings :+: CNil
-  type ArrayType = Seq[ValueType]
-  type ElemType = Settings :+: ArrayType :+: ValueType
-  type DataType = mutable.Map[String,ElemType]
-  val settings : DataType = mutable.HashMap.empty[String,ElemType]
-  val defaults : DataType = mutable.HashMap.empty[String,ElemType]
+  def name : String
 
-  def entrySet : Iterable[ElemType] = settings.values
+  type MapType = mutable.HashMap[String,Atom]
+  protected val settings : MapType = mutable.HashMap.empty[String,Atom]
+  def settingsDefaults : Map[String,Atom]
+  def settingsType : Map[String,Type[Atom]]
 
-  def get(path: String) : Option[ElemType] = {
-    val index = path.indexOf('.')
-    if (index == 0)
-      return None
-    if (index < 0) {
-      settings.get(path)
-    } else {
-      val path_element = path.substring(0, index)
-      val remainder = path.substring(index+1)
-      settings.get(path_element) flatMap { e: ElemType ⇒
-        e.select[Settings] flatMap { s: Settings ⇒ s.get(remainder) }
-      }
+  def toMap(mt: MapType): collection.Map[String, Atom] = mt.toMap
+
+  def validate : Results[mutable.HashMap[String,Atom]] = {
+    validate(Validation.SimpleLocation(name), settings)
+  }
+
+  def validateElement(ref: SelectedLocation[String], k: String, v: Atom): Results[Atom] = {
+    settingsType.get(k) match {
+      case Some(validator) ⇒
+        validator.validate(ref, v)
+      case None ⇒
+        StringFailure(ref, v, s"Type validator not found for key $k")
     }
   }
 
-  def getString(path : String) : Option[String] = get(path).flatMap { _.select[String] }
-  def getBoolean(path : String) : Option[Boolean] = get(path).flatMap { _.select[Boolean] }
-  def getByte(path : String) : Option[Byte] = get(path).flatMap {_.select[Byte] }
-  def getInt(path : String) : Option[Int] = get(path).flatMap {_.select[Int] }
-  def getLong(path : String) : Option[Long] = get(path).flatMap {_.select[Long] }
-  def getDouble(path : String) : Option[Double] = get(path).flatMap {_.select[Double] }
-  def getInstant(path : String) : Option[Instant] = get(path).flatMap {_.select[Instant] }
-  def getDuration(path : String) : Option[Duration] = get(path).flatMap { _.select[Duration] }
-  def getMilliseconds(path : String) : Option[Long] = get(path).flatMap { _.select[Duration] } map { x ⇒ x.toMillis }
-  def getMicroseconds(path : String) : Option[Long] = get(path).flatMap { _.select[Duration] } map { x ⇒ x.toMicros }
-  def getNanoseconds(path : String) : Option[Long]  = get(path).flatMap { _.select[Duration] } map { x ⇒ x.toNanos  }
+  def entrySet : Iterable[Atom] = settings.values
 
-  def getSettings(path : String) : Option[Settings] = get(path).flatMap { _.select[Settings] }
+  def getString(path : String) : Option[String] = settings.get(path).flatMap { _.select[String] }
+  def getBoolean(path : String) : Option[Boolean] = settings.get(path).flatMap { _.select[Boolean] }
+  def getByte(path : String) : Option[Byte] = settings.get(path).flatMap {_.select[Byte] }
+  def getShort(path : String) : Option[Short] = settings.get(path).flatMap {_.select[Short] }
+  def getInt(path : String) : Option[Int] = settings.get(path).flatMap {_.select[Int] }
+  def getLong(path : String) : Option[Long] = settings.get(path).flatMap {_.select[Long] }
+  def getFloat(path : String) : Option[Float] = settings.get(path).flatMap {_.select[Float] }
+  def getDouble(path : String) : Option[Double] = settings.get(path).flatMap {_.select[Double] }
+  def getInstant(path : String) : Option[Instant] = settings.get(path).flatMap {_.select[Instant] }
+  def getDuration(path : String) : Option[Duration] = settings.get(path).flatMap { _.select[Duration] }
+  def getMilliseconds(path : String) : Option[Long] = settings.get(path).flatMap { _.select[Duration] } map { x ⇒ x.toMillis }
+  def getMicroseconds(path : String) : Option[Long] = settings.get(path).flatMap { _.select[Duration] } map { x ⇒ x.toMicros }
+  def getNanoseconds(path : String) : Option[Long]  = settings.get(path).flatMap { _.select[Duration] } map { x ⇒ x.toNanos  }
 
-  def getStrings(path : String) : Option[Seq[String]] = ???
-  def getBooleans(path : String) : Option[Seq[Boolean]] = ???
-  def getBytes(path : String) : Option[Seq[Long]] = ???
-  def getInts(path : String) : Option[Seq[Int]] = ???
-  def getLongs(path : String) : Option[Seq[Long]] = ???
-  def getDoubles(path : String) : Option[Seq[Double]] = ???
-  def getNumbers(path : String) : Option[Seq[Number]] = ???
-  def getInstants(path : String) : Option[Seq[Instant]] = ???
-  def getDurations(path : String) : Option[Seq[Duration]] = ???
-
-  def setValues(values : DataType) : Unit = ???
-  def setString(path : String, value : String) : Unit = ???
-  def setBoolean(path : String, value : Boolean) : Unit = ???
-  def setByte(path : String, value : Byte) : Unit = ???
-  def setInt(path : String, value : Int) : Unit = ???
-  def setLong(path : String, value : Long) : Unit = ???
-  def setDouble(path : String, value : Double) : Unit = ???
-  def setNumber(path : String, value : Number) : Unit = ???
-  def setInstance(path : String, value : Instant) : Unit = ???
-  def setDuration(path : String, value : Duration) : Unit = ???
-
-  def setStrings(path : String, value : Seq[String]) : Unit = ???
-  def setBooleans(path : String, value : Seq[Boolean]) : Unit = ???
-  def setBytes(path : String, value : Seq[Byte]) : Unit = ???
-  def setDoubles(path : String, value : Seq[Double]) : Unit = ???
-  def setInts(path : String, value : Seq[Int]) : Unit = ???
-  def setLongs(path : String, value : Seq[Long]) : Unit = ???
-  def setNumbers(path : String, value : Seq[Number]) : Unit = ???
-  def setInstants(path : String, value : Seq[Instant]) : Unit = ???
-  def setDurations(path : String, value : Seq[Duration]) : Unit = ???
+  def setValues(values : MapType) : Unit = settings.transform { case (k,v) ⇒ values.getOrElse(k,v) }
+  def setString(path : String, value : String) : Unit = settings.put(path, value)
+  def setBoolean(path : String, value : Boolean) : Unit = settings.put(path, value)
+  def setByte(path : String, value : Byte) : Unit = settings.put(path, value)
+  def setShort(path : String, value : Short) : Unit = settings.put(path, value)
+  def setInt(path : String, value : Int) : Unit = settings.put(path, value)
+  def setLong(path : String, value : Long) : Unit = settings.put(path, value)
+  def setFloat(path : String, value : Float) : Unit = settings.put(path, value)
+  def setDouble(path : String, value : Double) : Unit = settings.put(path, value)
+  def setInstance(path : String, value : Instant) : Unit = settings.put(path, value)
+  def setDuration(path : String, value : Duration) : Unit = settings.put(path, value)
 
   def toConfig : com.typesafe.config.Config = ???
+
+}
+
+/** Settings For Anything That Needs Them
+  *
+  * Settings define a structured, typesafe way of specifying configuration settings, and other information for some
+  * object. Settings can be stored in the database
+  * Created by reidspencer on 11/10/14.
+  */
+case class Settings(
+  name : String,
+  settingsType : Map[String,Type[Atom]],
+  initialValue : Map[String,Atom],
+  override val settingsDefaults : Map[String,Atom]) extends SettingsInterface {
+  require(settingsType.size == settingsDefaults.size)
+  require(settingsType.size == initialValue.size)
+
+  settings.transform { case (k,v) ⇒ initialValue.getOrElse(k,v) }
+}
+
+object Settings {
+  // import BSONHandlers._
+
+  //implicit val SettingsHandler = Macros.handler[Settings]
+
+  def apply(cfg : com.typesafe.config.Config) : Settings = ???
+  // TODO: Implement conversion of Configuration from Typesafe Config with "best guess" at Type from values
+
+  lazy val Empty = Settings("Empty", Map(), Map(), Map())
 }
