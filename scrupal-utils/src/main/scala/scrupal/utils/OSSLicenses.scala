@@ -17,10 +17,10 @@
 
 package scrupal.utils
 
-/** A Registration of the Open Source Software Licenses
-  * Created by reid on 11/11/14.
-  */
-case class OSSLicense(name : String, description : String, url : String)
+import java.net.URI
+
+/** A Registration of the Open Source Software Licenses */
+case class OSSLicense(name : String, description : String, uri : URI)
   extends { val id = Symbol(name) } with Registrable[OSSLicense] {
   def registry = OSSLicense
 }
@@ -28,5 +28,14 @@ case class OSSLicense(name : String, description : String, url : String)
 object OSSLicense extends Registry[OSSLicense] {
   val registryName = "OSSLicenses"
   val registrantsName = "license"
-  val GPLv3 = OSSLicense("GPLv3", "Gnu General Public License version 3", "http://www.gnu.org/copyleft/gpl.html")
+  val GPLv3 = OSSLicense("GPLv3", "Gnu General Public License Version 3, 29 June 2007",
+    new URI("http://www.gnu.org/copyleft/gpl.html"))
+  val ApacheV2 = OSSLicense("ApacheV2", "Apache Software Foundation License Version 2.0, January 2004",
+    new URI("http://www.apache.org/licenses/LICENSE-2.0"))
+  val BSD3Clause = OSSLicense("BSD-3-Clause", "The BSD 3-Clause License",
+    new URI("http://opensource.org/licenses/BSD-3-Clause"))
+  val MPL2 = OSSLicense("MPL-2.0", "Mozilla Public License 2.0",
+    new URI("http://opensource.org/licenses/MPL-2.0"))
+  val MIT = OSSLicense("MIT", "The MIT License",
+    new URI("http://opensource.org/licenses/MIT"))
 }
