@@ -22,12 +22,12 @@ import akka.http.scaladsl.server.RequestContext
 import akka.pattern.ask
 import com.typesafe.config.{ ConfigRenderOptions, ConfigValue }
 import play.api.Configuration
+import scrupal.admin.AdminApp
 import scrupal.api._
 import scrupal.core.CoreModule
-import scrupal.core.apps.AdminApp
-import scrupal.core.sites.WelcomeSite
 import scrupal.storage.api.{Schema, Storage, StoreContext}
 import scrupal.utils._
+import scrupal.welcome.WelcomeSite
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration._

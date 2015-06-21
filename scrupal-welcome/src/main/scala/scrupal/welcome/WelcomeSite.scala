@@ -13,17 +13,17 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.sites
+package scrupal.welcome
 
-import org.joda.time.DateTime
-import scrupal.core.CoreModule
-import scrupal.api._
-import scrupal.core.entities.EchoEntity
-import scrupal.core.html.PlainPage
-import scrupal.core.nodes.{ HtmlNode, MarkedDocNode }
-import shapeless.{ ::, HNil }
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.PathMatchers._
+import org.joda.time.DateTime
+import scrupal.api._
+import scrupal.core.CoreModule
+import scrupal.core.entities.EchoEntity
+import scrupal.core.html.PlainPage
+import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
+import shapeless.{::, HNil}
 
 import scalatags.Text.all._
 

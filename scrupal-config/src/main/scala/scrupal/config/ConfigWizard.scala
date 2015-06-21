@@ -13,12 +13,10 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.apps
+package scrupal.config
 
-import reactivemongo.bson.{ BSONLong, BSONString }
-import scrupal.core._
-import scrupal.core.api._
 import scrupal.api.types._
+import scrupal.core._
 import scrupal.utils.ScrupalComponent
 
 /** The Entity definition for the Configuration workflow/wizard.
