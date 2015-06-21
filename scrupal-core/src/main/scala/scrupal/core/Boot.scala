@@ -17,7 +17,6 @@ package scrupal.core
 
 import play.api.Configuration
 import scrupal.core.impl.Scrupal
-import scrupal.utils.ConfigHelpers
 
 object Boot extends Scrupal with App {
 

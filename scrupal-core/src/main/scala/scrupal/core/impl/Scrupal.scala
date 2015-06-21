@@ -35,35 +35,19 @@ import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.util.matching.Regex
 
 case class Scrupal(
-  name : String = "Scrupal",
+  override val name : String = "Scrupal",
   config : Option[Configuration] = None,
   ec : Option[ExecutionContext] = None,
-  disp : Option[ActorRef] = None,
   sc : Option[StoreContext] = None,
   actSys : Option[ActorSystem] = None)
-  extends scrupal.api.Scrupal with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
+  extends scrupal.api.Scrupal(name, config, ec, sc, actSys)
+  with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
 
   LoggingHelpers.initializeLogging(forDebug = true)
 
   val Copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
 
-  val _configuration = config.getOrElse(ConfigHelpers.default)
-
-  implicit val _actorSystem = actSys.getOrElse(ActorSystem("Scrupal", _configuration.underlying))
-
-  implicit val _executionContext = ec.getOrElse(getExecutionContext(_configuration))
-
-  private[this] def getExecutionContext(config: Configuration): ExecutionContext = {
-    // TODO: This should be obtained from configuration instead
-    scala.concurrent.ExecutionContext.Implicits.global
-  }
-
-  lazy val _dispatcher = disp.getOrElse(ActionProcessor.makeSingletonRef(_actorSystem))
-
-  val _storageContext = new AtomicReference[StoreContext](sc.orNull)
-
   val assetsLocator = new ConfiguredAssetsLocator(_configuration)
-
 
   /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
     * Registry then we have had to found a database and loaded the sites. So that is our indicator of whether we
@@ -202,11 +186,11 @@ case class Scrupal(
     * the dispatcher for processing and (quickly) returns a future that will be completed when the dispatcher gets
     * around to it. The point of this is to hide the use of actors within Scrupal and have a nice, simple, quickly
     * responding synchronous call in order to obtain the Future to the eventual result of the action.
-    * @param action The action to act upon (a Request ⇒ Result[P] function).
+    * @param reaction The action to act upon (a Request ⇒ Result[P] function).
     * @return A Future to the eventual Result[P]
     */
-  def dispatch(action: Reaction): Future[Response[_]] = {
-    _dispatcher.ask(action)(_timeout) flatMap { any ⇒ any.asInstanceOf[Future[Response[_]]] }
+  def dispatch(reaction: Reaction): Future[Response] = {
+    reaction()
   }
 
   /** Called on application stop.

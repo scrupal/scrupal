@@ -27,20 +27,20 @@ import scala.concurrent.{ ExecutionContext, Future }
   * @param context Context in which the action should occur
   * @param node The node that will produce the action's result
   */
-case class NodeReaction(context : Context, node : Node) extends Reaction {
-  def apply() : Future[Response[_]] = {
-    node(context)
+case class NodeReaction(request : Request, node : Node) extends Reaction {
+  def apply() : Future[Response] = {
+    node(request)
   }
 }
 
-case class NodeIdReaction(id : Long, context : Context) extends Reaction {
-  def apply() : Future[Response[_]] = {
-    context.withSchema("core") { (storeContext, schema) ⇒
-      context.withExecutionContext { implicit ec : ExecutionContext ⇒
+case class NodeIdReaction(id : Long, request : Request) extends Reaction {
+  def apply() : Future[Response] = {
+    request.context.withSchema("core") { (storeContext, schema) ⇒
+      request.context.withExecutionContext { implicit ec : ExecutionContext ⇒
         schema.withCollection("nodes") { nodes ⇒
           nodes.asInstanceOf[Collection[Node]].fetch(id).flatMap {
             case Some(node) ⇒
-              node(context)
+              node(request)
             case None ⇒
               Future.successful(ErrorResponse(s"Node at id '${id.toString}' not found.", NotFound))
           }

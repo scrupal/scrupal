@@ -18,9 +18,6 @@ package scrupal.core.http
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ ActorSystem, Props }
-import akka.http.scaladsl.Http
-import akka.io.IO
-import akka.pattern.ask
 import akka.util.Timeout
 import play.api.Configuration
 import scrupal.api.{ Scrupal, Site }
