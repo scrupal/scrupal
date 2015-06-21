@@ -82,7 +82,7 @@ trait PathWalker[D, A, V] extends ScrupalComponent {
         (name, -1, indexed)
       }
     }
-    if (paths.length == 1 || !result._3.isDefined)
+    if (paths.length == 1 || result._3.isEmpty)
       (result._1, result._2, parents, doc, result._3)
     else {
       val nextDoc = getAsDocument(head, paths, result._3.get)
@@ -92,7 +92,7 @@ trait PathWalker[D, A, V] extends ScrupalComponent {
   }
 
   def lookup(path : String, document : D) : Option[V] = {
-    val parts = path.split("\\.").toSeq
+    val parts = path.split('.').toSeq
     val (name, index, parents, doc, value) = walk(Seq.empty[String], parts, Seq.empty[D], document)
     value
   }
