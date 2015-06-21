@@ -33,6 +33,7 @@ trait Collection[S <: Storable] extends StorageLayer {
   def fetchAll() : Future[Iterable[S]]
   def find(query : Query) : Future[Seq[S]]
   def insert(obj : S, update : Boolean = false) : Future[WriteResult]
+  def update(obj : S) : Future[WriteResult] = update(obj, IdentityModification(obj))
   def update(obj : S, update : Modification[S]) : Future[WriteResult]
   def update(id : ID, update : Modification[S]) : Future[WriteResult]
   def updateWhere(query : Query, update : Modification[S]) : Future[Seq[WriteResult]]
@@ -43,4 +44,5 @@ trait Collection[S <: Storable] extends StorageLayer {
 
 trait IndexKind
 trait Modification[S <: Storable] { def apply(s : S) : S = s }
+case class IdentityModification[S <: Storable](s : S) extends Modification[S]
 trait Query
