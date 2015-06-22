@@ -15,10 +15,8 @@
 
 package scrupal.test
 
-import scrupal.api.types.{BundleType, StringType}
 
 import scrupal.api._
-import scrupal.api.types
 import scrupal.core.nodes
 import scrupal.core.sites.NodeSite
 import scrupal.utils.OSSLicense
@@ -40,7 +38,7 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
       s"Field-$i" → AnyString
     }
     val ty_name = s"FieldsForEntity-$id"
-    val ty = types.BundleType(Symbol(ty_name), ty_name, fields.toMap)
+    val ty = BundleType(Symbol(ty_name), ty_name, fields.toMap)
     FakeEntity(s"Entity-$id", ty)
   }
 
@@ -56,14 +54,13 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
 
   case class ScenarioModule(override val id : Symbol)(implicit val scrupal : Scrupal) extends AbstractFakeModule(id, dbName) {
     override val description = id.name
-    def settingsTypes : BundleType = BundleType.Empty
 
     override def features : Seq[Feature] = {
       for (i ← 1 to ftrs) yield { genFeature(i, this) }
     }
 
     /** The core types that Scrupal provides to all modules */
-    override def types : Seq[Type[_]] = {
+    def types : Seq[Type[_]] = {
       for (i ← 1 to nods) yield { genType(i) }
     }
 

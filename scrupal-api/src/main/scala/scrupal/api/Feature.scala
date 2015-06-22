@@ -36,7 +36,10 @@ case class Feature(
   id : Symbol,
   description : String,
   override val parent : Option[Module],
-  implemented : Boolean = true)(implicit val scrupal: Scrupal) extends AbstractFeature with Registrable[Feature] {
+  implemented : Boolean = true)(implicit scrpl: Scrupal
+) extends {
+  implicit val scrupal: Scrupal = scrpl
+} with AbstractFeature  with Registrable[Feature] {
   def registry : Registry[Feature] = scrupal.Features
   /** Get the name of the feature */
   def name = id.name

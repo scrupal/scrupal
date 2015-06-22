@@ -48,7 +48,6 @@ abstract class Scrupal(
   val Applications = ApplicationsRegistry()
   val Modules = ModulesRegistry()
   val Entities = EntitiesRegistry()
-  val Types = TypesRegistry()
   val Features = FeaturesRegistry()
 
   implicit protected val _configuration : Configuration = config.getOrElse(ConfigHelpers.default())

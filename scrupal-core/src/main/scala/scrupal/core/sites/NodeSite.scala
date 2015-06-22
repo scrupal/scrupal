@@ -17,7 +17,6 @@ package scrupal.core.sites
 
 import org.joda.time.DateTime
 import scrupal.api._
-import scrupal.api.types.BundleType
 
 import scala.util.matching.Regex
 
@@ -31,8 +30,6 @@ case class NodeSite(
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None)(override implicit val scrupal : Scrupal) extends Site(id, scrupal) {
   final override val kind = NodeSite.kind
-  val settingsTypes = BundleType.Empty
-
 }
 
 object NodeSite {

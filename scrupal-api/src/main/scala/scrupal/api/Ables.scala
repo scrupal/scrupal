@@ -17,8 +17,6 @@ package scrupal.api
 
 import org.joda.time.DateTime
 import play.api.Configuration
-import play.api.libs.json.{JsObject, JsValue}
-import scrupal.api.types.{StructuredType, BundleType}
 import scrupal.utils.{OSSLicense, Patterns, Version}
 
 trait Authorable {
@@ -68,9 +66,8 @@ trait Describable {
 }
 
 /** Something that has settings that can be specified and changed */
-trait Settingsable extends SettingsInterface {
-  def settingsTypes : BundleType
-  def settingsDefaults : Map[String,Atom]  = Map.empty[String,Atom]
+trait Settingsable extends SettingsDelegate {
+  def settings = _settings.entries.toMap
 }
 
 /** Something that contains a path component for a URL */

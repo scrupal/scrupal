@@ -15,7 +15,6 @@
 
 package scrupal.api
 
-import scrupal.api.types.{BundleType, StringType}
 import scrupal.test.{FakeEntity, FakeModule, ScrupalApiSpecification}
 
 /**

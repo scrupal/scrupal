@@ -23,8 +23,9 @@ import scrupal.test.{ScrupalApiSpecification, FakeModule, FakeContext}
   */
 class FeatureSpec extends ScrupalApiSpecification("FeatureSpec") {
 
-  case class Fixture(name: String) extends FakeContext[Fixture] {
+  case class Fixture(name: String) extends {
     implicit val scrupal : Scrupal = testScrupal
+  } with FakeContext[Fixture] {
     val mod = new FakeModule(sym, "Description")
     mod.enable(mod)
     assert(mod.isEnabled(mod))

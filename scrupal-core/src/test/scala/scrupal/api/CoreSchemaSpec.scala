@@ -15,7 +15,12 @@
 
 package scrupal.api
 
+import scrupal.core.CoreSchemaDesign
 import scrupal.test.ScrupalApiSpecification
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 /** One line sentence description here.
@@ -25,16 +30,17 @@ class CoreSchemaSpec extends ScrupalApiSpecification("CoreSchema") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {
-      val errors = withSchema("core") { schema =>
-        val required = Seq("instances", "alerts", "sites", "nodes", "principals")
-        for (
-          name ← schema.collectionNames ;
-          result = required.contains(name) must beTrue if !result.isSuccess
-        ) yield {
-          result
+      val future = withStoreContext { context ⇒
+        context.addSchema(CoreSchemaDesign()).map { schema ⇒
+          val names = schema.collectionNames.toSeq
+          val required = Seq("instances", "sites", "nodes", "principals", "alias", "token")
+          for (name ← required) {
+            names.contains(name) must beTrue
+          }
+          names.size must beEqualTo(required.size)
         }
       }
-      errors.isEmpty must beTrue
+      Await.result(future, 2.seconds)
     }
   }
 }

@@ -13,32 +13,24 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api.types
+package scrupal.core
 
-import akka.http.scaladsl.model.MediaType
-import scrupal.api._
-import scrupal.utils.Validation.Location
+import scrupal.api.{BundleType, DataCache, SelectionType, Title_t, Markdown_t}
 
-/** A BLOB type has a specified MIME content type and a minimum and maximum length
-  *
-  * @param id
-  * @param description
-  * @param mediaType
-  * @param maxLen
-  */
-case class BLOBType(
-  id : Identifier,
-  description : String,
-  mediaType : MediaType,
-  maxLen : Long = Long.MaxValue)(implicit val scrupal : Scrupal) extends Type[Array[Byte]] {
-  assert(maxLen >= 0)
-  def validate(ref : Location, value : Array[Byte]) : VResult = {
-    simplify(ref, value, "Array[Byte]") {
-      case b: Array[Byte] if b.length > maxLen ⇒ Some(s"BLOB of length ${b.length} exceeds maximum length of $maxLen")
-      case b: Array[Byte] ⇒ None
-      case _ ⇒ Some("")
-    }
-  }
-  override def kind = 'BLOB
+object PageBundle_t
+  extends BundleType('PageBundle, "Information bundle for a page entity.",
+    fields = Map (
+      "title" -> Title_t,
+      "body" -> Markdown_t
+      // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
+      // 'master -> Node_t,
+      // 'defaultLayout -> Node_t,
+      // 'body -> Node_t,
+      // 'blocks ->
+    )
+  )
 
-}
+object Theme_t extends SelectionType('Theme, "Choice of themes", DataCache.themes)
+
+object Site_t extends SelectionType('Site, "Choice of sites", DataCache.sites)
+

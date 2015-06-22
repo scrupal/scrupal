@@ -15,19 +15,20 @@
 
 package scrupal.core.entities
 
-import scrupal.api.types.BundleType
+
 import scrupal.api.{Entity, Scrupal}
+import scrupal.core.PageBundle_t
 
 /** An Entity for representing a simple HTML5 page
   *
   * Description of thing
   */
-case class PageEntity(implicit val scrupal : Scrupal) extends Entity('Page) {
+case class PageEntity(implicit  scrpl : Scrupal) extends Entity('Page)(scrpl) {
   def kind = 'Page
   val description = "An entity for simple HTML5 pages."
   val author = scrupal.author
   val copyright = scrupal.copyright
   val license = scrupal.license
-  val instanceType = scrupal.Types('PageBundle).asInstanceOf[BundleType]
+  val instanceType = PageBundle_t
 }
 

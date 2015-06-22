@@ -25,7 +25,6 @@ import scala.concurrent.Future
 
 import scrupal.api._
 import scrupal.core.html._
-import scrupal.api.types.BundleType
 import scrupal.utils.OSSLicense
 
 
@@ -35,13 +34,13 @@ import scrupal.utils.OSSLicense
   * it simply echos its input to its output. This can be be used for benchmarking the routing and dispatch and layout
   * parts of Scrupal since the response content is generated computationally without blocking.
   */
-case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
+case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   def kind : Symbol = 'Echo
 
   val key : String = "Echo"
 
-  def instanceType : BundleType = BundleType.Empty(scrupal)
+  def instanceType : BundleType = BundleType.empty
 
   def author : String = "Reid Spencer"
 

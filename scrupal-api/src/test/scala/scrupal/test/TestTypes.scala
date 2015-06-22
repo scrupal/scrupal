@@ -17,7 +17,6 @@ package scrupal.test
 
 import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
-import scrupal.api.types._
 import scrupal.utils.Patterns._
 import scrupal.utils.Validation.{DefaultLocation, Location}
 
@@ -25,8 +24,10 @@ import scrupal.utils.Validation.{DefaultLocation, Location}
   *
   * Description of thing
   */
-case class TestTypes(implicit val scrupal: Scrupal) extends FakeContext[TestTypes] {
+case class TestTypes(scrpl: Scrupal) extends {
   val name = "TestTypes"
+  implicit val scrupal: Scrupal = scrpl
+} with FakeContext[TestTypes] {
   /** The Scrupal Type for Uniform Resource Identifiers per http://tools.ietf.org/html/rfc3986 */
   object MiddlePeriod extends AnyType(sym("MiddlePeriod"), "A type for validating URI strings.") {
     override def validate(ref: Location, value: Any) = simplify(ref, value, "String") {

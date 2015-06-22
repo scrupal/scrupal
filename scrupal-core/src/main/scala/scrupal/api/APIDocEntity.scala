@@ -15,8 +15,6 @@
 
 package scrupal.api
 
-import play.api.libs.json.JsObject
-import scrupal.api.types.BundleType
 
 /** API Documentation Helper For An Entity
   *
@@ -26,7 +24,7 @@ import scrupal.api.types.BundleType
   *
   * @tparam E - The Entity type this EntityAPIDoc documents
   */
-class APIDocEntity[E <: Entity](id : Symbol)(implicit val scrupal : Scrupal) extends Entity(id) {
+class APIDocEntity[E <: Entity](id : Symbol)(implicit scrpl : Scrupal) extends Entity(id)(scrpl) {
   def instanceType : BundleType = ???
 
   val author = scrupal.author

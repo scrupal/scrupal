@@ -16,7 +16,6 @@
 package scrupal.api
 
 import play.api.libs.json._
-import scrupal.api.types.BundleType
 import scrupal.storage.api.Storable
 import scrupal.utils.{Enablee, Registrable}
 
@@ -198,13 +197,14 @@ trait FindReactor extends EntityInstanceReactor {
   * This is the key abstraction for Modules. Entities have a public REST API that is served by Scrupal. Entities
   * should represent some concept that is stored by Scrupal and delivered to the user interface via the REST API.
   */
-abstract class Entity(sym : Symbol) extends {
-  val id : Symbol = sym; val _id : Symbol = sym; val segment : String = id.name
+abstract class Entity(sym : Symbol)(implicit scrpl : Scrupal) extends {
+  val id : Symbol = sym
+  val _id : Symbol = sym
+  val segment : String = id.name
+  implicit val scrupal: Scrupal = scrpl
 } with EntityProvider with Storable with Registrable[Entity] with ModuleOwned with Authorable
   with Describable with Enablee with Bootstrappable {
   def moduleOf = { scrupal.Modules.values.find(mod ⇒ mod.entities.contains(this)) }
-
-  implicit def scrupal: Scrupal
 
   override def parent = moduleOf
 

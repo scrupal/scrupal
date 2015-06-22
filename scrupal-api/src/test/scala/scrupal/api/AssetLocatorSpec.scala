@@ -25,12 +25,14 @@ import scrupal.test.{FakeContext, ScrupalApiSpecification}
 import scrupal.utils.OSSLicense
 
 class TestAssetLocator(config: Configuration) extends ConfiguredAssetsLocator(config) {
-  override def assets_path = super.assets_path ++ Seq("scrupal-core/test/resources")
+  override def assets_path = super.assets_path ++ Seq("scrupal-api/src/test/resources")
 }
 
 class AssetLocatorSpec extends ScrupalApiSpecification("AssetLocatorSpec") {
 sequential
-  case class Assets(name: String, scrupal : Scrupal = scrupal) extends FakeContext[Assets] {
+  case class Assets(name: String) extends {
+    implicit val scrupal : Scrupal = testScrupal
+  } with FakeContext[Assets] {
     val locator = scrupal.withConfiguration { config : Configuration ⇒ new TestAssetLocator(config) }
   }
 
@@ -65,7 +67,7 @@ sequential
       Some(stream.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
       stream match {
         case s: StreamResponse ⇒
-          s.stream.available() === 0
+          s.stream.available() === 1694
         case _ ⇒ failure("unexpected result type")
       }
       success
@@ -114,7 +116,7 @@ sequential
       val dirOpt = locator.fetchDirectory("root")
       dirOpt.isDefined must beTrue
       val dir = dirOpt.get
-      val cfg = Configuration(ConfigFactory.parseFile(new File("scrupal-core/test/resources/root/__dir.conf")))
+      val cfg = Configuration(ConfigFactory.parseFile(new File("scrupal-api/src/test/resources/root/__dir.conf")))
       dir.author must beEqualTo(cfg.getString("author"))
       dir.title must beEqualTo(cfg.getString("title"))
       dir.copyright must beEqualTo(cfg.getString("copyright"))

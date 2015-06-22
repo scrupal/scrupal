@@ -37,7 +37,7 @@ trait Module
 
   implicit def  scrupal : Scrupal
 
-  val registry = scrupal.Modules
+  def registry = scrupal.Modules
 
   /** The name of the database your module's schema is stored to
     *
@@ -84,13 +84,6 @@ trait Module
 
   // TODO: Can modules provide sites ?
 
-  /** The set of data types this module defines.
-    * There should be no duplicate types as there is overhead in managing them. Always prefer to depend on the module
-    * that defines the type rather than respecify it here. This sequence includes all the Trait and Entity types that
-    * the module defines.
-    */
-  def types : Seq[Type[_]]
-
   /** The set of handlers for the events this module is interested in.
     * Interest is expressed by providing a handler for each event the module wishes to intercept. When the event occurs
     * the module's handler will be invoked. Multiple modules can register for interest in the same event but there is
@@ -128,9 +121,6 @@ trait Module
     // This just makes sure it gets instantiated & registered as well as not being null
     features foreach { feature ⇒
       require(feature != null); require(feature.label.length > 0); feature.bootstrap(config)
-    }
-    types foreach {
-      typ ⇒ require(typ != null); require(typ.label.length > 0); typ.bootstrap(config)
     }
     entities foreach { entity ⇒
       require(entity != null); require(entity.label.length > 0); entity.bootstrap(config)

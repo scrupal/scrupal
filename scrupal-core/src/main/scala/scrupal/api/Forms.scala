@@ -22,7 +22,6 @@ import scalatags.Text.all._
 
 import scrupal.api.Html._
 import scrupal.core.html.Forms._
-import scrupal.api.types._
 import scrupal.utils.Enablee
 import scrupal.utils.Validation._
 

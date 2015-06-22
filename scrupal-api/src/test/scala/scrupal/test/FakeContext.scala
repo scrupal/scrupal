@@ -18,8 +18,7 @@ package scrupal.test
 import org.joda.time.DateTime
 import org.specs2.execute.{Result, AsResult}
 import org.specs2.specification.Fixture
-import scrupal.api.types.BundleType
-import scrupal.api.{Site, Context, Scrupal}
+import scrupal.api.{Site, Context, BundleType}
 
 import scala.util.matching.Regex
 
@@ -27,8 +26,7 @@ import scala.util.matching.Regex
   */
 trait FakeContext[T] extends Context with Fixture[T] {
   def name : String
-  implicit val scrupal : Scrupal
-  private val scrupalName = scrupal.label + { if (name.isEmpty) "" else "-" + name }
+  def scrupalName = scrupal.label + { if (name.isEmpty) "" else "-" + name }
   def nm(name : String) = ScrupalSpecification.next(scrupalName + "-" + name)
   def nm = ScrupalSpecification.next(scrupalName)
   def sym(name : String) = Symbol(nm(name))
@@ -41,7 +39,7 @@ trait FakeContext[T] extends Context with Fixture[T] {
     def hostnames: Regex = ".*".r
     def modified: Option[DateTime] = None
     def created: Option[DateTime] = None
-    val settingsTypes = BundleType.Empty
+    val settingsTypes = BundleType.empty
   })
 
   def apply[R](f: (T) ⇒ R)(implicit evidence$11: AsResult[R]): Result = {

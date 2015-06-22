@@ -29,7 +29,7 @@ import scala.concurrent.ExecutionContext
   */
 trait Context {
   // Scrupal Related things
-  val scrupal : Scrupal
+  implicit def scrupal : Scrupal
 
   // Site related things
   val site : Option[Site] = None

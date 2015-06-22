@@ -15,12 +15,13 @@
 
 package scrupal.core
 
-import scrupal.storage.api.{Index, SchemaDesign}
+import scrupal.api.APISchemaDesign
+import scrupal.storage.api.Index
 
 
 /** The basic schema for Scrupal. This is composed by merging together the various Components.
   */
-case class CoreSchemaDesign() extends SchemaDesign {
+case class CoreSchemaDesign() extends APISchemaDesign {
 
   /*
   // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
@@ -55,7 +56,7 @@ case class CoreSchemaDesign() extends SchemaDesign {
 */
   override def name: String = "Core"
 
-  override def requiredNames: Seq[String] = Seq("alias", "token")
+  override def requiredNames: Seq[String] = super.requiredNames ++ Seq("alias", "token")
 
-  override def indicesFor(name: String): Seq[Index] = Seq.empty[Index]
+  override def indicesFor(name: String): Seq[Index] = super.indicesFor(name) ++ Seq.empty[Index]
 }

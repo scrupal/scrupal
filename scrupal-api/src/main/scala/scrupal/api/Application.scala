@@ -17,8 +17,6 @@ package scrupal.api
 
 import akka.http.scaladsl.model.{HttpMethod, HttpMethods}
 import org.joda.time.DateTime
-import play.api.mvc.RequestHeader
-import play.api.routing.Router.Routes
 import scrupal.storage.api.Storable
 import scrupal.utils._
 
@@ -27,7 +25,10 @@ import scrupal.utils._
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
   * Created by reid on 11/6/14.
   */
-abstract class Application(scrupal: Scrupal, val id  : Identifier) extends EnablementProvider[Application]
+abstract class Application(ident  : Identifier)(implicit scrpl : Scrupal) extends {
+  val id : Identifier = ident
+  implicit val scrupal: Scrupal = scrpl
+} with EnablementProvider[Application]
   with Storable with Registrable[Application] with Authorable with Nameable with Describable with Modifiable {
 
   def registry : Registry[Application] = scrupal.Applications
@@ -52,11 +53,10 @@ case class BasicApplication(
   description : String,
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None
-)(implicit val   scrupal : Scrupal) extends Application(scrupal, sym) {
+)(implicit scrupal : Scrupal) extends Application(sym)(scrupal) {
   final val method : HttpMethod = HttpMethods.GET
   final val kind = 'BasicApplication
 }
-
 
 case class ApplicationsRegistry() extends Registry[Application] {
   import scala.language.reflectiveCalls
