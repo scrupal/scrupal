@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import play.api.Configuration
 
-import scrupal.storage.api.{Storage, StoreContext}
+import scrupal.storage.api.{Schema, Storage, StoreContext}
 import scrupal.utils._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -146,7 +146,7 @@ abstract class Scrupal(
       }
     }
     val scrupalConfiguration = configToSearch.getConfig("scrupal")
-    Await.result(Storage.fromConfiguration(scrupalConfiguration, "default", create=true), 2.seconds)
+    Await.result(Storage.fromConfiguration(scrupalConfiguration, "scrupal", create=true), 2.seconds)
   }
 
 
@@ -157,9 +157,11 @@ abstract class Scrupal(
     f(_configuration)
   }
 
-  def withStorageContext[T](f : StoreContext ⇒ T) : T = {
+  def withStoreContext[T](f : StoreContext ⇒ T) : T = {
     f(_storeContext)
   }
+
+  def withSchema[T](schemaName: String)(f : Schema ⇒ T) : T = _storeContext.withSchema[T](schemaName)(f)
 
   def withExecutionContext[T](f : (ExecutionContext) ⇒ T) : T = {
     f(_executionContext)

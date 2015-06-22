@@ -56,7 +56,7 @@ object Storage extends ScrupalComponent {
     val config_name = s"storage.$name"
     config.getConfig(config_name) match {
       case Some(cfg) ⇒
-        fromSpecificConfig(cfg)
+        fromSpecificConfig(cfg, create)
       case None ⇒
         Future { toss(s"Failed to find storage configuration for $config_name") }
     }

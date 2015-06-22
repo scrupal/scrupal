@@ -18,7 +18,7 @@ package scrupal.test
 import java.util.concurrent.atomic.AtomicInteger
 
 import scrupal.api.Scrupal
-import scrupal.storage.api.Schema
+import scrupal.storage.api.{StoreContext, Schema}
 
 import scala.concurrent.duration.{ Duration, FiniteDuration }
 
@@ -39,8 +39,9 @@ abstract class ScrupalApiSpecification(specName : String, timeout : FiniteDurati
 
   override protected def afterAll() = {}
 
+  def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
 
-  def withSchema[T](f : Schema ⇒ T) : T =  ???
+  def withSchema[T](schemaName : String)(f : Schema ⇒ T) : T =  scrupal.withSchema(schemaName)(f)
 }
 
 object ScrupalApiSpecification {

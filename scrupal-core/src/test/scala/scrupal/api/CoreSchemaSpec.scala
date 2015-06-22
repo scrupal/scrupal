@@ -21,11 +21,11 @@ import scrupal.test.ScrupalApiSpecification
 /** One line sentence description here.
   * Further description here.
   */
-class SchemaSpec extends ScrupalApiSpecification("CoreSchemaSpec") {
+class CoreSchemaSpec extends ScrupalApiSpecification("CoreSchema") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {
-      val errors = withSchema { schema =>
+      val errors = withSchema("core") { schema =>
         val required = Seq("instances", "alerts", "sites", "nodes", "principals")
         for (
           name ← schema.collectionNames ;

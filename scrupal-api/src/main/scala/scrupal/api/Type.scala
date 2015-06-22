@@ -48,8 +48,7 @@ case class TypeFailure[VT, T <: Type[VT]](ref : Location, value : VT, t : T, err
 trait Type[VT] extends Registrable[Type[_]] with Describable with Validator[VT] with Bootstrappable {
 
   implicit def scrupal : Scrupal
-
-  val registry : Registry[Type[_]] = scrupal.Types
+  def registry : Registry[Type[_]] = scrupal.Types
 
   type ValueType = VT
 

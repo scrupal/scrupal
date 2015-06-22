@@ -16,7 +16,6 @@
 package scrupal.api.types
 
 import scrupal.api._
-import scrupal.utils.Patterns._
 import scrupal.utils.Validation.Location
 
 import scala.util.matching.Regex
@@ -35,7 +34,6 @@ case class StringType(
   maxLen : Int = Int.MaxValue,
   patternName : String = "pattern"
 )(implicit val scrupal : Scrupal) extends Type[String] {
-  override type ValueType = String
   require(maxLen >= 0)
   def validate(ref : Location, value : String) = {
     simplify(ref, value, "String") {
