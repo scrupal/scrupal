@@ -69,7 +69,7 @@ trait Describable {
 
 /** Something that has settings that can be specified and changed */
 trait Settingsable extends SettingsInterface {
-  def settingsType : Map[String,Type[Atom]] = Map.empty[String,Type[Atom]]
+  def settingsTypes : BundleType
   def settingsDefaults : Map[String,Atom]  = Map.empty[String,Atom]
 }
 

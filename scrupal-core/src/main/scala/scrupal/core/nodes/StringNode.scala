@@ -15,12 +15,9 @@
 
 package scrupal.core.nodes
 
+import akka.http.scaladsl.model.MediaTypes
 import org.joda.time.DateTime
-import reactivemongo.bson.{ Macros, BSONDocument, BSONHandler, BSONObjectID }
-import scrupal.core.api.{ Node, Context, Result, StringResult }
-import scrupal.db.VariantReaderWriter
-import spray.http.MediaTypes
-
+import scrupal.api.{Request, StringResponse, Response, Node}
 import scala.concurrent.Future
 
 case class StringNode(
@@ -28,20 +25,12 @@ case class StringNode(
   text : String,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = StringNode.kind) extends Node {
   final val mediaType = MediaTypes.`text/plain`
-  def apply(ctxt : Context) : Future[Result[_]] = Future.successful { StringResult(text) }
+  def apply(request : Request) : Future[Response] = Future.successful { StringResponse(text) }
 }
 
 object StringNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'String
-  object StringNodeVRW extends VariantReaderWriter[Node, StringNode] {
-    implicit val StringNodeHandler : BSONHandler[BSONDocument, StringNode] = Macros.handler[StringNode]
-    override def fromDoc(doc : BSONDocument) : StringNode = StringNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = StringNodeHandler.write(obj.asInstanceOf[StringNode])
-  }
-  Node.variants.register(kind, StringNodeVRW)
 }
 

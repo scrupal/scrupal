@@ -15,12 +15,10 @@
 
 package scrupal.core.nodes
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
-import reactivemongo.bson.{ Macros, BSONDocument, BSONHandler, BSONObjectID }
 import scalatags.Text.all._
-import scrupal.core.api._
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaType, MediaTypes }
+import scrupal.api._
 
 import scala.concurrent.Future
 
@@ -35,23 +33,15 @@ case class MessageNode(
   message : String,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = MessageNode.kind) extends Node {
   final val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(ctxt : Context) : Future[Result[_]] = Future.successful {
+  def apply(request : Request) : Future[Response] = Future.successful {
     val text = div(cls := css_class, message)
-    HtmlResult(text, Successful)
+    HtmlResponse(Html.renderContents(Seq(text)), Successful)
   }
 }
 
 object MessageNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'Message
-  object MessageNodeVRW extends VariantReaderWriter[Node, MessageNode] {
-    implicit val MessageNodeHandler : BSONHandler[BSONDocument, MessageNode] = Macros.handler[MessageNode]
-    override def fromDoc(doc : BSONDocument) : MessageNode = MessageNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = MessageNodeHandler.write(obj.asInstanceOf[MessageNode])
-  }
-  Node.variants.register(kind, MessageNodeVRW)
 }
 

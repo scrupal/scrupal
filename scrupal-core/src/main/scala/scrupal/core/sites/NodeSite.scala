@@ -16,42 +16,27 @@
 package scrupal.core.sites
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{ BSONDocument, Macros }
-import scrupal.core.actions.NodeReactor
-import scrupal.core.api._
-import scrupal.db.VariantReaderWriter
+import scrupal.api._
+import scrupal.api.types.BundleType
+
+import scala.util.matching.Regex
 
 case class NodeSite(
+  override implicit val scrupal : Scrupal,
   override val id : Identifier,
   name : String,
   description : String,
-  host : String,
+  hostnames : Regex,
   siteRoot : Node = Node.Empty,
   override val requireHttps : Boolean = false,
   modified : Option[DateTime] = None,
-  created : Option[DateTime] = None) extends Site(id) {
+  created : Option[DateTime] = None) extends Site(id,scrupal) {
   final override val kind = NodeSite.kind
+  val settingsTypes = BundleType.Empty
 
-  override def extractAction(context : Context) : Option[Action] = {
-    super.extractAction(context) match {
-      case Some(action) ⇒ Some(action)
-      case None ⇒ Some(NodeReactor(context, siteRoot))
-    }
-  }
 }
 
 object NodeSite {
-  import BSONHandlers._
-
-  implicit val nodeReader = Node.NodeReader
-  implicit val nodeWriter = Node.NodeWriter
-
-  object NodeSiteBRW extends VariantReaderWriter[Site, NodeSite] {
-    implicit val NodeSiteHandler = Macros.handler[NodeSite]
-    override def fromDoc(doc : BSONDocument) : NodeSite = NodeSiteHandler.read(doc)
-    override def toDoc(obj : Site) : BSONDocument = NodeSiteHandler.write(obj.asInstanceOf[NodeSite])
-  }
   val kind = 'NodeSite
-  Site.variants.register(kind, NodeSiteBRW)
 }
 

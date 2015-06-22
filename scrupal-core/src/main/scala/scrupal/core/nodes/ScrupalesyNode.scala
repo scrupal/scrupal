@@ -15,12 +15,10 @@
 
 package scrupal.core.nodes
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
-import reactivemongo.bson.{ BSONDocument, BSONHandler, BSONObjectID, Macros }
 import scalatags.Text.all._
-import scrupal.core.api._
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaType, MediaTypes }
+import scrupal.api._
 
 import scala.concurrent.Future
 
@@ -61,24 +59,16 @@ case class ScrupalesyNode(
   scrupalesy : String,
   modified : Option[DateTime] = Some(DateTime.now()),
   created : Option[DateTime] = Some(DateTime.now()),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = ScrupalesyNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(ctxt : Context) : Future[Result[_]] = Future.successful {
+  def apply(request : Request) : Future[Response] = Future.successful {
     // TODO: Implement ScrupaleasyNode
-    HtmlResult(span("Not Implemented"), Unimplemented)
+    HtmlResponse(Html.renderContents( Seq( span("Not Implemented"))), Unimplemented)
   }
 }
 
 object ScrupalesyNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'Scrupalesy
-  object ScrupalesyNodeBRW extends VariantReaderWriter[Node, ScrupalesyNode] {
-    implicit val ScrupalesyNodeHandler : BSONHandler[BSONDocument, ScrupalesyNode] = Macros.handler[ScrupalesyNode]
-    override def fromDoc(doc : BSONDocument) : ScrupalesyNode = ScrupalesyNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = ScrupalesyNodeHandler.write(obj.asInstanceOf[ScrupalesyNode])
-  }
-  Node.variants.register(kind, ScrupalesyNodeBRW)
 }
 

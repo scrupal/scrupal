@@ -18,6 +18,7 @@ package scrupal.test
 import org.joda.time.DateTime
 import org.specs2.execute.{Result, AsResult}
 import org.specs2.specification.Fixture
+import scrupal.api.types.BundleType
 import scrupal.api.{Site, Context, Scrupal}
 
 import scala.util.matching.Regex
@@ -33,13 +34,14 @@ trait FakeContext[T] extends Context with Fixture[T] {
   def sym(name : String) = Symbol(nm(name))
   def sym = Symbol(nm)
 
-  override val site = Some( new Site(sym("Site"), scrupal) {
+  override val site = Some( new Site(sym("Site"), scrupal ) {
     val name = "FakeContextSite"
     val description  = "Just For Testing"
     val y = nm("localhost")
     def hostnames: Regex = ".*".r
     def modified: Option[DateTime] = None
     def created: Option[DateTime] = None
+    val settingsTypes = BundleType.Empty
   })
 
   def apply[R](f: (T) ⇒ R)(implicit evidence$11: AsResult[R]): Result = {

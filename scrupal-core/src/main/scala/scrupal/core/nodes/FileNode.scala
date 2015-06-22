@@ -18,7 +18,7 @@ package scrupal.core.nodes
 import java.io.{ FileInputStream, File }
 
 import org.joda.time.DateTime
-import scrupal.api.{ Node, StreamResponse, Response, Context }
+import scrupal.api._
 import akka.http.scaladsl.model.{ MediaTypes, MediaType }
 
 import scala.concurrent.Future
@@ -39,7 +39,7 @@ case class FileNode(
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = FileNode.kind) extends Node {
-  def apply(ctxt : Context) : Future[Response] = {
+  def apply(request : Request) : Future[Response] = {
     val extension = {
       val name = file.getName
       name.lastIndexOf(".") match {

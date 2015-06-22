@@ -16,16 +16,15 @@
 package scrupal.api
 
 import java.io.File
-import java.net.{ URLClassLoader, URL }
+import java.net.{URL, URLClassLoader}
 
-import akka.http.scaladsl.model.{ MediaTypes, MediaType }
-import com.typesafe.config.{ Config, ConfigFactory }
+import akka.http.scaladsl.model.{MediaType, MediaTypes}
+import com.typesafe.config.{Config, ConfigFactory}
 import play.api.Configuration
-import play.api.http.ContentTypes
 import scrupal.utils.OSSLicense
 
-import scala.reflect.internal.util.ScalaClassLoader
 import scala.collection.JavaConverters._
+import scala.reflect.internal.util.ScalaClassLoader
 
 trait AssetsLocator {
 
@@ -208,7 +207,7 @@ trait AssetsLocator {
 
 }
 
-class ConfiguredAssetsLocator(config : Configuration) extends AssetsLocator {
+case class ConfiguredAssetsLocator(config : Configuration) extends AssetsLocator {
   def assets_path = asset_path_from_config(config)
 }
 

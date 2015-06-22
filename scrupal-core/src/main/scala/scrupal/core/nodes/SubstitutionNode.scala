@@ -15,42 +15,41 @@
 
 package scrupal.core.nodes
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
-import reactivemongo.bson.{ BSONDocument, BSONHandler, BSONObjectID, Macros }
-import scrupal.core.api._
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaType, MediaTypes }
+import scrupal.api._
+
+import scala.concurrent.Future
 
 /** Generate Content by substituting values in a template
   * This allows users to create template type content in their browser. It is simply
   * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
-  * You can substitute a node (@{node('mynode}), values from the [[scrupal.core.api.Context]] (@{context.`var_name`}),
+  * You can substitute a node (@{node('mynode}), values from the [[scrupal.api.Context]] (@{context.`var_name`}),
   * predefined variables/functions (@{datetime}), etc.
-  * case class SubstitutionNode (
-  * description: String,
-  * script: String,
-  * subordinates: Map[String, Either[NodeRef,Node]] = Map.empty[String, Either[NodeRef,Node]],
-  * modified: Option[DateTime] = Some(DateTime.now()),
-  * created: Option[DateTime] = Some(DateTime.now()),
-  * _id: BSONObjectID = BSONObjectID.generate,
-  * final val kind: Symbol = SubstitutionNode.kind
-  * ) extends CompoundNode {
-  * final val mediaType: MediaType = MediaTypes.`text/html`
-  * def resolve(ctxt: Context, tags: Map[String,(Node,EnumeratorResult)]) : EnumeratorResult = {
-  * // val layout = Layout(layoutId).getOrElse(Layout.default)
-  * val template: Array[Byte] = script.getBytes(utf8)
-  * EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
-  * }
-  * }
-  *
-  * object SubstitutionNode {
-  * import scrupal.core.api.BSONHandlers._
-  * final val kind = 'Substitution
-  * object SubstitutionNodeNodeBRW extends VariantReaderWriter[Node,SubstitutionNode] {
-  * implicit val SubstitutionNodeHandler: BSONHandler[BSONDocument,SubstitutionNode] = Macros.handler[SubstitutionNode]
-  * override def fromDoc(doc: BSONDocument): SubstitutionNode = SubstitutionNodeHandler.read(doc)
-  * override def toDoc(obj: Node): BSONDocument = SubstitutionNodeHandler.write(obj.asInstanceOf[SubstitutionNode])
-  * }
-  * Node.variants.register(kind, SubstitutionNodeNodeBRW)
-  * }
   */
+case class SubstitutionNode (
+  description: String,
+  script: String,
+  subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
+  modified: Option[DateTime] = Some(DateTime.now()),
+  created: Option[DateTime] = Some(DateTime.now()),
+  final val kind: Symbol = SubstitutionNode.kind
+) extends Node {
+
+  final val mediaType: MediaType = MediaTypes.`text/html`
+
+  def apply(request : Request) : Future[Response] = {
+    Future.successful(NoopResponse) // FIXME: REturn correct results
+  }
+
+  def resolve(ctxt: Context, tags: Map[String,(Node,Response)]) : Response = {
+    // val layout = Layout(layoutId).getOrElse(Layout.default)
+    val template: Array[Byte] = script.getBytes(utf8)
+    // FIXME: Reinstate LayoutPRoducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
+    StringResponse("foo", Successful)
+  }
+}
+
+object SubstitutionNode {
+  final val kind = 'Substitution
+}

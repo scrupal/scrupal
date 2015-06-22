@@ -22,15 +22,13 @@ object Boot extends Scrupal with App {
 
   val core = CoreModule()(this)
 
-  override val config = open()
-
   override def open() : Configuration = {
     // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
     require (Modules('Core).isDefined, "Failed to find the CoreModule")
     super.open()
   }
 
-  val http = scrupal.core.http.Boot(this, config)
+  val http = scrupal.core.http.Boot(this, open())
 
   http.run()
 

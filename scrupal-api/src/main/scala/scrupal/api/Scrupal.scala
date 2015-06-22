@@ -29,6 +29,7 @@ import scrupal.utils._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.util.matching.Regex
 
 abstract class Scrupal(
   val name : String = "Scrupal",
@@ -50,17 +51,20 @@ abstract class Scrupal(
   val Types = TypesRegistry()
   val Features = FeaturesRegistry()
 
-  implicit val _configuration = config.getOrElse(ConfigHelpers.default())
+  implicit protected val _configuration : Configuration = config.getOrElse(ConfigHelpers.default())
 
-  implicit val _actorSystem = actSys.getOrElse(ActorSystem("Scrupal", _configuration.underlying))
+  implicit protected val _actorSystem : ActorSystem = actSys.getOrElse(ActorSystem("Scrupal", _configuration.underlying))
 
-  implicit val _executionContext = ec.getOrElse(getExecutionContext(_configuration))
+  implicit protected val _executionContext : ExecutionContext = ec.getOrElse(getExecutionContext(_configuration))
 
-  implicit val _storageContext = sc.getOrElse(getStorageContext(_configuration))
+  implicit val _storeContext : StoreContext = sc.getOrElse(getStoreContext(_configuration))
 
   implicit val _timeout = Timeout(
     _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
   )
+
+  implicit val _assetsLocator : AssetsLocator = new ConfiguredAssetsLocator(_configuration)
+
 
 
   /** Scrupal Thread Factory
@@ -132,7 +136,7 @@ abstract class Scrupal(
     }
   }
 
-  def getStorageContext(config : Configuration) : StoreContext = {
+  def getStoreContext(config : Configuration) : StoreContext = {
     val configToSearch = {
       config.getString("scrupal.storage.config.file") match {
         case Some(fileName) ⇒
@@ -154,7 +158,7 @@ abstract class Scrupal(
   }
 
   def withStorageContext[T](f : StoreContext ⇒ T) : T = {
-    f(_storageContext)
+    f(_storeContext)
   }
 
   def withExecutionContext[T](f : (ExecutionContext) ⇒ T) : T = {
@@ -188,7 +192,7 @@ abstract class Scrupal(
     * Resources managed by plugins, such as database connections, are likely not available at this point.
     *
     */
-  def open() : Unit = {
+  def open() : Configuration = {
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
     require(Types.registryName == "Types")
@@ -196,6 +200,7 @@ abstract class Scrupal(
     require(Sites.registryName == "Sites")
     require(Entities.registryName == "Entities")
     // FIXME: require(Template.registryName == "Templates")
+    _configuration
   }
 
   def close() : Unit
@@ -207,7 +212,7 @@ abstract class Scrupal(
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  protected def load(config : Configuration, context : StoreContext) : Future[Map[String, Site]]
+  protected def load(config : Configuration, context : StoreContext) : Future[Map[Regex, Site]]
 
   /** Handle An Action
     * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to

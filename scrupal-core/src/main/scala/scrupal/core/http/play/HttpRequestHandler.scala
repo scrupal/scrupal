@@ -15,10 +15,8 @@
 
 package scrupal.core.http.play
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import akka.util.ByteString
 import play.api.http.{DefaultHttpRequestHandler, HttpConfiguration, HttpErrorHandler, HttpFilters}
-import play.api.libs.iteratee.{Enumerator, Iteratee}
+import play.api.libs.iteratee.{Iteratee}
 import play.api.mvc.{EssentialAction, Handler, RequestHeader, Result}
 import play.api.routing.Router
 import play.api.routing.Router.Routes
@@ -37,22 +35,8 @@ class HttpRequestHandler(scrupal: Scrupal, errorHandler: HttpErrorHandler, confi
 
   case class PlayRequest(playRequest: RequestHeader, site: Site) extends Request {
     val PathParts(application, entity, instance, msg) = playRequest.path
-    override val message = msg.split('/')
+    override val message = msg.split('/').toIterable
     val context = Context(scrupal, site)
-    override val mediaType =
-      MediaTypes.getForKey(playRequest.contentType.getOrElse("") → playRequest.charset.getOrElse(""))
-    override val parameters =
-       playRequest.headers.toSimpleMap ++ playRequest.queryString.transform { case (k,v) ⇒ v.mkString(",") }
-    trait Request {
-      def context : Context
-      def entity : String
-      def instance : String
-      def message : Iterable[String] = Iterable.empty[String]
-      def mediaType : MediaType = MediaTypes.`application/octet-stream`
-      def payload : Enumerator[ByteString] = Enumerator.empty[ByteString]
-      def parameters : Map[String,String] = Map.empty[String,String]
-    }
-
   }
 
   override def routeRequest(request: RequestHeader) : Option[Handler] = {

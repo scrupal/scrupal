@@ -18,6 +18,7 @@ package scrupal.test
 import java.net.URL
 
 import scrupal.api._
+import scrupal.api.types.BundleType
 import scrupal.utils.{OSSLicense, Version}
 
 /** Make Module Creation More Light weight
@@ -52,5 +53,5 @@ case class FakeModule(
   nodes : Seq[Node] = Seq(),
   override val handlers : Seq[EventHandlerFor[Event]] = Seq())(implicit val scrupal: Scrupal)
   extends AbstractFakeModule(id, dbName) {
-
+  val settingsTypes : BundleType = BundleType.Empty
 }

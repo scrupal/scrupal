@@ -75,22 +75,23 @@ case class MarkedDocNode(
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
     val dirPath = if (path.isEmpty) root else root + "/" + relPath
-    val locator = request.context.scrupal.assetsLocator
+    val context = request.context
+    val locator = context.scrupal._assetsLocator
     val directory = locator.fetchDirectory(dirPath, recurse = true)
     directory match {
-      case None ⇒ Future.successful(ErrorResult(s"Directory at $dirPath was not found", NotFound))
+      case None ⇒ Future.successful(ErrorResponse(s"Directory at $dirPath was not found", NotFound))
       case Some(dir) ⇒
         val doc : String = {
           if (page.nonEmpty)
             page
           else dir.index match {
-            case None ⇒ return Future.successful(ErrorResult(s"Document at $dirPath was not found", NotFound))
+            case None ⇒ return Future.successful(ErrorResponse(s"Document at $dirPath was not found", NotFound))
             case Some(index) ⇒ index
           }
         }
         dir.files.get(doc) match {
-          case None ⇒ Future.successful(ErrorResult(s"Document at $dirPath/$doc was not found", NotFound))
-          case Some((docTitle, urlOpt)) ⇒ request.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
+          case None ⇒ Future.successful(ErrorResponse(s"Document at $dirPath/$doc was not found", NotFound))
+          case Some((docTitle, urlOpt)) ⇒ context.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
             Future {
               urlOpt match {
                 case Some(url) ⇒
@@ -115,9 +116,9 @@ case class MarkedDocNode(
                   val footer = Seq(div(cls := "footer", sub(sub(footerText))))
                   val contents = Source.fromInputStream(url.openStream()).mkString
                   val page = MarkedDocNode.DocPage(title, "Description", nav, contents, footer)
-                  HtmlResult(page.render(request), Successful)
+                  HtmlResponse(page.render(context), Successful)
                 case None ⇒
-                  ErrorResult(s"Document at $root/$doc was not listed in directory", NotFound)
+                  ErrorResponse(s"Document at $root/$doc was not listed in directory", NotFound)
               }
             }
           }
@@ -127,14 +128,7 @@ case class MarkedDocNode(
 }
 
 object MarkedDocNode {
-  import BSONHandlers._
   final val kind = 'MarkedDoc
-  object MarkedDocNodeBRW extends VariantReaderWriter[Node, MarkedDocNode] {
-    implicit val MarkedDocNodeHandler : BSONHandler[BSONDocument, MarkedDocNode] = Macros.handler[MarkedDocNode]
-    override def fromDoc(doc : BSONDocument) : MarkedDocNode = MarkedDocNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = MarkedDocNodeHandler.write(obj.asInstanceOf[MarkedDocNode])
-  }
-  Node.variants.register(kind, MarkedDocNodeBRW)
 
   case class DocPage(title : String, description : String, menu : Html.Contents, content : String, footer : Html.Contents)
     extends MarkedPageGenerator {

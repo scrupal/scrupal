@@ -73,7 +73,7 @@ case class Scrupal(
     // Get the database started up
     //Storage.startup()
 
-    val sc = _storageContext
+    val sc = _storeContext
 
 
     // TODO: scan classpath for additional modules
@@ -88,7 +88,7 @@ case class Scrupal(
     }
 
     // Load the configuration and wait at most 10 seconds for it
-    val load_result = Await.result(load(config, _storageContext), 10.seconds)
+    val load_result = Await.result(load(config, _storeContext), 10.seconds)
 
     /* TODO: Implement this so it doesn't thwart startup and test failures
     if (load_result.isEmpty)

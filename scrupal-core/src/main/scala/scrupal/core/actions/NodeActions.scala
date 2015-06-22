@@ -28,13 +28,13 @@ import scala.concurrent.{ ExecutionContext, Future }
   * @param node The node that will produce the action's result
   */
 case class NodeReactor(request : Request, node : Node) extends Reactor {
-  def apply() : Future[Response] = {
+  def apply(request: Request) : Future[Response] = {
     node(request)
   }
 }
 
 case class NodeIdReactor(id : Long, request : Request) extends Reactor {
-  def apply() : Future[Response] = {
+  def apply(request: Request) : Future[Response] = {
     request.context.withSchema("core") { (storeContext, schema) ⇒
       request.context.withExecutionContext { implicit ec : ExecutionContext ⇒
         schema.withCollection("nodes") { nodes : Collection[Node] ⇒

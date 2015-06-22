@@ -83,7 +83,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def create(req: Request) : CreateReactor = {
     new CreateReactor {
       val request : Request = req
-      override def apply() : Future[Response] = {
+      def apply(request: Request) : Future[Response] = {
         val instance = parseJSON(request)
         Future.successful(HtmlResponse(echo_doc("Create", id, instance).render(request.context)))
       }
@@ -93,7 +93,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def retrieve(req: Request) : RetrieveReactor = {
     new RetrieveReactor {
       val request : Request = req
-      override def apply : Future[Response] = {
+      def apply(request: Request) : Future[Response] = {
         Future.successful(HtmlResponse(echo_request("Retrieve", id).render(request.context)))
       }
     }
@@ -102,7 +102,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def update(req: Request) : UpdateReactor = {
     new UpdateReactor {
       val request : Request = req
-      override def apply : Future[Response] = {
+      def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(echo_doc("Update", id, fields).render(request.context)))
       }
     }
@@ -111,7 +111,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def delete(req: Request) : DeleteReactor = {
     new DeleteReactor {
       val request : Request = req
-      override def apply : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(echo_request("Delete", id).render(request.context)))
       }
     }
@@ -120,7 +120,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def query(req: Request) : QueryReactor = {
     new QueryReactor {
       val request : Request = req
-      override def apply : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(echo_doc("Query", id, fields).render(request.context)))
       }
     }
@@ -156,7 +156,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def add(req: Request) : AddReactor = {
     new AddReactor {
       val request : Request = req
-      override def apply() : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(facet_doc("Create", what, instance).render(request.context)))
       }
     }
@@ -165,7 +165,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def get(req: Request) : GetReactor = {
     new GetReactor {
       def request : Request = req
-      override def apply() : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(facet_request("Retrieve", what).render(request.context)))
       }
     }
@@ -174,7 +174,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def set(req : Request) : SetReactor = {
     new SetReactor {
       val request : Request = req
-      override def apply() : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(facet_doc("Update", what, fields).render(request.context)))
       }
     }
@@ -183,7 +183,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def remove(req: Request) : RemoveReactor = {
     new RemoveReactor {
       val request : Request = req
-      override def apply() : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(facet_request("Delete", what).render(request.context)))
       }
     }
@@ -192,7 +192,7 @@ case class EchoEntity(implicit val scrupal : Scrupal) extends Entity('Echo) {
   override def find(req: Request) : FindReactor = {
     new FindReactor {
       val request : Request = req
-      override def apply() : Future[Response] = {
+      override def apply(request : Request) : Future[Response] = {
         Future.successful(HtmlResponse(facet_doc("Query", what, args).render(request.context)))
       }
     }

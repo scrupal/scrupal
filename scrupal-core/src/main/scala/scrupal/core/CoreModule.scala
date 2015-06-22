@@ -42,14 +42,12 @@ case class CoreModule(implicit val scrupal : Scrupal) extends Module {
   val license = scrupal.license
 
   val notes_key = "Notes"
-  override val settingsType =
+  override val settingsTypes =
     BundleType('CoreConfiguration, "The definition of the CoreModule's configuration parameters", Map(
       notes_key → Markdown_t
     ))
 
-  override val settingsDefaults = Map(
-    notes_key → "No notes."
-  )
+  override val settingsDefaults : Map[String,Atom] = Map(notes_key → "No notes." )
 
   /** Controls whether debug information is displayed at the bottom of page requests.
     * Debug data will also be tacked on to the end of JSON data delivered via the REST api in the "debug" field.
@@ -216,7 +214,7 @@ case class CoreModule(implicit val scrupal : Scrupal) extends Module {
   def types = Seq[Type[_]](
     AnyType_t, AnyString_t, NonEmptyString_t, Password_t, AnyInteger_t, AnyReal_t, AnyTimestamp_t, Boolean_t,
     Identifier_t, Description_t, Markdown_t, DomainName_t, TcpPort_t, URL_t, IPv4Address_t, EmailAddress_t,
-    LegalName_t, SiteInfo_t, PageBundle_t, settingsType, UnspecificQuantity_t
+    LegalName_t, SiteInfo_t, PageBundle_t, settingsTypes, UnspecificQuantity_t
   )
 
   def entities = Seq[Entity](

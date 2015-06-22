@@ -18,6 +18,7 @@ package scrupal.api
 import java.time.Instant
 
 import play.api.libs.json.JsValue
+import scrupal.api.types.BundleType
 import scrupal.utils.Validation
 
 import scala.collection.mutable
@@ -36,7 +37,7 @@ trait SettingsInterface extends MapValidator[String,Atom,mutable.HashMap[String,
   type MapType = mutable.HashMap[String,Atom]
   protected val settings : MapType = mutable.HashMap.empty[String,Atom]
   def settingsDefaults : Map[String,Atom]
-  def settingsType : Map[String,Type[Atom]]
+  def settingsTypes : BundleType
 
   def toMap(mt: MapType): collection.Map[String, Atom] = mt.toMap
 
@@ -45,9 +46,9 @@ trait SettingsInterface extends MapValidator[String,Atom,mutable.HashMap[String,
   }
 
   def validateElement(ref: SelectedLocation[String], k: String, v: Atom): Results[Atom] = {
-    settingsType.get(k) match {
+    settingsTypes.fields.get(k) match {
       case Some(validator) ⇒
-        validator.validate(ref, v)
+        validator.asInstanceOf[Validator[Atom]].validate(ref, v)
       case None ⇒
         StringFailure(ref, v, s"Type validator not found for key $k")
     }
@@ -93,22 +94,17 @@ trait SettingsInterface extends MapValidator[String,Atom,mutable.HashMap[String,
   */
 case class Settings(
   name : String,
-  settingsType : Map[String,Type[Atom]],
-  initialValue : Map[String,Atom],
+  settingsTypes : BundleType,
+  initialValue : Map[String,Atom] = Map.empty[String,Atom],
   override val settingsDefaults : Map[String,Atom]) extends SettingsInterface {
-  require(settingsType.size == settingsDefaults.size)
-  require(settingsType.size == initialValue.size)
+  require(settingsTypes.size == settingsDefaults.size)
+  require(settingsTypes.size == initialValue.size)
 
   settings.transform { case (k,v) ⇒ initialValue.getOrElse(k,v) }
 }
 
 object Settings {
-  // import BSONHandlers._
-
-  //implicit val SettingsHandler = Macros.handler[Settings]
 
   def apply(cfg : com.typesafe.config.Config) : Settings = ???
   // TODO: Implement conversion of Configuration from Typesafe Config with "best guess" at Type from values
-
-  lazy val Empty = Settings("Empty", Map(), Map(), Map())
 }

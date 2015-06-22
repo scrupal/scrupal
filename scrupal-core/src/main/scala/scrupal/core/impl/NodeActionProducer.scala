@@ -17,7 +17,7 @@ package scrupal.core.impl
 
 import akka.http.scaladsl.model.{ HttpMethod, HttpMethods }
 import akka.http.scaladsl.server.PathMatcher
-import scrupal.api.{Request, Reactor, Context, Node}
+import scrupal.api.{Request, Reactor, Node}
 import scrupal.core.actions.NodeReactor
 import shapeless.HList
 

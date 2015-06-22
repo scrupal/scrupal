@@ -17,11 +17,9 @@ package scrupal.core.nodes
 
 import java.net.URL
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
-import reactivemongo.bson.{ BSONObjectID, Macros, BSONDocument, BSONHandler }
-import scrupal.core.api.{ Node, Context, Result, StreamResult }
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaType, MediaTypes }
+import scrupal.api._
 
 import scala.concurrent.Future
 
@@ -31,21 +29,13 @@ case class URLNode(
   mediaType : MediaType = MediaTypes.`text/html`,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = URLNode.kind) extends Node {
-  def apply(ctxt : Context) : Future[Result[_]] = Future.successful {
-    StreamResult(url.openStream(), mediaType)
+  def apply(request : Request) : Future[Response] = Future.successful {
+    StreamResponse(url.openStream(), mediaType)
   }
 }
 
 object URLNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'URL
-  object URLNodeVRW extends VariantReaderWriter[Node, URLNode] {
-    implicit val URLNodeHandler : BSONHandler[BSONDocument, URLNode] = Macros.handler[URLNode]
-    override def fromDoc(doc : BSONDocument) : URLNode = URLNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = URLNodeHandler.write(obj.asInstanceOf[URLNode])
-  }
-  Node.variants.register(kind, URLNodeVRW)
 }
 

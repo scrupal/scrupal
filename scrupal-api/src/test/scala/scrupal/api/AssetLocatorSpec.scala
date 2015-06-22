@@ -20,8 +20,7 @@ import java.io.File
 
 import com.typesafe.config.ConfigFactory
 import scrupal.test.{FakeContext, ScrupalApiSpecification}
-import scrupal.utils.{OSSLicense, Configuration}
-import spray.http.MediaTypes
+import scrupal.utils.OSSLicense
 
 class TestAssetLocator(config: Configuration) extends ConfiguredAssetsLocator(config) {
   override def assets_path = super.assets_path ++ Seq("scrupal-core/test/resources")

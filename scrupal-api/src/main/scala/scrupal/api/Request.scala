@@ -24,6 +24,10 @@ trait Request {
   def entity : String
   def instance : String
   def message : Iterable[String] = Iterable.empty[String]
+}
+
+trait RequestDetails {
+  def request : Request
   def mediaType : MediaType = MediaTypes.`application/octet-stream`
   def payload : Enumerator[ByteString] = Enumerator.empty[ByteString]
   def parameters : Map[String,String] = Map.empty[String,String]

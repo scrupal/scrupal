@@ -15,7 +15,8 @@
 
 package scrupal.api
 
-import akka.http.scaladsl.model.MediaType
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import org.joda.time.DateTime
 
 import scala.concurrent.Future
 import scala.language.existentials
@@ -40,8 +41,17 @@ trait Node extends Storable
 
 object Node {
 
+  type Ref = Reference[Node]
+
+  lazy val Empty = new Node {
+    def mediaType: MediaType = MediaTypes.`application/octet-stream`
+    def modified: Option[DateTime] = Some(DateTime.now())
+    def created: Option[DateTime] = Some(DateTime.now())
+    def apply(v1: Request): Future[Response] = Future.successful(NoopResponse)
+    def description: String = "This node is completely empty."
+  }
+
   /*
-  lazy val Empty = MessageNode("Empty Node", "text-danger", "This node is completely empty.")
 
   object variants extends VariantRegistry[Node]("Node")
 

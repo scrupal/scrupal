@@ -17,7 +17,6 @@ package scrupal.config
 
 import scrupal.api.types._
 import scrupal.core._
-import CoreModule
 import scrupal.utils.ScrupalComponent
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -28,7 +27,7 @@ import scrupal.utils.ScrupalComponent
   */
 object ConfigWizard extends ScrupalComponent {
 
-  val cw = CoreModule.ConfigWizard
+  val cw = ConfigWizard
 
   type SiteMap = Map[Symbol, String]
 
