@@ -16,29 +16,25 @@
 package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.api.Scrupal
 import scrupal.core.http.akka.SiteDirectives
 import scrupal.core.sites.NodeSite
 import scrupal.test.CaseClassFixture
-import spray.routing.HttpService
-import spray.testkit.Specs2RouteTest
 
 case class Sites(name : String) extends CaseClassFixture[Sites] {
-  val scrupal = new Scrupal(name)
+  val scrupal = new _root_.scrupal.core.impl.Scrupal(name)
   def mkName(int : Int) : Symbol = Symbol(name + int)
-  val s1 = NodeSite(mkName(1), "TestSite", "Testing only", "site1", requireHttps = false)
-  val s2 = NodeSite(mkName(2), "TestSite", "Testing only", "site2", requireHttps = true)
-  val s3 = NodeSite(mkName(3), "TestSite", "Testing only", "site3", requireHttps = false)
-  val s4 = NodeSite(mkName(4), "TestSite", "Testing only", "site4", requireHttps = true)
+  val s1 = NodeSite(mkName(1), "TestSite", "Testing only", "site1".r, requireHttps = false)(scrupal)
+  val s2 = NodeSite(mkName(2), "TestSite", "Testing only", "site2".r, requireHttps = true)(scrupal)
+  val s3 = NodeSite(mkName(3), "TestSite", "Testing only", "site3".r, requireHttps = false)(scrupal)
+  val s4 = NodeSite(mkName(4), "TestSite", "Testing only", "site4".r, requireHttps = true)(scrupal)
   scrupal.enable(s3)
   scrupal.enable(s4)
 }
 
 /** Test Suite For SiteDirectives
   */
-class SiteDirectivesSpec extends Specification with Specs2RouteTest with HttpService with SiteDirectives {
+class SiteDirectivesSpec extends Specification with SiteDirectives {
 
-  def actorRefFactory = system
 
   /*
 

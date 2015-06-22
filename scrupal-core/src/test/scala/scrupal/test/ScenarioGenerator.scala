@@ -15,19 +15,20 @@
 
 package scrupal.test
 
-import scrupal.core.types.StringType
+import scrupal.api.types.{BundleType, StringType}
 
-import scrupal.core.api._
-import scrupal.core.types
+import scrupal.api._
+import scrupal.api.types
 import scrupal.core.nodes
 import scrupal.core.sites.NodeSite
+import scrupal.utils.OSSLicense
 
 /** Created by reidspencer on 11/10/14.
   */
 case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, mods : Int = 1,
-  ents : Int = 1, nods : Int = 1, flds : Int = 1, ftrs : Int = 1) {
+  ents : Int = 1, nods : Int = 1, flds : Int = 1, ftrs : Int = 1)(implicit val scrupal: Scrupal) {
 
-  def genType(id : Int) : Type = {
+  def genType(id : Int) : Type[_] = {
     val name = s"Type-$id"
     StringType(Symbol(name), name, ".*".r, 128)
   }
@@ -53,15 +54,16 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
     Feature(Symbol(name), name, Some(mod))
   }
 
-  case class ScenarioModule(override val id : Symbol) extends AbstractFakeModule(id, dbName) {
+  case class ScenarioModule(override val id : Symbol)(implicit val scrupal : Scrupal) extends AbstractFakeModule(id, dbName) {
     override val description = id.name
+    def settingsTypes : BundleType = BundleType.Empty
 
     override def features : Seq[Feature] = {
       for (i ← 1 to ftrs) yield { genFeature(i, this) }
     }
 
     /** The core types that Scrupal provides to all modules */
-    override def types : Seq[Type] = {
+    override def types : Seq[Type[_]] = {
       for (i ← 1 to nods) yield { genType(i) }
     }
 
@@ -84,7 +86,7 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
       genModule(i)
     }
     val name = s"Application-$id"
-    BasicApplication(Symbol(name), name, name)
+    BasicApplication(Symbol(name), name, name, name, OSSLicense.ApacheV2, name)
   }
 
   def genSite(id : Int, apps : Int, mods : Int, ents : Int, instances : Int, nodes : Int) = {
@@ -92,6 +94,6 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
       genApplication(i, mods, ents, instances, nodes)
     }
     val name = s"Site-$id"
-    NodeSite(Symbol(name), name, name, "localhost", Node.Empty)
+    NodeSite(Symbol(name), name, name, "localhost".r, Node.Empty)
   }
 }

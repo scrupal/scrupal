@@ -27,13 +27,14 @@ import scrupal.test.ScrupalApiSpecification
   */
 class TypesSpec extends ScrupalApiSpecification("Types") {
 
+  val m : CoreModule = scrupal.Modules('Core).asInstanceOf[CoreModule]
 
   "Identifier_t" should {
-    "accept ***My-Funky.1d3nt1f13r###" in TestTypes() { t: TestTypes ⇒
-      Identifier_t.validate(t.vLoc, "***My-Funky.1d3nt1f13r###").isError must beFalse
+    "accept ***My-Funky.1d3nt1f13r###" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.Identifier_t.validate(t.vLoc, "***My-Funky.1d3nt1f13r###").isError must beFalse
     }
-    "reject 'Not An Identifier'" in TestTypes() { t: TestTypes ⇒
-      Identifier_t.validate(t.vLoc, "Not An Identifier ").isError must beTrue
+    "reject 'Not An Identifier'" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.Identifier_t.validate(t.vLoc, "Not An Identifier ").isError must beTrue
     }
   }
 
@@ -70,63 +71,63 @@ class TypesSpec extends ScrupalApiSpecification("Types") {
 
 
   "DomainName_t" should {
-    "accept scrupal.org" in TestTypes() { t: TestTypes ⇒
-      DomainName_t.validate(t.vLoc, "scrupal.org").isError must beFalse
+    "accept scrupal.org" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.DomainName_t.validate(t.vLoc, "scrupal.org").isError must beFalse
     }
-    "reject ###.999" in TestTypes() { t: TestTypes ⇒
-      DomainName_t.validate(t.vLoc, "###.999").isError must beTrue
+    "reject ###.999" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.DomainName_t.validate(t.vLoc, "###.999").isError must beTrue
     }
   }
 
   "URI_t" should {
-    "accept http://user:pw@scrupal.org/path?q=where#extra" in TestTypes() { t: TestTypes ⇒
-      URL_t.validate(t.vLoc, "http://user:pw@scrupal.org/path?q=where#extra").isError must beFalse
+    "accept http://user:pw@scrupal.org/path?q=where#extra" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.URL_t.validate(t.vLoc, "http://user:pw@scrupal.org/path?q=where#extra").isError must beFalse
     }
-    "reject Not\\A@URI" in TestTypes() { t: TestTypes ⇒
-      URL_t.validate(t.vLoc, "Not\\A@URI").isError must beTrue
+    "reject Not\\A@URI" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.URL_t.validate(t.vLoc, "Not\\A@URI").isError must beTrue
     }
   }
 
   "IPv4Address_t" should {
-    "accept 1.2.3.4" in TestTypes() { t: TestTypes ⇒
-      IPv4Address_t.validate(t.vLoc, "1.2.3.4").isError must beFalse
+    "accept 1.2.3.4" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.IPv4Address_t.validate(t.vLoc, "1.2.3.4").isError must beFalse
     }
-    "reject 1.2.3.400" in TestTypes() { t: TestTypes ⇒
-      IPv4Address_t.validate(t.vLoc, "1.2.3.400").isError must beTrue
+    "reject 1.2.3.400" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.IPv4Address_t.validate(t.vLoc, "1.2.3.400").isError must beTrue
     }
   }
 
   "TcpPort_t" should {
-    "accept 8088" in TestTypes() { t: TestTypes ⇒
-      TcpPort_t.validate(t.vLoc, 8088).isError must beFalse
+    "accept 8088" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.TcpPort_t.validate(t.vLoc, 8088).isError must beFalse
     }
-    "reject 65537" in TestTypes() { t: TestTypes ⇒
-      TcpPort_t.validate(t.vLoc, "65537").isError must beTrue
+    "reject 65537" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.TcpPort_t.validate(t.vLoc, "65537").isError must beTrue
     }
   }
 
   "EmailAddress_t" should {
-    "accept someone@scrupal.org" in TestTypes() { t: TestTypes ⇒
+    "accept someone@scrupal.org" in TestTypes()(scrupal) { t: TestTypes ⇒
       // println("Email Regex: " + EmailAddress_t.regex.pattern.pattern)
-      EmailAddress_t.validate(t.vLoc, "someone@scrupal.org").isError must beFalse
+      m.EmailAddress_t.validate(t.vLoc, "someone@scrupal.org").isError must beFalse
     }
-    "reject white space" in TestTypes() { t: TestTypes ⇒
-      EmailAddress_t.validate(t.vLoc, " \t\r\n").isError must beTrue
+    "reject white space" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.EmailAddress_t.validate(t.vLoc, " \t\r\n").isError must beTrue
     }
-    "reject nobody@ scrupal dot org" in TestTypes() { t: TestTypes ⇒
-      EmailAddress_t.validate(t.vLoc, "nobody@ 24 dot com").isError must beTrue
+    "reject nobody@ scrupal dot org" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.EmailAddress_t.validate(t.vLoc, "nobody@ 24 dot com").isError must beTrue
     }
-    "reject no body@scrupal.org" in TestTypes() { t: TestTypes ⇒
-      EmailAddress_t.validate(t.vLoc, "no body@scrupal.org").isError must beTrue
+    "reject no body@scrupal.org" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.EmailAddress_t.validate(t.vLoc, "no body@scrupal.org").isError must beTrue
     }
   }
 
   "LegalName_t" should {
-    "accept 'My Legal Name'" in TestTypes() { t: TestTypes ⇒
-      LegalName_t.validate(t.vLoc, "My Legal Name").isError must beFalse
+    "accept 'My Legal Name'" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.LegalName_t.validate(t.vLoc, "My Legal Name").isError must beFalse
     }
-    "reject tab char" in TestTypes() { t: TestTypes ⇒
-      LegalName_t.validate(t.vLoc, "\t").isError must beTrue
+    "reject tab char" in TestTypes()(scrupal) { t: TestTypes ⇒
+      m.LegalName_t.validate(t.vLoc, "\t").isError must beTrue
     }
   }
 

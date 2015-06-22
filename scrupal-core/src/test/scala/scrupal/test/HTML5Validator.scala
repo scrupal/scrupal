@@ -20,8 +20,8 @@ import java.nio.charset.StandardCharsets
 
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
 import org.xml.sax.InputSource
-import scrupal.core.api.Context
-import scrupal.core.api.Html.{ Page, TagContent }
+import scrupal.api.Context
+import scrupal.api.Html.{ Page, TagContent }
 import scrupal.utils.ScrupalComponent
 
 import scala.util.{ Failure, Success, Try }

@@ -25,15 +25,16 @@ class SchemaSpec extends ScrupalApiSpecification("CoreSchemaSpec") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {
-      withSchema { schema =>
-        val names = schema.collectionNames
-        names.contains("instances") must beTrue
-        names.contains("alerts") must beTrue
-        names.contains("sites") must beTrue
-        names.contains("nodes") must beTrue
-        names.contains("principals") must beTrue
+      val errors = withSchema { schema =>
+        val required = Seq("instances", "alerts", "sites", "nodes", "principals")
+        for (
+          name ← schema.collectionNames ;
+          result = required.contains(name) must beTrue if !result.isSuccess
+        ) yield {
+          result
+        }
       }
-      success
+      errors.isEmpty must beTrue
     }
   }
 }

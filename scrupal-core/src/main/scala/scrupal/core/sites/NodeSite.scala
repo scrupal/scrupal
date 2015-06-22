@@ -22,7 +22,6 @@ import scrupal.api.types.BundleType
 import scala.util.matching.Regex
 
 case class NodeSite(
-  override implicit val scrupal : Scrupal,
   override val id : Identifier,
   name : String,
   description : String,
@@ -30,7 +29,7 @@ case class NodeSite(
   siteRoot : Node = Node.Empty,
   override val requireHttps : Boolean = false,
   modified : Option[DateTime] = None,
-  created : Option[DateTime] = None) extends Site(id,scrupal) {
+  created : Option[DateTime] = None)(override implicit val scrupal : Scrupal) extends Site(id, scrupal) {
   final override val kind = NodeSite.kind
   val settingsTypes = BundleType.Empty
 

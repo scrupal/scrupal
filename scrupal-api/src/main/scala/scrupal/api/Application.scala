@@ -44,7 +44,6 @@ abstract class Application(scrupal: Scrupal, val id  : Identifier) extends Enabl
 }
 
 case class BasicApplication(
-  scrupal : Scrupal,
   sym : Identifier,
   name : String,
   author : String,
@@ -52,16 +51,10 @@ case class BasicApplication(
   license: OSSLicense,
   description : String,
   modified : Option[DateTime] = None,
-  created : Option[DateTime] = None) extends Application(scrupal, sym) {
+  created : Option[DateTime] = None
+)(implicit val   scrupal : Scrupal) extends Application(scrupal, sym) {
   final val method : HttpMethod = HttpMethods.GET
   final val kind = 'BasicApplication
-}
-
-object BasicApplication {
-  /*import BSONHandlers._
-
-  implicit val BasicApplicationHandler = Macros.handler[BasicApplication]
-  */
 }
 
 

@@ -17,14 +17,11 @@ package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
 import scrupal.core.http.akka.FeatureDirectives
-import spray.routing.HttpService
-import spray.testkit.Specs2RouteTest
 
 /** Created by reidspencer on 11/5/14.
   */
-class FeatureDirectivesSpec extends Specification with Specs2RouteTest with HttpService with FeatureDirectives {
+class FeatureDirectivesSpec extends Specification with FeatureDirectives {
 
-  def actorRefFactory = system
 
   /* FIXME: This needs to be re-thought as feature enablement is a scope dependent activity
   var f1 = Feature('disabled_unimnplemented, "Feature", false).disable()

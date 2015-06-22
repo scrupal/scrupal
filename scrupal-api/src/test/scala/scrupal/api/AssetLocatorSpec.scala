@@ -18,7 +18,9 @@ package scrupal.api
 
 import java.io.File
 
+import akka.http.scaladsl.model.MediaTypes
 import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import scrupal.test.{FakeContext, ScrupalApiSpecification}
 import scrupal.utils.OSSLicense
 
@@ -28,10 +30,8 @@ class TestAssetLocator(config: Configuration) extends ConfiguredAssetsLocator(co
 
 class AssetLocatorSpec extends ScrupalApiSpecification("AssetLocatorSpec") {
 sequential
-  case class Assets(name: String) extends FakeContext[Assets](name) {
-
-    val locator = new TestAssetLocator(scrupal._configuration)
-
+  case class Assets(name: String, scrupal : Scrupal = scrupal) extends FakeContext[Assets] {
+    val locator = scrupal.withConfiguration { config : Configuration ⇒ new TestAssetLocator(config) }
   }
 
   "AssetLocator" should {
@@ -62,10 +62,10 @@ sequential
 
     "obtain correct media type from file extension" in Assets("mediaType") { a: Assets ⇒
       val stream = a.locator.fetch("fake.js")
-      Some(stream.contentType.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
+      Some(stream.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
       stream match {
         case s: StreamResponse ⇒
-          s.payload.available() === 0
+          s.stream.available() === 0
         case _ ⇒ failure("unexpected result type")
       }
       success
@@ -130,7 +130,7 @@ sequential
     "grok recursing directories" in {
       val dirOpt = locator.fetchDirectory("root", recurse=true)
       dirOpt.isDefined must beTrue
-      val dir : AssetLocator.Directory = dirOpt.get
+      val dir : AssetsLocator.Directory = dirOpt.get
       val dirs = dir.dirs
       val empty = dirs.get("empty")
       empty.isDefined must beTrue

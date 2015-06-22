@@ -483,7 +483,7 @@ object ConfigWizard extends ScrupalComponent {
   case class DatabaseInfo(host : String, port : Int, name : String, user : String, pass : String) {
     def uri = { "mongodb://" + host + ":" + port + "/" + name }
   }
-
+/*
   val databaseSection = FieldSet("Database", "Description", "Database", Seq(
     TextFormField("Host", "The hostname where your MongoDB server is running", DomainName_t, BSONString("localhost")),
     IntegerFormField("Port", "The port number at which your MongoDB server is running", TcpPort_t, BSONLong(27172)),
@@ -509,7 +509,7 @@ object ConfigWizard extends ScrupalComponent {
     TextFormField("Description", "A description or summary of your page", NonEmptyString_t),
     TextAreaFormField("Body", "The body of your page in markdown format", Markdown_t)
   ))
-
+*/
   // def makePageForm = pageSection.fill(PageInfo())
 
 }
