@@ -42,7 +42,7 @@ import scala.concurrent.Future
   * @see [[scrupal.api.Request]]
   *
   */
-trait Reaction extends ( () ⇒ Future[Response]) {
+trait Reactor extends ( () ⇒ Future[Response] ) with Reaction {
 
   /** The Request to which this Reaction reacts to
     *
@@ -60,8 +60,19 @@ trait Reaction extends ( () ⇒ Future[Response]) {
     *
     * @return The Result[_] yielded from executing the action.
     */
-  def apply() : Future[Response]
+  def apply() : Future[Response] = this.apply(this.request)
+
+  def apply(request: Request) : Future[Response]
 }
+
+/** A function that generates content
+  *
+  * This is the basic characteristic of a Node. It is simply a function that receives a Context
+  * and produces content as a Future Result. The Context provides the setting in which it is
+  * generating the content. All dynamic content in Scrupal is generated through a Generator.
+  * The Result embodies the notion of completing a request with some content and a disposition.
+  */
+trait Reaction extends ((Request) ⇒ Future[Response])
 
 /* TODO: Remove extractor stuff if not needed
 /** Extract An Action From A Context

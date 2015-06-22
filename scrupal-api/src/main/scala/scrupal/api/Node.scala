@@ -22,16 +22,6 @@ import scala.language.existentials
 
 import scrupal.storage.api._
 
-/** A function that generates content
-  *
-  * This is the basic characteristic of a Node. It is simply a function that receives a Context
-  * and produces content as a Future Result. The Context provides the setting in which it is
-  * generating the content. All dynamic content in Scrupal is generated through a Generator.
-  * The Result embodies the notion of completing a request with some content and a disposition.
-  */
-trait Generator extends ((Request) ⇒ Future[Response])
-
-
 /** Content Generating Node
   *
   * This is the fundamental type of a node. It has some housekeeping information and can generate
@@ -41,7 +31,7 @@ trait Generator extends ((Request) ⇒ Future[Response])
   * very numerous. For that reason, they are not registered in an object registry.
   */
 trait Node extends Storable
-  with Describable with Modifiable with Generator with Bootstrappable {
+  with Describable with Modifiable with Reaction with Bootstrappable {
   def mediaType : MediaType
   def reference(schema: String, collection : String)(implicit sc : StoreContext) : Reference[Node] = {
     StorableReference(sc.store, schema, collection, this)

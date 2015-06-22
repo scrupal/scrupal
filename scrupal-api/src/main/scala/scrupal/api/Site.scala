@@ -24,12 +24,12 @@ import scala.util.matching.Regex
   * Scrupal manages sites.
   * Created by reidspencer on 11/3/14.
   */
-abstract class Site(sym : Identifier) extends { val id : Identifier = sym; val _id : Identifier = sym }
+abstract class Site(sym : Identifier, scrupal: Scrupal) extends { val id : Identifier = sym; val _id : Identifier = sym }
     with Settingsable with SiteProvider[Site] with Storable with Registrable[Site]
     with Nameable with Describable with Modifiable {
 
   val kind = 'Site
-  def registry = Site
+  def registry = scrupal.Sites
 
   def requireHttps : Boolean = false // = getBoolean("requireHttps").get
 
@@ -48,14 +48,15 @@ abstract class Site(sym : Identifier) extends { val id : Identifier = sym; val _
   def isChildScope(e : Enablement[_]) : Boolean = applications.contains(e)
 }
 
-object Site extends Registry[Site] {
-
+/** The Registry of Sites for this Scrupal.
+  *
+  * This object is the registry of Site objects. When a [[scrupal.api.Site]] is instantiated, it will
+  * register itself with this object.
+  */
+case class SitesRegistry() extends Registry[Site] {
   import scala.language.reflectiveCalls
-
   val registrantsName : String = "site"
   val registryName : String = "Sites"
-
-
 
   def forHost(hostName : String) : Iterable[Site] = {
     for (
@@ -64,5 +65,5 @@ object Site extends Registry[Site] {
       site
     }
   }
-
 }
+

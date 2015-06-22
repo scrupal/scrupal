@@ -37,7 +37,7 @@ case class RangeType(
   id : Identifier,
   description : String,
   min : Long = Long.MinValue,
-  max : Long = Long.MaxValue) extends Type[Atom] {
+  max : Long = Long.MaxValue)(implicit val scrupal: Scrupal) extends Type[Atom] {
   require(min <= max)
 
   override def kind = 'Range
@@ -92,11 +92,4 @@ case class RangeType(
 
 }
 
-object AnyInteger_t
-  extends RangeType('AnyInteger, "A type that accepts any integer value", Int.MinValue, Int.MaxValue)
-
-/** The Scrupal Type for TCP port numbers */
-object TcpPort_t
-  extends RangeType('TcpPort, "A type for TCP port numbers", 1, 65535) {
-}
 

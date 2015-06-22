@@ -17,7 +17,7 @@ package scrupal.core.nodes
 
 import org.joda.time.DateTime
 import scalatags.Text.all._
-import scrupal.api.Node
+import scrupal.api._
 import akka.http.scaladsl.model.{ MediaType, MediaTypes }
 
 import scala.concurrent.Future
@@ -35,28 +35,21 @@ import scala.concurrent.Future
   * @param created
   */
 case class CommandNode(
+  id : Identifier,
   description : String,
   command : String,
   modified : Option[DateTime] = Some(DateTime.now()),
   created : Option[DateTime] = Some(DateTime.now()),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = CommandNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(ctxt : Context) : Future[Result[_]] = Future.successful {
+  def apply(ctxt : Request) : Future[Response] = Future.successful {
     // TODO: implement CommandNode
-    HtmlResult(span("Not Implemented"), Unimplemented)
+    HtmlResponse(span("Not Implemented").toString(), Unimplemented)
   }
 }
 
 object CommandNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'Command
-  object CommandNodeBRW extends VariantReaderWriter[Node, CommandNode] {
-    implicit val CommandNodeHandler : BSONHandler[BSONDocument, CommandNode] = Macros.handler[CommandNode]
-    override def fromDoc(doc : BSONDocument) : CommandNode = CommandNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = CommandNodeHandler.write(obj.asInstanceOf[CommandNode])
-  }
-  Node.variants.register(kind, CommandNodeBRW)
 }
 

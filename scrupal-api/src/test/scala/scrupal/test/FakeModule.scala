@@ -23,7 +23,7 @@ import scrupal.utils.{OSSLicense, Version}
 /** Make Module Creation More Light weight
   * This just just adds boilerplate and defaults to make instantiation easier
   */
-abstract class AbstractFakeModule(
+abstract class AbstractFakeModule (
   id : Symbol,
   dbName : String) extends Module {
   val description = "Fake Module"
@@ -50,6 +50,7 @@ case class FakeModule(
   types : Seq[Type[_]] = Seq(),
   entities : Seq[Entity] = Seq(),
   nodes : Seq[Node] = Seq(),
-  override val handlers : Seq[EventHandlerFor[Event]] = Seq()) extends AbstractFakeModule(id, dbName) {
+  override val handlers : Seq[EventHandlerFor[Event]] = Seq())(implicit val scrupal: Scrupal)
+  extends AbstractFakeModule(id, dbName) {
 
 }

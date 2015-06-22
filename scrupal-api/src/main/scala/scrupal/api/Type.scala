@@ -46,7 +46,10 @@ case class TypeFailure[VT, T <: Type[VT]](ref : Location, value : VT, t : T, err
   * Modules must cooperate on defining types in such a way that their names do not conflict.
   */
 trait Type[VT] extends Registrable[Type[_]] with Describable with Validator[VT] with Bootstrappable {
-  def registry : Registry[Type[_]] = Type
+
+  implicit def scrupal : Scrupal
+
+  val registry : Registry[Type[_]] = scrupal.Types
 
   type ValueType = VT
 
@@ -58,7 +61,7 @@ trait Type[VT] extends Registrable[Type[_]] with Describable with Validator[VT] 
     */
   lazy val plural = Pluralizer.pluralize(label)
 
-  def moduleOf = { Module.values.find(mod ⇒ mod.types.contains(this)) }
+  def moduleOf = { scrupal.Modules.values.find(mod ⇒ mod.types.contains(this)) }
 
   /** The kind of this class is simply its simple class name. Each "kind" has a different information structure */
   def kind : Symbol = Symbol(super.getClass.getSimpleName.replace("$", "_"))
@@ -80,17 +83,37 @@ trait Type[VT] extends Registrable[Type[_]] with Describable with Validator[VT] 
     }
 }
 
-case class Not_A_Type() extends Type[Boolean] {
-  lazy val id = 'NotAType
-  override val kind = 'NotAKind
-  override val trivial = true
-  val description = "Not A Type"
-  val module = 'NotAModule
-  def validate(ref : Location, value : Boolean) =
-    TypeFailure(ref, value, this, "NotAType is not valid")
+/** The registry of Types for this Scrupal
+  *
+  * This object is the registry of Type objects. When a [[scrupal.api.Type]] is instantiated, it will register
+  * itself with this object. The object is located in [[scrupal.api.Scrupal]]
+  */
+case class TypesRegistry() extends Registry[Type[_]] {
+
+  val registryName = "Types"
+  val registrantsName = "type"
+
+  /** Determine if a type is a certain kind
+    * While Scrupal defines a useful set of types that will suffice for many needs,
+    * Modules are free to create new kinds of types (i.e. subclass from Type itself,
+    * not create a new instance of Type). Types have a "kind" field that allows them to be categorized roughly by the
+    * nature of the subclass from Type. This method checks to see if a given type is a member of that category.
+    * @param name The symbol for the type to check
+    * @param kind The symbol for the kind that ```name``` should be
+    * @return true iff ```name``` is of kind ```kind```
+    */
+  def isKindOf(name : Symbol, kind : Symbol) : Boolean = lookup(name).exists { k ⇒ k.kind == kind }
+
+/*  TODO: Remove if not needed: def of(id : Identifier) : Type[_] = {
+    this(id) match {
+      case Some(typ) ⇒ typ
+      case None ⇒ new UnfoundType(id)
+    }
+  }*/
 }
 
-case class UnfoundType(id : Symbol) extends Type[Boolean] {
+
+case class UnfoundType(scrupal: Scrupal, id : Symbol) extends Type[Boolean] {
   override val kind = 'Unfound
   override val trivial = true
   val description = "A type that was not loaded in memory"
@@ -124,31 +147,4 @@ trait JsObjectType extends MapableType[String,JsValue,JsObject] {
   }
 }
 
-/** Type Registry and companion */
-object Type extends Registry[Type[_]] {
-
-  val registryName = "Types"
-  val registrantsName = "type"
-
-  /** Determine if a type is a certain kind
-    * While Scrupal defines a useful set of types that will suffice for many needs,
-    * Modules are free to create new kinds of types (i.e. subclass from Type itself,
-    * not create a new instance of Type). Types have a "kind" field that allows them to be categorized roughly by the
-    * nature of the subclass from Type. This method checks to see if a given type is a member of that category.
-    * @param name The symbol for the type to check
-    * @param kind The symbol for the kind that ```name``` should be
-    * @return true iff ```name``` is of kind ```kind```
-    */
-  def isKindOf(name : Symbol, kind : Symbol) : Boolean = lookupOrElse(name, NotAType).kind == kind
-
-  lazy val NotAType = Not_A_Type()
-
-  def of(id : Identifier) : Type[_] = {
-    Type(id) match {
-      case Some(typ) ⇒ typ
-      case None ⇒ new UnfoundType(id)
-    }
-  }
-
-}
 

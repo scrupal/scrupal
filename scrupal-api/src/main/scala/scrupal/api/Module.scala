@@ -34,13 +34,17 @@ import scala.concurrent.ExecutionContext
 trait Module
   extends Settingsable with Registrable[Module] with Authorable with Describable with Enablee
   with Enablement[Module] with Versionable with Bootstrappable {
+
+  implicit def  scrupal : Scrupal
+
+  val registry = scrupal.Modules
+
   /** The name of the database your module's schema is stored to
     *
     * Generally most modules want to live in the "scrupal" database and most everything else. However,
     * if you override this, your module's own content will be stored in the correspondingly named database.
     */
   val dbName : String = "scrupal"
-  def registry = Module
   def asT = this
 
   def moreDetailsURL : URL
@@ -138,12 +142,12 @@ trait Module
   }
 }
 
-/** Amalgamated information about all registered Modules
-  * This object is the Registry of modules. When a [[scrupal.api.Module]] is instantiated,
-  * it will register itself with this module. Upon registration, the information it provides about the module is
-  * amalgamated into this object for use by the rest of Scrupal.
+/** The Registry of Modules for this Scrupal.
+  *
+  * This object is the registry of Module objects. When a [[scrupal.api.Module]] is instantiated, it will
+  * register itself with this object.
   */
-object Module extends Registry[Module] {
+case class ModulesRegistry() extends Registry[Module] {
 
   val registryName = "Modules"
   val registrantsName = "module"
@@ -153,16 +157,15 @@ object Module extends Registry[Module] {
     values foreach { mod : Module ⇒
       // In a database session ...
       context.withStore { implicit store : Store ⇒
-          // For each schema ...
-          mod.schemas.foreach { design : SchemaDesign ⇒
-            if (!store.hasSchema(design.name))
-              store.addSchema(design)
-            store.withSchema(design.name) { schema ⇒
-              schema.construct
-            }
+        // For each schema ...
+        mod.schemas.foreach { design : SchemaDesign ⇒
+          if (!store.hasSchema(design.name))
+            store.addSchema(design)
+          store.withSchema(design.name) { schema ⇒
+            schema.construct
           }
         }
+      }
     }
   }
-
 }

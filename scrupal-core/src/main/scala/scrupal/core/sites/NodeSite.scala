@@ -17,7 +17,7 @@ package scrupal.core.sites
 
 import org.joda.time.DateTime
 import reactivemongo.bson.{ BSONDocument, Macros }
-import scrupal.core.actions.NodeReaction
+import scrupal.core.actions.NodeReactor
 import scrupal.core.api._
 import scrupal.db.VariantReaderWriter
 
@@ -35,7 +35,7 @@ case class NodeSite(
   override def extractAction(context : Context) : Option[Action] = {
     super.extractAction(context) match {
       case Some(action) ⇒ Some(action)
-      case None ⇒ Some(NodeReaction(context, siteRoot))
+      case None ⇒ Some(NodeReactor(context, siteRoot))
     }
   }
 }

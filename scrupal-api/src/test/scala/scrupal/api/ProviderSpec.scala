@@ -23,13 +23,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProviderSpec extends Specification {
 
-  case object NullReaction extends Reaction {
+  case object NullReactor extends Reactor {
     def request: Request = Request.empty
-    def apply() : Future[Response] = Future.successful { NoopResponse }
+    def apply(request: Request) : Future[Response] = Future.successful { NoopResponse }
   }
   case class SimpleProvider(id : Symbol) extends Provider {
     def canProvide(request: Request): Boolean = true
-    def provide(request: Request): Option[Reaction] = Some(NullReaction)
+    def provide(request: Request): Option[Reactor] = Some(NullReactor)
   }
 
   val provider1 = SimpleProvider('One)
@@ -45,7 +45,7 @@ class ProviderSpec extends Specification {
       val maybe_reaction = dp.provide(Request.empty)
       maybe_reaction.isDefined must beTrue
       val reaction = maybe_reaction.get
-      reaction must beEqualTo(NullReaction)
+      reaction must beEqualTo(NullReactor)
       val future = reaction().map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
       Await.result(future, 1.seconds)
     }

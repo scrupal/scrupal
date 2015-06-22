@@ -17,6 +17,7 @@ package scrupal.config
 
 import scrupal.api.types._
 import scrupal.core._
+import CoreModule
 import scrupal.utils.ScrupalComponent
 
 /** The Entity definition for the Configuration workflow/wizard.

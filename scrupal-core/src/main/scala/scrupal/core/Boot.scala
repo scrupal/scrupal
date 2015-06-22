@@ -20,21 +20,23 @@ import scrupal.core.impl.Scrupal
 
 object Boot extends Scrupal with App {
 
-  override val (config, sc) = open()
+  val core = CoreModule()(this)
+
+  override val config = open()
+
+  override def open() : Configuration = {
+    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
+    require (Modules('Core).isDefined, "Failed to find the CoreModule")
+    super.open()
+  }
 
   val http = scrupal.core.http.Boot(this, config)
 
   http.run()
 
-  override def open() = {
-    // Make sure that we registered the CoreModule as 'Core just to make sure it is instantiated at this point
-    require(CoreModule.id == 'Core)
-    super.open()
-  }
-
   override def onLoadConfig(config : Configuration) : Configuration = {
     val new_config = super.onLoadConfig(config)
-    CoreModule.bootstrap(new_config)
+    core.bootstrap(new_config)
     new_config
   }
 

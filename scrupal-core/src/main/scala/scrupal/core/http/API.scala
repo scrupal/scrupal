@@ -15,8 +15,9 @@
 
 package scrupal.core.http
 
-import scrupal.core.api.Scrupal
-import spray.routing.Route
+import _root_.akka.http.scaladsl.server.Route
+import scrupal.api.Scrupal
+import scrupal.core.http.akka.Controller
 
 /** The Controller For The Scrupal JSON API
   * This controller handles all requests of the forms /api/... and /doc/api/... So that developers can both use and

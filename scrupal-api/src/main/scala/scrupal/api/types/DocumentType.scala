@@ -80,16 +80,19 @@ trait StructuredType[ET] extends DocumentType[String, ET, Map[String, ET]] {
 
 /** A Map is a set whose elements are named with an arbitrary string
   *
-  * @param id
-  * @param description
-  * @param elemType
+  * @param scrupal The Scrupal context
+  * @param id The unique identifier for this type
+  * @param description A description for this type
+  * @param fieldNames The names of the fields of this type
+  * @param elemType The types of the elements of this type
+  * @tparam ET The element type
   */
 case class MapType[ET](
   override val id : Identifier,
   description : String,
   override val fieldNames: Seq[String],
   elemType : Type[ET]
-  ) extends StructuredType[ET] {
+)(implicit val scrupal : Scrupal) extends StructuredType[ET] {
   override def kind = 'Map
 
   def fields : Map[String, Type[_]] = fieldNames.map { name ⇒ name → elemType } toMap

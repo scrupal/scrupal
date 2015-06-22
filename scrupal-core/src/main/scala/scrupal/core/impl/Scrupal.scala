@@ -15,19 +15,15 @@
 
 package scrupal.core.impl
 
-import java.util.concurrent.atomic.AtomicReference
 
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.ActorSystem
 import akka.http.scaladsl.server.RequestContext
-import akka.pattern.ask
 import com.typesafe.config.{ ConfigRenderOptions, ConfigValue }
 import play.api.Configuration
-import scrupal.admin.AdminApp
 import scrupal.api._
 import scrupal.core.CoreModule
 import scrupal.storage.api.{Schema, Storage, StoreContext}
 import scrupal.utils._
-import scrupal.welcome.WelcomeSite
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration._
@@ -40,12 +36,10 @@ case class Scrupal(
   ec : Option[ExecutionContext] = None,
   sc : Option[StoreContext] = None,
   actSys : Option[ActorSystem] = None)
-  extends scrupal.api.Scrupal(name, config, ec, sc, actSys)
-  with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
+  extends scrupal.api.Scrupal(name, config, ec, sc, actSys) {
 
   LoggingHelpers.initializeLogging(forDebug = true)
 
-  val Copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
 
   val assetsLocator = new ConfiguredAssetsLocator(_configuration)
 
@@ -65,13 +59,13 @@ case class Scrupal(
     * Resources managed by plugins, such as database connections, are likely not available at this point.
     *
     */
-  def open() = {
+  override def open() : Configuration = {
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
-    require(Type.registryName == "Types")
-    require(Module.registryName == "Modules")
-    require(Site.registryName == "Sites")
-    require(Entity.registryName == "Entities")
+    require(Types.registryName == "Types")
+    require(Modules.registryName == "Modules")
+    require(Sites.registryName == "Sites")
+    require(Entities.registryName == "Entities")
     require(Template.registryName == "Templates")
 
     val config = onLoadConfig(ConfigHelpers.default)
@@ -79,32 +73,31 @@ case class Scrupal(
     // Get the database started up
     //Storage.startup()
 
-    val future = Storage.fromConfiguration(Symbol(name + "-DB"), Some(config)) map { sc ⇒
-      _storageContext.set(sc)
+    val sc = _storageContext
 
-      // TODO: scan classpath for additional modules
-      val configured_modules = Seq.empty[String]
 
-      // Now we go through the configured modules and bootstrap them
-      for (class_name ← configured_modules) {
-        Scrupal.findModuleOnClasspath(class_name) match {
-          case Some(module) ⇒ module.bootstrap(config)
-          case None ⇒ log.warn("Could not locate module with class name: " + class_name)
-        }
+    // TODO: scan classpath for additional modules
+    val configured_modules = Seq.empty[String]
+
+    // Now we go through the configured modules and bootstrap them
+    for (class_name ← configured_modules) {
+      scrupal.api.Scrupal.findModuleOnClasspath(class_name) match {
+        case Some(module) ⇒ module.bootstrap(config)
+        case None ⇒ log.warn("Could not locate module with class name: " + class_name)
       }
-
-      // Load the configuration and wait at most 10 seconds for it
-      val load_result = Await.result(load(config, _storageContext.get), 10.seconds)
-
-      /* TODO: Implement this so it doesn't thwart startup and test failures
-      if (load_result.isEmpty)
-        toss("Refusing to start because of load errors. Check logs for details.")
-      else {
-        log.info("Loaded Sites:\n" + load_result.map { case(x,y) ⇒ s"$x:${y.host}"})
-      }*/
-      config -> sc
     }
-    Await.result(future, 10.seconds)
+
+    // Load the configuration and wait at most 10 seconds for it
+    val load_result = Await.result(load(config, _storageContext), 10.seconds)
+
+    /* TODO: Implement this so it doesn't thwart startup and test failures
+    if (load_result.isEmpty)
+      toss("Refusing to start because of load errors. Check logs for details.")
+    else {
+      log.info("Loaded Sites:\n" + load_result.map { case(x,y) ⇒ s"$x:${y.host}"})
+    }*/
+    config
+    // Await.result(future, 10.seconds)
   }
 
   def close() = {
@@ -133,7 +126,7 @@ case class Scrupal(
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  protected def load(config: Configuration, context: StoreContext): Future[Map[String, Site]] = {
+  protected def load(config: Configuration, context: StoreContext): Future[Map[Regex, Site]] = {
     context.withSchema("core") { schema: Schema ⇒
       try {
         schema.construct
@@ -155,16 +148,19 @@ case class Scrupal(
           } recover {
             case x: Throwable ⇒
               log.warn(s"Attempt to validate core Schema failed: ", x)
-              Map.empty[String, Site]
+              Map.empty[Regex, Site]
           }
         } map { sites ⇒
           if (sites.isEmpty) {
+            /* FIXME: figure out how to add the WelcomeSite back in
             val ws = new WelcomeSite(Symbol(name + "-Welcome"))
             ws.enable(this)
             DataCache.update(this, schema)
             AdminApp.enable(ws)
             CoreModule.enable(AdminApp)
             Map(ws.hostnames → ws)
+            */
+            Map.empty[Regex,Site]
           } else {
             DataCache.update(this, schema)
             sites
@@ -189,7 +185,7 @@ case class Scrupal(
     * @param reaction The action to act upon (a Request ⇒ Result[P] function).
     * @return A Future to the eventual Result[P]
     */
-  def dispatch(reaction: Reaction): Future[Response] = {
+  def dispatch(reaction: Reactor): Future[Response] = {
     reaction()
   }
 
@@ -221,7 +217,7 @@ case class Scrupal(
   /** Called Just before the action is used.
     *
     */
-  def doFilter(a: Reaction): Reaction = {
+  def doFilter(a: Reactor): Reactor = {
     a
   }
 
@@ -232,7 +228,7 @@ case class Scrupal(
     * @param ex The exception
     * @return The result to send to the client
     */
-  def onError(action: Reaction, ex: Throwable) = {
+  def onError(action: Reactor, ex: Throwable) = {
 
     /*
   try {
@@ -261,7 +257,7 @@ case class Scrupal(
     * @param request the HTTP request header
     * @return the result to send to the client
     */
-  def onHandlerNotFound(request: Reaction) = {
+  def onHandlerNotFound(request: Reactor) = {
     /*
   NotFound(Play.maybeApplication.map {
     case app if app.mode != Mode.Prod ⇒ views.html.defaultpages.devNotFound.f
@@ -277,22 +273,12 @@ case class Scrupal(
     * @param request the HTTP request header
     * @return the result to send to the client
     */
-  def onBadRequest(request: Reaction, error: String) = {
+  def onBadRequest(request: Reactor, error: String) = {
     /*
   BadRequest(views.html.defaultpages.badRequest(request, error))
   */
   }
 
-  def onActionCompletion(request: Reaction) = {
+  def onActionCompletion(request: Reactor) = {
   }
-}
-
-object Scrupal extends Registry[Scrupal] {
-  def registryName = "Scrupalz"
-  def registrantsName = "scrupali"
-
-  private[scrupal] def findModuleOnClasspath(name : String) : Option[Module] = {
-    None // TODO: Write ClassLoader code to load foreign modules on the classpath - maybe use OSGi ?
-  }
-
 }

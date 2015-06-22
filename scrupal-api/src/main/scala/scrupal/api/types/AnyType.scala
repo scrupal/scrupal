@@ -21,10 +21,9 @@ import scrupal.utils.Validation._
 /** A type that can take any value and always validates successfully */
 case class AnyType(
   id : Identifier,
-  description : String) extends Type[Any] {
+  description : String)(implicit val scrupal : Scrupal) extends Type[Any] {
   def validate(ref : Location, value : Any) : VResult = Success(ref, value)
   override def kind = 'Any
   override def trivial = true
 }
 
-object AnyType_t extends AnyType('Any, "A type that accepts any value")

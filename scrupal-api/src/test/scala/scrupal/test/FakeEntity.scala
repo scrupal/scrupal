@@ -15,14 +15,15 @@
 
 package scrupal.test
 
-import scrupal.api.Entity
+import scrupal.api.{Scrupal, Entity}
 import scrupal.api.types.BundleType
 import scrupal.utils.OSSLicense
 
 import scala.language.existentials
 
 /** Mockup of an Entity for testing */
-case class FakeEntity(name : String, instanceType : BundleType[Any]) extends Entity(Symbol(name)) {
+case class FakeEntity(name : String, instanceType : BundleType)
+    (implicit val scrupal: Scrupal) extends Entity(Symbol(name)) {
 
   final val key : String = name
 

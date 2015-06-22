@@ -27,7 +27,7 @@ import scrupal.utils.Validation.{Results, IndexedLocation}
 case class SetType[ET](
   id : Identifier,
   description : String,
-  elemType : Type[ET]) extends IndexableType[ET,Set[ET]] {
+  elemType : Type[ET])(implicit val scrupal : Scrupal) extends IndexableType[ET,Set[ET]] {
   override type ValueType = Set[ET]
   override def kind = 'Set
 

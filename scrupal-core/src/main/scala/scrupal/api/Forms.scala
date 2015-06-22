@@ -16,6 +16,7 @@
 package scrupal.api
 
 import play.api.libs.json._
+import scrupal.core.CoreModule
 
 import scalatags.Text.all._
 
@@ -25,6 +26,111 @@ import scrupal.api.types._
 import scrupal.utils.Enablee
 import scrupal.utils.Validation._
 
+/** FIXME: Scrupal Forms - Revive as an API "Input" class that is much simpler and not connected to HTML5 forms
+  * This trait brings together all the form related objects nd generically represents an HTML5 Form in Scrupal.
+  *
+
+trait Form extends Container with Enablee with Provider with Html.TemplateGenerator {
+  lazy val segment : String = id.name
+  def actionPath : String
+  def items : Seq[FormItem]
+  def values : Settings
+
+  type ErrorMap = Map[FormItem, Contents]
+  def errorMap : ErrorMap = Map.empty[FormItem, Contents]
+
+  def hasErrors(field : FormItem) : Boolean = errorMap.contains(field)
+  def errorsOf(field : FormItem) : Contents = errorMap.getOrElse(field, Seq.empty[Modifier])
+
+  def withErrorMap(errorMap : ErrorMap) : Form
+
+  def apply(context : Context, args : ContentsArgs) : Contents = { Seq() }
+
+
+  override def location = SimpleLocation(s"Form($name)")
+  /** Wrap a field's rendered element with an appropriate label and other formatting. This default is aimed at
+    * Twitter bootstrap which is the default formatting for Scrupal.
+    *
+    * @param field The field whose rendered output should be wrapped
+    * @return The TagContent for the final markup for the field
+    */
+  /*def wrap(field : FormField) : TagContent = {
+    val the_label = scrupal.api.html.Forms.label(field.name, field.name, Seq(cls := "control-label text-info"))
+    val the_field = field.render(this)
+    div(cls := "clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
+      if (field.name.isEmpty) {
+        Seq(div(the_field))
+      } else if (field.inline) {
+        if (field.prefix) {
+          Seq(div(the_field, nbsp, the_label))
+        } else {
+          Seq(div(the_label, nbsp, the_field))
+        }
+      } else if (field.prefix) {
+        Seq(div(the_field), the_label)
+      } else {
+        Seq(the_label, div(the_field))
+      },
+      for (error ← errorsOf(field)) yield {
+        div(cls := "text-danger small col-md-10", style := "padding-left:0;padding-top:0;margin-top:0;", error)
+      },
+      if (field.showHelp && field.description.nonEmpty) {
+        Seq(div(cls := "help-block text-muted small col-md-10", style := "padding-left:0;padding-top:0;",
+          field.description))
+      } else {
+        Seq.empty[AttrPair]
+      }
+    )
+  }
+  def apply(context : Context, args : ContentsArgs) : Contents = { Seq(render) }
+
+  def renderItem(item : FormItem) : TagContent = {
+    item match {
+      case f : FormField ⇒ wrap(f)
+      case f : FormItem  ⇒ f.render(this)
+    }
+  }
+
+  def render : TagContent = {
+    scalatags.Text.tags.form(
+      scalatags.Text.attrs.action := actionPath, method := "POST", attrs.name := name,
+      "enctype".attr := "application/x-www-form-urlencoded",
+      items.map { field ⇒ renderItem(field) }
+    )
+  }
+
+  def render(form : Form) : TagContent = render()
+  /** Provide the form action
+    *
+    * This method from ActionProvider is invoked when a request is made to display or submit the form.
+    * It simply checks the conditions and invokes a method to acquire the Action object corresponding
+    * to rendering or submitting the form.
+    *
+    * @param matchingSegment The path segment used to select this ActionProvider
+    * @param context The context of the request
+    * @return
+    */
+  override def provideAction(matchingSegment : String, context : Context) : Option[Action] = {
+    if (matchingSegment == singularKey && context.request.unmatchedPath.isEmpty) {
+      context.request.request.method match {
+        case HttpMethods.GET ⇒ provideRenderFormAction(matchingSegment, context)
+        case HttpMethods.POST ⇒ provideAcceptFormAction(matchingSegment, context)
+        case _ ⇒ None
+      }
+    } else {
+      None
+    }
+  }
+
+  def provideRenderFormAction(matchingSegment : String, context : Context) : Option[RenderFormAction] = {
+    Some(new RenderFormAction(this, context))
+  }
+
+  def provideAcceptFormAction(matchingSegment : String, context : Context) : Option[AcceptFormAction] = {
+    Some(new AcceptFormAction(this, context))
+  }
+  */
+
 /** Abstract Form Item.
   *
   * Each item in a form is nameable, describable, a BSONValidator, and can render itself. A FormItem is
@@ -33,6 +139,7 @@ import scrupal.utils.Validation._
   *
   */
 trait FormItem extends Nameable with Describable with Validator[JsValue] {
+  implicit val scrupal : Scrupal
   def location : Location = TypedLocation(this)
 //  TODO: EXtract rendering code out of Form code and make it stand alone
 // def render(form : Form) : TagContent
@@ -150,7 +257,6 @@ case class TextFormField(
 case class PasswordFormField(
   name : String,
   description : String,
-  fieldType : StringType = Password_t,
   defaultValue : JsValue = JsNull,
   attrs : AttrList = EmptyAttrList,
   optional : Boolean = false,
@@ -160,6 +266,7 @@ case class PasswordFormField(
   /*def render(form : Form) : TagContent = {
     password(name, form.values.getString(name), attributes(attrs))
   }*/
+  val fieldType : Type[_] = scrupal.Types.lookup('Password).get
   def decode(value : String) : JsValue = if (value.nonEmpty) JsString(value) else JsNull
 }
 
@@ -343,110 +450,6 @@ case class FieldSet(
   override def location = SimpleLocation(s"FieldSet($name)")
 }
 
-/** Scrupal Forms
-  * This trait brings together all the form related objects nd generically represents an HTML5 Form in Scrupal.
-  *
-  */
-trait Form extends Container with Enablee with TerminalActionProvider with Html.TemplateGenerator {
-  lazy val segment : String = id.name
-  def actionPath : String
-  def items : Seq[FormItem]
-  def values : Settings
-
-  type ErrorMap = Map[FormItem, Contents]
-  def errorMap : ErrorMap = Map.empty[FormItem, Contents]
-
-  def hasErrors(field : FormItem) : Boolean = errorMap.contains(field)
-  def errorsOf(field : FormItem) : Contents = errorMap.getOrElse(field, Seq.empty[Modifier])
-
-  def withErrorMap(errorMap : ErrorMap) : Form
-
-  def apply(context : Context, args : ContentsArgs) : Contents = { Seq() }
-
-
-  override def location = SimpleLocation(s"Form($name)")
-  /** Wrap a field's rendered element with an appropriate label and other formatting. This default is aimed at
-    * Twitter bootstrap which is the default formatting for Scrupal.
-    *
-    * @param field The field whose rendered output should be wrapped
-    * @return The TagContent for the final markup for the field
-    */
-  /*def wrap(field : FormField) : TagContent = {
-    val the_label = scrupal.api.html.Forms.label(field.name, field.name, Seq(cls := "control-label text-info"))
-    val the_field = field.render(this)
-    div(cls := "clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
-      if (field.name.isEmpty) {
-        Seq(div(the_field))
-      } else if (field.inline) {
-        if (field.prefix) {
-          Seq(div(the_field, nbsp, the_label))
-        } else {
-          Seq(div(the_label, nbsp, the_field))
-        }
-      } else if (field.prefix) {
-        Seq(div(the_field), the_label)
-      } else {
-        Seq(the_label, div(the_field))
-      },
-      for (error ← errorsOf(field)) yield {
-        div(cls := "text-danger small col-md-10", style := "padding-left:0;padding-top:0;margin-top:0;", error)
-      },
-      if (field.showHelp && field.description.nonEmpty) {
-        Seq(div(cls := "help-block text-muted small col-md-10", style := "padding-left:0;padding-top:0;",
-          field.description))
-      } else {
-        Seq.empty[AttrPair]
-      }
-    )
-  }
-  def apply(context : Context, args : ContentsArgs) : Contents = { Seq(render) }
-
-  def renderItem(item : FormItem) : TagContent = {
-    item match {
-      case f : FormField ⇒ wrap(f)
-      case f : FormItem  ⇒ f.render(this)
-    }
-  }
-
-  def render : TagContent = {
-    scalatags.Text.tags.form(
-      scalatags.Text.attrs.action := actionPath, method := "POST", attrs.name := name,
-      "enctype".attr := "application/x-www-form-urlencoded",
-      items.map { field ⇒ renderItem(field) }
-    )
-  }
-
-  def render(form : Form) : TagContent = render()
-  /** Provide the form action
-    *
-    * This method from ActionProvider is invoked when a request is made to display or submit the form.
-    * It simply checks the conditions and invokes a method to acquire the Action object corresponding
-    * to rendering or submitting the form.
-    *
-    * @param matchingSegment The path segment used to select this ActionProvider
-    * @param context The context of the request
-    * @return
-    */
-  override def provideAction(matchingSegment : String, context : Context) : Option[Action] = {
-    if (matchingSegment == singularKey && context.request.unmatchedPath.isEmpty) {
-      context.request.request.method match {
-        case HttpMethods.GET ⇒ provideRenderFormAction(matchingSegment, context)
-        case HttpMethods.POST ⇒ provideAcceptFormAction(matchingSegment, context)
-        case _ ⇒ None
-      }
-    } else {
-      None
-    }
-  }
-
-  def provideRenderFormAction(matchingSegment : String, context : Context) : Option[RenderFormAction] = {
-    Some(new RenderFormAction(this, context))
-  }
-
-  def provideAcceptFormAction(matchingSegment : String, context : Context) : Option[AcceptFormAction] = {
-    Some(new AcceptFormAction(this, context))
-  }
-  */
 
 }
 /*
@@ -566,3 +569,4 @@ object emptyForm extends Form {
   def withErrorMap(em : ErrorMap) : Form = this
 }
 
+*/

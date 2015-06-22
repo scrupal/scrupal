@@ -34,7 +34,7 @@ case class StringType(
   regex : Regex,
   maxLen : Int = Int.MaxValue,
   patternName : String = "pattern"
-) extends Type[String] {
+)(implicit val scrupal : Scrupal) extends Type[String] {
   override type ValueType = String
   require(maxLen >= 0)
   def validate(ref : Location, value : String) = {
@@ -51,60 +51,4 @@ case class StringType(
   }
   override def kind = 'String
 }
-
-object AnyString_t
-  extends StringType('AnyString, "A type that accepts any string input", ".*".r, 1024 * 1024)
-
-object NonEmptyString_t
-  extends StringType('NonEmptyString, "A type that accepts any string input except empty", ".+".r, 1024 * 1024)
-
-/** The Scrupal Type for the identifier of things */
-object Identifier_t
-  extends StringType('Identifier, "Scrupal Identifier", anchored(Identifier), 64, "an identifier")
-
-object Password_t
-  extends StringType('Password, "A type for human written passwords", anchored(Password), 64, "a password") {
-  override def validate(ref : Location, value : String) = {
-    simplify(ref, value, "String") {
-      case bs : String if bs.length > maxLen ⇒
-        Some(s"Value is too short for a password.")
-      case bs : String if !regex.pattern.matcher(bs).matches() ⇒
-        Some(s"Value is not legal for a password.")
-      case bs : String ⇒
-        None
-      case _ ⇒
-        Some("")
-    }
-  }
-}
-
-object Description_t
-  extends StringType('Description, "Scrupal Description", anchored(".+".r), 1024)
-
-object Markdown_t
-  extends StringType('Markdown, "Markdown document type", anchored(Markdown), patternName = "markdown formatting")
-
-/** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
-object DomainName_t
-  extends StringType('DomainName, "RFC compliant Domain Name", anchored(DomainName), 253, "a domain name")
-
-/** The Scrupal Type for Uniform Resource Locators.
-  * We should probably have one for URIs too,  per http://tools.ietf.org/html/rfc3986
-  */
-object URL_t
-  extends StringType('URL, "Uniform Resource Locator", anchored(UniformResourceLocator))
-
-/** The Scrupal Type for IP version 4 addresses */
-object IPv4Address_t
-  extends StringType('IPv4Address, "A type for IP v4 Addresses", anchored(IPv4Address), 15, "an IPv4 address")
-
-/** The Scrupal Type for Email addresses */
-object EmailAddress_t
-  extends StringType('EmailAddress, "An email address", anchored(EmailAddress), 253, "an e-mail address")
-
-object LegalName_t
-  extends StringType('LegalName, "The name of a person or corporate entity", anchored(LegalName), 128, "a legal name.")
-
-object Title_t
-  extends StringType('Title, "A string that is valid for a page title", anchored(Title), 70, "a page title")
 

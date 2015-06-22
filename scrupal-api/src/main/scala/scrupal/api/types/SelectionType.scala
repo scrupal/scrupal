@@ -21,7 +21,7 @@ import scrupal.utils.Validation.Location
 case class SelectionType(
   id : Identifier,
   description : String,
-  choices : Seq[String]) extends Type[String] {
+  choices : Seq[String])(implicit val scrupal : Scrupal) extends Type[String] {
   override type ValueType = String
   require(choices.nonEmpty)
   def validate(ref : Location, value : String) : VResult = {
@@ -33,7 +33,3 @@ case class SelectionType(
   }
 }
 
-object UnspecificQuantity_t extends SelectionType('UnspecificQuantity,
-  "A simple choice of quantities that do not specifically designate a number",
-  Seq("None", "Some", "Any", "Both", "Few", "Several", "Most", "Many", "All")
-)

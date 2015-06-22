@@ -24,21 +24,21 @@ import scala.concurrent.{ ExecutionContext, Future }
   *
   * This is an adapter that captures the context and a node and turns it into an action that invokes the
   * Generator function on the node to produce the action's result. This just allows a node to be used as an action.
-  * @param context Context in which the action should occur
+  * @param request Request for which the action should occur
   * @param node The node that will produce the action's result
   */
-case class NodeReaction(request : Request, node : Node) extends Reaction {
+case class NodeReactor(request : Request, node : Node) extends Reactor {
   def apply() : Future[Response] = {
     node(request)
   }
 }
 
-case class NodeIdReaction(id : Long, request : Request) extends Reaction {
+case class NodeIdReactor(id : Long, request : Request) extends Reactor {
   def apply() : Future[Response] = {
     request.context.withSchema("core") { (storeContext, schema) ⇒
       request.context.withExecutionContext { implicit ec : ExecutionContext ⇒
-        schema.withCollection("nodes") { nodes ⇒
-          nodes.asInstanceOf[Collection[Node]].fetch(id).flatMap {
+        schema.withCollection("nodes") { nodes : Collection[Node] ⇒
+          nodes.fetch(id).flatMap {
             case Some(node) ⇒
               node(request)
             case None ⇒

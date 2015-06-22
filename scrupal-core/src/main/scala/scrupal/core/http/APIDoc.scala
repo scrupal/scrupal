@@ -15,13 +15,15 @@
 
 package scrupal.core.http
 
-import scrupal.core.api.Scrupal
-import spray.routing._
+import _root_.akka.http.scaladsl.server.Route
+import scrupal.api.Scrupal
+import scrupal.core.http.akka.Controller
+import _root_.akka.http.scaladsl.server.directives._
 
 /** One line sentence description here.
   * Further description here.
   */
-case class APIDoc(id : Symbol, priority : Int) extends Controller {
+case class APIDoc(id : Symbol, priority : Int) extends Controller with RouteDirectives {
   def routes(implicit scrupal : Scrupal) : Route = reject
 
   /*

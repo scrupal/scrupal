@@ -36,7 +36,7 @@ case class RealType(
   id : Identifier,
   description : String,
   min : Double = Double.MinValue,
-  max : Double = Double.MaxValue) extends Type[Atom] {
+  max : Double = Double.MaxValue)(implicit val scrupal: Scrupal) extends Type[Atom] {
   require(min <= max)
 
   override def kind = 'Real
@@ -91,7 +91,4 @@ case class RealType(
   }
 }
 
-
-object AnyReal_t
-  extends RealType('AnyReal, "A type that accepts any double floating point value", Double.MinValue, Double.MaxValue)
 

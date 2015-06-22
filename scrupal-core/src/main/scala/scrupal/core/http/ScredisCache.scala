@@ -15,9 +15,8 @@
 
 package scrupal.core.http
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.MediaType
-import reactivemongo.bson.{ BSONDocument, BSONHandler }
+import _root_.akka.actor.ActorSystem
+import _root_.akka.http.scaladsl.model.MediaType
 import scredis._
 import scrupal.api.Scrupal
 
@@ -29,7 +28,6 @@ trait Cacheable[PT] {
   def payload : PT
   val ttl : Duration = Duration.Inf // non-expiring, doesn't time out after fixed amount of time after creation
   val tti : Duration = Duration.Inf // non-expiring, doesn't time out if not referenced
-  implicit def payloadHandler : BSONHandler[BSONDocument, PT]
 }
 
 /** Redis Based Cache
@@ -43,7 +41,7 @@ trait Cacheable[PT] {
   * it and evicts things that have not been accessed in a while.
   * Created by reidspencer on 11/8/14.
   */
-class ScredisCache(scrupal : Scrupal) extends Cache[Cacheable[_]] {
+class ScredisCache(scrupal : Scrupal) { // FIXME: What does akka-http use for caching ? extends Cache[Cacheable[_]] {
 
   // TODO: Implement ScredisCache
 

@@ -17,6 +17,7 @@ package scrupal.test
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import scrupal.api.Scrupal
 import scrupal.storage.api.Schema
 
 import scala.concurrent.duration.{ Duration, FiniteDuration }
@@ -30,7 +31,9 @@ abstract class ScrupalApiSpecification(specName : String, timeout : FiniteDurati
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
-  implicit lazy val scrupal = FakeScrupal(ScrupalSpecification.next(specName))
+  val testScrupal : Scrupal = FakeScrupal(ScrupalSpecification.next(specName))
+
+  implicit val scrupal : Scrupal = testScrupal
 
   override protected def beforeAll() = {}
 

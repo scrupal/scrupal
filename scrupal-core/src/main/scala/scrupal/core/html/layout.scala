@@ -15,8 +15,8 @@
 
 package scrupal.core.html
 
-import scrupal.core.api.Html._
-import scrupal.core.api.Context
+import scrupal.api.Html._
+import scrupal.api.Context
 
 import scalatags.Text.all._
 

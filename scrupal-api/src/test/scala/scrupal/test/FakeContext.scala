@@ -15,7 +15,6 @@
 
 package scrupal.test
 
-import akka.http.scaladsl.model.Uri
 import org.joda.time.DateTime
 import org.specs2.execute.{Result, AsResult}
 import org.specs2.specification.Fixture
@@ -25,14 +24,16 @@ import scala.util.matching.Regex
 
 /** Created by reidspencer on 11/9/14.
   */
-class FakeContext[T](name: String )(implicit val scrupal : Scrupal) extends Context with Fixture[T] {
+trait FakeContext[T] extends Context with Fixture[T] {
+  def name : String
+  implicit val scrupal : Scrupal
   private val scrupalName = scrupal.label + { if (name.isEmpty) "" else "-" + name }
   def nm(name : String) = ScrupalSpecification.next(scrupalName + "-" + name)
   def nm = ScrupalSpecification.next(scrupalName)
   def sym(name : String) = Symbol(nm(name))
   def sym = Symbol(nm)
 
-  override val site = Some( new Site(sym("Site")) {
+  override val site = Some( new Site(sym("Site"), scrupal) {
     val name = "FakeContextSite"
     val description  = "Just For Testing"
     val y = nm("localhost")
@@ -46,9 +47,4 @@ class FakeContext[T](name: String )(implicit val scrupal : Scrupal) extends Cont
     AsResult(result)
   }
 
-}
-
-object FakeContext {
-  // def apply(name: String) = new FakeContext(name)
-  // def fixture(name: String) = new FakeContext(name)
 }

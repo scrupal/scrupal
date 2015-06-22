@@ -31,8 +31,8 @@ class ActionSpec extends ScrupalApiSpecification("ActionSpec") {
   case class Fixture(name: String, path: String) extends FakeContext(name,path) {
 
     class TestActionProducer[L <: HList](pm: PathMatcher[L]) extends ActionProducer(pm) {
-      def actionFor(list: L, ctxt: Context) : Option[Reaction] = {
-        Some(new Reaction {
+      def actionFor(list: L, ctxt: Context) : Option[Reactor] = {
+        Some(new Reactor {
           val context = ctxt
           def apply() : Future[Response[_]] = {
             Future.successful(StringResponse(list.toString))
@@ -44,8 +44,8 @@ class ActionSpec extends ScrupalApiSpecification("ActionSpec") {
     val int_p2a = new TestActionProducer(PathMatcher("foo")/IntNumber)
 
     val empty_p2a = new ActionProducer(PathMatcher("bar")) {
-      def actionFor(list: HNil, ctxt: Context): Option[Reaction] = {
-        Some(new Reaction {
+      def actionFor(list: HNil, ctxt: Context): Option[Reactor] = {
+        Some(new Reactor {
           val context = ctxt;
           def apply(): Future[Response[_]] = Future {
             StringResponse("")

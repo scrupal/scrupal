@@ -15,45 +15,64 @@
 
 package scrupal.api.types
 
+import java.time.Instant
+
 import scrupal.api._
 import scrupal.utils.Validation.Location
 import shapeless._
 
+import scala.concurrent.duration.Duration
+
 case class BooleanType(
   id : Identifier,
-  description : String) extends Type[BooleanType.BLISS] {
+  description : String)(implicit val scrupal: Scrupal) extends Type[Atom] {
   override def kind = 'Boolean
   def verity = List("true", "on", "yes", "confirmed")
   def falseness = List("false", "off", "no", "denied")
 
-  def validate(ref : Location, value : BooleanType.BLISS) : VResult = {
+  private object validation extends Poly1 {
+    def check[T](value: T): Option[String] = {
+      if (value == 0 || value == 1)
+        None
+      else
+        Some(s"Value '$value' could not be converted to boolean (0 or 1 required")
+    }
+    def checkString(s: String) : Option[String] = {
+      if (verity.contains(s)) None
+      else if (falseness.contains(s)) None
+      else Some(s"Value '$s' could not be interpreted as a boolean")
+    }
+
+
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ None}
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d) }
+
+    implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ checkString(s.name) }
+
+    implicit def caseString = at[String] { s ⇒ checkString(s) }
+
+    implicit def caseInstant = at[Instant] { i : Instant ⇒ check(i.toEpochMilli, i) }
+
+    implicit def caseDuration = at[Duration] { i : Duration ⇒ check(i.toMillis, i)  }
+
+  }
+  def validate(ref : Location, value : Atom) : VResult = {
     simplify(ref, value, "Boolean, Integer, Long, or String") { v  ⇒
-      object booleanValidator extends Poly1 {
-        implicit def caseBoolean = at[Boolean](b ⇒ None)
-        implicit def caseLong = at[Long] { l ⇒
-          if (l == 0 || l == 1) None else Some(s"Value '$l' could not be converted to boolean (0 or 1 required")
-        }
-        implicit def caseInt = at[Int] { i ⇒
-          if (i == 0 || i == 1) None else Some(s"Value '$i' could not be converted to boolean (0 or 1 required")
-        }
-        implicit def caseSrhot = at[Short] { i ⇒
-          if (i == 0 || i == 1) None else Some(s"Value '$i' could not be converted to boolean (0 or 1 required")
-        }
-        implicit def caseString = at[String] { s ⇒
-          if (verity.contains(s)) None
-          else if (falseness.contains(s)) None
-          else Some(s"Value '$s' could not be interpreted as a boolean")
-        }
-      }
-      val mapped = v.map(booleanValidator)
+      val mapped = v.map(validation)
       mapped.select[Option[String]].flatten
     }
   }
 }
 
-object BooleanType {
-  type BLISS = Boolean :+: Long :+: Int :+: Short :+: String :+: CNil
-}
-
-object Boolean_t extends BooleanType('TheBoolean, "A type that accepts true/false values")
 

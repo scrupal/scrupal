@@ -15,7 +15,7 @@
 
 package scrupal.core.http
 
-import scrupal.core.api.Context
+import scrupal.api.Context
 
 /** Simple Reverse Routing For Scrupal
   *

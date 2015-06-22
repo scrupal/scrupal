@@ -14,7 +14,10 @@
  * and limitations under the License.                                                                                 *
  **********************************************************************************************************************/
 
+import play.routes.compiler.InjectedRoutesGenerator
 import play.sbt.PlayLayoutPlugin
+import play.sbt.routes.RoutesKeys._
+
 import sbt._
 import sbt.Keys._
 
@@ -32,7 +35,10 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     organization    := "org.scrupal",
     version         := "0.2.0-SNAPSHOT",
     maxErrors       := 25,
-    //scalacOptions   += "-Xlog-implicits",
+    routesGenerator := InjectedRoutesGenerator,
+    namespaceReverseRouter := true,
+    aggregateReverseRoutes := Seq(),
+  //scalacOptions   += "-Xlog-implicits",
     scrupalCopyrightHolder := "Reactific Software LLC",
     scrupalCopyrightYears := Seq(2013,2014,2015),
     scrupalDeveloperUrl := url("http://reactific.com/")

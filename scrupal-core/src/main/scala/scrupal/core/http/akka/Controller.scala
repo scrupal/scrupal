@@ -13,15 +13,20 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
 import akka.event.Logging._
-import scrupal.core.api._
-import scrupal.utils.{ Registrable, Registry }
-import spray.http.StatusCodes.{ NotFound, _ }
-import spray.http.{ HttpRequest, HttpResponse, _ }
-import spray.routing._
-import spray.routing.directives.LogEntry
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.headers.Location
+import akka.http.scaladsl.server.RouteResult.Rejected
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.directives.LogEntry
+import akka.shapeless.HList
+
+import scrupal.api._
+
+import scrupal.utils.{Registrable, Registry}
 
 /** Abstract Controller
   *
@@ -53,9 +58,10 @@ trait Controller extends Registrable[Controller]
 
   def request_context = extract(rc ⇒ rc)
 
+  /* FIXME: Reinstate site directive in http.akka.Controller
   def site(scrupal : Scrupal) : Directive1[Site] = {
-    hostName.flatMap { host : String ⇒
-      val sites = Site.forHost(host)
+    extractHost.tflatMap { host : Tuple1[String] ⇒
+      val sites = scrupal.Sites.forHost(host)
       if (sites.isEmpty)
         reject(ValidationRejection(s"No site defined for host '$host'."))
       else {
@@ -63,7 +69,7 @@ trait Controller extends Registrable[Controller]
         if (site.isEnabled(scrupal)) {
           schemeName.flatMap { scheme : String ⇒
             validate((scheme == "https") == site.requireHttps,
-              s"Site '${site.name} requires ${if (site.requireHttps) "https" else "http"}.").hflatMap { hNil ⇒
+              s"Site '${site.name} requires ${if (site.requireHttps) "https" else "http"}.").hflatMap { hNil : HList ⇒
                 extract { ctxt ⇒ site }
               }
           }
@@ -72,7 +78,7 @@ trait Controller extends Registrable[Controller]
         }
       }
     }
-  }
+  }*/
 }
 
 abstract class BasicController(val id : Identifier, val priority : Int = 0) extends Controller
@@ -84,12 +90,13 @@ abstract class BasicController(val id : Identifier, val priority : Int = 0) exte
 class ActionProviderController extends BasicController('ActionProviderController, 0) with PathHelpers {
 
   def routes(implicit scrupal : Scrupal) : Route = {
+    reject
+    /* FIXME: Reinstate ActionProviderController.routes
     site(scrupal) { site : Site ⇒
       rawPathPrefix(Slash) {
-        /*        val x = FormDataMarshaller
+        val x = FormDataMarshaller
         entity(as[FormData]){ emailData⇒
-
-        } */
+        }
         request_context { ctxt : RequestContext ⇒
           implicit val context = Context(scrupal, ctxt, site)
           site.extractAction(context) match {
@@ -104,6 +111,7 @@ class ActionProviderController extends BasicController('ActionProviderController
         }
       }
     }
+  */
   }
 }
 
@@ -131,19 +139,21 @@ trait RequestLoggers {
 
   def showErrorResponses(request : HttpRequest) : Any ⇒ Option[LogEntry] = {
     case HttpResponse(OK | NotModified | PartialContent, _, _, _) ⇒ None
-    case HttpResponse(NotFound, _, _, _) ⇒ Some(LogEntry("404: " + request.uri, WarningLevel))
+    case HttpResponse(StatusCodes.NotFound, _, _, _) ⇒ Some(LogEntry("404: " + request.uri, WarningLevel))
     case r @ HttpResponse(Found | MovedPermanently, _, _, _) ⇒
-      Some(LogEntry(s"${r.status.intValue}: ${request.uri} -> ${r.header[HttpHeaders.Location].map(_.uri.toString).getOrElse("")}", WarningLevel))
+      Some(LogEntry(s"${r.status.intValue}: ${request.uri} -> ${r.header[Location].map(_.uri.toString).getOrElse("")}", WarningLevel))
     case response ⇒ Some(
       LogEntry("Non-200 response for\n  Request : " + request + "\n  Response: " + response, WarningLevel))
   }
 
-  def showRepoResponses(repo : String)(request : HttpRequest) : HttpResponsePart ⇒ Option[LogEntry] = {
+  /*
+  def showRepoResponses(repo : String)(request : HttpRequest) = {
     case HttpResponse(s @ (OK | NotModified), _, _, _) ⇒ Some(LogEntry(s"$repo  ${s.intValue}: ${request.uri}", InfoLevel))
-    case ChunkedResponseStart(HttpResponse(OK, _, _, _)) ⇒ Some(LogEntry(repo + " 200 (chunked): " + request.uri, InfoLevel))
-    case HttpResponse(NotFound, _, _, _) ⇒ Some(LogEntry(repo + " 404: " + request.uri))
+    case HttpResponse(OK, _, _, _) ⇒ Some(LogEntry(repo + " 200 (chunked): " + request.uri, InfoLevel))
+    case HttpResponse(StatusCodes.NotFound, _, _, _) ⇒ Some(LogEntry(repo + " 404: " + request.uri))
     case _ ⇒ None
   }
+  */
 }
 
 object Controller extends Registry[Controller] {

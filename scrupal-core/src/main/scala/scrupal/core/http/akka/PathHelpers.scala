@@ -13,18 +13,18 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
-import shapeless.{ HList, HNil }
-import spray.http.Uri.Path
-import spray.routing.Directives._
-import spray.routing._
+import akka.http.scaladsl.model.Uri.Path
+import akka.http.scaladsl.model.Uri.Path.Slash
+import akka.http.scaladsl.server.{PathMatcher, Route, PathMatchers, Directive}
+import shapeless.{HList, HNil}
 
 /** Created by reidspencer on 11/10/14.
   */
 trait PathHelpers {
   type SegmentsResult[T] = shapeless.::[String, shapeless.::[T, HNil]]
-
+/*
   def rawPathPrefixWithMatch[T](segments : Map[String, T]) : Directive[SegmentsResult[T]] = {
     val matcher = {
       if (segments.isEmpty)
@@ -43,6 +43,7 @@ trait PathHelpers {
     }
     rawPathPrefix(matcher ~ Slash) hmap { x ⇒ x.head }
   }
+  */
 
   /** Custom directive that uses a redirect to add a trailing slashe to segment
     * if the slash isn't present.
@@ -55,6 +56,7 @@ trait PathHelpers {
     * }
     * }
     */
+  /*
   def directories[T](segments : Map[String, T]) = new Directive[SegmentsResult[T]] {
     def happly(f : SegmentsResult[T] ⇒ Route) : Route = {
       // match a slash followed by any of the segments in the map
@@ -63,14 +65,15 @@ trait PathHelpers {
       }
     }
   }
+  */
 }
 
 /** Spray's PathEnd matches trailing optional slashes... we can't have that
   * otherwise it will cause a redirect loop.
-  */
 object PathEndNoSlash extends PathMatcher[HNil] {
   def apply(path : Path) = path match {
     case Path.Empty ⇒ PathMatcher.Matched.Empty
     case _ ⇒ PathMatcher.Unmatched
   }
 }
+  */

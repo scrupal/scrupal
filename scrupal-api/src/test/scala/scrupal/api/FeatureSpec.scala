@@ -23,7 +23,8 @@ import scrupal.test.{ScrupalApiSpecification, FakeModule, FakeContext}
   */
 class FeatureSpec extends ScrupalApiSpecification("FeatureSpec") {
 
-  case class Fixture(name: String) extends FakeContext[Fixture](name) {
+  case class Fixture(name: String) extends FakeContext[Fixture] {
+    implicit val scrupal : Scrupal = testScrupal
     val mod = new FakeModule(sym, "Description")
     mod.enable(mod)
     assert(mod.isEnabled(mod))
@@ -48,16 +49,16 @@ class FeatureSpec extends ScrupalApiSpecification("FeatureSpec") {
     }
 
     "yield None for undefined Feature" in {
-      val maybe = Feature('DoesNotExist)
+      val maybe = scrupal.Features('DoesNotExist)
       maybe must beEqualTo(None)
     }
 
     "access with one argument" in Fixture("OneArg") { f : Fixture ⇒
-      val truth = Feature(f.impl_on.id)
+      val truth = scrupal.Features(f.impl_on.id)
       truth.isDefined must beTrue
       val t1 = truth.get
       t1.isEnabled(f.mod) must beTrue
-      val truth2 = Feature(f.impl_off.id)
+      val truth2 = scrupal.Features(f.impl_off.id)
       truth2.isDefined must beTrue
       val t2 = truth2.get
       t2.isEnabled(f.mod) must beFalse
@@ -72,7 +73,7 @@ class FeatureSpec extends ScrupalApiSpecification("FeatureSpec") {
     }
     "convert to boolean implicitly" in Fixture("Convert") { f : Fixture ⇒
       f.impl_off.isEnabled(f.mod) must beFalse
-      if (Feature(f.impl_on, f.mod)) {
+      if (scrupal.Features(f.impl_on, f.mod)) {
         success
       }
       else

@@ -17,13 +17,13 @@ package scrupal.api
 
 import org.specs2.mutable.Specification
 import scrupal.api.types.RangeType
-import scrupal.test.FakeModule
+import scrupal.test.{ScrupalApiSpecification, FakeModule}
 import scrupal.utils.Version
 
 import scala.collection.immutable.HashMap
 
 /** Test specifications for the API Module class */
-class ModuleSpec extends Specification {
+class ModuleSpec extends ScrupalApiSpecification("Module") {
 
   sequential // FIXME: Garbage collection affects this when run in parallel
 
@@ -77,9 +77,9 @@ class ModuleSpec extends Specification {
 
   "Modules" should {
     "register three modules" in {
-      Module('Module1) must beEqualTo(Some(Module1))
-      Module('Module2) must beEqualTo(Some(Module2))
-      Module('Module3) must beEqualTo(Some(Module3))
+      scrupal.Modules('Module1) must beEqualTo(Some(Module1))
+      scrupal.Modules('Module2) must beEqualTo(Some(Module2))
+      scrupal.Modules('Module3) must beEqualTo(Some(Module3))
     }
   }
 

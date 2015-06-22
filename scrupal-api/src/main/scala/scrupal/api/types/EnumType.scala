@@ -32,7 +32,8 @@ import scala.language.implicitConversions
 case class EnumType(
   id : Identifier,
   description : String,
-  enumerators : Map[Identifier, Int]) extends Type[Atom] {
+  enumerators : Map[Identifier, Int])
+  (implicit val scrupal : Scrupal) extends Type[Atom] {
   require(enumerators.nonEmpty)
   override def kind = 'Enum
 

@@ -20,13 +20,13 @@ import scrupal.utils._
 /** Provider Of Reactions
   *
   * Scrupal objects that mix in this trait participate in the dispatching of [[Request]]s. Providers get a chance to
-  * indicate their interest in particular kinds of [[Request]]s by returning a [[Reaction]] that will
+  * indicate their interest in particular kinds of [[Request]]s by returning a [[Reactor]] that will
   * yield a [[Response]] for each
   */
 trait Provider {
 
   def canProvide(request: Request) : Boolean
-  def provide(request: Request) : Option[Reaction]
+  def provide(request: Request) : Option[Reactor]
 
 }
 
@@ -44,7 +44,7 @@ trait DelegatingProvider extends Provider with Identifiable {
     delegates.exists { delegate ⇒ delegate.canProvide(request) }
   }
 
-  def provide(request: Request) : Option[Reaction] = {
+  def provide(request: Request) : Option[Reactor] = {
     delegates.find { delegate ⇒
       delegate.canProvide(request)
     } flatMap { delegate ⇒

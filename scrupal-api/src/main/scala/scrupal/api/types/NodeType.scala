@@ -33,6 +33,7 @@ case class NodeType[R](
   id : Identifier,
   description : String,
   fields : Map[String, Type[R]],
-  mediaType : MediaType = MediaTypes.`text/html`) extends StructuredType[R] {
+  mediaType : MediaType = MediaTypes.`text/html`)
+  (implicit val scrupal : Scrupal) extends StructuredType[R] {
   override def kind = 'Node
 }

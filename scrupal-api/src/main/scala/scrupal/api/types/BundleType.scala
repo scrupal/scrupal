@@ -34,39 +34,16 @@ import scrupal.api._
   * @param description A description of the trait in terms of its purpose or utility
   * @param fields A map of the field name symbols to their Type
   */
-case class BundleType[ET](
+case class BundleType(
   id : Identifier,
   description : String,
-  fields : Map[String, Type[_]]) extends StructuredType[ET] {
+  fields : Map[String, Type[_]]
+  )(implicit val   scrupal : Scrupal) extends StructuredType[Type[_]] {
   override def kind = 'Bundle
 }
 
 object BundleType {
-  def Empty[ET] = BundleType[ET]('EmptyBundleType, "A Bundle with no fields", Map.empty[String, Type[ET]])
+  def Empty(implicit scrupal: Scrupal) =
+    BundleType('EmptyBundleType, "A Bundle with no fields", Map.empty[String, Type[_]])
 }
 
-/** The Scrupal Type for information about Sites */
-object SiteInfo_t
-  extends BundleType('SiteInfo, "Basic information about a site that Scrupal will serve.",
-    fields = Map(
-      "name" -> Identifier_t,
-      "title" -> Identifier_t,
-      "domain" -> DomainName_t,
-      "port" -> TcpPort_t,
-      "admin_email" -> EmailAddress_t,
-      "copyright" -> Identifier_t
-    )
-  )
-
-object PageBundle_t
-  extends BundleType('PageBundle, "Information bundle for a page entity.",
-    fields = Map (
-      "title" -> Title_t,
-      "body" -> Markdown_t
-    // TODO: Figure out how to structure a bundle to factor in constructing a network of nodes
-    // 'master -> Node_t,
-    // 'defaultLayout -> Node_t,
-    // 'body -> Node_t,
-    // 'blocks ->
-    )
-  )

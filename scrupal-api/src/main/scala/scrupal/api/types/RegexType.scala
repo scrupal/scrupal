@@ -31,7 +31,7 @@ import scala.util.{ Failure, Success, Try }
   */
 case class RegexType(
   id : Identifier,
-  description : String) extends Type[String] {
+  description : String)(implicit val scrupal : Scrupal) extends Type[String] {
   def validate(ref : Location, value : String) : VResult = {
     simplify(ref, value, "String") {
       case s: String ⇒ Try {
@@ -44,7 +44,4 @@ case class RegexType(
     }
   }
 }
-
-object Regex_t
-  extends RegexType('Regex, "Regular expression type")
 

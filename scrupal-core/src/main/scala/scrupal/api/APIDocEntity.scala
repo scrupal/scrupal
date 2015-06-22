@@ -26,8 +26,12 @@ import scrupal.api.types.BundleType
   *
   * @tparam E - The Entity type this EntityAPIDoc documents
   */
-class APIDocEntity[E <: Entity](id : Symbol) extends Entity(id) {
-  def instanceType : BundleType[JsObject] = ???
+class APIDocEntity[E <: Entity](id : Symbol)(implicit val scrupal : Scrupal) extends Entity(id) {
+  def instanceType : BundleType = ???
+
+  val author = scrupal.author
+  val copyright = scrupal.copyright
+  val license = scrupal.license
 
   def kind : Symbol = ???
 

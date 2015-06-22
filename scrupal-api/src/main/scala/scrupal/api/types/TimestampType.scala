@@ -32,7 +32,8 @@ case class TimestampType(
   id : Identifier,
   description : String,
   min : DateTime = new DateTime(0L),
-  max : DateTime = new DateTime(Long.MaxValue / 2)) extends Type[Long] {
+  max : DateTime = new DateTime(Long.MaxValue / 2))
+  (implicit val scrupal : Scrupal) extends Type[Long] {
   assert(min.getMillis <= max.getMillis)
   def validate(ref : Location, value : Long) = {
     simplify(ref, value, "Long") {
@@ -46,6 +47,4 @@ case class TimestampType(
   }
 }
 
-object AnyTimestamp_t
-  extends TimestampType('AnyTimestamp, "A type that accepts any timestamp value")
 

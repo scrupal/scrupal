@@ -24,33 +24,43 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import play.api.Configuration
 
-import scrupal.storage.api.StoreContext
+import scrupal.storage.api.{Storage, StoreContext}
 import scrupal.utils._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 
 abstract class Scrupal(
   val name : String = "Scrupal",
-  config : Option[Configuration] = None,
+  config : Option[Configuration] = Some(ConfigHelpers.default()),
   ec : Option[ExecutionContext] = None,
   sc : Option[StoreContext] = None,
   actSys : Option[ActorSystem] = None
 ) extends { final val id : Symbol = Symbol(name); final val registry = Scrupal }
-  with ScrupalComponent with AutoCloseable with Enablement[Scrupal] with Registrable[Scrupal] {
+  with ScrupalComponent with AutoCloseable with Authorable with Enablement[Scrupal] with Registrable[Scrupal] {
 
-  def Copyright : String
+  val author = "Reactific Software LLC"
+  val copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
+  val license = OSSLicense.ApacheV2
+
+  val Sites = SitesRegistry()
+  val Applications = ApplicationsRegistry()
+  val Modules = ModulesRegistry()
+  val Entities = EntitiesRegistry()
+  val Types = TypesRegistry()
+  val Features = FeaturesRegistry()
 
   implicit val _configuration = config.getOrElse(ConfigHelpers.default())
-
-  implicit val _timeout = Timeout(
-    _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
-  )
 
   implicit val _actorSystem = actSys.getOrElse(ActorSystem("Scrupal", _configuration.underlying))
 
   implicit val _executionContext = ec.getOrElse(getExecutionContext(_configuration))
 
-  implicit val _storageContext = sc.orNull
+  implicit val _storageContext = sc.getOrElse(getStorageContext(_configuration))
+
+  implicit val _timeout = Timeout(
+    _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
+  )
 
 
   /** Scrupal Thread Factory
@@ -122,6 +132,19 @@ abstract class Scrupal(
     }
   }
 
+  def getStorageContext(config : Configuration) : StoreContext = {
+    val configToSearch = {
+      config.getString("scrupal.storage.config.file") match {
+        case Some(fileName) ⇒
+          ConfigHelpers.from(fileName).getOrElse(config)
+        case None ⇒
+          config
+      }
+    }
+    val scrupalConfiguration = configToSearch.getConfig("scrupal")
+    Await.result(Storage.fromConfiguration(scrupalConfiguration, "default", create=true), 2.seconds)
+  }
+
 
   // TODO: Decide if assetsLocator is part of API or Core
   // val assetsLocator : AssetsLocator
@@ -151,10 +174,10 @@ abstract class Scrupal(
     * are configured yet or not.
     * @return True iff there are sites loaded
     */
-  def isReady : Boolean = _configuration.getConfig("scrupal").nonEmpty && Site.nonEmpty
+  def isReady : Boolean = _configuration.getConfig("scrupal").nonEmpty && Sites.nonEmpty
 
   def isChildScope(e : Enablement[_]) : Boolean = e match {
-    case s : Site ⇒ Site.containsValue(s)
+    case s : Site ⇒ Sites.containsValue(s)
     case _ ⇒ false
   }
 
@@ -165,7 +188,15 @@ abstract class Scrupal(
     * Resources managed by plugins, such as database connections, are likely not available at this point.
     *
     */
-  def open() : (Configuration, StoreContext)
+  def open() : Unit = {
+    // We do a lot of stuff in API objects and they need to be instantiated in the right order,
+    // so "touch" them now because they are otherwise initialized randomly as used
+    require(Types.registryName == "Types")
+    require(Modules.registryName == "Modules")
+    require(Sites.registryName == "Sites")
+    require(Entities.registryName == "Entities")
+    // FIXME: require(Template.registryName == "Templates")
+  }
 
   def close() : Unit
 
@@ -186,9 +217,10 @@ abstract class Scrupal(
     * @param action The action to act upon (a Request ⇒ Result[P] function).
     * @return A Future to the eventual Result[P]
     */
-  def dispatch(action : Reaction) : Future[Response]
+  def dispatch(action : Reactor) : Future[Response]
 
   def onStart() : Unit
+
 }
 
 object Scrupal extends Registry[Scrupal] {

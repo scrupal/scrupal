@@ -17,8 +17,8 @@ package scrupal.core.impl
 
 import akka.http.scaladsl.model.{ HttpMethod, HttpMethods }
 import akka.http.scaladsl.server.PathMatcher
-import scrupal.api.{ Reaction, PathAndMethodActionExtractor, Context, Node }
-import scrupal.core.actions.NodeReaction
+import scrupal.api.{Request, Reactor, Context, Node}
+import scrupal.core.actions.NodeReactor
 import shapeless.HList
 
 /** Title Of Thing.
@@ -26,17 +26,17 @@ import shapeless.HList
   * Description of thing
   */
 case class NodeActionProducer[L <: HList](pm : PathMatcher[L], node : Node, method : HttpMethod = HttpMethods.GET)
-  extends PathAndMethodActionExtractor[L] {
-  def actionFor(list : L, c : Context) : Option[Reaction] = {
-    Some(NodeReaction(c, node))
+  extends {
+  def actionFor(list : L, c : Request) : Option[Reactor] = {
+    Some(NodeReactor(c, node))
   }
 }
 
 case class FunctionalNodeActionProducer[L <: HList](
   pm : PathMatcher[L],
-  nodeF : (L, Context) ⇒ Node,
-  method : HttpMethod = HttpMethods.GET) extends PathAndMethodActionExtractor[L] {
-  def actionFor(list : L, c : Context) : Option[Reaction] = {
-    Some(NodeReaction(c, nodeF(list, c)))
+  nodeF : (L, Request) ⇒ Node,
+  method : HttpMethod = HttpMethods.GET) {
+  def actionFor(list : L, c : Request) : Option[Reactor] = {
+    Some(NodeReactor(c, nodeF(list, c)))
   }
 }

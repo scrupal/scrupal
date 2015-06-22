@@ -13,60 +13,20 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.entities
 
-import scrupal.core.api.{ Scrupal, Site }
-import spray.routing.Directives._
-import spray.routing._
+import scrupal.api.{Entity, Scrupal}
 
-/** Spray Routing Directives For Scrupal Sites
-  * This provides a few routing directives that deal with sites being enabled and requiring a certain scheme
+/** An Entity for representing a simple HTML5 page
+  *
+  * Description of thing
   */
-trait SiteDirectives {
-
-  def siteScheme(site : Site) = {
-    scheme("http").hrequire { hnil ⇒ !site.requireHttps } |
-      scheme("https").hrequire { hnil ⇒ site.requireHttps }
-  }
-
-  def siteEnabled(site : Site, scrupal : Scrupal) = {
-    validate(site.isEnabled(scrupal), s"Site '${site.name}' is disabled.")
-  }
-
-  def scrupalIsReady(scrupal : Scrupal) = {
-    validate(scrupal.isReady, s"Scrupal is not configured!")
-  }
-
-  /*
-
-  schemeName { scheme ⇒
-    reject(ValidationRejection(s"Site '${site._id.name}' does not support scheme'$scheme'"))
-  }
-}
-
-    require
-    validate(!site.requireHttps, s"Site '${site._id.name}' does not permit https.") {
-      extract (ctx ⇒ provide(site) )
-    }
-  } ~
-    scheme("https") {
-      validate(site.requireHttps, s"Site '${site._id.name}' requires https.") { hnil ⇒
-        extract(ctx ⇒ site)
-      }
-    } ~
-}
-*/
-
-  def site(scrupal : Scrupal) : Directive1[Site] = {
-    hostName.flatMap { host : String ⇒
-      val sites = Site.forHost(host)
-      if (sites.isEmpty)
-        reject(ValidationRejection(s"No site defined for host '$host'."))
-      else {
-        val site = sites.head
-        siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx ⇒ site)
-      }
-    }
-  }
+case class PageEntity(implicit val scrupal : Scrupal) extends Entity('Page) {
+  def kind = 'Page
+  val description = "An entity for simple HTML5 pages."
+  val author = scrupal.author
+  val copyright = scrupal.copyright
+  val license = scrupal.license
+  val instanceType = scrupal.Types('PageBundle)
 }
 

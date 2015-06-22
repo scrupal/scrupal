@@ -25,7 +25,7 @@ class InstanceSpec extends ScrupalApiSpecification("InstanceSpec") {
 
   class TestModule(db: String) extends FakeModule('foo, db) {
     val thai = StringType('Thai, "Thai Foon", ".*".r)
-    val buns = BundleType[Any]('Buns, "Buns Aye", Map("tie" -> thai))
+    val buns = BundleType('Buns, "Buns Aye", Map("tie" -> thai))
     val plun = FakeEntity("Plun", buns)
 
     override val types = Seq(thai, buns)

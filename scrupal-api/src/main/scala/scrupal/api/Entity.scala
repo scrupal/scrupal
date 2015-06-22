@@ -22,11 +22,11 @@ import scrupal.utils.{Enablee, Registrable}
 
 import scala.concurrent.Future
 
-trait EntityCollectionReaction extends Reaction with Nameable with Describable {
+trait EntityCollectionReactor extends Reactor with Nameable with Describable {
   def id : String
 }
 
-trait EntityInstanceReaction extends Reaction with Nameable with Describable {
+trait EntityInstanceReactor extends Reactor with Nameable with Describable {
   def id : String
   def what : Iterable[String]
 }
@@ -37,7 +37,7 @@ trait EntityInstanceReaction extends Reaction with Nameable with Describable {
   */
 trait EntityProvider extends PluralityProvider {
 
-  override def provide(request: Request) : Option[Reaction] = {
+  override def provide(request: Request) : Option[Reactor] = {
     request.message.headOption.map { msg ⇒
       if (isPlural(request)) {
         msg.toLowerCase match {
@@ -61,10 +61,10 @@ trait EntityProvider extends PluralityProvider {
     }
   }
 
-  def noSuchMessage(req : Request, msg: String) : Reaction = {
-    new Reaction {
+  def noSuchMessage(req : Request, msg: String) : Reactor = {
+    new Reactor {
       val request : Request = req
-      def apply(): Future[Response] = { Future.successful( ErrorResponse(msg, Unavailable) ) }
+      def apply(request: Request): Future[Response] = { Future.successful( ErrorResponse(msg, Unavailable) ) }
     }
   }
 
@@ -74,7 +74,7 @@ trait EntityProvider extends PluralityProvider {
     * @param request The request to create the entity
     * @return A Create object that can perform the task from an Actor (i.e. in an isolated context)
     */
-  def create(request: Request) : CreateReaction
+  def create(request: Request) : CreateReactor
 
   /** Retrieve Command (GET/plural) - Retrieve an existing entity by its identifier
     * This is a command on the entity type's contain to retrieve a specific entity. The full instance should be
@@ -82,108 +82,108 @@ trait EntityProvider extends PluralityProvider {
     * @param request The request to retrieve the entity
     * @return
     */
-  def retrieve(request : Request) : RetrieveReaction
+  def retrieve(request : Request) : RetrieveReactor
 
   /** Update Command (PUT/plural) - Updates all or a few of the fields of an entity
     * @param request The request to update the entity
     * @return
     */
-  def update(request : Request) : UpdateReaction
+  def update(request : Request) : UpdateReactor
 
   /** Delete Command (DELETE/plural) */
   /** Delete an entity
     * @param request The request to delete the entity
     * @return THe DeleteReaction to generate the response for the Delete request
     */
-  def delete(request : Request) : DeleteReaction
+  def delete(request : Request) : DeleteReactor
 
   /** Query Command (OPTIONS/plural)
     *
     * @param request The request to query the entity
     * @return The QueryReaction to generate the response for the Query request
     */
-  def query(request: Request) : QueryReaction
+  def query(request: Request) : QueryReactor
 
   /** Create Facet Command (POST/singular) */
-  def add(request: Request) : AddReaction
+  def add(request: Request) : AddReactor
 
   /** RetrieveAspect Command (GET/singular) */
-  def get(request: Request) : GetReaction
+  def get(request: Request) : GetReactor
 
   /** UpdateAspect Command (PUT/singular) */
-  def set(request: Request) : SetReaction
+  def set(request: Request) : SetReactor
 
   /** XXX Command (DELETE/singular) */
-  def remove(request: Request) : RemoveReaction
+  def remove(request: Request) : RemoveReactor
 
   /** XXX Command (OPTIONS/singular) */
-  def find(request: Request) : FindReaction
+  def find(request: Request) : FindReactor
 }
 
-trait CreateReaction extends EntityCollectionReaction {
+trait CreateReactor extends EntityCollectionReactor {
   val name : String = "Create"
   val description = "Create a specific instance of the entity and insert it in the entity collection."
   val id = request.instance
   val data : JsObject = emptyJsObject
 }
 
-trait RetrieveReaction extends EntityCollectionReaction {
+trait RetrieveReactor extends EntityCollectionReactor {
   val name : String = "Retrieve"
   val description = "Retrieve a specific instance of the entity from the entity collection."
   val id : String = request.instance
 }
 
-trait UpdateReaction extends EntityCollectionReaction {
+trait UpdateReactor extends EntityCollectionReactor {
   val name : String = "Update"
   val description = "Update a specific instance of the entity."
   val id : String = request.instance
   val fields : JsObject = emptyJsObject
 }
 
-trait DeleteReaction extends EntityCollectionReaction {
+trait DeleteReactor extends EntityCollectionReactor {
   val name : String = "Delete"
   val description = "Delete a specific instance from the entity collection."
   val id : String = request.instance
 }
 
-trait QueryReaction extends EntityCollectionReaction {
+trait QueryReactor extends EntityCollectionReactor {
   val name : String = "Query"
   val description = "Query the entity collection for an entity of a certain id or containing certain data."
   val id : String = request.instance
   val fields : JsObject = emptyJsObject
 }
 
-trait AddReaction extends EntityInstanceReaction {
+trait AddReactor extends EntityInstanceReactor {
   val name : String = "Add"
   val description = "Create a facet on a specific entity in the collection."
   val id : String = request.instance
   val what : Iterable[String] = request.message
-  val args : JsObject = emptyJsObject
+  val instance : JsObject = emptyJsObject
 }
 
-trait GetReaction extends EntityInstanceReaction {
+trait GetReactor extends EntityInstanceReactor {
   val name : String = "Get"
   val description = "Retrieve a facet from a specific entity in the collection."
   val id : String = request.instance
   val what : Iterable[String] = request.message
 }
 
-trait SetReaction extends EntityInstanceReaction {
+trait SetReactor extends EntityInstanceReactor {
   val name : String = "Set"
   val description = "Update a facet from a specific entity in the collection."
   val id : String = request.instance
   val what : Iterable[String] = request.message
-  val args : JsObject = emptyJsObject
+  val fields : JsObject = emptyJsObject
 }
 
-trait RemoveReaction extends EntityInstanceReaction {
+trait RemoveReactor extends EntityInstanceReactor {
   val name : String = "Remove"
   val description = "Delete a facet from a specific entity in the collection."
   val id : String = request.instance
   val what : Iterable[String] = request.message
 }
 
-trait FindReaction extends EntityInstanceReaction {
+trait FindReactor extends EntityInstanceReactor {
   val name : String = "Find"
   val description = "Query a specific entity in the collection for a facet of a certain id or containing certain data."
   val id : String = request.instance
@@ -200,15 +200,17 @@ trait FindReaction extends EntityInstanceReaction {
   */
 abstract class Entity(sym : Symbol) extends {
   val id : Symbol = sym; val _id : Symbol = sym; val segment : String = id.name
-} with EntityProvider with Storable with Registrable[Entity] with ModuleOwned
+} with EntityProvider with Storable with Registrable[Entity] with ModuleOwned with Authorable
   with Describable with Enablee with Bootstrappable {
-  def moduleOf = { Module.values.find(mod ⇒ mod.entities.contains(this)) }
+  def moduleOf = { scrupal.Modules.values.find(mod ⇒ mod.entities.contains(this)) }
+
+  implicit def scrupal: Scrupal
 
   override def parent = moduleOf
 
-  def instanceType : BundleType[Any]
+  def instanceType : BundleType
 
-  def registry = Entity
+  def registry = scrupal.Entities
 
   /*
   def toMap(mt : Map[String,Any]) : Map[String, Any] = mt
@@ -220,47 +222,52 @@ abstract class Entity(sym : Symbol) extends {
   override def validate(ref : Location, value : Map[String,Any] ) : VResult = instanceType.validate(ref, value)
 */
 
-  def create(request: Request) : CreateReaction = NoopCreateReaction(request)
+  def create(request: Request) : CreateReactor = NoopCreateReactor(request)
 
-  def retrieve(request: Request) : RetrieveReaction = NoopRetrieveReaction(request)
+  def retrieve(request: Request) : RetrieveReactor = NoopRetrieveReactor(request)
 
-  def update(request : Request) : UpdateReaction = NoopUpdateReaction(request)
+  def update(request : Request) : UpdateReactor = NoopUpdateReactor(request)
 
-  def delete(request : Request) : DeleteReaction = NoopDeleteReaction(request)
+  def delete(request : Request) : DeleteReactor = NoopDeleteReactor(request)
 
-  def query(request : Request) : QueryReaction = NoopQueryReaction(request)
+  def query(request : Request) : QueryReactor = NoopQueryReactor(request)
 
-  def add(request : Request) : AddReaction = NoopAddReaction(request)
+  def add(request : Request) : AddReactor = NoopAddReactor(request)
 
-  def get(request : Request) : GetReaction = NoopGetReaction(request)
+  def get(request : Request) : GetReactor = NoopGetReactor(request)
 
-  def set(request : Request) : SetReaction = NoopSetReaction(request)
+  def set(request : Request) : SetReactor = NoopSetReactor(request)
 
-  def remove(request : Request) : RemoveReaction = NoopRemoveReaction(request)
+  def remove(request : Request) : RemoveReactor = NoopRemoveReactor(request)
 
-  def find(request : Request) : FindReaction = NoopFindReaction(request)
+  def find(request : Request) : FindReactor = NoopFindReactor(request)
 
 }
 
-trait NoopReaction extends Reaction with Describable {
-  def apply() : Future[Response] = Future.successful( NoopResponse )
-  override val description = "Noop"
-}
-
-case class NoopCreateReaction(request : Request) extends CreateReaction with NoopReaction
-case class NoopRetrieveReaction(request : Request) extends RetrieveReaction with NoopReaction
-case class NoopUpdateReaction(request : Request) extends UpdateReaction with NoopReaction
-case class NoopDeleteReaction(request : Request) extends DeleteReaction with NoopReaction
-case class NoopQueryReaction(request : Request) extends QueryReaction with NoopReaction
-case class NoopAddReaction(request : Request) extends AddReaction with NoopReaction
-case class NoopGetReaction(request : Request) extends GetReaction with NoopReaction
-case class NoopSetReaction(request : Request) extends SetReaction with NoopReaction
-case class NoopRemoveReaction(request : Request) extends RemoveReaction with NoopReaction
-
-case class NoopFindReaction(request : Request) extends FindReaction with NoopReaction
-
-object Entity extends scrupal.utils.Registry[Entity] {
+/** The registry of Entities for this Scrupal.
+  *
+  * This object is the registry of Entity objects. When a [[scrupal.api.Entity]] is instantiated, it will register
+  * itself with this object. The object is located in [[scrupal.api.Scrupal]]
+  */
+case class EntitiesRegistry() extends scrupal.utils.Registry[Entity] {
   val registrantsName : String = "entity"
   val registryName : String = "Entities"
 }
+
+
+trait NoopReactor extends Reactor with Describable {
+  def apply(request: Request) : Future[Response] = Future.successful( NoopResponse )
+  override val description = "Noop"
+}
+
+case class NoopCreateReactor(request : Request) extends CreateReactor with NoopReactor
+case class NoopRetrieveReactor(request : Request) extends RetrieveReactor with NoopReactor
+case class NoopUpdateReactor(request : Request) extends UpdateReactor with NoopReactor
+case class NoopDeleteReactor(request : Request) extends DeleteReactor with NoopReactor
+case class NoopQueryReactor(request : Request) extends QueryReactor with NoopReactor
+case class NoopAddReactor(request : Request) extends AddReactor with NoopReactor
+case class NoopGetReactor(request : Request) extends GetReactor with NoopReactor
+case class NoopSetReactor(request : Request) extends SetReactor with NoopReactor
+case class NoopRemoveReactor(request : Request) extends RemoveReactor with NoopReactor
+case class NoopFindReactor(request : Request) extends FindReactor with NoopReactor
 

@@ -13,40 +13,60 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
-import play.api.http.{HttpFilters, HttpConfiguration, HttpErrorHandler, DefaultHttpRequestHandler}
-import play.api.libs.iteratee.Iteratee
-import play.api.mvc.{Result, RequestHeader, EssentialAction, Handler}
-import play.api.routing.Router
-import play.api.routing.Router.Routes
-import scrupal.api.Site
+import akka.http.scaladsl.server.{ValidationRejection, Directive1}
+import scrupal.api.{Scrupal, Site}
 
-import scala.annotation.switch
-
-/** Scrupal Request Handler
-  *
-  * Play will invoke this handler to dispatch HTTP Requests as they come in. It's job is
+/** Spray Routing Directives For Scrupal Sites
+  * This provides a few routing directives that deal with sites being enabled and requiring a certain scheme
   */
-class HttpRequestHandler(errorHandler: HttpErrorHandler, configuration: HttpConfiguration,
-  filters: HttpFilters) extends DefaultHttpRequestHandler(Router.empty, errorHandler, configuration, filters) {
+trait SiteDirectives {
+/*
+  def siteScheme(site : Site) = {
+    scheme("http").hrequire { hnil ⇒ !site.requireHttps } |
+      scheme("https").hrequire { hnil ⇒ site.requireHttps }
+  }
 
-  override def routeRequest(request: RequestHeader) : Option[Handler] = {
-    val routes : Iterable[Routes] = for (
-      site ← Site.forHost(request.host) ;
-      app ← site.applications if app.hasRouteFor(request)
-    ) yield {
-      app.routeFor(request)
-    }
-    (routes.size : @switch) match {
-      case 0 ⇒ super.routeRequest(request)
-      case 1 ⇒ routes.head.lift(request)
-      case _ ⇒ Some(new MultiAction(routes))
-    }
+  def siteEnabled(site : Site, scrupal : Scrupal) = {
+    validate(site.isEnabled(scrupal), s"Site '${site.name}' is disabled.")
+  }
+
+  def scrupalIsReady(scrupal : Scrupal) = {
+    validate(scrupal.isReady, s"Scrupal is not configured!")
+  }
+
+  /*
+
+  schemeName { scheme ⇒
+    reject(ValidationRejection(s"Site '${site._id.name}' does not support scheme'$scheme'"))
   }
 }
 
-case class MultiAction(routes: Iterable[Routes]) extends EssentialAction {
-  /// TODO: Implement MultiAction
-  def apply(request: RequestHeader) : Iteratee[Array[Byte], Result] = ???
+    require
+    validate(!site.requireHttps, s"Site '${site._id.name}' does not permit https.") {
+      extract (ctx ⇒ provide(site) )
+    }
+  } ~
+    scheme("https") {
+      validate(site.requireHttps, s"Site '${site._id.name}' requires https.") { hnil ⇒
+        extract(ctx ⇒ site)
+      }
+    } ~
 }
+*/
+
+  def site(scrupal : Scrupal) : Directive1[Site] = {
+    hostName.flatMap { host : String ⇒
+      val sites = Site.forHost(host)
+      if (sites.isEmpty)
+        reject(ValidationRejection(s"No site defined for host '$host'."))
+      else {
+        val site = sites.head
+        siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx ⇒ site)
+      }
+    }
+  }
+  */
+}
+

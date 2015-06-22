@@ -28,7 +28,7 @@ import scrupal.utils.Validation.{Results, IndexedLocation}
 case class ListType[EType](
   id : Identifier,
   description : String,
-  elemType : Type[EType]) extends IndexableType[EType, Seq[EType]] {
+  elemType : Type[EType])(implicit val scrupal: Scrupal) extends IndexableType[EType, Seq[EType]] {
   override def kind = 'List
   def toSeq(st : Seq[EType]) : Seq[EType] = st
   def validateElement(ref : IndexedLocation, v : EType) : Results[EType]= {

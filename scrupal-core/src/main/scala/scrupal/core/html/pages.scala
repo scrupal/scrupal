@@ -15,11 +15,11 @@
 
 package scrupal.core.html
 
-import scrupal.core.api.Html.Contents
+import scrupal.api.Html.Contents
 
 import scalatags.Text.all._
-import scrupal.core.api._
-import scrupal.core.api.Html._
+import scrupal.api._
+import scrupal.api.Html._
 
 trait BasicPageGenerator extends PageGenerator {
   def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
@@ -34,7 +34,7 @@ trait BasicPageGenerator extends PageGenerator {
   def bodyPrefix(context : Context, args : ContentsArgs) : Html.Contents = { display_alerts(context) }
 
   def bodySuffix(context : Context, args : ContentsArgs) : Html.Contents = {
-    if (Feature.enabled('DebugFooter, context.scrupal)) {
+    if (context.scrupal.Features.enabled('DebugFooter, context.scrupal)) {
       display_context_table(context)
     } else {
       Html.emptyContents

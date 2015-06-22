@@ -30,7 +30,7 @@ case class BLOBType(
   id : Identifier,
   description : String,
   mediaType : MediaType,
-  maxLen : Long = Long.MaxValue) extends Type[Array[Byte]] {
+  maxLen : Long = Long.MaxValue)(implicit val scrupal : Scrupal) extends Type[Array[Byte]] {
   assert(maxLen >= 0)
   def validate(ref : Location, value : Array[Byte]) : VResult = {
     simplify(ref, value, "Array[Byte]") {

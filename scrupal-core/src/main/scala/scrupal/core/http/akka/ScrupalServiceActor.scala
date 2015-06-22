@@ -13,18 +13,18 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
-import akka.actor.{ Actor, Props }
+import akka.actor._
+import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.directives._
 import akka.util.Timeout
 import scrupal.api.Html.ContentsArgs
 import scrupal.api._
-import scrupal.core.html.{ PlainPageGenerator, PlainPage }
+import scrupal.core.html.PlainPageGenerator
 import scrupal.utils.ScrupalComponent
-import akka.http.scaladsl.model.MediaTypes._
-import akka.http.scaladsl.server._
 
-import scala.util.{ Failure, Success, Try }
 import scalatags.Text.all._
 
 object ScrupalServiceActor {
@@ -34,7 +34,7 @@ object ScrupalServiceActor {
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ScrupalServiceActor(val scrupal : Scrupal)(implicit val askTimeout : Timeout) extends Actor with ScrupalService {
+class ScrupalServiceActor(implicit val scrupal : Scrupal, implicit val askTimeout : Timeout) extends Actor with ScrupalService {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
@@ -50,13 +50,14 @@ class ScrupalServiceActor(val scrupal : Scrupal)(implicit val askTimeout : Timeo
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
   // or timeout handling
-  def receive = runRoute(the_router)
+  def receive = { case _ ⇒ None } // runRoute(the_router)
 }
 
 /** The top level Service For Scrupal
   * This trait is mixed in to the ScrupalServiceActor and provides the means by which all the controller's routes are
   */
-trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectives with RequestLoggers {
+trait ScrupalService extends ScrupalComponent
+    with BasicDirectives with SiteDirectives with RouteDirectives with RequestLoggers {
 
   case class RouteConstructionFailure(xcptn : Throwable) extends PlainPageGenerator {
     val title = "Unable To Process Route"
@@ -82,7 +83,8 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
   }
 
   def createRouter(scrupal : Scrupal) : Route = {
-
+    reject
+    /*
     Try {
       new AssetsController(scrupal).routes(scrupal) ~
         new ActionProviderController().routes(scrupal)
@@ -102,6 +104,7 @@ trait ScrupalService extends HttpService with ScrupalComponent with SiteDirectiv
           }
         }
     }
+    */
   }
 
   /*

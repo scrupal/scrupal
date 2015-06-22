@@ -17,12 +17,10 @@ package scrupal.core.nodes
 
 import java.net.URL
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
-import reactivemongo.bson.{ Macros, BSONDocument, BSONHandler, BSONObjectID }
 import scalatags.Text.all._
-import scrupal.core.api._
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaType, MediaTypes }
+import scrupal.api._
 
 import scala.concurrent.Future
 
@@ -34,22 +32,14 @@ case class LinkNode(
   url : URL,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = LinkNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(ctxt : Context) : Future[Result[_]] = Future.successful {
-    HtmlResult(a(href := url.toString, description), Successful)
+  def apply(ctxt : Request) : Future[Response] = Future.successful {
+    HtmlResponse(Html.renderContents(Seq(a(href := url.toString, description))), Successful)
   }
 }
 
 object LinkNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'Link
-  object LinkNodeVRW extends VariantReaderWriter[Node, LinkNode] {
-    implicit val LinkNodeHandler : BSONHandler[BSONDocument, LinkNode] = Macros.handler[LinkNode]
-    override def fromDoc(doc : BSONDocument) : LinkNode = LinkNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = LinkNodeHandler.write(obj.asInstanceOf[LinkNode])
-  }
-  Node.variants.register(kind, LinkNodeVRW)
 }
 

@@ -30,7 +30,7 @@ object DataCache extends DataCache {
 
   def update(scrupal : Scrupal, schema : Schema) = {
     _themes = Seq("amelia", "cyborg", "default", "readable") // FIXME: allow new themes from theme providers in modules
-    _sites = Site.values.map { site ⇒ site.name }
+    _sites = scrupal.Sites.values.map { site ⇒ site.name }
   }
 
   private var _sites = Seq.empty[String]

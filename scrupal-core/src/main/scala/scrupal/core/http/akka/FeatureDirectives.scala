@@ -13,19 +13,28 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core
+package scrupal.core.http.akka
 
-import scrupal.api.DataCache
-import scrupal.api.types.SelectionType
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.directives._
+import scrupal.api.Feature
+import scrupal.utils.Enablement
 
-/** Core Types
-  * This object contains the definitions of various types provided by the core module
+/** Spray Directives For Scrupal Features
+  *
   */
-object Types {
+trait FeatureDirectives extends BasicDirectives with RouteDirectives {
 
-  object Theme_t extends SelectionType('Theme, "Choice of themes", DataCache.themes)
-
-  object Site_t extends SelectionType('Site, "Choice of sites", DataCache.sites)
-
+  def feature(theFeature : Feature, scope : Enablement[_]) : Directive0 = {
+    if (theFeature.implemented) {
+      if (theFeature.isEnabled(scope)) {
+        pass
+      } else {
+        reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not enabled."))
+      }
+    } else {
+      reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not implemented."))
+    }
+  }
 
 }

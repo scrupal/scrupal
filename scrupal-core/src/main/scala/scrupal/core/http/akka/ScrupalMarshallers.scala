@@ -13,38 +13,36 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
 import akka.actor._
 import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.model._
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.http.scaladsl.model._
-
-import play.api.libs.iteratee.{ Cont, Done, Iteratee, Input, Enumerator }
-
+import play.api.libs.iteratee.{Cont, Done, Enumerator, Input, Iteratee}
 import scrupal.api._
 
-import spray.can.Http
-import spray.httpx.marshalling._
-
-import scala.concurrent.{ Future, ExecutionContext }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
-trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
+trait ScrupalMarshallers extends GenericMarshallers {
 
-  def makeMarshallable(fr : Future[Response[_]])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
+  /* FIXME: Reinstate ScrupalMarshallers
+  def makeMarshallable(fr : Future[Response])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
     scrupal.withActorExec { (as, ec, to) ⇒
-      val marshaller1 : ToResponseMarshaller[Response[_]] = mystery_marshaller(as, ec, to)
-      val marshaller2 = futureMarshaller[Response[_]](marshaller1, ec)
+      val marshaller1 : ToResponseMarshaller[Response] = mystery_marshaller(as, ec, to)
+      val marshaller2 = futureMarshaller[Response](marshaller1, ec)
       ToResponseMarshallable.isMarshallable(fr)(marshaller2)
     }
   }
 
   def makeMarshallable(r : Response[_])(implicit scrupal : Scrupal) : ToResponseMarshallable = {
     scrupal.withActorExec { (as, ec, to) ⇒
-      val marshaller1 : ToResponseMarshaller[Response[_]] = mystery_marshaller(as, ec, to)
+      val marshaller1 : ToResponseMarshaller[Response] = mystery_marshaller(as, ec, to)
       ToResponseMarshallable.isMarshallable(r)(marshaller1)
     }
   }
@@ -53,7 +51,7 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
   val text_ct = ContentType(MediaTypes.`text/plain`, HttpCharsets.`UTF-8`)
 
   implicit val html_marshaller : ToResponseMarshaller[HtmlResponse] =
-    ToResponseMarshaller.delegate[HtmlResponse, String](html_ct) { h ⇒ h.payload.toString() }
+    ToResponseMarshallable.marshaller.delegate[HtmlResponse, String](html_ct) { h ⇒ h.payload.toString() }
 
   implicit val string_marshaller : ToResponseMarshaller[StringResponse] =
     ToResponseMarshaller.delegate[StringResponse, String](text_ct) { h ⇒ h.payload }
@@ -161,8 +159,8 @@ trait ScrupalMarshallers extends BasicMarshallers with MetaMarshallers {
     }
 
   implicit def mystery_marshaller(
-    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[Response[_]] = {
-    ToResponseMarshaller[Response[_]] {
+    implicit arf : ActorRefFactory, ec : ExecutionContext, timeout : Timeout) : ToResponseMarshaller[Response] = {
+    ToResponseMarshaller[Response] {
       (value, trmc) ⇒
         {
           value match {
@@ -262,4 +260,5 @@ class StreamingResponseActor(ct : ContentType, trmc : ToResponseMarshallingConte
       context.stop(self)
     }
   }
+  */
 }

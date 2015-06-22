@@ -17,10 +17,11 @@ package scrupal.core.http
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ ActorSystem, Props }
-import akka.util.Timeout
-import play.api.Configuration
+import _root_.akka.actor.{ ActorSystem, Props }
+import _root_.akka.util.Timeout
+import _root_.play.api.Configuration
 import scrupal.api.{ Scrupal, Site }
+import scrupal.core.http.akka.ScrupalServiceActor
 import scrupal.utils.{ ScrupalComponent, DateTimeHelpers }
 
 import scala.compat.Platform
@@ -66,7 +67,7 @@ case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalCompon
   }
 
   def checkReady() = {
-    for (site ← Site.values if site.isEnabled(scrupal)) {
+    for (site ← scrupal.Sites.values if site.isEnabled(scrupal)) {
       val app_names = for (app ← site.applications if app.isEnabled(site)) yield {
         for (mod ← app.modules if mod.isEnabled(app)) yield {
           val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield { ent.singularKey }

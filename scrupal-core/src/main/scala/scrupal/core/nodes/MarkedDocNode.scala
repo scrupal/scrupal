@@ -15,14 +15,12 @@
 
 package scrupal.core.nodes
 
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
-import reactivemongo.bson.{ BSONDocument, BSONHandler, BSONObjectID, Macros }
-import scrupal.core.api.AssetLocator.Directory
-import scrupal.core.api.Html.{ ContentsArgs, Contents }
-import scrupal.core.api._
+import scrupal.api.AssetsLocator.Directory
+import scrupal.api.Html.{ ContentsArgs, Contents }
+import scrupal.api._
 import scrupal.core.html.MarkedPageGenerator
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaType, MediaTypes }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.io.Source
@@ -44,7 +42,6 @@ case class MarkedDocNode(
   path : List[String],
   modified : Option[DateTime] = Some(DateTime.now()),
   created : Option[DateTime] = Some(DateTime.now()),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = MarkedDocNode.kind) extends Node {
   override def mediaType : MediaType = MediaTypes.`text/html`
   override def description : String = "A node that provides a marked document from a resource as html."
@@ -73,12 +70,12 @@ case class MarkedDocNode(
     fileMap → dirMap
   }
 
-  def apply(context : Context) : Future[Result[_]] = {
+  def apply(request : Request) : Future[Response] = {
     val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
     val dirPath = if (path.isEmpty) root else root + "/" + relPath
-    val locator = context.scrupal.assetsLocator
+    val locator = request.context.scrupal.assetsLocator
     val directory = locator.fetchDirectory(dirPath, recurse = true)
     directory match {
       case None ⇒ Future.successful(ErrorResult(s"Directory at $dirPath was not found", NotFound))
@@ -93,7 +90,7 @@ case class MarkedDocNode(
         }
         dir.files.get(doc) match {
           case None ⇒ Future.successful(ErrorResult(s"Document at $dirPath/$doc was not found", NotFound))
-          case Some((docTitle, urlOpt)) ⇒ context.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
+          case Some((docTitle, urlOpt)) ⇒ request.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
             Future {
               urlOpt match {
                 case Some(url) ⇒
@@ -118,7 +115,7 @@ case class MarkedDocNode(
                   val footer = Seq(div(cls := "footer", sub(sub(footerText))))
                   val contents = Source.fromInputStream(url.openStream()).mkString
                   val page = MarkedDocNode.DocPage(title, "Description", nav, contents, footer)
-                  HtmlResult(page.render(context), Successful)
+                  HtmlResult(page.render(request), Successful)
                 case None ⇒
                   ErrorResult(s"Document at $root/$doc was not listed in directory", NotFound)
               }

@@ -18,10 +18,8 @@ package scrupal.core.nodes
 import java.io.{ FileInputStream, File }
 
 import org.joda.time.DateTime
-import reactivemongo.bson.{ Macros, BSONDocument, BSONHandler, BSONObjectID }
-import scrupal.core.api.{ Node, StreamResult, Result, Context }
-import scrupal.db.VariantReaderWriter
-import spray.http.{ MediaTypes, MediaType }
+import scrupal.api.{ Node, StreamResponse, Response, Context }
+import akka.http.scaladsl.model.{ MediaTypes, MediaType }
 
 import scala.concurrent.Future
 
@@ -40,9 +38,8 @@ case class FileNode(
   override val mediaType : MediaType = MediaTypes.`text/html`,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
-  _id : BSONObjectID = BSONObjectID.generate,
   final val kind : Symbol = FileNode.kind) extends Node {
-  def apply(ctxt : Context) : Future[Result[_]] = {
+  def apply(ctxt : Context) : Future[Response] = {
     val extension = {
       val name = file.getName
       name.lastIndexOf(".") match {
@@ -54,17 +51,10 @@ case class FileNode(
       case Some(mt) ⇒ mt
       case None     ⇒ MediaTypes.`application/octet-stream`
     }
-    Future.successful(StreamResult(new FileInputStream(file), mediaType))
+    Future.successful(StreamResponse(new FileInputStream(file), mediaType))
   }
 }
 
 object FileNode {
-  import scrupal.core.api.BSONHandlers._
   final val kind = 'File
-  object FileNodeVRW extends VariantReaderWriter[Node, FileNode] {
-    implicit val FileNodeHandler : BSONHandler[BSONDocument, FileNode] = Macros.handler[FileNode]
-    override def fromDoc(doc : BSONDocument) : FileNode = FileNodeHandler.read(doc)
-    override def toDoc(obj : Node) : BSONDocument = FileNodeHandler.write(obj.asInstanceOf[FileNode])
-  }
-  Node.variants.register(kind, FileNodeVRW)
 }

@@ -18,10 +18,9 @@ package scrupal.core.html
 import java.io.{ PrintWriter, StringWriter }
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.joda.time.DateTime
-import reactivemongo.bson._
-import scrupal.core.api.Html._
-import scrupal.core.api.{ Feature, Context }
+import play.api.libs.json._
+import scrupal.api.Html._
+import scrupal.api.Context
 import scalatags.Text.Modifier
 
 import scalatags.Text.all._
@@ -63,9 +62,9 @@ object display_context_table extends FragmentGenerator {
         caption(style := "font-size: 1.2em; font-weight: bold;", "Request Header Details"),
         thead(tr(th("Parameter"), th("Value"))),
         tbody(
-          tr(th("Request"), td(context.method.toString(), ": ", context.uri.toString())),
-          tr(th("Protocol"), td(context.protocol.toString())),
-          tr(th("Headers"), td(context.headers.toString()))
+          //tr(th("Request"), td(context.method.toString(), ": ", context.uri.toString())),
+          // tr(th("Protocol"), td(context.protocol.toString())),
+          // tr(th("Headers"), td(context.headers.toString()))
         )
       )
     ))
@@ -74,7 +73,7 @@ object display_context_table extends FragmentGenerator {
 
 object debug_footer extends FragmentGenerator {
   def apply(context : Context) = {
-    if (Feature.enabled('DebugFooter, context.scrupal)) {
+    if (context.scrupal.Features.enabled('DebugFooter, context.scrupal)) {
       display_context_table(context)
     } else {
       emptyContents
@@ -84,12 +83,15 @@ object debug_footer extends FragmentGenerator {
 
 object display_alerts extends FragmentGenerator {
   def apply(context : Context) : Contents = {
+    /* FIXME: REinstate display of alerts
     for (alert ← context.alerts if alert.unexpired) yield {
       div(cls := "alert alert-dismissible @alert.cssClass",
         button(`type` := "button", cls := "close", data("dismiss") := "alert", aria.hidden := "true",
           i(cls := "icon-remove-sign")),
         strong(alert.iconHtml, "&nbsp;", alert.prefix), "&nbsp;", alert.message)
     }
+    */
+    Seq(div())
   }
 }
 
@@ -120,50 +122,47 @@ case class display_exception(xcptn : Throwable) extends SimpleGenerator {
   }
 }
 
-case class display_exception_result(xcptn : scrupal.core.api.ExceptionResult) extends SimpleGenerator {
-  def apply() = { Seq(div(cls := "bg-danger", display_exception(xcptn.payload)())) }
+case class display_exception_result(xcptn : scrupal.api.ExceptionResponse) extends SimpleGenerator {
+  def apply() = { Seq(div(cls := "bg-danger", display_exception(xcptn.xcptn)())) }
 }
 
-trait bson_fragment extends SimpleGenerator {
-  def value(value : BSONValue) : Modifier = {
+trait json_fragment extends SimpleGenerator {
+  def value(value : JsValue) : Modifier = {
     value match {
-      case s : BSONString   ⇒ "\"" + s.value + "\""
-      case i : BSONInteger  ⇒ i.value.toString
-      case l : BSONLong     ⇒ l.value + "L"
-      case d : BSONDouble   ⇒ d.value + "D"
-      case b : BSONBoolean  ⇒ b.value.toString
-      case x : BSONDateTime ⇒ new DateTime(x.value).toString
-      case a : BSONArray    ⇒ array(a)
-      case d : BSONDocument ⇒ document(d)
-      case b : BSONBinary   ⇒ s"Binary(${b.subtype})"
-      case x : BSONValue    ⇒ s"Code(${x.code.toInt})"
+      case s : JsString   ⇒ "\"" + s.value + "\""
+      case i : JsNumber   ⇒ i.value.toString
+      case b : JsBoolean  ⇒ b.value.toString
+      case a : JsArray    ⇒ array(a)
+      case d : JsObject   ⇒ document(d)
+      case JsNull         ⇒ s"Null"
+      case _ ⇒ s"Unknown"
     }
 
   }
-  def array(array : BSONArray) : Modifier = {
-    div(s"Array(${array.length}) [",
+  def array(array : JsArray) : Modifier = {
+    div(s"Array(${array.value.size}) [",
       {
-        for (e ← array.values) { Seq(value(e), ", ") }
+        for (e ← array.value) { Seq(value(e), ", ") }
       },
       "]"
     )
   }
 
-  def document(doc : BSONDocument) : Modifier = {
-    div(s"Document(${doc.elements.length}) {",
+  def document(doc : JsObject) : Modifier = {
+    div(s"Document(${doc.value.size}) {",
       dl(cls := "dl-horizontal",
-        for ((k, v) ← doc.elements) { Seq(dt(k), dd(value(v))) }
+        for ((k, v) ← doc.value) { Seq(dt(k), dd(value(v))) }
       ),
       "}"
     )
   }
 }
 
-case class bson_value(bv : BSONValue) extends bson_fragment {
+case class json_value(bv : JsValue) extends json_fragment {
   def apply() : Contents = { Seq(span(value(bv))) }
 }
 
-case class bson_document_panel(title : String, doc : BSONDocument) extends bson_fragment {
+case class json_document_panel(title : String, doc : JsObject) extends json_fragment {
   def apply() = Seq (
     div(cls := "panel panel-primary",
       div(cls := "panel-heading",

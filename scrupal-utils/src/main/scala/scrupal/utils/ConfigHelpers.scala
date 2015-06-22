@@ -114,6 +114,13 @@ object ConfigHelpers extends ScrupalComponent {
     new Configuration(loadDev(env, Map.empty[String, String]))
   }
 
+  def from(fileName : String) : Option[Configuration] = {
+    val env = Environment.simple()
+    env.getExistingFile(fileName) map { file : File ⇒
+      Configuration(ConfigFactory.parseFileAnySyntax(file))
+    }
+  }
+
   def from(underlying : Config) = {
     new Configuration(underlying)
   }

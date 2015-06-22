@@ -27,10 +27,10 @@ import scrupal.utils._
   * run on that site. Each application gets a top level context and configures which modules are relevant for it
   * Created by reid on 11/6/14.
   */
-abstract class Application(val id  : Identifier) extends EnablementProvider[Application]
-  with Storable with Registrable[Application] with Nameable with Describable with Modifiable {
+abstract class Application(scrupal: Scrupal, val id  : Identifier) extends EnablementProvider[Application]
+  with Storable with Registrable[Application] with Authorable with Nameable with Describable with Modifiable {
 
-  def registry : Registry[Application] = Application
+  def registry : Registry[Application] = scrupal.Applications
 
   /** Applicable Modules
     * This modules are assigned (enabled) within this application
@@ -44,11 +44,15 @@ abstract class Application(val id  : Identifier) extends EnablementProvider[Appl
 }
 
 case class BasicApplication(
+  scrupal : Scrupal,
   sym : Identifier,
   name : String,
+  author : String,
+  copyright : String,
+  license: OSSLicense,
   description : String,
   modified : Option[DateTime] = None,
-  created : Option[DateTime] = None) extends Application(sym) {
+  created : Option[DateTime] = None) extends Application(scrupal, sym) {
   final val method : HttpMethod = HttpMethods.GET
   final val kind = 'BasicApplication
 }
@@ -61,7 +65,7 @@ object BasicApplication {
 }
 
 
-object Application extends Registry[Application] {
+case class ApplicationsRegistry() extends Registry[Application] {
   import scala.language.reflectiveCalls
 
   def registryName = "Applications"

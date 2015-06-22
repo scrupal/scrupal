@@ -33,8 +33,6 @@ import shapeless._
   */
 trait SettingsInterface extends MapValidator[String,Atom,mutable.HashMap[String,Atom]] {
 
-  def name : String
-
   type MapType = mutable.HashMap[String,Atom]
   protected val settings : MapType = mutable.HashMap.empty[String,Atom]
   def settingsDefaults : Map[String,Atom]
@@ -42,7 +40,7 @@ trait SettingsInterface extends MapValidator[String,Atom,mutable.HashMap[String,
 
   def toMap(mt: MapType): collection.Map[String, Atom] = mt.toMap
 
-  def validate : Results[mutable.HashMap[String,Atom]] = {
+  def validate(name : String) : Results[mutable.HashMap[String,Atom]] = {
     validate(Validation.SimpleLocation(name), settings)
   }
 

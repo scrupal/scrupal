@@ -13,24 +13,26 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
-import scrupal.core.api._
-import spray.http.{ MediaTypes, StatusCodes, Uri }
-import spray.routing._
+import akka.http.scaladsl.model.{MediaTypes, StatusCodes, Uri}
+import akka.http.scaladsl.server.{StandardRoute, Route}
+import scrupal.api._
 
 /** Controller that provides assets
   *
   * This controller provides the assets that are "baked" in to a Scrupal applications.
   */
-class AssetsController(scrupal : Scrupal) extends BasicController('Assets, priority = Int.MinValue /*Make Assets first*/ )
-  with AssetLocator with ScrupalMarshallers {
+class AssetsController(implicit val scrupal : Scrupal) extends BasicController('Assets, priority = Int.MinValue /*Make Assets first*/ )
+  with AssetsLocator with ScrupalMarshallers {
 
   val assets_path : Seq[String] = {
     scrupal.withConfiguration[Seq[String]] { config ⇒ super.asset_path_from_config(config) }
   }
 
   def routes(implicit scrupal : Scrupal) : Route = {
+    reject
+    /* FIXME: Resurrece AssetsController.routes
     // logRequestResponse(showAllResponses _) {
     get {
       pathPrefix("assets") {
@@ -66,14 +68,17 @@ class AssetsController(scrupal : Scrupal) extends BasicController('Assets, prior
       }
     }
     // }
+    */
   }
 
-  def resultAsRoute(result : ⇒ Result[_])(implicit scrupal : Scrupal) : Route = {
+  def resultAsRoute(result : ⇒ Response)(implicit scrupal : Scrupal) : Route = {
+    reject
+    /* FIXME: Reinstate resultAsRoute
     if (result.disposition.isSuccessful) {
       complete { makeMarshallable(result) }
     } else {
       result match {
-        case er : ErrorResult ⇒
+        case er : ErrorResponse ⇒
           if (result.disposition == NotFound) {
             reject
           } else {
@@ -81,9 +86,13 @@ class AssetsController(scrupal : Scrupal) extends BasicController('Assets, prior
           }
       }
     }
+    */
   }
 
+  /* FIXME: REinstate various AssetsController methods
+
   def favicon( /*aSite: Site*/ )(implicit scrupal : Scrupal) : StandardRoute = {
+    reject
     complete {
       val path = "images/scrupal.ico"
       val result = fetch(path, MediaTypes.`image/x-icon`, minified = false)
@@ -130,7 +139,7 @@ class AssetsController(scrupal : Scrupal) extends BasicController('Assets, prior
       makeMarshallable(result)
     }
   }
-
+*/
 }
 
 case class WebJarsController() extends BasicController('webjars) {
@@ -455,7 +464,7 @@ private def minify(file: String, suffix: String, min: Boolean ) = {
  }
 }
 */
-/** # Special handling for AngularJS modules that have partial HTML files that need to be served.
+/* # Special handling for AngularJS modules that have partial HTML files that need to be served.
   * GET            /chunks/:module/:file                  scrupal.controllers.Assets.chunk(module,file)
   *
   * # Special handling for the favicon
