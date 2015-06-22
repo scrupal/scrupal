@@ -15,14 +15,11 @@
 
 package scrupal.core.impl
 
-
-import akka.actor.ActorSystem
 import akka.http.scaladsl.server.RequestContext
 import com.typesafe.config.{ ConfigRenderOptions, ConfigValue }
 import play.api.Configuration
 import scrupal.api._
-import scrupal.core.CoreModule
-import scrupal.storage.api.{Schema, Storage, StoreContext}
+import scrupal.storage.api.{Schema, StoreContext}
 import scrupal.utils._
 
 import scala.collection.immutable.TreeMap
@@ -30,16 +27,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.util.matching.Regex
 
-case class Scrupal(
+case class Scrupal (
   override val name : String = "Scrupal",
-  config : Option[Configuration] = None,
-  ec : Option[ExecutionContext] = None,
-  sc : Option[StoreContext] = None,
-  actSys : Option[ActorSystem] = None)
-  extends scrupal.api.Scrupal(name, config, ec, sc, actSys) {
+  config : Option[Configuration] = None
+) extends scrupal.api.Scrupal(name, config, None, None, None) {
 
   LoggingHelpers.initializeLogging(forDebug = true)
-
 
   val assetsLocator = new ConfiguredAssetsLocator(_configuration)
 

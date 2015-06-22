@@ -13,28 +13,38 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.core.http
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import play.api.libs.iteratee.Enumerator
+object HttpUtils {
 
-trait Request {
-  def context : Context
-  def entity : String
-  def instance : String
-  def message : Iterable[String] = Iterable.empty[String]
-}
+  import scrupal.api._
+  import _root_.akka.http.scaladsl.model.{StatusCodes, StatusCode}
 
-trait DetailedRequest extends Request {
-  def mediaType : MediaType = MediaTypes.`application/octet-stream`
-  def payload : Enumerator[Array[Byte]] = Enumerator.empty[Array[Byte]]
-  def parameters : Map[String,String] = Map.empty[String,String]
-}
+  implicit class Disposition2StatusCode(disposition : Disposition) {
+    def toStatusCode: StatusCode = {
+      disposition match {
+        case Successful ⇒ StatusCodes.OK
+        case Received ⇒ StatusCodes.Accepted
+        case Pending ⇒ StatusCodes.OK
+        case Promise ⇒ StatusCodes.OK
+        case Unspecified ⇒ StatusCodes.InternalServerError
+        case TimedOut ⇒ StatusCodes.GatewayTimeout
+        case Unintelligible ⇒ StatusCodes.BadRequest
+        case Unimplemented ⇒ StatusCodes.NotImplemented
+        case Unsupported ⇒ StatusCodes.NotImplemented
+        case Unauthorized ⇒ StatusCodes.Unauthorized
+        case Unavailable ⇒ StatusCodes.ServiceUnavailable
+        case Unacceptable ⇒ StatusCodes.NotAcceptable
+        case NotFound ⇒ StatusCodes.NotFound
+        case Ambiguous ⇒ StatusCodes.Conflict
+        case Conflict ⇒ StatusCodes.Conflict
+        case TooComplex ⇒ StatusCodes.Forbidden
+        case Exhausted ⇒ StatusCodes.ServiceUnavailable
+        case Exception ⇒ StatusCodes.InternalServerError
+        case _ ⇒ StatusCodes.InternalServerError
+      }
+    }
+  }
 
-case class SimpleRequest(context : Context, entity: String, instance: String, msg: String) extends Request {
-  override val message = Seq(msg)
-}
 
-object Request {
-  val empty = SimpleRequest(null, "", "", "")
 }

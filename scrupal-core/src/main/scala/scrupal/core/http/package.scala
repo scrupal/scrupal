@@ -13,7 +13,8 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal
+package scrupal.core
+
 
 /** Scrupal HTTP Interface Project
   * The purpose of scrupal-http is to interface the core abstractions of Scrupal with the web. Because Scrupal uses
@@ -24,5 +25,6 @@ package scrupal
   * Users of this library simply register the Scrupal entities and provide the responses necessary.
   */
 package object http {
+
 
 }
