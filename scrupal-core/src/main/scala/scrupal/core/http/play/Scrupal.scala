@@ -13,39 +13,44 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.impl
+package scrupal.core.http.play
 
-import akka.http.scaladsl.server.RequestContext
-import com.typesafe.config.{ ConfigRenderOptions, ConfigValue }
+import com.google.inject.AbstractModule
+
+import com.typesafe.config.ConfigValue
+
+import javax.inject.{Inject, Singleton}
+
 import play.api.Configuration
+import play.api.inject.ApplicationLifecycle
 import scrupal.api._
+import scrupal.core.CoreModule
 import scrupal.storage.api.{Schema, StoreContext}
-import scrupal.utils._
+import scrupal.utils.LoggingHelpers
 
 import scala.collection.immutable.TreeMap
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future }
+
 import scala.util.matching.Regex
 
-case class Scrupal (
-  override val name : String = "Scrupal",
-  config : Option[Configuration] = None
-) extends scrupal.api.Scrupal(name, config, None, None, None) {
-
-  LoggingHelpers.initializeLogging(forDebug = true)
-
-  val assetsLocator = new ConfiguredAssetsLocator(_configuration)
-
-  /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
-    * Registry then we have had to found a database and loaded the sites. So that is our indicator of whether we
-    * are configured yet or not.
-    * @return True iff there are sites loaded
-    */
-  override def isReady: Boolean = {
-    super.isReady
+class ScrupalModule extends AbstractModule {
+  def configure() = {
+    bind(classOf[scrupal.api.Scrupal])
+      .to(classOf[Scrupal]).asEagerSingleton()
   }
+}
 
-  def authenticate(rc: RequestContext): Option[Principal] = None
+@Singleton
+case class Scrupal @Inject() (
+  override val name : String = "Scrupal",
+  config : Configuration,
+  lifecycle : ApplicationLifecycle
+) extends scrupal.api.Scrupal(name, Some(config), None, None, None) {
+
+  lifecycle.addStopHook { () ⇒
+    Future.successful { this.close() }
+  }
 
   /** Called before the application starts.
     *
@@ -53,6 +58,10 @@ case class Scrupal (
     *
     */
   override def open() : Configuration = {
+    LoggingHelpers.initializeLogging(forDebug = true)
+
+    log.debug("Scrupal startup initiated.")
+
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
     require(Types.registryName == "Types")
@@ -61,16 +70,20 @@ case class Scrupal (
     require(Entities.registryName == "Entities")
     require(Template.registryName == "Templates")
 
-    val config = onLoadConfig(ConfigHelpers.default)
+    // Instantiate the core module and make sure that we registered it as 'Core
 
-    // Get the database started up
-    //Storage.startup()
+    val core = CoreModule()(this)
+    core.bootstrap(_configuration)
+    require (Modules('Core).isDefined, "Failed to find the CoreModule as 'Core")
 
-    val sc = _storeContext
-
-
-    // TODO: scan classpath for additional modules
-    val configured_modules = Seq.empty[String]
+    val configured_modules : Seq[String] = {
+      // FIXME: can we avoid configuring the specific modules here?
+      // How about JSR 367?  in JSE 9? https://www.jcp.org/en/jsr/detail?id=376
+      _configuration.getStringSeq("scrupal.modules") match {
+        case Some(list) ⇒ list
+        case None ⇒ List.empty[String]
+      }
+    }
 
     // Now we go through the configured modules and bootstrap them
     for (class_name ← configured_modules) {
@@ -81,27 +94,28 @@ case class Scrupal (
     }
 
     // Load the configuration and wait at most 10 seconds for it
-    val load_result = Await.result(load(config, _storeContext), 10.seconds)
-
-    /* TODO: Implement this so it doesn't thwart startup and test failures
-    if (load_result.isEmpty)
-      toss("Refusing to start because of load errors. Check logs for details.")
-    else {
-      log.info("Loaded Sites:\n" + load_result.map { case(x,y) ⇒ s"$x:${y.host}"})
-    }*/
-    config
-    // Await.result(future, 10.seconds)
+    val future = load(_configuration, _storeContext) map { siteMap ⇒
+      if (siteMap.isEmpty)
+        toss("Refusing to start because of load errors. Check logs for details.")
+      else {
+        log.info("Loaded Sites:\n" + siteMap.map { case (x, y) ⇒ s"$x:${y.hostnames}"})
+      }
+      log.debug("Scrupal startup completed.")
+      config
+    }
+    Await.result(future, 10.seconds)
   }
 
-  def close() = {
+  override def close() = {
+    log.debug("Scrupal shutdown initiated")
     withExecutionContext { implicit ec : ExecutionContext ⇒
       _actorSystem.shutdown()
+      _storeContext.close()
     }
+    log.debug("Scrupal shutdown completed")
   }
 
-  override def finalize() = {
-    close()
-  }
+  override def authenticate(rc: Context): Option[Principal] = None
 
   type FlatConfig = TreeMap[String, ConfigValue]
 
@@ -163,115 +177,5 @@ case class Scrupal (
           toss("Collection 'sites' was not found")
       }
     }
-  }
-
-  /** Called once the application is started.
-    */
-  def onStart() {
-  }
-
-  /** Handle An Action
-    * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to
-    * the dispatcher for processing and (quickly) returns a future that will be completed when the dispatcher gets
-    * around to it. The point of this is to hide the use of actors within Scrupal and have a nice, simple, quickly
-    * responding synchronous call in order to obtain the Future to the eventual result of the action.
-    * @param reaction The action to act upon (a Request ⇒ Result[P] function).
-    * @return A Future to the eventual Result[P]
-    */
-  def dispatch(reaction: Reactor): Future[Response] = {
-    reaction()
-  }
-
-  /** Called on application stop.
-    */
-  def onStop() {
-  }
-
-  /** Provide handling of configuration loading
-    *
-    * This method can be overridden by subclasses to refine the configuration read from default sources or do anything
-    * else that might be interesting. This default version just prints the configuration to the log at TRACE level.
-    *
-    * @param config the loaded configuration
-    * @return The configuration that Scrupal should use
-    */
-  def onLoadConfig(config: Configuration): Configuration = {
-    // Trace log the configuration
-    log.trace("STARTUP CONFIGURATION VALUES")
-    interestingConfig(config) foreach {
-      case (key: String, value: ConfigValue) ⇒
-        log.trace("    " + key + " = " + value.render(ConfigRenderOptions.defaults))
-    }
-
-    // return the configuration
-    config
-  }
-
-  /** Called Just before the action is used.
-    *
-    */
-  def doFilter(a: Reactor): Reactor = {
-    a
-  }
-
-  /** Called when an exception occurred.
-    *
-    * The default is to send the default error page.
-    *
-    * @param ex The exception
-    * @return The result to send to the client
-    */
-  def onError(action: Reactor, ex: Throwable) = {
-
-    /*
-  try {
-    InternalServerError(Play.maybeApplication.map {
-      case app if app.mode != Mode.Prod ⇒ views.html.defaultpages.devError.f
-      case app ⇒ views.html.defaultpages.error.f
-    }.getOrElse(views.html.defaultpages.devError.f) {
-      ex match {
-        case e: UsefulException ⇒ e
-        case NonFatal(e) ⇒ UnexpectedException(unexpected = Some(e))
-      }
-    })
-  } catch {
-    case e: Throwable ⇒ {
-      Logger.error("Error while rendering default error page", e)
-      InternalServerError
-    }
-  }
-  */
-  }
-
-  /** Called when no action was found to serve a request.
-    *
-    * The default is to send the framework default 404 page.
-    *
-    * @param request the HTTP request header
-    * @return the result to send to the client
-    */
-  def onHandlerNotFound(request: Reactor) = {
-    /*
-  NotFound(Play.maybeApplication.map {
-    case app if app.mode != Mode.Prod ⇒ views.html.defaultpages.devNotFound.f
-    case app ⇒ views.html.defaultpages.notFound.f
-  }.getOrElse(views.html.defaultpages.devNotFound.f)(request, Play.maybeApplication.flatMap(_.routes)))
-  */
-  }
-
-  /** Called when an action has been found, but the request parsing has failed.
-    *
-    * The default is to send the framework default 400 page.
-    *
-    * @param request the HTTP request header
-    * @return the result to send to the client
-    */
-  def onBadRequest(request: Reactor, error: String) = {
-    /*
-  BadRequest(views.html.defaultpages.badRequest(request, error))
-  */
-  }
-
-  def onActionCompletion(request: Reactor) = {
   }
 }

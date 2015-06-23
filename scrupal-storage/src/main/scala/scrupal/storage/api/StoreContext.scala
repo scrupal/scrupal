@@ -55,5 +55,6 @@ case class StoreContext(
   }
 
   def close() = {
+    store.close()
   }
 }

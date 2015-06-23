@@ -17,17 +17,19 @@ package scrupal.core.http.play
 
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
 
-import com.google.inject.Inject
+import javax.inject.{Inject,Singleton}
+
+import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import play.api.http.{DefaultHttpRequestHandler, HttpConfiguration, HttpErrorHandler, HttpFilters}
-import play.api.libs.iteratee.{Enumerator, Iteratee}
-import play.api.mvc._
+import play.api.libs.iteratee.Enumerator
 import play.api.routing.Router
-import play.api.mvc.Results.Ok
+import play.api.mvc.Results.{NotFound, Ok}
+import _root_.play.api.mvc
 
 import scrupal.api.Request
 import scrupal.api._
-import scrupal.core.http.HttpUtils
+import scrupal.core.http.{play, HttpUtils}
 
 import scala.annotation.switch
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,18 +40,20 @@ import scala.util.matching.Regex
   *
   * Play will invoke this handler to dispatch HTTP Requests as they come in. It's job is
   */
-class HttpRequestHandler @Inject() (
+@Singleton
+class RequestHandler @Inject() (
   env: Environment,
   play_config : Configuration,
   errorHandler: HttpErrorHandler,
   http_config: HttpConfiguration,
-  filters: HttpFilters
+  filters: HttpFilters,
+  lifecycle : ApplicationLifecycle
 ) extends DefaultHttpRequestHandler(Router.empty, errorHandler, http_config, filters) {
 
-  implicit val scrupal = _root_.scrupal.core.impl.Scrupal("Scrupal", Some(play_config))
+  implicit val scrupal = play.Scrupal("Scrupal", play_config, lifecycle)
 
 
-  override def routeRequest(header: RequestHeader) : Option[Handler] = {
+  override def routeRequest(header: mvc.RequestHeader) : Option[mvc.Handler] = {
     val reactions : Iterable[(Site,Reactor)] = {
       for (
         site ← scrupal.Sites.forHost(header.host);
@@ -61,7 +65,9 @@ class HttpRequestHandler @Inject() (
       }
     }
     (reactions.size : @switch) match {
-      case 0 ⇒ super.routeRequest(header)
+      case 0 ⇒ {
+        Some(mvc.Action { r: mvc.RequestHeader ⇒ NotFound(s"No Reactor For $r") })
+      }
       case 1 ⇒ {
         val (site : Site, reactor : Reactor) = reactions.head
         val action = SingleAction(scrupal, site, reactor).action
@@ -77,13 +83,14 @@ class HttpRequestHandler @Inject() (
 
 object PathParts extends Regex( """/([^/]+)/([^/]+)/([^/]+)/([^?&#]+)""" )
 
-case class PlayRequest(scrupal: Scrupal, playRequest: RequestHeader, site: Site) extends Request {
+case class PlayRequest(scrupal: Scrupal, playRequest: mvc.RequestHeader, site: Site) extends Request {
   val PathParts(application, entity, instance, msg) = playRequest.path
   override val message = msg.split('/').toIterable
   val context = Context(scrupal, site)
 }
 
-case class PlayDetailedRequest(scrupal: Scrupal, detail: play.api.mvc.Request[RawBuffer], site: Site) extends DetailedRequest {
+
+case class PlayDetailedRequest(scrupal: Scrupal, detail: mvc.Request[mvc.RawBuffer], site: Site) extends DetailedRequest {
   val PathParts(application, entity, instance, msg) = detail.path
   override val message = msg.split('/').toIterable
   val context = Context(scrupal, site)
@@ -108,21 +115,21 @@ case class PlayDetailedRequest(scrupal: Scrupal, detail: play.api.mvc.Request[Ra
 
 
 case class SingleAction(scrupal: Scrupal, site: Site, reactor : Reactor)  {
-  def action = Action.async(BodyParsers.parse.raw) { playRequest : play.api.mvc.Request[RawBuffer] ⇒
+  def action = mvc.Action.async(mvc.BodyParsers.parse.raw) { playRequest : mvc.Request[mvc.RawBuffer] ⇒
     import HttpUtils._
     val details : DetailedRequest = PlayDetailedRequest(scrupal, playRequest, site)
     scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
       reactor(details) map { response ⇒
         val status = response.disposition.toStatusCode.intValue()
-        val header = ResponseHeader(status)
-        Result(header, response.payload)
+        val header = mvc.ResponseHeader(status)
+        mvc.Result(header, response.payload)
       }
     }
   }
 }
 
 case class MultiAction(routes: Iterable[(Site, Reactor)]) {
-  def action = Action.async(BodyParsers.parse.raw) { playRequest : play.api.mvc.Request[RawBuffer] ⇒
+  def action = mvc.Action.async(mvc.BodyParsers.parse.raw) { playRequest : mvc.Request[mvc.RawBuffer] ⇒
     /// TODO: Implement MultiAction
     import HttpUtils._
     Future.successful { Ok("MultiAction not yet implemented") }

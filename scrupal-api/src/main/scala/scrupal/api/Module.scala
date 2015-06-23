@@ -24,18 +24,16 @@ import scrupal.utils._
 import scala.collection.immutable.HashMap
 import scala.concurrent.ExecutionContext
 
-
 /** A modular plugin to Scrupal to extend its functionality.
   * A module is an object that provides information (data) and functionality (behavior) to Scrupal so that Scrupal can
   * be extended to do things it was not originally invented to do. The scrupal-core module provides the abstractions,
   * such as Module, to make this possible. Everything else Scrupal provides is done as a module that extends the
   * functionality of the API.
   */
-trait Module
-  extends Settingsable with Registrable[Module] with Authorable with Describable with Enablee
+abstract class Module(scrpl : Scrupal) extends {
+  implicit val scrupal : Scrupal = scrpl
+} with Settingsable with Registrable[Module] with Authorable with Describable with Enablee
   with Enablement[Module] with Versionable with Bootstrappable {
-
-  implicit def  scrupal : Scrupal
 
   def registry = scrupal.Modules
 

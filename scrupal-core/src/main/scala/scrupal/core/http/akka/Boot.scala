@@ -13,16 +13,15 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.http.akka
 
 import java.util.concurrent.TimeUnit
 
-import _root_.akka.actor.{ ActorSystem, Props }
+import _root_.akka.actor.{ActorSystem, Props}
 import _root_.akka.util.Timeout
 import _root_.play.api.Configuration
-import scrupal.api.{ Scrupal, Site }
-import scrupal.core.http.akka.ScrupalServiceActor
-import scrupal.utils.{ ScrupalComponent, DateTimeHelpers }
+import scrupal.api.Scrupal
+import scrupal.utils.{DateTimeHelpers, ScrupalComponent}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -57,7 +56,6 @@ case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalCompon
     // FIXME: Need to start the Play Server here, not spray
     // IO(Http) ? Http.bind(service, interface, port)
 
-    scrupal.onStart()
   }
 
   def runDuration = {

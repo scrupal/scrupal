@@ -28,7 +28,7 @@ import scrupal.utils.Version
   * its functionality. The Core module defines the simple, trait, bundle and entity types
   * Further description here.
   */
-case class CoreModule(implicit val scrupal : Scrupal) extends Module {
+case class CoreModule(implicit scrpl : Scrupal) extends Module(scrpl) {
   def id = Core
   val description = "Scrupal's Core module for core, essential functionality."
   val version = Version(0, 1, 0)

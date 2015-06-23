@@ -17,11 +17,13 @@ package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
 import scrupal.core.http.akka.SiteDirectives
+import scrupal.core.http.play.Scrupal
 import scrupal.core.sites.NodeSite
 import scrupal.test.CaseClassFixture
 
+/*
 case class Sites(name : String) extends CaseClassFixture[Sites] {
-  val scrupal = new _root_.scrupal.core.impl.Scrupal(name)
+  val scrupal = new Scrupal(name)
   def mkName(int : Int) : Symbol = Symbol(name + int)
   val s1 = NodeSite(mkName(1), "TestSite", "Testing only", "site1".r, requireHttps = false)(scrupal)
   val s2 = NodeSite(mkName(2), "TestSite", "Testing only", "site2".r, requireHttps = true)(scrupal)
@@ -30,7 +32,7 @@ case class Sites(name : String) extends CaseClassFixture[Sites] {
   scrupal.enable(s3)
   scrupal.enable(s4)
 }
-
+*/
 /** Test Suite For SiteDirectives
   */
 class SiteDirectivesSpec extends Specification with SiteDirectives {

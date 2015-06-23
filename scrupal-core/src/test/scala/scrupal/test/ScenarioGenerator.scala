@@ -52,7 +52,7 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
     Feature(Symbol(name), name, Some(mod))
   }
 
-  case class ScenarioModule(override val id : Symbol)(implicit val scrupal : Scrupal) extends AbstractFakeModule(id, dbName) {
+  case class ScenarioModule(override val id : Symbol) extends AbstractFakeModule(id, dbName) {
     override val description = id.name
 
     override def features : Seq[Feature] = {

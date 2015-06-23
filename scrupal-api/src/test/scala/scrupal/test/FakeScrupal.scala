@@ -17,7 +17,7 @@ package scrupal.test
 
 import akka.actor.ActorSystem
 import play.api.Configuration
-import scrupal.api.{Response, Reactor, Site, Scrupal}
+import scrupal.api.{Site, Scrupal}
 import scrupal.storage.api.StoreContext
 
 import scala.concurrent.{Future, ExecutionContext}
@@ -30,28 +30,11 @@ class FakeScrupal(
   sc : Option[StoreContext] ,
   actSys : Option[ActorSystem]) extends Scrupal(name, config, ec, sc, actSys) {
 
-  def Copyright: String = "Copyright 2015, Reactific Software LLC"
-
-  def dispatch(reaction: Reactor): Future[Response] = {
-    reaction()
-  }
-
   protected def load(config: Configuration, context: StoreContext): Future[Map[Regex, Site]] = {
-    Future.successful ( Map.empty[Regex, Site] )
+    Future.successful(Map.empty[Regex, Site])
   }
-
-  def onStart(): Unit = {}
-
-  def close(): Unit = {}
-
-  /** Called before the application starts.
-    *
-    * Resources managed by plugins, such as database connections, are likely not available at this point.
-    *
-    */
-  override def open(): Configuration = { _configuration }
-
 }
+
 
 object FakeScrupal {
   def apply(   nm : String = "Scrupal",

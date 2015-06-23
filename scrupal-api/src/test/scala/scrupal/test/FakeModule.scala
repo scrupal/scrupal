@@ -25,7 +25,7 @@ import scrupal.utils.{OSSLicense, Version}
   */
 abstract class AbstractFakeModule (
   id : Symbol,
-  dbName : String) extends Module {
+  dbName : String)(implicit scrpl: Scrupal) extends Module(scrpl) {
   val description = "Fake Module"
   val version = Version(0, 1, 0)
   val obsoletes = Version(0, 0, 0)
@@ -51,7 +51,6 @@ case class FakeModule(
   entities : Seq[Entity] = Seq(),
   nodes : Seq[Node] = Seq(),
   override val handlers : Seq[EventHandlerFor[Event]] = Seq())(implicit scrpl: Scrupal) extends {
-  implicit val scrupal : Scrupal = scrpl
-} with  AbstractFakeModule(id, dbName) {
+} with  AbstractFakeModule(id, dbName)(scrpl) {
   val settingsTypes : BundleType = BundleType.empty
 }

@@ -186,7 +186,7 @@ abstract class Scrupal(
     case _ ⇒ false
   }
 
-  def authenticate(rc : Context) : Option[Principal] = None
+  def authenticate(context : Context) : Option[Principal] = None
 
   /** Called before the application starts.
     *
@@ -194,6 +194,9 @@ abstract class Scrupal(
     *
     */
   def open() : Configuration = {
+    // Set up logging
+    LoggingHelpers.initializeLogging(forDebug = true)
+
     // We do a lot of stuff in API objects and they need to be instantiated in the right order,
     // so "touch" them now because they are otherwise initialized randomly as used
     require(Types.registryName == "Types")
@@ -201,10 +204,11 @@ abstract class Scrupal(
     require(Sites.registryName == "Sites")
     require(Entities.registryName == "Entities")
     // FIXME: require(Template.registryName == "Templates")
+
     _configuration
   }
 
-  def close() : Unit
+  def close() : Unit = {}
 
   /** Load the Sites from configuration
     * Site loading is based on the database configuration. Whatever databases are loaded, they are scanned and any
@@ -215,17 +219,15 @@ abstract class Scrupal(
     */
   protected def load(config : Configuration, context : StoreContext) : Future[Map[Regex, Site]]
 
-  /** Handle An Action
+  /** Handle A Reactor
     * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to
     * the dispatcher for processing and (quickly) returns a future that will be completed when the dispatcher gets
     * around to it. The point of this is to hide the use of actors within Scrupal and have a nice, simple, quickly
     * responding synchronous call in order to obtain the Future to the eventual result of the action.
-    * @param action The action to act upon (a Request ⇒ Result[P] function).
-    * @return A Future to the eventual Result[P]
+    * @param reactor The reactor to act upon (a Request ⇒ Response function).
+    * @return A Future to the eventual Response
     */
-  def dispatch(action : Reactor) : Future[Response]
-
-  def onStart() : Unit
+  def dispatch(reactor : Reactor) : Future[Response] = { reactor() }
 
 }
 
