@@ -17,7 +17,7 @@ package scrupal.api
 
 import scrupal.utils._
 
-/** Provider Of Reactions
+/** Provider Of Reactors
   *
   * Scrupal objects that mix in this trait participate in the dispatching of [[Request]]s. Providers get a chance to
   * indicate their interest in particular kinds of [[Request]]s by returning a [[Reactor]] that will
@@ -30,9 +30,9 @@ trait Provider {
 
 }
 
-/** Delegating Provider of Reactions
+/** Delegating Provider of Reactors
   *
-  * This Reaction Provider just contains a set of delegates
+  * This Reactor Provider just contains a set of delegates to which it delegates the job of providing the Reactors
   */
 trait DelegatingProvider extends Provider with Identifiable {
 
