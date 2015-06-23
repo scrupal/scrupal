@@ -24,7 +24,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 import scrupal.api._
-import scrupal.core.CoreModule
+import scrupal.core.{CoreSchemaDesign, CoreModule, Core}
 import scrupal.core.sites.WelcomeSite
 import scrupal.storage.api.{Schema, StoreContext}
 import scrupal.utils.LoggingHelpers
@@ -74,8 +74,8 @@ case class Scrupal @Inject() (
     // Instantiate the core module and make sure that we registered it as 'Core
 
     val core = CoreModule()(this)
-    core.bootstrap(_configuration)
     require (Modules('Core).isDefined, "Failed to find the CoreModule as 'Core")
+    core.bootstrap(_configuration)
 
     val configured_modules : Seq[String] = {
       // FIXME: can we avoid configuring the specific modules here?
@@ -135,14 +135,15 @@ case class Scrupal @Inject() (
     * @param context The database context from which to load the
     */
   protected def load(config: Configuration, context: StoreContext): Future[Map[Regex, Site]] = {
-    context.withSchema("core") { schema: Schema ⇒
-      try {
-        schema.construct
-      } catch {
-        case x: Throwable ⇒
-          log.error("Attempt to validate core schema failed: ", x)
-          throw x
-      }
+    val coreSchema = CoreSchemaDesign()
+    try {
+      context.addSchema(coreSchema)
+    } catch {
+      case x: Throwable ⇒
+        log.error("Attempt to validate core schema failed: ", x)
+        throw x
+    }
+    context.withSchema(coreSchema.name) { schema: Schema ⇒
       schema.collectionFor[Site]("sites") match {
         case Some(sitesCollection) ⇒ {
           sitesCollection.fetchAll().map {
