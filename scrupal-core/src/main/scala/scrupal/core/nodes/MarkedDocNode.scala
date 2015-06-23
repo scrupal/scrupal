@@ -39,7 +39,7 @@ import scalatags.Text.all._
 case class MarkedDocNode(
   contextPath : String,
   root : String,
-  path : List[String],
+  path : Iterable[String],
   modified : Option[DateTime] = Some(DateTime.now()),
   created : Option[DateTime] = Some(DateTime.now()),
   final val kind : Symbol = MarkedDocNode.kind) extends Node {

@@ -35,7 +35,7 @@ trait Dependencies
   )
 
   object Ver {
-    val play = "2.4.0"
+    val play = "2.4.1"
     val akka = "2.3.9"
     val spray = "1.3.2"
     val akka_http = "1.0-RC3"

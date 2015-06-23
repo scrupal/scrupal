@@ -28,7 +28,7 @@ case class NodeSite(
   siteRoot : Node = Node.Empty,
   override val requireHttps : Boolean = false,
   modified : Option[DateTime] = None,
-  created : Option[DateTime] = None)(override implicit val scrupal : Scrupal) extends Site(id, scrupal) {
+  created : Option[DateTime] = None)(implicit scrpl : Scrupal) extends Site(id) {
   final override val kind = NodeSite.kind
 }
 

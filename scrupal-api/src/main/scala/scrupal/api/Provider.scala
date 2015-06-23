@@ -67,6 +67,20 @@ trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider 
   } { e : Enablee ⇒
     e.asInstanceOf[Provider]
   }
+
+  def enable(modName: Symbol)(implicit scrupal : Scrupal) : Option[Module] = {
+    scrupal.Modules(modName) map { module ⇒
+      module.enable(this)
+    }
+  }
+
+  def enable(modName: Symbol, forModule: Symbol)(implicit scrupal : Scrupal)  : Option[Module] = {
+    scrupal.Modules(modName) flatMap { enabledModule ⇒
+      scrupal.Modules(modName) map { enablingModule ⇒
+        enabledModule.enable(enablingModule)
+      }
+    }
+  }
 }
 
 trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T] {

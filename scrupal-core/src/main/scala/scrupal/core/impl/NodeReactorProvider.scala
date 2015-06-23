@@ -15,28 +15,23 @@
 
 package scrupal.core.impl
 
-import akka.http.scaladsl.model.{ HttpMethod, HttpMethods }
-import akka.http.scaladsl.server.PathMatcher
-import scrupal.api.{Request, Reactor, Node}
+import scrupal.api.{Provider, Request, Reactor, Node}
 import scrupal.core.actions.NodeReactor
-import shapeless.HList
 
-/** Title Of Thing.
+/** A provide of NodeReactor
   *
-  * Description of thing
+  * This adapts a node to being a provide of a NodeReactor that just uses the node.
   */
-case class NodeActionProducer[L <: HList](pm : PathMatcher[L], node : Node, method : HttpMethod = HttpMethods.GET)
-  extends {
-  def actionFor(list : L, c : Request) : Option[Reactor] = {
-    Some(NodeReactor(c, node))
+case class NodeReactorProvider(node : Node) extends Provider {
+  def canProvide(request : Request) : Boolean = true
+  def provide (request : Request) : Option[Reactor] = {
+    Some(NodeReactor(request, node))
   }
 }
 
-case class FunctionalNodeActionProducer[L <: HList](
-  pm : PathMatcher[L],
-  nodeF : (L, Request) ⇒ Node,
-  method : HttpMethod = HttpMethods.GET) {
-  def actionFor(list : L, c : Request) : Option[Reactor] = {
-    Some(NodeReactor(c, nodeF(list, c)))
+case class FunctionalNodeReactorProvider(nodeF : (Request) ⇒ Node) extends Provider {
+  def canProvide(request : Request) : Boolean = true
+  def provide(request : Request) : Option[Reactor] = {
+    Some(NodeReactor(request, nodeF(request)))
   }
 }

@@ -24,8 +24,6 @@ import play.api.{UsefulException, OptionalSourceMapper, Configuration, Environme
 import play.api.http.DefaultHttpErrorHandler
 import play.api.mvc.Results._
 
-import scrupal.api.Scrupal
-
 import scala.concurrent.Future
 
 class ErrorHandler @Inject() (scrupal : Scrupal,

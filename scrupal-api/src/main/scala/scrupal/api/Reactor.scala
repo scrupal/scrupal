@@ -15,16 +15,16 @@
 
 package scrupal.api
 
-/* TODO: Remove imports if not needed
-import akka.http.scaladsl.model.{HttpMethod, Uri}
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.PathMatcher._
-import akka.http.scaladsl.server.PathMatchers.Slash
-import scrupal.utils.{Patterns, Pluralizer, ScrupalComponent}
-import shapeless.{::, HList, HNil}
-*/
-
 import scala.concurrent.Future
+
+/** A function that generates content
+  *
+  * This is the basic characteristic of a Node. It is simply a function that receives a Context
+  * and produces content as a Future Result. The Context provides the setting in which it is
+  * generating the content. All dynamic content in Scrupal is generated through a Generator.
+  * The Result embodies the notion of completing a request with some content and a disposition.
+  */
+trait Reaction extends ((Request) ⇒ Future[Response])
 
 /** An Reaction To A Request That Produces A Response
   *
@@ -65,14 +65,6 @@ trait Reactor extends ( () ⇒ Future[Response] ) with Reaction {
   def apply(request: Request) : Future[Response]
 }
 
-/** A function that generates content
-  *
-  * This is the basic characteristic of a Node. It is simply a function that receives a Context
-  * and produces content as a Future Result. The Context provides the setting in which it is
-  * generating the content. All dynamic content in Scrupal is generated through a Generator.
-  * The Result embodies the notion of completing a request with some content and a disposition.
-  */
-trait Reaction extends ((Request) ⇒ Future[Response])
 
 /* TODO: Remove extractor stuff if not needed
 /** Extract An Action From A Context

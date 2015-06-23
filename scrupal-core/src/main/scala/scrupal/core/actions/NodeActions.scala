@@ -20,10 +20,10 @@ import scrupal.storage.api.Collection
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-/** Action From Node
+/** Reactor From A Node
   *
-  * This is an adapter that captures the context and a node and turns it into an action that invokes the
-  * Generator function on the node to produce the action's result. This just allows a node to be used as an action.
+  * This is an adapter that captures a request and a node and turns it into a reactor that invokes the
+  * Reaction function on the node to produce the reactor's result. This just allows a node to be used as an action.
   * @param request Request for which the action should occur
   * @param node The node that will produce the action's result
   */
@@ -33,7 +33,14 @@ case class NodeReactor(request : Request, node : Node) extends Reactor {
   }
 }
 
-case class NodeIdReactor(id : Long, request : Request) extends Reactor {
+/** Reactor From A Stored Node
+  *
+  * This provides a Reactor from a stored node. It loads the node from the database and invokes the node's
+  * Reaction function to generate a Response or, if the node is not found, it generates an error response.
+  * @param request The request
+  * @param id The primary id of the node
+  */
+case class NodeIdReactor(request : Request, id : Long) extends Reactor {
   def apply(request: Request) : Future[Response] = {
     request.context.withSchema("core") { (storeContext, schema) ⇒
       request.context.withExecutionContext { implicit ec : ExecutionContext ⇒

@@ -24,7 +24,7 @@ import scala.util.matching.Regex
   * Scrupal manages sites.
   * Created by reidspencer on 11/3/14.
   */
-abstract class Site(sym : Identifier, scr : Scrupal) extends {
+abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
   val id : Identifier = sym
   implicit val scrupal: Scrupal = scr
 } with Settingsable with SiteProvider[Site] with Storable with Registrable[Site]

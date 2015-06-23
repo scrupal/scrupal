@@ -25,6 +25,7 @@ import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 import scrupal.api._
 import scrupal.core.CoreModule
+import scrupal.core.sites.WelcomeSite
 import scrupal.storage.api.{Schema, StoreContext}
 import scrupal.utils.LoggingHelpers
 
@@ -159,15 +160,13 @@ case class Scrupal @Inject() (
           }
         } map { sites ⇒
           if (sites.isEmpty) {
-            /* FIXME: figure out how to add the WelcomeSite back in
-            val ws = new WelcomeSite(Symbol(name + "-Welcome"))
+            val ws = new WelcomeSite(Symbol(name + "-Welcome"))(this)
             ws.enable(this)
             DataCache.update(this, schema)
-            AdminApp.enable(ws)
-            CoreModule.enable(AdminApp)
+            // AdminApp.enable(ws)
+            // CoreModule.enable(AdminApp)
             Map(ws.hostnames → ws)
-            */
-            Map.empty[Regex,Site]
+            // Map.empty[Regex,Site]
           } else {
             DataCache.update(this, schema)
             sites

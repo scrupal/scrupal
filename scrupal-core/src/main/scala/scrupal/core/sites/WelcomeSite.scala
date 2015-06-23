@@ -13,47 +13,46 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.welcome
+package scrupal.core.sites
 
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.PathMatchers._
 import org.joda.time.DateTime
 import scrupal.api._
-import scrupal.core.CoreModule
-import scrupal.core.entities.EchoEntity
 import scrupal.core.html.PlainPage
+import scrupal.core.impl.{NodeReactorProvider, FunctionalNodeReactorProvider}
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
-import shapeless.{::, HNil}
 
+import scala.util.matching.Regex
 import scalatags.Text.all._
 
-case class WelcomeSite(sym : Identifier) extends Site(sym) {
+case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(sym) {
   val name : String = "Welcome To Scrupal"
   val description : String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
   val modified : Option[DateTime] = Some(DateTime.now)
   val created : Option[DateTime] = Some(new DateTime(2014, 11, 18, 17, 40))
   override val themeName = "cyborg"
-  def hostnames : String = ".*"
-  val siteRoot : Node =
-    new HtmlNode(
-      "Main index page for Welcome To Scrupal Site",
-      WelcomeSite.WelcomePageTemplate,
-      modified = Some(DateTime.now),
-      created = Some(new DateTime(2014, 11, 18, 18, 0))
-    )
+  def hostnames : Regex = ".*".r
 
-  object DocPathToDocs extends FunctionalNodeActionProducer(PathMatcher("doc") / Segments, {
-    (list : ::[List[String], HNil], ctxt) ⇒ new MarkedDocNode("doc", "docs", list.head)
-  }) {}
-
-  override def delegates : Seq[ActionExtractor] = super.delegates ++ Seq(
-    DocPathToDocs,
-    NodeActionProducer(PathMatcher("index.html") | Slash | spray.routing.PathMatchers.PathEnd, siteRoot)
+  object WelcomeSiteRoot extends HtmlNode(
+    "Main index page for Welcome To Scrupal Site",
+    WelcomeSite.WelcomePageTemplate,
+    modified = Some(DateTime.now),
+    created = Some(new DateTime(2014, 11, 18, 18, 0))
   )
 
-  CoreModule.enable(this)
-  EchoEntity.enable(this)
-  CoreModule.enable(EchoEntity)
+  object DocPathToDocs extends FunctionalNodeReactorProvider( { request: Request ⇒
+    MarkedDocNode("doc", "docs", request.message)
+  }) {}
+
+  override def delegates : Iterable[Provider] = super.delegates++ Iterable(
+    DocPathToDocs,
+    new NodeReactorProvider(WelcomeSiteRoot) {
+      def canProvider(request: Request) : Boolean = { request.message.isEmpty }
+    }
+  )
+
+  enable('Core)
+  enable('EchoEntity)
+  enable('Core, 'EchoEntity)
 }
 
 object WelcomeSite {
