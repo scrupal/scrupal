@@ -74,8 +74,11 @@ case class Settings(
   initialValue : Map[String,Atom] = Map.empty[String,Atom],
   settingsDefaults : Map[String,Atom] = Map.empty[String,Atom]
 ) extends SettingsInterface with MapValidator[String,Atom,mutable.HashMap[String,Atom]] {
-  require(settingsTypes.size == settingsDefaults.size)
-  require(settingsTypes.size == initialValue.size)
+  private val typeKeys = settingsTypes.fields.keys.toSeq
+  require(settingsDefaults.keys.forall { key ⇒ typeKeys.contains(key) },
+    "Failed to find a type for each settings default value" )
+  require(initialValue.keys.forall { key ⇒ typeKeys.contains(key) },
+    "Failed to find a type for each settings initial value")
 
   protected val settings : MapType = mutable.HashMap.empty[String,Atom]
 
