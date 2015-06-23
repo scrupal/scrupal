@@ -73,7 +73,7 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
 object WelcomeSite {
 
   object WelcomePageTemplate
-    extends PlainPage('WelcomePage, "Welcome To Scrupal!", "An introductory page for Scrupal", Seq(
+    extends PlainPage('WelcomePage, "Welcome To Scrupal!", "An introduction to Scrupal", Seq(
       div(cls := "panel panel-primary",
         div(cls := "panel-heading",
           h1(cls := "panel-title", "Welcome To Scrupal!")
