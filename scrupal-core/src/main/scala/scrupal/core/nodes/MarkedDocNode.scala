@@ -15,7 +15,7 @@
 
 package scrupal.core.nodes
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model.{Uri, MediaTypes, MediaType}
 import org.joda.time.DateTime
 import scrupal.api.AssetsLocator.Directory
 import scrupal.api.Html.{ ContentsArgs, Contents }

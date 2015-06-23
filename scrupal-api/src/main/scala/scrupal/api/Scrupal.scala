@@ -217,7 +217,7 @@ abstract class Scrupal(
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  protected def load(config : Configuration, context : StoreContext) : Future[Map[Regex, Site]]
+  protected def load(config : Configuration, context : StoreContext) : Future[Seq[Site]]
 
   /** Handle A Reactor
     * This is the main entry point into Scrupal for processing actions. It very simply forwards the action to

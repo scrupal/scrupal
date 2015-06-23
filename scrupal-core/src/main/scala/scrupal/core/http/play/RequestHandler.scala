@@ -15,7 +15,9 @@
 
 package scrupal.core.http.play
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import java.nio.charset.Charset
+
+import akka.http.scaladsl.model.{HttpMethods, Uri, MediaTypes, MediaType}
 
 import javax.inject.{Inject,Singleton}
 
@@ -24,7 +26,7 @@ import play.api.{Configuration, Environment}
 import play.api.http.{DefaultHttpRequestHandler, HttpConfiguration, HttpErrorHandler, HttpFilters}
 import play.api.libs.iteratee.Enumerator
 import play.api.routing.Router
-import play.api.mvc.Results.{NotFound, Ok}
+import play.api.mvc.Results.{NotFound, Ok, Conflict}
 import _root_.play.api.mvc
 
 import scrupal.api.Request
@@ -55,14 +57,17 @@ class RequestHandler @Inject() (
   scrupal.open()
 
   override def routeRequest(header: mvc.RequestHeader) : Option[mvc.Handler] = {
-    val reactions : Iterable[(Site,Reactor)] = {
+    val reactions : Iterable[(Context,Reactor)] = {
       for (
-        site ← scrupal.Sites.forHost(header.host);
-        req = PlayRequest(scrupal, header, site);
-        app ← site.applications if app.canProvide(req);
-        reaction = app.provide(req) if reaction.nonEmpty
+        site ← scrupal.Sites.forHost(header.host) ;
+        context = Context(scrupal, site) ;
+        req = PlayRequest(context, header);
+        provider ← site.delegates
+          if provider.canProvide(req);
+        reaction = provider.provide(req)
+          if reaction.nonEmpty
       ) yield {
-        site → reaction.get
+        context → reaction.get
       }
     }
     (reactions.size : @switch) match {
@@ -70,31 +75,27 @@ class RequestHandler @Inject() (
         Some(mvc.Action { r: mvc.RequestHeader ⇒ NotFound(s"No Reactor For $r") })
       }
       case 1 ⇒ {
-        val (site : Site, reactor : Reactor) = reactions.head
-        val action = SingleAction(scrupal, site, reactor).action
+        val (context : Context, reactor : Reactor) = reactions.head
+        val action = SingleAction(context, reactor).action
         Some(action)
       }
       case _ ⇒ {
-        val action = MultiAction(reactions).action
-        Some(action)
+        Some(mvc.Action { r: mvc.RequestHeader ⇒ Conflict(s"Found ${reactions.size} possible reactions to $r")})
       }
     }
   }
 }
 
-object PathParts extends Regex( """/([^/]+)/([^/]+)/([^/]+)/([^?&#]+)""" )
-
-case class PlayRequest(scrupal: Scrupal, playRequest: mvc.RequestHeader, site: Site) extends Request {
-  val PathParts(application, entity, instance, msg) = playRequest.path
-  override val message = msg.split('/').toIterable
-  val context = Context(scrupal, site)
+case class PlayRequest(context: Context, playRequest: mvc.RequestHeader) extends Request {
+  val method = HttpMethods.getForKeyCaseInsensitive(playRequest.method).getOrElse(HttpMethods.GET)
+  val path = Uri.Path(playRequest.path,playRequest.charset.map {s ⇒ Charset.forName(s)}.getOrElse(utf8))
+  override val query = playRequest.queryString
 }
 
-
-case class PlayDetailedRequest(scrupal: Scrupal, detail: mvc.Request[mvc.RawBuffer], site: Site) extends DetailedRequest {
-  val PathParts(application, entity, instance, msg) = detail.path
-  override val message = msg.split('/').toIterable
-  val context = Context(scrupal, site)
+case class PlayDetailedRequest(context: Context, detail: mvc.Request[mvc.RawBuffer]) extends DetailedRequest {
+  val method = HttpMethods.getForKeyCaseInsensitive(detail.method).getOrElse(HttpMethods.GET)
+  val path = Uri.Path(detail.path, detail.charset.map {s ⇒ Charset.forName(s)}.getOrElse(utf8))
+  override val query = detail.queryString
   override val mediaType : MediaType = detail.mediaType match {
     case Some(mt) ⇒
       MediaTypes.getForKey( mt.mediaType → mt.mediaSubType ).getOrElse(MediaTypes.`application/octet-stream`)
@@ -115,25 +116,17 @@ case class PlayDetailedRequest(scrupal: Scrupal, detail: mvc.Request[mvc.RawBuff
 }
 
 
-case class SingleAction(scrupal: Scrupal, site: Site, reactor : Reactor)  {
+case class SingleAction(context: Context, reactor : Reactor)  {
   def action = mvc.Action.async(mvc.BodyParsers.parse.raw) { playRequest : mvc.Request[mvc.RawBuffer] ⇒
     import HttpUtils._
-    val details : DetailedRequest = PlayDetailedRequest(scrupal, playRequest, site)
-    scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
+    val details : DetailedRequest = PlayDetailedRequest(context, playRequest)
+    context.withExecutionContext { implicit ec : ExecutionContext ⇒
       reactor(details) map { response ⇒
         val status = response.disposition.toStatusCode.intValue()
         val header = mvc.ResponseHeader(status)
         mvc.Result(header, response.payload)
       }
     }
-  }
-}
-
-case class MultiAction(routes: Iterable[(Site, Reactor)]) {
-  def action = mvc.Action.async(mvc.BodyParsers.parse.raw) { playRequest : mvc.Request[mvc.RawBuffer] ⇒
-    /// TODO: Implement MultiAction
-    import HttpUtils._
-    Future.successful { Ok("MultiAction not yet implemented") }
   }
 }
 

@@ -15,26 +15,29 @@
 
 package scrupal.api
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model._
 import play.api.libs.iteratee.Enumerator
 
 trait Request {
+  def method : HttpMethod
   def context : Context
-  def entity : String
-  def instance : String
-  def message : Iterable[String] = Iterable.empty[String]
+  def path : Uri.Path
+  def query : Map[String,Seq[String]] = Map.empty[String,Seq[String]]
+}
+
+object Request {
+  lazy val empty = new Request {
+    val method = HttpMethods.TRACE
+    val context = Context.empty
+    val path = Uri.Path.Empty
+  }
 }
 
 trait DetailedRequest extends Request {
+  def context : Context
   def mediaType : MediaType = MediaTypes.`application/octet-stream`
   def payload : Enumerator[Array[Byte]] = Enumerator.empty[Array[Byte]]
   def parameters : Map[String,String] = Map.empty[String,String]
 }
 
-case class SimpleRequest(context : Context, entity: String, instance: String, msg: String) extends Request {
-  override val message = Seq(msg)
-}
-
-object Request {
-  val empty = SimpleRequest(null, "", "", "")
-}
+case class SimpleRequest(context : Context, method: HttpMethod, site: Site, path: Uri.Path) extends Request

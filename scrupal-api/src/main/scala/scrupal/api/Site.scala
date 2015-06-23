@@ -35,7 +35,11 @@ abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
 
   def requireHttps : Boolean = false // = getBoolean("requireHttps").get
 
-  def hostnames : Regex // = getString("host").get
+  def hostNames : Regex // = getString("host").get
+
+  def forHost(hostName: String) : Boolean = {
+    hostNames.findFirstIn(hostName).isDefined
+  }
 
   def themeProvider : String = "bootswatch"
 
@@ -62,7 +66,7 @@ case class SitesRegistry() extends Registry[Site] {
 
   def forHost(hostName : String) : Iterable[Site] = {
     for (
-      (id, site) ← _registry if site.hostnames.findFirstMatchIn(hostName).nonEmpty
+      (id, site) ← _registry if site.forHost(hostName)
     ) yield {
       site
     }

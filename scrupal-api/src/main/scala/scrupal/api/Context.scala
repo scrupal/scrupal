@@ -95,6 +95,11 @@ class UserContext(scrupal : Scrupal, site : Site, principal : Principal)
 
 /** Some utility applicators for constructing the various Contexts */
 object Context {
+  lazy val empty = new Context {
+    // Scrupal Related things
+    implicit def scrupal: Scrupal = ???
+  }
+
   def apply(scrupal : Scrupal) =
     new SimpleContext(scrupal)
 

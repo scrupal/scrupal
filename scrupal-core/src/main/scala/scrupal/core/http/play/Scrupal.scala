@@ -26,7 +26,7 @@ import play.api.inject.ApplicationLifecycle
 import scrupal.api._
 import scrupal.core.{CoreSchemaDesign, CoreModule, Core}
 import scrupal.core.sites.WelcomeSite
-import scrupal.storage.api.{Schema, StoreContext}
+import scrupal.storage.api.{Collection, Schema, StoreContext}
 import scrupal.utils.LoggingHelpers
 
 import scala.collection.immutable.TreeMap
@@ -95,11 +95,11 @@ case class Scrupal @Inject() (
     }
 
     // Load the configuration and wait at most 10 seconds for it
-    val future = load(_configuration, _storeContext) map { siteMap ⇒
-      if (siteMap.isEmpty)
+    val future = load(_configuration, _storeContext) map { sites ⇒
+      if (sites.isEmpty)
         toss("Refusing to start because of load errors. Check logs for details.")
       else {
-        log.info("Loaded Sites:\n" + siteMap.map { case (x, y) ⇒ s"$x:${y.hostnames}"})
+        log.info("Loaded Sites:\n" + sites.map { site ⇒ s"${site.label}"})
       }
       log.debug("Scrupal startup completed.")
       config
@@ -134,48 +134,42 @@ case class Scrupal @Inject() (
     * @param config The Scrupal Configuration to use to determine the initial loading
     * @param context The database context from which to load the
     */
-  protected def load(config: Configuration, context: StoreContext): Future[Map[Regex, Site]] = {
+  protected def load(config: Configuration, context: StoreContext): Future[Seq[Site]] = {
     val coreSchema = CoreSchemaDesign()
     try {
-      context.addSchema(coreSchema)
+      context.addSchema(coreSchema) flatMap { schema ⇒
+        schema.collectionFor[Site]("sites") match {
+          case Some(sitesCollection: Collection[Site]) ⇒ {
+            sitesCollection.fetchAll().map {
+              sites ⇒ {
+                for (site ← sites) yield {
+                  log.debug(s"Loading site '${site.name}' for host ${site.hostNames}, enabled=${site.isEnabled(this)}")
+                  site.enable(this)
+                  site
+                }
+              }.toSeq
+            } map { sites ⇒
+              if (sites.isEmpty) {
+                val ws = new WelcomeSite(Symbol(name + "-Welcome"))(this)
+                ws.enable(this)
+                DataCache.update(this, schema)
+                // AdminApp.enable(ws)
+                // CoreModule.enable(AdminApp)
+                Seq(ws)
+              } else {
+                DataCache.update(this, schema)
+                sites
+              }
+            }
+          }
+          case None ⇒
+            toss("Collection 'sites' was not found")
+        }
+      }
     } catch {
       case x: Throwable ⇒
         log.error("Attempt to validate core schema failed: ", x)
         throw x
-    }
-    context.withSchema(coreSchema.name) { schema: Schema ⇒
-      schema.collectionFor[Site]("sites") match {
-        case Some(sitesCollection) ⇒ {
-          sitesCollection.fetchAll().map {
-            sites ⇒ {
-              for (site ← sites) yield {
-                log.debug(s"Loading site '${site.name}' for host ${site.hostnames}, enabled=${site.isEnabled(this)}")
-                site.enable(this)
-                site.hostnames → site
-              }
-            }.toMap
-          } recover {
-            case x: Throwable ⇒
-              log.warn(s"Attempt to validate core Schema failed: ", x)
-              Map.empty[Regex, Site]
-          }
-        } map { sites ⇒
-          if (sites.isEmpty) {
-            val ws = new WelcomeSite(Symbol(name + "-Welcome"))(this)
-            ws.enable(this)
-            DataCache.update(this, schema)
-            // AdminApp.enable(ws)
-            // CoreModule.enable(AdminApp)
-            Map(ws.hostnames → ws)
-            // Map.empty[Regex,Site]
-          } else {
-            DataCache.update(this, schema)
-            sites
-          }
-        }
-        case None ⇒
-          toss("Collection 'sites' was not found")
-      }
     }
   }
 }

@@ -85,15 +85,11 @@ trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider 
 
 trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T] {
 
-  override def canProvide(request: Request) : Boolean = {
-    request.context.site.exists { site ⇒ site.label == label } && super.canProvide(request)
-  }
-}
-
-trait ApplicationProvider[T <: ApplicationProvider[T]] extends EnablementProvider[T] {
-
-  override def canProvide(request: Request) : Boolean = {
-    request.context.application.exists { app ⇒ app.label == label } && super.canProvide(request)
+  override def canProvide(request: Request): Boolean = {
+    request.context.site match {
+      case Some(site) ⇒ site.label == this.label && super.canProvide(request)
+      case None ⇒ false
+    }
   }
 }
 
@@ -121,10 +117,13 @@ trait PluralityProvider extends TerminalProvider {
   lazy val pluralKey = makeKey(Pluralizer.pluralize(label))
 
   override def canProvide(request : Request) : Boolean = {
-    request.entity == singularKey || isPlural(request)
+    request.path.head == singularKey || isPlural(request)
   }
 
-  def isPlural(request: Request) : Boolean = request.entity == pluralKey
+  def isPlural(request: Request) : Boolean = {
+    request.path.head == pluralKey
+
+  }
 
 }
 

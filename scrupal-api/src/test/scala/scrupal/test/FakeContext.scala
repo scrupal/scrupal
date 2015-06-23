@@ -32,11 +32,11 @@ trait FakeContext[T] extends Context with Fixture[T] {
   def sym(name : String) = Symbol(nm(name))
   def sym = Symbol(nm)
 
-  override val site = Some( new Site(sym("Site"), scrupal ) {
+  override val site = Some( new Site(sym("Site"))(scrupal) {
     val name = "FakeContextSite"
     val description  = "Just For Testing"
     val y = nm("localhost")
-    def hostnames: Regex = ".*".r
+    def hostNames: Regex = ".*".r
     def modified: Option[DateTime] = None
     def created: Option[DateTime] = None
     val settingsTypes = BundleType.empty

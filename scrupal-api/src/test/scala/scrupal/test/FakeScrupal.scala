@@ -21,7 +21,6 @@ import scrupal.api.{Site, Scrupal}
 import scrupal.storage.api.StoreContext
 
 import scala.concurrent.{Future, ExecutionContext}
-import scala.util.matching.Regex
 
 class FakeScrupal(
   name : String,
@@ -30,8 +29,8 @@ class FakeScrupal(
   sc : Option[StoreContext] ,
   actSys : Option[ActorSystem]) extends Scrupal(name, config, ec, sc, actSys) {
 
-  protected def load(config: Configuration, context: StoreContext): Future[Map[Regex, Site]] = {
-    Future.successful(Map.empty[Regex, Site])
+  protected def load(config: Configuration, context: StoreContext): Future[Seq[Site]] = {
+    Future.successful(Seq.empty[Site])
   }
 }
 

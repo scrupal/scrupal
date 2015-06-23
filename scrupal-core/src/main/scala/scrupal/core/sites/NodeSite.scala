@@ -24,7 +24,7 @@ case class NodeSite(
   override val id : Identifier,
   name : String,
   description : String,
-  hostnames : Regex,
+  hostNames : Regex,
   siteRoot : Node = Node.Empty,
   override val requireHttps : Boolean = false,
   modified : Option[DateTime] = None,

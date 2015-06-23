@@ -36,9 +36,6 @@ case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalCompon
   val executionStart = Platform.currentTime
 
   def run() = {
-    // Check to make sure everything is ready to run.
-    checkReady()
-
     // we need an ActorSystem to host our application in
     implicit val system = ActorSystem("Scrupal-Http")
 
@@ -64,26 +61,4 @@ case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalCompon
     DateTimeHelpers.makeDurationReadable(duration)
   }
 
-  def checkReady() = {
-    for (site ← scrupal.Sites.values if site.isEnabled(scrupal)) {
-      val app_names = for (app ← site.applications if app.isEnabled(site)) yield {
-        for (mod ← app.modules if mod.isEnabled(app)) yield {
-          val paths = for (ent ← mod.entities if ent.isEnabled(mod)) yield { ent.singularKey }
-          val distinct_paths = paths.distinct
-          if (paths.size != distinct_paths.size) {
-            toss(
-              s"Cowardly refusing to start with duplicate entity paths in module ${mod.label} in application ${
-                mod
-                  .label
-              } in site ${site.label}")
-          }
-        }
-        app.label
-      }
-      val distinct_app_names = app_names.distinct
-      if (app_names.size != distinct_app_names.size) {
-        toss(s"Cowardly refusing to start with duplicate application names in site ${site.label}")
-      }
-    }
-  }
 }

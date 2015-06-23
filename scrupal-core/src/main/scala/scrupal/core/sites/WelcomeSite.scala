@@ -15,6 +15,11 @@
 
 package scrupal.core.sites
 
+import akka.http.scaladsl.server.PathMatcher.{Unmatched, Matched}
+import akka.http.scaladsl.server.PathMatchers
+import akka.http.scaladsl.server.PathMatchers._
+import akka.http.scaladsl.model.Uri.Path.Slash
+import akka.http.scaladsl.model.HttpMethods
 import org.joda.time.DateTime
 import scrupal.api._
 import scrupal.core.html.PlainPage
@@ -30,7 +35,7 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   val modified : Option[DateTime] = Some(DateTime.now)
   val created : Option[DateTime] = Some(new DateTime(2014, 11, 18, 17, 40))
   override val themeName = "cyborg"
-  def hostnames : Regex = ".*".r
+  def hostNames : Regex = ".*".r
 
   object WelcomeSiteRoot extends HtmlNode(
     "Main index page for Welcome To Scrupal Site",
@@ -40,13 +45,23 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   )
 
   object DocPathToDocs extends FunctionalNodeReactorProvider( { request: Request ⇒
-    MarkedDocNode("doc", "docs", request.message)
-  }) {}
+    val path = request.path.toString().split("/").toIterable
+    MarkedDocNode("doc", "docs", path)
+  }) {
+    private val pathMatcher = PathMatchers.Slash ~ "doc"
+    override def canProvide(request: Request) : Boolean = {
+      (request.method == HttpMethods.GET) && (pathMatcher(request.path) != Unmatched)
+    }
+  }
 
   override def delegates : Iterable[Provider] = super.delegates++ Iterable(
     DocPathToDocs,
     new NodeReactorProvider(WelcomeSiteRoot) {
-      def canProvider(request: Request) : Boolean = { request.message.isEmpty }
+      override def canProvide(request: Request) : Boolean = {
+        request.method == HttpMethods.GET && (
+          (PathMatchers.Slash(request.path) != Unmatched) || (PathMatchers.PathEnd(request.path) == Matched.Empty)
+        )
+      }
     }
   )
 
