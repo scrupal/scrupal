@@ -52,6 +52,7 @@ class RequestHandler @Inject() (
 
   implicit val scrupal = play.Scrupal("Scrupal", play_config, lifecycle)
 
+  scrupal.open()
 
   override def routeRequest(header: mvc.RequestHeader) : Option[mvc.Handler] = {
     val reactions : Iterable[(Site,Reactor)] = {
