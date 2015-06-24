@@ -17,14 +17,13 @@ package scrupal.core.sites
 
 import akka.http.scaladsl.server.PathMatcher.{Unmatched, Matched}
 import akka.http.scaladsl.server.PathMatchers
-import akka.http.scaladsl.server.PathMatchers._
-import akka.http.scaladsl.model.Uri.Path.Slash
 import akka.http.scaladsl.model.HttpMethods
 import org.joda.time.DateTime
 import scrupal.api._
 import scrupal.core.html.PlainPage
 import scrupal.core.impl.{NodeReactorProvider, FunctionalNodeReactorProvider}
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
+import scrupal.utils.Enablement
 
 import scala.util.matching.Regex
 import scalatags.Text.all._
@@ -54,20 +53,24 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
     }
   }
 
-  override def delegates : Iterable[Provider] = super.delegates++ Iterable(
-    DocPathToDocs,
-    new NodeReactorProvider(WelcomeSiteRoot) {
-      override def canProvide(request: Request) : Boolean = {
-        request.method == HttpMethods.GET && (
-          (PathMatchers.Slash(request.path) != Unmatched) || (PathMatchers.PathEnd(request.path) == Matched.Empty)
-        )
-      }
+  object WelcomeSiteProvider extends NodeReactorProvider(WelcomeSiteRoot) {
+    val matcher = PathMatchers.Slash ~ PathMatchers.PathEnd
+    override def canProvide(request: Request) : Boolean = {
+      request.method == HttpMethods.GET && (matcher(request.path) != Unmatched)
     }
-  )
+  }
 
-  enable('Core)
-  enable('EchoEntity)
-  enable('Core, 'EchoEntity)
+  override def delegates : Iterable[Provider] = {
+    super.delegates ++ Iterable(
+      DocPathToDocs, WelcomeSiteProvider
+    )
+  }
+
+  val coreModule = scrupal.Modules('Core)
+  val echoEntity = coreModule.flatMap { m ⇒ m.entity('Echo) }
+  enable(coreModule)
+  enable(echoEntity)
+  // enable(echoEntity, coreModule)
 }
 
 object WelcomeSite {

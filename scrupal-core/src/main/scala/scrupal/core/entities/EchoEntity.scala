@@ -37,10 +37,6 @@ import scrupal.utils.OSSLicense
   */
 case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
-  def kind : Symbol = 'Echo
-
-  val key : String = "Echo"
-
   def instanceType : BundleType = BundleType.empty
 
   def author : String = "Reid Spencer"

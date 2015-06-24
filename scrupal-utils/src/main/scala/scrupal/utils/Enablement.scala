@@ -17,17 +17,16 @@
 
 package scrupal.utils
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.language.reflectiveCalls
 
 /** Enablement Trait For Tracking Enable/Disable Status of Enablees.
   *
   * This is intended to be mixed in to some container of other Enablement objects in a hierarchy that eventually
-  * contains Enablees, or has them contained at any level. Enablement objects can also bee Enablees. For example,
+  * contains Enablees, or has them contained at any level. Enablement objects can also be Enablees. For example,
   * a Module contains Features and Entities that are both Enablees so it is an Enablement object and it tracks the
   * enablement status of its enablees.  But the Module can be enabled/disabled itself so it can also be an Enablee
-  *
-  *
   */
 
 trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with ScrupalComponent {
@@ -41,20 +40,30 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
 
   def isChildScope(scope : Enablement[_]) : Boolean
 
-  def isEnabled(enablee : Enablee, forScope : Enablement[_] = this) : Boolean = {
+  /** Determine if an Enablee is enabled within a scope.
+    *
+    * The enablee is only enabled if the following cases are true:
+    *
+    * - It and all its parent Enablees are enabled in forScope
+    * -
+    * @param enablee The thing about which we are determining the enablement status
+    * @param forScope The scope in which enablement matters
+    * @return True iff the enablee is enabled in forScope
+    */
+  final def isEnabled(enablee : Enablee, forScope : Enablement[_] = this) : Boolean = {
     if (forScope != this && !isChildScope(forScope))
       toss(s"Scope ${forScope.id.name} is not a child of ${id.name} " +
-        s"so enablement for ${enablee.enablementName} cannot be determined.")
+        s"so enablement for ${enablee.id.name} cannot be determined.")
     _enabled.lookup(enablee) match {
+      case None ⇒ false
       case Some(set) ⇒
         set.contains(forScope) && (
           enablee.parent match {
-            case Some(e) ⇒
-              e.isEnabled(forScope)
             case None ⇒ true
+            case Some(e : Enablee) ⇒
+              e.isEnabled(forScope)
           }
         )
-      case None ⇒ false
     }
   }
 
@@ -66,6 +75,14 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
       case None ⇒ mutable.HashSet(forScope)
     }
     _enabled.register(enablee, update_value)
+  }
+
+  def enable(enablee: Option[Enablee]) : Unit = {
+    enablee.map { e ⇒ enable(e) }
+  }
+
+  def enable(enablee: Option[Enablee], forScope : Option[Enablement[_]]) : Unit = {
+    enablee.map { e ⇒ forScope.map { fs ⇒ enable(e, fs) }}
   }
 
   def disable(enablee : Enablee, forScope : Enablement[_] = this) : Unit = {
@@ -83,14 +100,14 @@ trait Enablement[T <: Enablement[T]] extends IdentifiedWithRegistry with Scrupal
     }
   }
 
-  def forEach[R](p : Enablee ⇒ Boolean)(f : Enablee ⇒ R) : Seq[R] = {
+  def forEach[R](p : Enablee ⇒ Boolean)(f : Enablee ⇒ R) : Iterable[R] = {
     for (e ← _enabled.keys if p(e)) yield { f(e) }
-  }.toSeq
+  }
 
-  def forEachEnabled[R](f : Enablee ⇒ R) : Seq[R] = forEach(e ⇒ isEnabled(e))(f)
+  def forEachEnabled[R](f : Enablee ⇒ R) : Iterable[R] = forEach(e ⇒ isEnabled(e))(f)
 
-  def getEnablementMap : Map[Enablee, Seq[Enablement[_]]] = {
-    _enabled.registry.map { case (k, v) ⇒ k -> v.toSeq.map { ar ⇒ ar.asInstanceOf[Enablement[_]] } }
+  def getEnablementMap : Map[Enablee, Iterable[Enablement[_]]] = {
+    _enabled.registry.map { case (k, v) ⇒ k -> v.map { ar ⇒ ar.asInstanceOf[Enablement[_]] } }
   }
 
 }

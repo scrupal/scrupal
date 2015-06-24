@@ -51,7 +51,7 @@ abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
     e.asInstanceOf[Application]
   }
 
-  def isChildScope(e : Enablement[_]) : Boolean = applications.contains(e)
+  def isChildScope(e : Enablement[_]) : Boolean = applications.exists { x ⇒ x == e }
 }
 
 /** The Registry of Sites for this Scrupal.

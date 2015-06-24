@@ -40,7 +40,7 @@ abstract class Application(ident  : Identifier)(implicit scrpl : Scrupal) extend
 
   def entities = forEach[Entity] { e ⇒ e.isInstanceOf[Entity] && isEnabled(e, this) } { e ⇒ e.asInstanceOf[Entity] }
 
-  def isChildScope(e : Enablement[_]) : Boolean = entities.contains(e)
+  def isChildScope(e : Enablement[_]) : Boolean = entities.exists { x ⇒ x == e }
 
 }
 

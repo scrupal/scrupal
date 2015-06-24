@@ -15,6 +15,7 @@
 
 package scrupal.api
 
+import akka.http.scaladsl.server.{PathMatcher, PathMatchers}
 import scrupal.utils._
 
 /** Provider Of Reactors
@@ -67,20 +68,6 @@ trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider 
   } { e : Enablee ⇒
     e.asInstanceOf[Provider]
   }
-
-  def enable(modName: Symbol)(implicit scrupal : Scrupal) : Option[Module] = {
-    scrupal.Modules(modName) map { module ⇒
-      module.enable(this)
-    }
-  }
-
-  def enable(modName: Symbol, forModule: Symbol)(implicit scrupal : Scrupal)  : Option[Module] = {
-    scrupal.Modules(modName) flatMap { enabledModule ⇒
-      scrupal.Modules(modName) map { enablingModule ⇒
-        enabledModule.enable(enablingModule)
-      }
-    }
-  }
 }
 
 trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T] {
@@ -111,18 +98,22 @@ trait PluralityProvider extends TerminalProvider {
   def makeKey(name : String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern, "-")
 
   /** Singular form of the entity's label */
-  lazy val singularKey = makeKey(label)
+  val singularKey = makeKey(label)
 
   /** Plural form of the entity's label */
-  lazy val pluralKey = makeKey(Pluralizer.pluralize(label))
+  val pluralKey = makeKey(Pluralizer.pluralize(label))
+
+  val singularMatcher = PathMatchers.Slash ~ PathMatcher(singularKey)
+  val pluralMatcher = PathMatchers.Slash ~ PathMatcher(pluralKey)
+
+  val matcher = singularMatcher | pluralMatcher
 
   override def canProvide(request : Request) : Boolean = {
-    request.path.head == singularKey || isPlural(request)
+    matcher(request.path) != PathMatcher.Unmatched
   }
 
   def isPlural(request: Request) : Boolean = {
-    request.path.head == pluralKey
-
+    pluralMatcher(request.path) != PathMatcher.Unmatched
   }
 
 }

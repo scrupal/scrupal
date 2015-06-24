@@ -96,10 +96,10 @@ case class CoreModule(implicit scrpl : Scrupal) extends Module(scrpl) {
     DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
   )
 
+  lazy val pageEntity = PageEntity()(scrupal)
+  lazy val echoEntity = EchoEntity()(scrupal)
 
-  def entities = Seq[Entity](
-    PageEntity()(scrupal), EchoEntity()(scrupal)
-  )
+  def entities = Seq[Entity](pageEntity, echoEntity)
 
   def nodes = Seq[Node]()
 

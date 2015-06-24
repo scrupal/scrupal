@@ -43,13 +43,12 @@ trait EntityInstanceReactor extends Reactor with Nameable with Describable {
   */
 trait EntityProvider extends PluralityProvider {
 
-  val pluralMatcher: PathMatcher1[String] = PathMatcher(pluralKey) / /*instance_id=*/Segment
+  val pluralEntityMatcher: PathMatcher1[String] = pluralMatcher / /*instance_id=*/Segment
 
-  val singularMatcher : PathMatcher[(String,String)] =
-    PathMatcher(singularKey) / /*instance_id=*/Segment / /*facet_name*/ Segment
+  val singularEntityMatcher : PathMatcher[(String,String)] = pluralMatcher / /*instance_id=*/Segment / /*facet_name*/ Segment
 
   override def provide(request: Request) : Option[Reactor] = {
-    singularMatcher(request.path) match {
+    singularEntityMatcher(request.path) match {
       case Matched(rest, extractions) ⇒
         val (instance_id, facet_name) = extractions
         request.method match {
@@ -61,7 +60,7 @@ trait EntityProvider extends PluralityProvider {
           case _ ⇒ noSuchMessage(request, s"$request not supported on entity $label.")
         }
       case Unmatched ⇒
-        pluralMatcher(request.path) match {
+        pluralEntityMatcher(request.path) match {
           case Matched(rest, extractions) ⇒
             val instance_id = extractions._1
             request.method match {
@@ -199,7 +198,6 @@ trait FindReactor extends EntityInstanceReactor {
   */
 abstract class Entity(sym : Symbol)(implicit scrpl : Scrupal) extends {
   val id : Symbol = sym
-  val _id : Symbol = sym
   val segment : String = id.name
   implicit val scrupal: Scrupal = scrpl
 } with EntityProvider with Storable with Registrable[Entity] with ModuleOwned with Authorable

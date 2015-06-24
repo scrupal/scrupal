@@ -80,6 +80,8 @@ abstract class Module(scrpl : Scrupal) extends {
     */
   def entities : Seq[Entity]
 
+  def entity(id: Symbol) = entities.find { e ⇒ e.id == id }
+
   // TODO: Can modules provide sites ?
 
   /** The set of handlers for the events this module is interested in.
