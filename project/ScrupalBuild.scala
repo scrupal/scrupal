@@ -35,9 +35,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     organization    := "org.scrupal",
     version         := "0.2.0-SNAPSHOT",
     maxErrors       := 25,
-    routesGenerator := InjectedRoutesGenerator,
-    namespaceReverseRouter := true,
-    aggregateReverseRoutes := Seq(),
   //scalacOptions   += "-Xlog-implicits",
     scrupalCopyrightHolder := "Reactific Software LLC",
     scrupalCopyrightYears := Seq(2013,2014,2015),
@@ -45,102 +42,108 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
   )
 
   lazy val utils_proj = Project(base_name + "-utils", file("./scrupal-utils"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal Utils",
       resolvers ++= all_resolvers,
       libraryDependencies ++= utils_dependencies
     )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
   lazy val utils_deps = utils_proj % "compile->compile;test->test"
 
   lazy val storage_proj = Project(base_name + "-storage", file("./scrupal-storage"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal Storage",
       resolvers ++= all_resolvers,
       libraryDependencies ++= storage_dependencies
     )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps)
   lazy val storage_deps = storage_proj % "compile->compile;test->test"
 
   lazy val api_proj = Project(base_name + "-api", file("./scrupal-api"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal API",
       resolvers ++= all_resolvers,
       libraryDependencies ++= api_dependencies
     )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps, storage_deps)
   lazy val api_deps = api_proj % "compile->compile;test->test"
 
   lazy val store_reactivemongo_proj = Project(base_name + "-store-reactivemongo", file("./scrupal-store-reactivemongo"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal Store For ReactiveMongo",
       resolvers ++= all_resolvers,
       libraryDependencies ++= store_reactivemongo_dependencies
     )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps, storage_deps, api_deps)
   lazy val store_reactivemongo_deps = store_reactivemongo_proj % "compile->compile;test->test"
 
 
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     // .settings(sbt_web_settings:_*)
     // .settings(less_settings:_*)
     // .settings(core_pipeline_settings:_*)
     .settings(
       scrupalTitle := "Scrupal Core",
-      mainClass in (Compile, run) := Some("scrupal.core.Boot"),
+      routesGenerator := InjectedRoutesGenerator,
+      namespaceReverseRouter := true,
       resolvers ++= all_resolvers,
       libraryDependencies ++= core_dependencies
     )
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(storage_deps, api_deps, utils_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
 
   lazy val admin_proj = Project(base_name + "-admin", file("./scrupal-admin"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal Administration Module",
+      routesGenerator := InjectedRoutesGenerator,
+      namespaceReverseRouter := true,
       resolvers ++= all_resolvers,
       libraryDependencies ++= admin_dependencies)
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps, core_deps)
   lazy val admin_deps = admin_proj % "compile->compile;test->test"
 
   lazy val welcome_proj = Project(base_name + "-welcome", file("./scrupal-welcome"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal Welcome Module",
+      routesGenerator := InjectedRoutesGenerator,
+      namespaceReverseRouter := true,
       resolvers ++= all_resolvers,
       libraryDependencies ++= welcome_dependencies)
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps, core_deps)
   lazy val welcome_deps = config_proj % "compile->compile;test->test"
 
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal Configuration Module",
       resolvers ++= all_resolvers,
       libraryDependencies ++= config_dependencies)
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .dependsOn(utils_deps, core_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
 
   lazy val root = Project(base_name, file("."))
+    .enablePlugins(ScrupalPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Root",
+      scrupalTitle := "Scrupal",
+      aggregateReverseRoutes := Seq(core_proj, config_proj, admin_proj),
       resolvers ++= all_resolvers,
       libraryDependencies ++= root_dependencies
     )
-    .enablePlugins(ScrupalPlugin)
     .dependsOn(config_deps, core_deps, storage_deps, utils_deps)
     .aggregate(config_proj, core_proj, storage_proj, utils_proj)
 

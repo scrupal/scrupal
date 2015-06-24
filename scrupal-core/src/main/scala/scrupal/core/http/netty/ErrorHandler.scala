@@ -13,60 +13,35 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.akka
+package scrupal.core.http.netty
 
-import akka.http.scaladsl.server.{ValidationRejection, Directive1}
-import scrupal.api.{Scrupal, Site}
+import javax.inject.Inject
 
-/** Spray Routing Directives For Scrupal Sites
-  * This provides a few routing directives that deal with sites being enabled and requiring a certain scheme
-  */
-trait SiteDirectives {
-/*
-  def siteScheme(site : Site) = {
-    scheme("http").hrequire { hnil ⇒ !site.requireHttps } |
-      scheme("https").hrequire { hnil ⇒ site.requireHttps }
+import com.google.inject.Provider
+import play.api.mvc.RequestHeader
+import play.api.routing.Router
+import play.api.{UsefulException, OptionalSourceMapper, Configuration, Environment}
+import play.api.http.DefaultHttpErrorHandler
+import play.api.mvc.Results._
+
+import scala.concurrent.Future
+
+class ErrorHandler @Inject() (scrupal : Scrupal,
+  env: Environment,
+  config: Configuration,
+  sourceMapper: OptionalSourceMapper,
+  router: Provider[Router]
+  ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
+
+  override def onProdServerError(request: RequestHeader, exception: UsefulException) = {
+    Future.successful(
+      InternalServerError("A server error occurred: " + exception.getMessage)
+    )
   }
 
-  def siteEnabled(site : Site, scrupal : Scrupal) = {
-    validate(site.isEnabled(scrupal), s"Site '${site.name}' is disabled.")
-  }
-
-  def scrupalIsReady(scrupal : Scrupal) = {
-    validate(scrupal.isReady, s"Scrupal is not configured!")
-  }
-
-  /*
-
-  schemeName { scheme ⇒
-    reject(ValidationRejection(s"Site '${site._id.name}' does not support scheme'$scheme'"))
+  override def onForbidden(request: RequestHeader, message: String) = {
+    Future.successful(
+      Forbidden("You're not allowed to access this resource.")
+    )
   }
 }
-
-    require
-    validate(!site.requireHttps, s"Site '${site._id.name}' does not permit https.") {
-      extract (ctx ⇒ provide(site) )
-    }
-  } ~
-    scheme("https") {
-      validate(site.requireHttps, s"Site '${site._id.name}' requires https.") { hnil ⇒
-        extract(ctx ⇒ site)
-      }
-    } ~
-}
-*/
-
-  def site(scrupal : Scrupal) : Directive1[Site] = {
-    hostName.flatMap { host : String ⇒
-      val sites = Site.forHost(host)
-      if (sites.isEmpty)
-        reject(ValidationRejection(s"No site defined for host '$host'."))
-      else {
-        val site = sites.head
-        siteScheme(site) & siteEnabled(site, scrupal) & extract(ctx ⇒ site)
-      }
-    }
-  }
-  */
-}
-

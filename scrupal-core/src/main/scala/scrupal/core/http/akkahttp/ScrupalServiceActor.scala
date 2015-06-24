@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.akka
+package scrupal.core.http.akkahttp
 
 import akka.actor._
 import akka.http.scaladsl.model.MediaTypes._

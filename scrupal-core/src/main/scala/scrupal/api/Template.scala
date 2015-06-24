@@ -21,7 +21,6 @@ import scrupal.utils.{ Registry, Registrable }
 trait Template[T] extends Registrable[Template[_]] with Describable with ((Map[String, T], Context) ⇒ T) {
   def contentType : MediaType
   def registry = Template
-  def asT : this.type = this
 }
 
 object Template extends Registry[Template[_]] {

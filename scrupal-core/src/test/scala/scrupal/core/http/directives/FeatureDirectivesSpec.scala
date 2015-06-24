@@ -16,7 +16,7 @@
 package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.http.akka.FeatureDirectives
+import scrupal.core.http.akkahttp.FeatureDirectives
 
 /** Created by reidspencer on 11/5/14.
   */

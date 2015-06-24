@@ -15,8 +15,8 @@
 
 package scrupal.core.http
 
-import _root_.akka.actor.ActorSystem
-import _root_.akka.http.scaladsl.model.MediaType
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model.MediaType
 import scredis._
 import scrupal.api.Scrupal
 

@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.play
+package scrupal.core.http.netty
 
 import com.google.inject.AbstractModule
 

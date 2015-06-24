@@ -13,35 +13,28 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.play
+package scrupal.core.http.akkahttp
 
-import javax.inject.Inject
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.directives._
+import scrupal.api.Feature
+import scrupal.utils.Enablement
 
-import com.google.inject.Provider
-import play.api.mvc.RequestHeader
-import play.api.routing.Router
-import play.api.{UsefulException, OptionalSourceMapper, Configuration, Environment}
-import play.api.http.DefaultHttpErrorHandler
-import play.api.mvc.Results._
+/** Spray Directives For Scrupal Features
+  *
+  */
+trait FeatureDirectives extends BasicDirectives with RouteDirectives {
 
-import scala.concurrent.Future
-
-class ErrorHandler @Inject() (scrupal : Scrupal,
-  env: Environment,
-  config: Configuration,
-  sourceMapper: OptionalSourceMapper,
-  router: Provider[Router]
-  ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
-
-  override def onProdServerError(request: RequestHeader, exception: UsefulException) = {
-    Future.successful(
-      InternalServerError("A server error occurred: " + exception.getMessage)
-    )
+  def feature(theFeature : Feature, scope : Enablement[_]) : Directive0 = {
+    if (theFeature.implemented) {
+      if (theFeature.isEnabled(scope)) {
+        pass
+      } else {
+        reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not enabled."))
+      }
+    } else {
+      reject(ValidationRejection(s"Feature '${theFeature.name}' of module '${theFeature.moduleOf}' is not implemented."))
+    }
   }
 
-  override def onForbidden(request: RequestHeader, message: String) = {
-    Future.successful(
-      Forbidden("You're not allowed to access this resource.")
-    )
-  }
 }

@@ -37,7 +37,6 @@ trait Arranger extends ((ContentsArgs, Context) ⇒ Array[Byte])
 trait Layout extends Registrable[Layout] with Describable with Arranger {
   def mediaType : MediaType
   def registry = Layout
-  def asT : this.type = this
 }
 
 case class HtmlLayout(

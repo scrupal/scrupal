@@ -15,10 +15,10 @@
 
 package scrupal.core.http
 
-import _root_.akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.Route
 import scrupal.api.Scrupal
-import scrupal.core.http.akka.Controller
-import _root_.akka.http.scaladsl.server.directives._
+import scrupal.core.http.akkahttp.Controller
+import akka.http.scaladsl.server.directives._
 
 /** One line sentence description here.
   * Further description here.

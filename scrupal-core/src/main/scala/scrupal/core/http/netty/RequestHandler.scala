@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.play
+package scrupal.core.http.netty
 
 import java.nio.charset.Charset
 
@@ -31,7 +31,7 @@ import _root_.play.api.mvc
 
 import scrupal.api.Request
 import scrupal.api._
-import scrupal.core.http.{play, HttpUtils}
+import scrupal.core.http.{netty, HttpUtils}
 
 import scala.annotation.switch
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,7 +52,7 @@ class RequestHandler @Inject() (
   lifecycle : ApplicationLifecycle
 ) extends DefaultHttpRequestHandler(Router.empty, errorHandler, http_config, filters) {
 
-  implicit val scrupal = play.Scrupal("Scrupal", play_config, lifecycle)
+  implicit val scrupal = netty.Scrupal("Scrupal", play_config, lifecycle)
 
   scrupal.open()
 
