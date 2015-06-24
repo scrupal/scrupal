@@ -65,6 +65,9 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
   sequential
 
   s"$name" should {
+
+    sequential
+
     "have same name as this test" in {
       driver.name must beEqualTo(driverName)
     }
@@ -92,7 +95,7 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
     }
 
     "create the DingBotsSchema" in {
-      getContext("testing")  { context ⇒
+      getContext("testing", false)  { context ⇒
         if (context.hasSchema(DingBotsSchema.name)) {
           context.dropSchema(DingBotsSchema.name) flatMap { wr ⇒
             wr.tossOnError
@@ -117,21 +120,19 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
     }
 
     "not allow duplication of a collection" in {
-      getContext("testing")  { context ⇒
-        val result = context.withSchema(DingBotsSchema.name) { schema ⇒
+      getContext("testing", false)  { context ⇒
+        context.withSchema(DingBotsSchema.name) { schema ⇒
           schema.addCollection[DingBot]("dingbots") map { coll ⇒
             failure("schema.addCollection should have failed")
           } recover {
             case x: Throwable ⇒ success
           }
         }
-        context.close()
-        result
       }
     }
 
     "insert a dingbot in a collection" in {
-      getContext("testing")  { context ⇒
+      getContext("testing", false)  { context ⇒
         context.withSchema(DingBotsSchema.name) { schema ⇒
           schema.withCollection[DingBot,Future[Result]]("dingbots") { coll ⇒
             coll.insert(new DingBot(1, "ping", 42)) map { wr: WriteResult ⇒
@@ -139,6 +140,12 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
             }
           }
         }
+      }
+    }
+    "close the context" in {
+      getContext("testing", false) { context ⇒
+        context.close()
+        Future.successful { success }
       }
     }
   }

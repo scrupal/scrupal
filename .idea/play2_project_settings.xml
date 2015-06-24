@@ -230,6 +230,7 @@
         <entry key="scrupal-store-filesys">
           <value>
             <ProjectSettingsEntry>
+<<<<<<< Updated upstream
               <option name="sourceDir" value="$PROJECT_DIR$/app" />
               <option name="confDir" value="$PROJECT_DIR$/app" />
               <option name="templateImports">
@@ -262,6 +263,8 @@
         <entry key="scrupal-store-reactivemongo">
           <value>
             <ProjectSettingsEntry>
+=======
+>>>>>>> Stashed changes
               <option name="confDir" value="$PROJECT_DIR$/app" />
               <option name="templateImports">
                 <list>

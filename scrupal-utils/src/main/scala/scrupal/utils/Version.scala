@@ -1,19 +1,17 @@
-/** ********************************************************************************************************************
-  * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                                  *
-  * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                                  *
-  * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
-  * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                                  *
-  *      http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                                  *
-  * Unless required by applicable law or agreed to in writing, software distributed under the                          *
-  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
-  * either express or implied. See the License for the specific language governing permissions                         *
-  * and limitations under the License.                                                                                 *
-  * ********************************************************************************************************************
-  */
+/**********************************************************************************************************************
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
+ *                                                                                                                    *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
+ *                                                                                                                    *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
+ *                                                                                                                    *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
+ *                                                                                                                    *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
+ **********************************************************************************************************************/
 
 package scrupal.utils
 
@@ -28,11 +26,11 @@ package scrupal.utils
   * breaks backwards compatibility) nor minor (retains backwards compatibility but adds features), then it is simply an
   * update that fixes a bug or otherwise improves a stable release so only the update number need be incremented.
   * @param major The major version number that identifies a release that provides new major features and breaks
-  *           backwards compatibility with prior releases either by changing functionality or removing functionality.
+  *          backwards compatibility with prior releases either by changing functionality or removing functionality.
   * @param minor The minor version number that identifies a release that maintains backwards compatibility with
-  *           prior releases but provides additional features.
+  *          prior releases but provides additional features.
   * @param update The update version number that identifies the fix/patch level without introducing new features
-  *            nor breaking backwards compatibility.
+  *           nor breaking backwards compatibility.
   */
 case class Version(major : Int, minor : Int, update : Int) extends Ordered[Version] {
 
