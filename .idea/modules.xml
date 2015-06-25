@@ -14,15 +14,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-storage.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-storage.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-storage-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-storage-build.iml" />
-<<<<<<< Updated upstream
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-reactivemongo.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-reactivemongo.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-reactivemongo-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-reactivemongo-build.iml" />
-=======
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-filesys.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-filesys.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-filesys.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-filesys.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-filesys-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-filesys-build.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-filesys-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-filesys-build.iml" />
->>>>>>> Stashed changes
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-utils-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-welcome.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-welcome.iml" />
