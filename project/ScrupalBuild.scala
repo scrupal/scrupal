@@ -84,6 +84,16 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, storage_deps, api_deps)
   lazy val store_reactivemongo_deps = store_reactivemongo_proj % "compile->compile;test->test"
 
+  lazy val store_rxmongo_proj = Project(base_name + "-store-rxmongo", file("./scrupal-store-rxmongo"))
+    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
+    .settings(buildSettings:_*)
+    .settings(
+      scrupalTitle := "Scrupal Store For RxMongo",
+      resolvers ++= all_resolvers,
+      libraryDependencies ++= store_rxmongo_dependencies
+    )
+    .dependsOn(utils_deps, storage_deps, api_deps)
+  lazy val store_rxmongo_deps = store_rxmongo_proj % "compile->compile;test->test"
 
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
@@ -113,18 +123,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, core_deps)
   lazy val admin_deps = admin_proj % "compile->compile;test->test"
 
-  lazy val welcome_proj = Project(base_name + "-welcome", file("./scrupal-welcome"))
-    .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
-    .settings(buildSettings:_*)
-    .settings(
-      scrupalTitle := "Scrupal Welcome Module",
-      routesGenerator := InjectedRoutesGenerator,
-      namespaceReverseRouter := true,
-      resolvers ++= all_resolvers,
-      libraryDependencies ++= welcome_dependencies)
-    .dependsOn(utils_deps, core_deps)
-  lazy val welcome_deps = config_proj % "compile->compile;test->test"
-
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
     .enablePlugins(ScrupalPlugin).disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
@@ -144,8 +142,8 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       resolvers ++= all_resolvers,
       libraryDependencies ++= root_dependencies
     )
-    .dependsOn(config_deps, core_deps, storage_deps, utils_deps)
-    .aggregate(config_proj, core_proj, storage_proj, utils_proj)
+    .dependsOn(admin_proj, config_deps, core_deps, store_rxmongo_deps, storage_deps, utils_deps)
+    .aggregate(admin_proj, config_proj, core_proj, store_rxmongo_proj, storage_proj, utils_proj)
 
   override def rootProject = Some(root)
 }

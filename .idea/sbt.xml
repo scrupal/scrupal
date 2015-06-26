@@ -23,10 +23,10 @@
             <option value="$PROJECT_DIR$/scrupal-storage/project" />
             <option value="$PROJECT_DIR$/scrupal-store-reactivemongo" />
             <option value="$PROJECT_DIR$/scrupal-store-reactivemongo/project" />
+            <option value="$PROJECT_DIR$/scrupal-store-rxmongo" />
+            <option value="$PROJECT_DIR$/scrupal-store-rxmongo/project" />
             <option value="$PROJECT_DIR$/scrupal-utils" />
             <option value="$PROJECT_DIR$/scrupal-utils/project" />
-            <option value="$PROJECT_DIR$/scrupal-welcome" />
-            <option value="$PROJECT_DIR$/scrupal-welcome/project" />
           </set>
         </option>
         <option name="resolveClassifiers" value="true" />

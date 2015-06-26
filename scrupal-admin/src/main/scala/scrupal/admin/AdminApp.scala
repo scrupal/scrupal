@@ -18,16 +18,20 @@ package scrupal.admin
 import akka.http.scaladsl.server.PathMatchers.PathEnd
 import org.joda.time.DateTime
 import scrupal.api.Html.{Contents, ContentsArgs, EmptyContentsArgs}
-import scrupal.api.types._
-import scrupal.api.{Application, Entity, Html}
+import scrupal.api._
+import scrupal.core.Site_t
 import scrupal.core.html.BootstrapPage
-import scrupal.core.impl.NodeActionProducer
+import scrupal.core.impl.NodeReactorProvider
 import scrupal.core.nodes.HtmlNode
+import scrupal.utils.OSSLicense
 
 import scalatags.Text.all._
 
-object AdminApp extends Application('admin) {
+class AdminApp(implicit scrupal: Scrupal) extends Application('admin) {
   val kind : Symbol = 'Admin
+  val author = "Reactific Software LLC"
+  val copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
+  val license = OSSLicense.ApacheV2
 
   def description : String = "The Scrupal Administrative Application"
 
@@ -39,109 +43,112 @@ object AdminApp extends Application('admin) {
 
   def modified : Option[DateTime] = timestamp
 
-  object StatusBar extends Html.Template('AdminStatusBar) {
-    val description = "Lists the Sites"
+  /* FIXME: Reinstate body of AdminApp
 
-    class SiteSelectionForm extends SimpleForm('SiteSelectionForm, "SiteSelection",
-      "A form for selecting the site to administrate", "/admin/siteselectionform",
+object StatusBar extends Html.Template('AdminStatusBar) {
+  val description = "Lists the Sites"
+
+  class SiteSelectionForm extends SimpleForm('SiteSelectionForm, "SiteSelection",
+    "A form for selecting the site to administrate", "/admin/siteselectionform",
+    Seq(
+      SelectionFormField("Site: ", "Select a site to administrate", Site_t, inline = true)
+    )
+  )
+
+  lazy val siteSelectionForm = new SiteSelectionForm
+
+  def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
+    Seq(siteSelectionForm.render)
+  }
+}
+
+StatusBar.siteSelectionForm.enable(this)
+
+object SiteConfig extends Html.Template('AdminSite) {
+  val description = "Configuration"
+  def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
+    Seq(div(cls := "well",
+      for ((enablee, enablement) ← context.site.get.getEnablementMap) {
+        p(enablee.id.name, " is enabled in ", enablement.map { e ⇒ e.id.name }.mkString(", "))
+      }
+    ))
+  }
+}
+
+class DBForm extends SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
+  TextFormField("Host:", "The hostname where your MongoDB server is running",
+    DomainName_t, BSONString("localhost"), optional = true, inline = true, attrs = Seq(placeholder := "localhost")),
+  IntegerFormField("Port:", "The port number at which your MongoDB server is running",
+    TcpPort_t, BSONLong(5253), optional = true, inline = true, attrs = Seq(placeholder := "5253")),
+  TextFormField("Name:", "The name of the database you want to connect to",
+    Identifier_t, BSONString("scrupal"), optional = true, inline = true, attrs = Seq(placeholder := "scrupal")),
+  TextFormField("User:", "The user name for the MongoDB server authentication",
+    Identifier_t, BSONString("admin"), optional = true, inline = true, attrs = Seq(placeholder := "admin")),
+  PasswordFormField("Password:", "The password for the MongoDB server authentication", Password_t, inline = true),
+  SubmitFormField("", "Submit database configuration to Scrupal server.", "Configure Database")
+)) {
+  override def provideAcceptFormAction(matchingSegment : String, context : Context) : Option[AcceptFormAction] = {
+    Some(new DataBaseFormAcceptance(this, context))
+  }
+}
+
+
+case class DataBaseFormAcceptance(override val form : Form, override val context : Context)
+  extends AcceptFormAction(form, context) {
+  override def handleValidatedFormData(doc : BSONDocument) : Result[_] = {
+    super.handleValidatedFormData(doc)
+  }
+
+  override def handleValidationFailure(errors : ValidationFailed[BSONValue]) : Result[_] = {
+    val node = adminLayout(formWithErrors(errors))
+    val contents = node.results(context)
+    HtmlResult(contents, Successful)
+  }
+}
+
+object Database extends Html.Template('AdminDatabase) {
+  val description = "Database Configuration"
+  def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
+    context.withSchema { (dbc, schema) ⇒
       Seq(
-        SelectionFormField("Site: ", "Select a site to administrate", Site_t, inline = true)
+        div(cls := "well", tag("DatabaseForm", context, args))
+      )
+    }
+  }
+}
+
+object Modules extends Html.Template('AdminModules) {
+  val description = "Modules Administration"
+  def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
+    Seq(
+      div(cls := "well",
+        p("Modules Defined:"),
+        ul(
+          for (mod ← Module.values) yield {
+            li(mod.id.name, " - ", mod.description, " - ", mod.moreDetailsURL.toString)
+          }
+        )
       )
     )
-
-    lazy val siteSelectionForm = new SiteSelectionForm
-
-    def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
-      Seq(siteSelectionForm.render)
-    }
   }
+}
 
-  StatusBar.siteSelectionForm.enable(this)
-
-  object SiteConfig extends Html.Template('AdminSite) {
-    val description = "Configuration"
-    def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
-      Seq(div(cls := "well",
-        for ((enablee, enablement) ← context.site.get.getEnablementMap) {
-          p(enablee.id.name, " is enabled in ", enablement.map { e ⇒ e.id.name }.mkString(", "))
-        }
-      ))
-    }
-  }
-
-  class DBForm extends SimpleForm('database_form, "Database Form", "Description", "/admin/database_form", Seq(
-    TextFormField("Host:", "The hostname where your MongoDB server is running",
-      DomainName_t, BSONString("localhost"), optional = true, inline = true, attrs = Seq(placeholder := "localhost")),
-    IntegerFormField("Port:", "The port number at which your MongoDB server is running",
-      TcpPort_t, BSONLong(5253), optional = true, inline = true, attrs = Seq(placeholder := "5253")),
-    TextFormField("Name:", "The name of the database you want to connect to",
-      Identifier_t, BSONString("scrupal"), optional = true, inline = true, attrs = Seq(placeholder := "scrupal")),
-    TextFormField("User:", "The user name for the MongoDB server authentication",
-      Identifier_t, BSONString("admin"), optional = true, inline = true, attrs = Seq(placeholder := "admin")),
-    PasswordFormField("Password:", "The password for the MongoDB server authentication", Password_t, inline = true),
-    SubmitFormField("", "Submit database configuration to Scrupal server.", "Configure Database")
-  )) {
-    override def provideAcceptFormAction(matchingSegment : String, context : Context) : Option[AcceptFormAction] = {
-      Some(new DataBaseFormAcceptance(this, context))
-    }
-  }
-
-  case class DataBaseFormAcceptance(override val form : Form, override val context : Context)
-    extends AcceptFormAction(form, context) {
-    override def handleValidatedFormData(doc : BSONDocument) : Result[_] = {
-      super.handleValidatedFormData(doc)
-    }
-
-    override def handleValidationFailure(errors : ValidationFailed[BSONValue]) : Result[_] = {
-      val node = adminLayout(formWithErrors(errors))
-      val contents = node.results(context)
-      HtmlResult(contents, Successful)
-    }
-  }
-
-  object Database extends Html.Template('AdminDatabase) {
-    val description = "Database Configuration"
-    def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
-      context.withSchema { (dbc, schema) ⇒
-        Seq(
-          div(cls := "well", tag("DatabaseForm", context, args))
-        )
-      }
-    }
-  }
-
-  object Modules extends Html.Template('AdminModules) {
-    val description = "Modules Administration"
-    def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
-      Seq(
-        div(cls := "well",
-          p("Modules Defined:"),
-          ul(
-            for (mod ← Module.values) yield {
-              li(mod.id.name, " - ", mod.description, " - ", mod.moreDetailsURL.toString)
-            }
-          )
+object Applications extends Html.Template('AdminApplications) {
+  val description = "Applications Administration"
+  def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
+    Seq(
+      div(cls := "well",
+        p("Applications:"),
+        ul(
+          for (app ← context.site.get.applications) yield {
+            li(app.name, " - ", app.delegates.map { p ⇒ p.describe }.mkString(", ")) // FIXME: describe?
+          }
         )
       )
-    }
+    )
   }
-
-  object Applications extends Html.Template('AdminApplications) {
-    val description = "Applications Administration"
-    def apply(context : Context, args : ContentsArgs = EmptyContentsArgs) : Contents = {
-      Seq(
-        div(cls := "well",
-          p("Applications:"),
-          ul(
-            for (app ← context.site.get.applications) yield {
-              li(app.name, " - ", app.delegates.map { p ⇒ p.describe }.mkString(", ")) // FIXME: describe?
-            }
-          )
-        )
-      )
-    }
-  }
-
+}
+*/
   object AdminPage extends BootstrapPage('AdminPage, "Scrupal Admin", "Scrupal Administration") {
     override def body_content(context : Context, args : ContentsArgs) : Contents = {
       Seq(
@@ -181,6 +188,7 @@ object AdminApp extends Application('admin) {
     }
   }
 
+/* FIXME: Reinstate DBFORM in AdminApp
   def adminLayout(dbForm : Form) = {
     new HtmlNode(
       description = "Layout for Admin application",
@@ -197,21 +205,26 @@ object AdminApp extends Application('admin) {
     }
   }
 
-  override def delegates : Seq[ActionExtractor] = {
-      def dbForm = new DBForm
+  override def delegates : Seq[Provider] = {
+    def dbForm = new DBForm
     dbForm.enable(this)
     super.delegates ++ Seq(
-      NodeActionProducer(PathEnd, adminLayout(dbForm))
+      NodeReactorProvider(PathEnd, adminLayout(dbForm))
     )
   }
+  */
 }
 
-object SiteAdminEntity extends Entity('SiteAdmin) {
+class SiteAdminEntity(implicit scrupal: Scrupal) extends Entity('SiteAdmin) {
   def kind : Symbol = 'SiteAdmin
 
   def description : String = "An entity that handles administration of Scrupal sites."
 
-  def instanceType : BundleType = BundleType.Empty[Any]
+  val author = "Reactific Software LLC"
+  val copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
+  val license = OSSLicense.ApacheV2
+
+  def instanceType : BundleType = BundleType.empty
 
   /* FIXME:
     override def create(context: Context, id: String, instance: BSONDocument) : Create = {

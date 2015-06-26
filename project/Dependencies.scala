@@ -165,6 +165,10 @@ trait Dependencies
     reactivemongo
   )
 
+  val store_rxmongo_dependencies : Seq[ModuleID] = Seq(
+    rxmongo
+  )
+
   val types_dependencies : Seq[ModuleID] = Seq(
     play_json, shapeless
   ) ++ common_dependencies

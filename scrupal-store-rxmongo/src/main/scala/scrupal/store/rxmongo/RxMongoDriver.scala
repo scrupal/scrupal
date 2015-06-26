@@ -13,40 +13,37 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.test
+package scrupal.store.rxmongo
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.net.URI
+import java.time.Instant
 
-import scrupal.api.Scrupal
-import scrupal.storage.api.{StoreContext, Schema}
+import scrupal.storage.api.{Store, WriteResult, StorageDriver}
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.{Future, ExecutionContext}
 
-/** One line sentence description here.
-  * Further description here.
-  */
-abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDuration = Duration(5, "seconds"))
-  extends ScrupalSpecification(specName) with OneAppPerSpec {
+class RXMongoDriver extends StorageDriver {
+  override def isDriverFor(uri: URI): Boolean = false
 
-  // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
-  // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
+  override def canOpen(uri: URI): Boolean = false
 
-  lazy val testScrupal : Scrupal = FakeScrupal(ScrupalSpecification.next(specName))
+  override def addStore(uri: URI)(implicit ec: ExecutionContext): Future[Store] = ???
 
-  implicit lazy val scrupal : Scrupal = testScrupal
+  override def scheme: String = ???
 
-  override protected def beforeAll() = {}
+  override def name: String = ???
 
-  override protected def afterAll() = {}
+  override def storeExists(uri: URI): Boolean = ???
 
-  def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
+  override def open(uri: URI, create: Boolean)(implicit ec: ExecutionContext): Future[Store] = ???
 
-  def withSchema[T](schemaName : String)(f : Schema ⇒ T) : T =  scrupal.withSchema(schemaName)(f)
-}
+  override def created: Instant = Instant.now()
 
-object ScrupalApiSpecification {
+  override def drop(implicit ec: ExecutionContext): Future[WriteResult] = ???
 
-  def next(name : String) : String = name + "-" + counter.incrementAndGet()
-  val counter = new AtomicInteger(0)
+  override def size: Long = ???
 
+  override def close(): Unit = ???
+
+  override def id: Symbol = ???
 }

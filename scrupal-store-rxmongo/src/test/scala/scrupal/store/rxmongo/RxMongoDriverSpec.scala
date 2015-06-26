@@ -13,40 +13,13 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.test
+package scrupal.store.rxmongo
 
-import java.util.concurrent.atomic.AtomicInteger
+import scrupal.test.ScrupalApiSpecification
 
-import scrupal.api.Scrupal
-import scrupal.storage.api.{StoreContext, Schema}
+class RxMongoDriverSpec extends ScrupalApiSpecification("RxMongoDriver") {
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
-
-/** One line sentence description here.
-  * Further description here.
-  */
-abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDuration = Duration(5, "seconds"))
-  extends ScrupalSpecification(specName) with OneAppPerSpec {
-
-  // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
-  // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
-
-  lazy val testScrupal : Scrupal = FakeScrupal(ScrupalSpecification.next(specName))
-
-  implicit lazy val scrupal : Scrupal = testScrupal
-
-  override protected def beforeAll() = {}
-
-  override protected def afterAll() = {}
-
-  def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
-
-  def withSchema[T](schemaName : String)(f : Schema ⇒ T) : T =  scrupal.withSchema(schemaName)(f)
-}
-
-object ScrupalApiSpecification {
-
-  def next(name : String) : String = name + "-" + counter.incrementAndGet()
-  val counter = new AtomicInteger(0)
-
+  s"$specName" should {
+    "provide some test examples" in { pending }
+  }
 }
