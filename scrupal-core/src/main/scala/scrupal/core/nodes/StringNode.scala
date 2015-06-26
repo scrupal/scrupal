@@ -17,17 +17,18 @@ package scrupal.core.nodes
 
 import akka.http.scaladsl.model.MediaTypes
 import org.joda.time.DateTime
-import scrupal.api.{Request, StringResponse, Response, Node}
+import scrupal.api._
 import scala.concurrent.Future
 
 case class StringNode(
+  name : String,
   description : String,
   text : String,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = StringNode.kind) extends Node {
   final val mediaType = MediaTypes.`text/plain`
-  def apply(request : Request) : Future[Response] = Future.successful { StringResponse(text) }
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful { StringResponse(text) }
 }
 
 object StringNode {

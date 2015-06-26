@@ -226,8 +226,8 @@ abstract class Scrupal(
     * @param reactor The reactor to act upon (a Request ⇒ Response function).
     * @return A Future to the eventual Response
     */
-  def dispatch(reactor : Reactor) : Future[Response] = {
-    reactor()
+  def dispatch(request: DetailedRequest, reactor : Reactor) : Future[Response] = {
+    reactor(request)
   }
 
 }

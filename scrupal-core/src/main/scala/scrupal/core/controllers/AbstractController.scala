@@ -13,18 +13,42 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.core.controllers
 
-import org.specs2.mutable.Specification
+import play.api.mvc.Results._
+import play.api.mvc._
+import play.api.mvc.{Request⇒PRequest}
+import scrupal.api._
+import scrupal.core.http.HttpUtils
+import scrupal.core.http.netty.PlayDetailedRequest
 
-/** Test specification for Events system portion of the API
- * Further description here.
- */
-class EventsSpec extends Specification {
+import scala.concurrent.{Future, ExecutionContext}
 
-  "Event" should {
-    "work correctly" in {
-      success
+/** Title Of Thing.
+  *
+  * Description of thing
+  */
+abstract class AbstractController(site : Site)(implicit scrupal : Scrupal) extends Controller {
+
+  protected def cr2a(func: (DetailedRequest) => Option[Reactor]): Action[_] = {
+    Action.async(BodyParsers.parse.raw) { req: PRequest[RawBuffer] ⇒
+      import HttpUtils._
+      val context = Context(scrupal, site)
+      val details: DetailedRequest = PlayDetailedRequest(context, req)
+      func(details) match {
+        case Some (reactor) ⇒
+          context.withExecutionContext { implicit ec: ExecutionContext ⇒
+            reactor(details) map { response ⇒
+              val d = response.disposition
+              val status = d.toStatusCode.intValue()
+              val msg = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
+              val header = ResponseHeader(status, reasonPhrase = msg)
+              Result(header, response.payload)
+            }
+          }
+        case None ⇒
+          Future.successful { NotFound("") }
+      }
     }
   }
 

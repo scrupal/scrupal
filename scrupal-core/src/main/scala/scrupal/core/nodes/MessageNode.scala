@@ -28,6 +28,7 @@ import scala.concurrent.Future
   * during node substitution so the result is visible to the end user.
   */
 case class MessageNode(
+  name : String,
   description : String,
   css_class : String,
   message : String,
@@ -35,7 +36,7 @@ case class MessageNode(
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = MessageNode.kind) extends Node {
   final val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(request : Request) : Future[Response] = Future.successful {
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
     val text = div(cls := css_class, message)
     HtmlResponse(Html.renderContents(Seq(text)), Successful)
   }

@@ -13,15 +13,27 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.core.entities
 
-import org.specs2.mutable.Specification
+import scrupal.api.{BundleType, Entity, Scrupal}
 
-class ReferenceSpec extends Specification {
+/** API Documentation Helper For An Entity
+  *
+  * Entities provide an API by which their functionality is invoked. Being able to utilize the API depends on
+  * documentation that corresponds to the Entity API and is accurate and up to date. To this end, this class provides
+  * the means to auto-generated API Documentation for entities and by extending it enhance that documentation.
+  *
+  * @tparam E - The Entity type this EntityAPIDoc documents
+  */
+class APIDocEntity[E <: Entity](id : Symbol)(implicit scrpl : Scrupal) extends Entity(id)(scrpl) {
+  def instanceType : BundleType = ???
 
-  "ReferenceSpec" should {
-    "have some test examples" in {
-      pending
-    }
-  }
+  val author = scrupal.author
+  val copyright = scrupal.copyright
+  val license = scrupal.license
+
+  def kind : Symbol = ???
+
+  def description : String = ???
+
 }

@@ -23,6 +23,7 @@ import scrupal.api._
 import scala.concurrent.Future
 
 case class StaticNode(
+  name : String,
   description : String,
   body : Html.Template,
   modified : Option[DateTime] = Some(DateTime.now),
@@ -30,7 +31,7 @@ case class StaticNode(
   final val kind : Symbol = StaticNode.kind) extends Node {
   def args : ContentsArgs = Html.EmptyContentsArgs
   val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(request : Request) : Future[Response] = Future.successful {
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
     HtmlResponse(body.render(request.context, args), Successful)
   }
 }

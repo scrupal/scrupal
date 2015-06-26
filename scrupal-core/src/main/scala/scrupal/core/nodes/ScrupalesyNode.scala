@@ -55,6 +55,7 @@ import scala.concurrent.Future
   * @param created
   */
 case class ScrupalesyNode(
+  name: String,
   description : String,
   scrupalesy : String,
   modified : Option[DateTime] = Some(DateTime.now()),
@@ -62,7 +63,7 @@ case class ScrupalesyNode(
   final val kind : Symbol = ScrupalesyNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(request : Request) : Future[Response] = Future.successful {
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
     // TODO: Implement ScrupaleasyNode
     HtmlResponse(Html.renderContents( Seq( span("Not Implemented"))), Unimplemented)
   }

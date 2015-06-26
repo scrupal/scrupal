@@ -15,7 +15,7 @@
 
 package scrupal.config
 
-import scrupal.api.types._
+import scrupal.api._
 import scrupal.core._
 import scrupal.utils.ScrupalComponent
 

@@ -47,25 +47,27 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   def description : String = "An entity that stores nothing and merely echos its requests"
 
-  case class echo_doc(kind : String, id : String, instance : JsObject)
+  case class echo_doc(kind : String, id : String, details: String, instance : JsObject)
     extends PlainPageGenerator {
     def title = kind + " -" + id
     def description = "Echo " + kind + " Request"
     def content(context : Context, args : ContentsArgs) : Html.Contents = {
       Seq(
         h1(title),
+        dl(dt("Description"),dd(description),dt("Details"),dd(details)),
         json_document_panel("Instance Document", instance)(),
         display_context_table(context)
       )
     }
   }
 
-  case class echo_request(kind : String, id : String) extends PlainPageGenerator {
+  case class echo_request(kind : String, id : String, details: String) extends PlainPageGenerator {
     val title = kind + " - " + id
     val description = "Echo " + kind + " Request"
     def content(context : Context, args : ContentsArgs) : Html.Contents = {
       Seq(
-        h1(title), p(description),
+        h1(title),
+        dl(dt("Description"),dd(description),dt("Details"),dd(details)),
         display_context_table(context)
       )
     }
@@ -76,148 +78,131 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
     JsObject(Seq())
   }
 
-  override def create(req: Request, id: String, rest_of_path: Uri.Path) : CreateReactor = {
+  override def create(details: String) : CreateReactor = {
     new CreateReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val rest = rest_of_path
-      override val content = parseJSON(request)
-      def apply(request: Request) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_doc("Create", instance_id, content).render(request.context)))
+      def apply(request: DetailedRequest) : Future[Response] = {
+        Future.successful {
+          val content = parseJSON(request)
+          HtmlResponse(echo_doc("Create", "<>", details, content).render(request.context))
+        }
       }
     }
   }
 
-  override def retrieve(req: Request, id: String, rest_of_path: Uri.Path) : RetrieveReactor = {
+  override def retrieve(instance_id: String, details: String) : RetrieveReactor = {
     new RetrieveReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val rest = rest_of_path
-      def apply(request: Request) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_request("Retrieve", instance_id).render(request.context)))
+      def apply(request: DetailedRequest) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_request("Retrieve", instance_id, details).render(request.context)))
       }
     }
   }
 
-  override def update(req: Request, id: String, rest_of_path: Uri.Path) : UpdateReactor = {
+  override def update(instance_id: String, details: String) : UpdateReactor = {
     new UpdateReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val rest = rest_of_path
-      override val content = parseJSON(request)
-      def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_doc("Update", instance_id, content).render(request.context)))
+      def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful {
+          val content = parseJSON(request)
+          HtmlResponse(echo_doc("Update", instance_id, details, content).render(request.context))
+        }
       }
     }
   }
 
-  override def delete(req: Request, id: String, rest_of_path: Uri.Path) : DeleteReactor = {
+  override def delete(instance_id: String, details: String) : DeleteReactor = {
     new DeleteReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val rest = rest_of_path
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_request("Delete", instance_id).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_request("Delete", instance_id, details).render(request.context)))
       }
     }
   }
 
-  override def query(req: Request, id: String, rest_of_path: Uri.Path) : QueryReactor = {
+  override def query(details: String) : QueryReactor = {
     new QueryReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val rest = rest_of_path
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_request("Query", instance_id).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_request("Query", "<>", details).render(request.context)))
       }
     }
   }
 
-  case class facet_doc(kind : String, facet: String, what : Uri.Path, instance : JsObject)
+  case class facet_doc(kind : String, instance_id: String, facet: String, facet_id: String, details: String, instance : JsObject)
     extends PlainPageGenerator {
     val title = "Facet " + kind + " -" + facet
     val description = "Echo Facet " + kind + " Request"
     def content(context : Context, args : ContentsArgs) : Html.Contents = {
       Seq(
         h1(title),
-        h3("Facet Data: ", what.toString()),
+        dl(
+          dt("Description"), dd(description),
+          dt("Instance ID"), dd(instance_id),
+          dt("Facet ID"), dd(facet_id),
+          dt("Details"), dd(details)
+        ),
         json_document_panel("Instance Document", instance)(),
         display_context_table(context)
       )
     }
   }
 
-  case class facet_request(kind : String, facet: String, what : Uri.Path)
+  case class facet_request(kind : String, instance_id: String, facet: String, facet_id: String, details: String)
     extends PlainPageGenerator {
     val title = "Facet " + kind + " - " + facet
     val description = "Echo Facet " + kind + " Request"
     def content(context : Context, args : ContentsArgs) : Html.Contents = {
       Seq(
         h1(title),
-        h3("Facet Data:", what.toString()),
+        dl(
+          dt("Description"), dd(description),
+          dt("Instance ID"), dd(instance_id),
+          dt("Facet ID"), dd(facet_id),
+          dt("Details"), dd(details)
+        ),
         display_context_table(context)
       )
     }
   }
 
-  override def add(req: Request, id: String, fct: String, rest_of_path: Uri.Path) : AddReactor = {
+  override def add(id: String, facet: String, rest: String) : AddReactor = {
     new AddReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val facet = fct
-      val rest = rest_of_path
-      override val content = parseJSON(request)
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_doc("Create", facet, rest, content).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful{
+          val content = parseJSON(request)
+          HtmlResponse(facet_doc("Create", id, facet, "<>", rest, content).render(request.context))
+        }
       }
     }
   }
 
-  override def get(req: Request, id: String, fct: String, rest_of_path: Uri.Path) : GetReactor = {
+  override def get(id: String, facet: String, facet_id: String, details: String) : GetReactor = {
     new GetReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val facet = fct
-      val rest = rest_of_path
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_request("Retrieve", facet, rest).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_request("Retrieve", id, facet, facet_id, details).render(request.context)))
       }
     }
   }
 
-  override def set(req : Request, id: String, fct: String, rest_of_path: Uri.Path) : SetReactor = {
+  override def set(id: String, facet: String, facet_id: String, details: String) : SetReactor = {
     new SetReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val facet = fct
-      val rest = rest_of_path
-      override val content = parseJSON(request)
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_doc("Update", facet, rest, content).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful {
+          val content = parseJSON(request)
+          HtmlResponse(facet_doc("Update", id, facet, facet_id, details, content).render(request.context))
+        }
       }
     }
   }
 
-  override def remove(req: Request, id: String, fct: String, rest_of_path: Uri.Path) : RemoveReactor = {
+  override def remove(id: String, facet: String, facet_id: String, details: String) : RemoveReactor = {
     new RemoveReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val facet = fct
-      val rest = rest_of_path
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_request("Delete", facet, rest).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_request("Delete", id, facet, facet_id, details).render(request.context)))
       }
     }
   }
 
-  override def find(req: Request, id: String, fct: String, rest_of_path: Uri.Path) : FindReactor = {
+  override def find(id: String, facet: String, details: String) : FindReactor = {
     new FindReactor {
-      val request : Request = req
-      val instance_id : String = id
-      val facet = fct
-      val rest = rest_of_path
-      override def apply(request : Request) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_request("Query", facet, rest).render(request.context)))
+      override def apply(request : DetailedRequest) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_request("Query", id, facet, "<>", details).render(request.context)))
       }
     }
   }

@@ -26,7 +26,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 abstract class AbstractHtmlNode extends Node {
   final val mediaType : MediaType = MediaTypes.`text/html`
   def content(context : Context)(implicit ec : ExecutionContext) : Future[Html.Contents]
-  def apply(request : Request) : Future[Response] = {
+  def apply(request : DetailedRequest) : Future[Response] = {
     val context = request.context
     context.withExecutionContext { implicit ec : ExecutionContext ⇒
       content(context)(ec).map { html ⇒ HtmlResponse(Html.renderContents(html), Successful) }
@@ -44,6 +44,7 @@ abstract class AbstractHtmlNode extends Node {
   *
   */
 case class HtmlNode(
+  name : String,
   description : String,
   template : Html.Template,
   modified : Option[DateTime] = Some(DateTime.now),

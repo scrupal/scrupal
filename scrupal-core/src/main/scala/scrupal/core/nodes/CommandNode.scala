@@ -35,7 +35,7 @@ import scala.concurrent.Future
   * @param created
   */
 case class CommandNode(
-  id : Identifier,
+  name : String,
   description : String,
   command : String,
   modified : Option[DateTime] = Some(DateTime.now()),
@@ -43,7 +43,7 @@ case class CommandNode(
   final val kind : Symbol = CommandNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(ctxt : Request) : Future[Response] = Future.successful {
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
     // TODO: implement CommandNode
     HtmlResponse(span("Not Implemented").toString(), Unimplemented)
   }

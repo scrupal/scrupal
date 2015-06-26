@@ -15,27 +15,18 @@
 
 package scrupal.api
 
-import akka.http.scaladsl.model.{Uri, HttpMethods}
+import akka.http.scaladsl.model.HttpMethods
 import akka.http.scaladsl.server.PathMatcher.{Matched, Unmatched}
 import akka.http.scaladsl.server.{PathMatcher1, PathMatcher}
 import akka.http.scaladsl.server.PathMatchers._
-import play.api.libs.json.JsObject
 import scrupal.storage.api.Storable
 import scrupal.utils.{Enablee, Registrable}
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-trait EntityCollectionReactor extends Reactor with Nameable with Describable {
-  def instance_id : String
-  def rest: Uri.Path
-}
-
-trait EntityInstanceReactor extends Reactor with Nameable with Describable {
-  def instance_id : String
-  def facet: String
-  def rest: Uri.Path
-}
+trait EntityCollectionReactor extends Reactor
+trait EntityInstanceReactor extends Reactor
 
 /** Provider of EntityCommands for command parameters
   * This
@@ -45,18 +36,21 @@ trait EntityProvider extends PluralityProvider {
 
   val pluralEntityMatcher: PathMatcher1[String] = pluralMatcher / /*instance_id=*/Segment
 
-  val singularEntityMatcher : PathMatcher[(String,String)] = pluralMatcher / /*instance_id=*/Segment / /*facet_name*/ Segment
+  val singularEntityMatcher : PathMatcher[(String,String)] = singularMatcher / /*instance_id=*/Segment / /*facet_name*/ Segment
 
   override def provide(request: Request) : Option[Reactor] = {
+    None
+    /* FIXME: EntityProvider.provide
     singularEntityMatcher(request.path) match {
       case Matched(rest, extractions) ⇒
         val (instance_id, facet_name) = extractions
+        val details : String = rest.toString()
         request.method match {
-          case HttpMethods.POST ⇒ Some(add(request, instance_id, facet_name, rest))
-          case HttpMethods.GET ⇒ Some(get(request, instance_id, facet_name, rest))
-          case HttpMethods.PUT ⇒  Some(set(request, instance_id, facet_name, rest))
-          case HttpMethods.DELETE ⇒ Some(remove(request, instance_id, facet_name, rest))
-          case HttpMethods.OPTIONS ⇒  Some(find(request, instance_id, facet_name, rest))
+          case HttpMethods.POST ⇒ Some(add(instance_id, facet_name, details))
+          case HttpMethods.GET ⇒ Some(get(instance_id, facet_name, details))
+          case HttpMethods.PUT ⇒  Some(set(rinstance_id, facet_name, details))
+          case HttpMethods.DELETE ⇒ Some(remove(instance_id, facet_name, details))
+          case HttpMethods.OPTIONS ⇒  Some(find(instance_id, facet_name, details))
           case _ ⇒ noSuchMessage(request, s"$request not supported on entity $label.")
         }
       case Unmatched ⇒
@@ -64,81 +58,85 @@ trait EntityProvider extends PluralityProvider {
           case Matched(rest, extractions) ⇒
             val instance_id = extractions._1
             request.method match {
-              case HttpMethods.POST ⇒ Some(create(request, instance_id, rest))
-              case HttpMethods.GET ⇒ Some(retrieve(request, instance_id, rest))
-              case HttpMethods.PUT ⇒ Some(update(request, instance_id, rest))
-              case HttpMethods.DELETE ⇒ Some(delete(request, instance_id, rest))
-              case HttpMethods.OPTIONS ⇒ Some(query(request, instance_id, rest))
+              case HttpMethods.POST ⇒ Some(create(request, instance_id, details))
+              case HttpMethods.GET ⇒ Some(retrieve(request, instance_id, details))
+              case HttpMethods.PUT ⇒ Some(update(request, instance_id, details))
+              case HttpMethods.DELETE ⇒ Some(delete(request, instance_id, details))
+              case HttpMethods.OPTIONS ⇒ Some(query(request, instance_id, details))
               case _ ⇒ noSuchMessage(request, s"$request not supported on entitty $label.")
             }
           case Unmatched ⇒ None
         }
-    }
+    } */
   }
 
   def noSuchMessage(req : Request, msg: String) : Option[Reactor] = {
     Some(new Reactor {
+      val name = "Unavailable"
+      val description = "A Reactor that generates an Unavailable response"
       val request : Request = req
-      def apply(request: Request): Future[Response] = { Future.successful( ErrorResponse(msg, Unavailable) ) }
+      def apply(request: DetailedRequest): Future[Response] = { Future.successful( ErrorResponse(msg, Unavailable) ) }
     })
   }
 
   /** CREATE ENTITY (POST/plural) - Create a new entity from scratch
     * This is a command on the entity type's container to insert a new entity. The instance should be created
     * with the provided identifier, if possible. If not, respond with an error.
-    * @param request The request to create the entity
     * @return A Create object that can perform the task from an Actor (i.e. in an isolated context)
     */
-  def create(request: Request, instance_id: String, rest: Uri.Path) : CreateReactor
+  def create(details: String) : CreateReactor
+
+  /** Query Command (OPTIONS/plural)
+    * @return The QueryReaction to generate the response for the Query request
+    */
+  def query(details: String) : QueryReactor
+
 
   /** Retrieve Command (GET/plural) - Retrieve an existing entity by its identifier
     * This is a command on the entity type's contain to retrieve a specific entity. The full instance should be
     * retrieved, including all retrievable facets.
-    * @param request The request to retrieve the entity
     * @return
     */
-  def retrieve(request : Request, instance_id: String, rest: Uri.Path) : RetrieveReactor
+  def retrieve(instance_id: String, details: String) : RetrieveReactor
+  def retrieve(instance_id: Long, details: String) : RetrieveReactor
 
   /** Update Command (PUT/plural) - Updates all or a few of the fields of an entity
-    * @param request The request to update the entity
     * @return
     */
-  def update(request : Request, instance_id: String, rest: Uri.Path) : UpdateReactor
+  def update(instance_id: String, details: String) : UpdateReactor
+  def update(instance_id: Long, details: String) : UpdateReactor
 
   /** Delete Command (DELETE/plural) */
   /** Delete an entity
-    * @param request The request to delete the entity
     * @return THe DeleteReaction to generate the response for the Delete request
     */
-  def delete(request : Request, instance_id: String, rest: Uri.Path) : DeleteReactor
-
-  /** Query Command (OPTIONS/plural)
-    *
-    * @param request The request to query the entity
-    * @return The QueryReaction to generate the response for the Query request
-    */
-  def query(request: Request, instance_id: String, rest: Uri.Path) : QueryReactor
-
-  /** Create Facet Command (POST/singular) */
-  def add(request: Request, instance_id: String, facet: String, rest: Uri.Path) : AddReactor
-
-  /** RetrieveAspect Command (GET/singular) */
-  def get(request: Request, instance_id: String, facet: String, rest: Uri.Path) : GetReactor
-
-  /** UpdateAspect Command (PUT/singular) */
-  def set(request: Request, instance_id: String, facet: String, rest: Uri.Path) : SetReactor
-
-  /** XXX Command (DELETE/singular) */
-  def remove(request: Request, instance_id: String, facet: String, rest: Uri.Path) : RemoveReactor
+  def delete(instance_id: String, details: String) : DeleteReactor
+  def delete(instance_id: Long, details: String) : DeleteReactor
 
   /** XXX Command (OPTIONS/singular) */
-  def find(request: Request, instance_id: String, facet: String, rest: Uri.Path) : FindReactor
+  def find(instance_id: String, facet: String, details: String) : FindReactor
+  def find(instance_id: Long, facet: String, details: String) : FindReactor
+
+  /** Create Facet Command (POST/singular) */
+  def add(instance_id: String, facet: String, details: String) : AddReactor
+  def add(instance_id: Long, facet: String, details: String) : AddReactor
+
+  /** RetrieveAspect Command (GET/singular) */
+  def get(instance_id: String, facet: String, facet_id: String, details: String) : GetReactor
+  def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor
+
+  /** UpdateAspect Command (PUT/singular) */
+  def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor
+  def set(instance_id: Long, facet: String, facet_id: String, details: String) : SetReactor
+
+  /** XXX Command (DELETE/singular) */
+  def remove(instance_id: String, facet: String, facet_id: String, details: String) : RemoveReactor
+  def remove(instance_id: Long, facet: String, facet_id: String, details: String) : RemoveReactor
 }
 
 trait CreateReactor extends EntityCollectionReactor {
   val name : String = "Create"
   val description = "Create a specific instance of the entity and insert it in the entity collection."
-  val content : JsObject = emptyJsObject
 }
 
 trait RetrieveReactor extends EntityCollectionReactor {
@@ -149,7 +147,6 @@ trait RetrieveReactor extends EntityCollectionReactor {
 trait UpdateReactor extends EntityCollectionReactor {
   val name : String = "Update"
   val description = "Update a specific instance of the entity."
-  val content : JsObject = emptyJsObject
 }
 
 trait DeleteReactor extends EntityCollectionReactor {
@@ -165,7 +162,6 @@ trait QueryReactor extends EntityCollectionReactor {
 trait AddReactor extends EntityInstanceReactor {
   val name : String = "Add"
   val description = "Create a facet on a specific entity in the collection."
-  val content : JsObject = emptyJsObject
 }
 
 trait GetReactor extends EntityInstanceReactor {
@@ -176,7 +172,6 @@ trait GetReactor extends EntityInstanceReactor {
 trait SetReactor extends EntityInstanceReactor {
   val name : String = "Set"
   val description = "Update a facet from a specific entity in the collection."
-  val content : JsObject = emptyJsObject
 }
 
 trait RemoveReactor extends EntityInstanceReactor {
@@ -220,44 +215,66 @@ abstract class Entity(sym : Symbol)(implicit scrpl : Scrupal) extends {
   override def validate(ref : Location, value : Map[String,Any] ) : VResult = instanceType.validate(ref, value)
 */
 
-  def create(request: Request, instance_id: String, rest: Uri.Path) : CreateReactor = {
-    NoopCreateReactor(request, instance_id, rest)
+  def create(details: String) : CreateReactor = { NoopCreateReactor(details) }
+
+  def retrieve(instance_id: String, details: String) : RetrieveReactor = {
+    NoopRetrieveReactor(instance_id, details)
+  }
+  def retrieve(instance_id: Long, details: String) : RetrieveReactor = {
+    retrieve (instance_id.toString, details)
   }
 
-  def retrieve(request: Request, instance_id: String, rest: Uri.Path) : RetrieveReactor = {
-    NoopRetrieveReactor(request, instance_id, rest)
+  def update(instance_id: String, details: String) : UpdateReactor = {
+    NoopUpdateReactor(instance_id, details)
+  }
+  def update(instance_id: Long, details: String) : UpdateReactor = {
+    update(instance_id.toString, details)
   }
 
-  def update(request : Request, instance_id: String, rest: Uri.Path) : UpdateReactor = {
-    NoopUpdateReactor(request, instance_id, rest)
+  def delete(instance_id: String, details: String) : DeleteReactor = {
+    NoopDeleteReactor(instance_id, details)
+  }
+  def delete(instance_id: Long, details: String) : DeleteReactor = {
+    delete(instance_id.toString, details)
   }
 
-  def delete(request : Request, instance_id: String, rest: Uri.Path) : DeleteReactor = {
-    NoopDeleteReactor(request, instance_id, rest)
+  def query(details: String) : QueryReactor = {
+    NoopQueryReactor(details)
   }
 
-  def query(request : Request, instance_id: String, rest: Uri.Path) : QueryReactor = {
-    NoopQueryReactor(request, instance_id, rest)
+  def add(instance_id: String, facet: String, details: String) : AddReactor = {
+    NoopAddReactor(instance_id, facet, details)
+  }
+  def add(instance_id: Long, facet: String, details: String) : AddReactor = {
+    add(instance_id.toString, facet, details)
   }
 
-  def add(request : Request, instance_id: String, facet: String, rest: Uri.Path) : AddReactor = {
-    NoopAddReactor(request, instance_id, facet, rest)
+  def get(instance_id: String, facet: String, facet_id: String, details: String) : GetReactor = {
+    NoopGetReactor(instance_id, facet, facet_id, details)
+  }
+  def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor = {
+    get(instance_id.toString, facet, facet_id, details)
   }
 
-  def get(request : Request, instance_id: String, facet: String, rest: Uri.Path) : GetReactor = {
-    NoopGetReactor(request, instance_id, facet, rest)
+  def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor = {
+    NoopSetReactor(instance_id, facet, facet_id, details)
+  }
+  def set(instance_id: Long, facet: String, facet_id: String, details: String) : SetReactor = {
+    set(instance_id.toString, facet, facet_id, details)
   }
 
-  def set(request : Request, instance_id: String, facet: String, rest: Uri.Path) : SetReactor = {
-    NoopSetReactor(request, instance_id, facet, rest)
+  def remove(instance_id: String, facet: String, facet_id: String, details: String) : RemoveReactor = {
+    NoopRemoveReactor(instance_id, facet, facet_id, details)
+  }
+  def remove(instance_id: Long, facet: String, facet_id: String, details: String) : RemoveReactor = {
+    remove(instance_id.toString, facet, facet_id, details)
   }
 
-  def remove(request : Request, instance_id: String, facet: String, rest: Uri.Path) : RemoveReactor = {
-    NoopRemoveReactor(request, instance_id, facet, rest)
+  def find(instance_id: String, facet: String, details: String) : FindReactor = {
+    NoopFindReactor(instance_id, facet, details)
   }
-
-  def find(request : Request, instance_id: String, facet: String, rest: Uri.Path) : FindReactor = {
-    NoopFindReactor(request, instance_id, facet, rest)
+  def find(instance_id: Long, facet: String, details: String) : FindReactor = {
+    find(instance_id.toString, facet, details)
   }
 
 }
@@ -274,27 +291,26 @@ case class EntitiesRegistry() extends scrupal.utils.Registry[Entity] {
 
 
 trait NoopReactor extends Reactor with Describable {
-  def apply(request: Request) : Future[Response] = Future.successful( NoopResponse )
+  def apply(request: DetailedRequest) : Future[Response] = Future.successful( NoopResponse )
 }
 
-case class NoopCreateReactor(request : Request, instance_id: String, rest: Uri.Path)
-  extends CreateReactor with NoopReactor
-case class NoopRetrieveReactor(request : Request, instance_id: String, rest: Uri.Path)
+case class NoopCreateReactor(details: String) extends CreateReactor with NoopReactor
+case class NoopRetrieveReactor(instance_id: String, details: String)
   extends RetrieveReactor with NoopReactor
-case class NoopUpdateReactor(request : Request, instance_id: String, rest: Uri.Path)
+case class NoopUpdateReactor(instance_id: String, details: String)
   extends UpdateReactor with NoopReactor
-case class NoopDeleteReactor(request : Request, instance_id: String, rest: Uri.Path)
+case class NoopDeleteReactor(instance_id: String, details: String)
   extends DeleteReactor with NoopReactor
-case class NoopQueryReactor(request : Request, instance_id: String, rest: Uri.Path)
+case class NoopQueryReactor(details: String)
   extends QueryReactor with NoopReactor
-case class NoopAddReactor(request : Request, instance_id: String, facet: String, rest: Uri.Path)
+case class NoopAddReactor(instance_id: String, facet: String, details: String)
   extends AddReactor with NoopReactor
-case class NoopGetReactor(request : Request, instance_id: String, facet: String, rest: Uri.Path)
+case class NoopGetReactor(instance_id: String, facet: String, facet_id: String, details: String)
   extends GetReactor with NoopReactor
-case class NoopSetReactor(request : Request, instance_id: String, facet: String, rest: Uri.Path)
+case class NoopSetReactor(instance_id: String, facet: String, facet_id: String, details: String)
   extends SetReactor with NoopReactor
-case class NoopRemoveReactor(request : Request, instance_id: String, facet: String, rest: Uri.Path)
+case class NoopRemoveReactor(instance_id: String, facet: String, facet_id: String, details: String)
   extends RemoveReactor with NoopReactor
-case class NoopFindReactor(request : Request, instance_id: String, facet: String, rest: Uri.Path)
+case class NoopFindReactor(instance_id: String, facet: String, details: String)
   extends FindReactor with NoopReactor
 

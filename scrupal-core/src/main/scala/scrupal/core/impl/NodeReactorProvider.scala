@@ -15,7 +15,7 @@
 
 package scrupal.core.impl
 
-import scrupal.api.{Provider, Request, Reactor, Node}
+import scrupal.api._
 import scrupal.core.actions.NodeReactor
 
 /** A provide of NodeReactor
@@ -25,13 +25,13 @@ import scrupal.core.actions.NodeReactor
 case class NodeReactorProvider(node : Node) extends Provider {
   def canProvide(request : Request) : Boolean = true
   def provide (request : Request) : Option[Reactor] = {
-    Some(NodeReactor(request, node))
+    Some(NodeReactor(node))
   }
 }
 
 case class FunctionalNodeReactorProvider(nodeF : (Request) ⇒ Node) extends Provider {
   def canProvide(request : Request) : Boolean = true
   def provide(request : Request) : Option[Reactor] = {
-    Some(NodeReactor(request, nodeF(request)))
+    Some(NodeReactor(nodeF(request)))
   }
 }

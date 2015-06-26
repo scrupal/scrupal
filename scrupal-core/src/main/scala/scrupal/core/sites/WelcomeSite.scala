@@ -36,7 +36,7 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   override val themeName = "cyborg"
   def hostNames : Regex = ".*".r
 
-  object WelcomeSiteRoot extends HtmlNode(
+  object WelcomeSiteRoot extends HtmlNode("WelcomeSiteRoot",
     "Main index page for Welcome To Scrupal Site",
     WelcomeSite.WelcomePageTemplate,
     modified = Some(DateTime.now),
@@ -45,7 +45,7 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
 
   object DocPathToDocs extends FunctionalNodeReactorProvider( { request: Request ⇒
     val path = request.path.toString().split("/").toIterable
-    MarkedDocNode("doc", "docs", path)
+    MarkedDocNode("", "doc", "docs", path)
   }) {
     private val pathMatcher = PathMatchers.Slash ~ "doc"
     override def canProvide(request: Request) : Boolean = {

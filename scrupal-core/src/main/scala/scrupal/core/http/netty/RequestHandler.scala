@@ -29,14 +29,12 @@ import play.api.routing.Router
 import play.api.mvc.Results.{NotFound, Ok, Conflict}
 import _root_.play.api.mvc
 
-import scrupal.api.Request
 import scrupal.api._
 import scrupal.core.http.{netty, HttpUtils}
 
 import scala.annotation.switch
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
-import scala.util.matching.Regex
 
 /** Scrupal Request Handler
   *

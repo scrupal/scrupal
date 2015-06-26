@@ -28,6 +28,7 @@ import scala.concurrent.Future
   * predefined variables/functions (@{datetime}), etc.
   */
 case class SubstitutionNode (
+  name : String,
   description: String,
   script: String,
   subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
@@ -38,8 +39,8 @@ case class SubstitutionNode (
 
   final val mediaType: MediaType = MediaTypes.`text/html`
 
-  def apply(request : Request) : Future[Response] = {
-    Future.successful(NoopResponse) // FIXME: REturn correct results
+  def apply(request : DetailedRequest) : Future[Response] = {
+    Future.successful(NoopResponse) // FIXME: Return correct results
   }
 
   def resolve(ctxt: Context, tags: Map[String,(Node,Response)]) : Response = {

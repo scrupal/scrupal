@@ -17,8 +17,9 @@ package scrupal.api
 
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
+import play.api.libs.iteratee.Enumerator
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.existentials
 
 import scrupal.storage.api._
@@ -31,8 +32,7 @@ import scrupal.storage.api._
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-trait Node extends Storable
-  with Describable with Modifiable with Reaction with Bootstrappable {
+trait Node extends Reactor with Storable with Modifiable with Bootstrappable {
   def mediaType : MediaType
   def reference(schema: String, collection : String)(implicit sc : StoreContext) : Reference[Node] = {
     StorableReference(sc.store, schema, collection, this)
@@ -43,15 +43,16 @@ object Node {
 
   type Ref = Reference[Node]
 
-  lazy val Empty = new Node {
+  lazy val empty = new Node {
+    def name: String = "empty"
     def mediaType: MediaType = MediaTypes.`application/octet-stream`
     def modified: Option[DateTime] = Some(DateTime.now())
     def created: Option[DateTime] = Some(DateTime.now())
-    def apply(v1: Request): Future[Response] = Future.successful(NoopResponse)
+    def apply(v1: DetailedRequest): Future[Response] = Future.successful(NoopResponse)
     def description: String = "This node is completely empty."
   }
 
-  /*
+  /* FIXME: Move Node storage code to scrupal-store-reactivemongo
 
   object variants extends VariantRegistry[Node]("Node")
 
@@ -76,16 +77,17 @@ object Node {
   }
   */
 }
+
 /* FIXME: Reinstate when we need CompoundNodes
 abstract class CompoundNode extends Node {
-  def subordinates : Map[String, Either[NodeRef, Node]]
-  def resolve(ctxt : Context, tagged_data : Map[String, (Node, EnumeratorResult)]) : EnumeratorResult
-  def apply(ctxt : Context) : Future[Result[_]] = {
+  def subordinates : Map[String, Either[Reference[Node], Node]]
+  def resolve(ctxt : Context, tagged_data : Map[String, (Node, Response)]) : Response
+  def apply(ctxt : Context) : Future[Response] = {
     ctxt.withExecutionContext { implicit ec : ExecutionContext ⇒
       ctxt.withSchema {
         case (dbc, schema) ⇒
           schema.withDB { db : ScrupalDB ⇒
-            val futures_nested : Iterable[Future[(String, (Node, EnumeratorResult))]] = {
+            val futures_nested : Iterable[Future[(String, (Node, Response))]] = {
               for ((name, nr) ← subordinates) yield {
                 if (nr.isLeft) {
                   val dao = NodeDAO(db)
@@ -114,10 +116,9 @@ abstract class CompoundNode extends Node {
 
 */
 
-/* FIXME: Reinstate  when we want generalized Layout
 case class LayoutProducer (
   template: Array[Byte],
-  tags: Map[String,(Node,EnumeratorResult)]
+  tags: Map[String,(Node,Response)]
 ) {
   private val end: Int = template.length
   private var index: Int = 0
@@ -166,7 +167,7 @@ case class LayoutProducer (
     (None, end, index)
   }
 
-  def buildEnumerator: Enumerator[Array[Byte]] = {
+  def buildEnumerator(implicit ec: ExecutionContext) : Enumerator[Array[Byte]] = {
     var enums = Seq.empty[Enumerator[Array[Byte]]]
     while (index < end) {
       val (tag, block_end, next_index) = nextTag
@@ -192,6 +193,8 @@ case class LayoutProducer (
     }
   }
 }
+
+/* FIXME: Reinstate  when we want LayoutNode
 
 /** A Node That Is A Layout.
   *

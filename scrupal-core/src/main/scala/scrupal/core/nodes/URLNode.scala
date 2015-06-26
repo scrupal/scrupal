@@ -24,13 +24,14 @@ import scrupal.api._
 import scala.concurrent.Future
 
 case class URLNode(
+  name : String,
   description : String,
   url : URL,
   mediaType : MediaType = MediaTypes.`text/html`,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = URLNode.kind) extends Node {
-  def apply(request : Request) : Future[Response] = Future.successful {
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
     StreamResponse(url.openStream(), mediaType)
   }
 }

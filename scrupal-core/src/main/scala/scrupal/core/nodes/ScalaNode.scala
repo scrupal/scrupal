@@ -36,6 +36,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   * @param created
   */
 case class ScalaNode(
+  name : String,
   description : String,
   code : String,
   modified : Option[DateTime] = Some(DateTime.now()),
@@ -43,7 +44,7 @@ case class ScalaNode(
   final val kind : Symbol = ScalaNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(request : Request) : Future[Response] = request.context.withExecutionContext {
+  def apply(request : DetailedRequest) : Future[Response] = request.context.withExecutionContext {
     implicit ec : ExecutionContext ⇒
       Future {
         import javax.script.ScriptEngineManager

@@ -15,7 +15,7 @@
 
 package scrupal.core.nodes
 
-import akka.http.scaladsl.model.{Uri, MediaTypes, MediaType}
+import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import org.joda.time.DateTime
 import scrupal.api.AssetsLocator.Directory
 import scrupal.api.Html.{ ContentsArgs, Contents }
@@ -37,6 +37,7 @@ import scalatags.Text.all._
   * @param created Date of creation
   */
 case class MarkedDocNode(
+  name : String,
   contextPath : String,
   root : String,
   path : Iterable[String],
@@ -70,7 +71,7 @@ case class MarkedDocNode(
     fileMap → dirMap
   }
 
-  def apply(request : Request) : Future[Response] = {
+  def apply(request : DetailedRequest) : Future[Response] = {
     val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
@@ -96,7 +97,7 @@ case class MarkedDocNode(
               urlOpt match {
                 case Some(url) ⇒
                   val title = docTitle + " - " + dir.title.getOrElse("Documentation")
-                  val content = URLNode("docUrl", url)
+                  val content = URLNode("docURL", "docUrl", url)
                   val linkPath = if (relPath.isEmpty) "/" + contextPath else "/" + contextPath + "/" + relPath
                   val parentPath = path.dropRight(2).mkString("/")
                   val parentDir = if (parentPath.isEmpty)

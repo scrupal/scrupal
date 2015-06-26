@@ -34,10 +34,37 @@ object Request {
 }
 
 trait DetailedRequest extends Request {
-  def context : Context
+  def parameters : Map[String,String] = Map.empty[String,String]
   def mediaType : MediaType = MediaTypes.`application/octet-stream`
   def payload : Enumerator[Array[Byte]] = Enumerator.empty[Array[Byte]]
-  def parameters : Map[String,String] = Map.empty[String,String]
 }
 
-case class SimpleRequest(context : Context, method: HttpMethod, site: Site, path: Uri.Path) extends Request
+object DetailedRequest {
+  def apply(req : Request,
+    params : Map[String,String] = Map.empty[String,String],
+    mType : MediaType = MediaTypes.`application/octet-stream`,
+    body : Enumerator[Array[Byte]] = Enumerator.empty[Array[Byte]]): Unit = {
+    new DetailedRequest {
+      val method = req.method
+      val context = req.context
+      val path = req.path
+      override val query = req.query
+      override val parameters = params
+      override val mediaType = mType
+      override val payload = body
+    }
+  }
+
+  lazy val empty = new DetailedRequest {
+    val name = "empty"
+    val description = "The empty DetailedRequest"
+    val method = HttpMethods.TRACE
+    val context = Context.empty
+    val path = Uri.Path.Empty
+  }
+
+}
+
+case class SimpleRequest(site: Site, method: HttpMethod, path: Uri.Path)(implicit scrupal : Scrupal) extends Request {
+  val context : Context = Context(scrupal, site)
+}

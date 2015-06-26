@@ -28,13 +28,14 @@ import scala.concurrent.Future
   * This node type contains a URL to a resource and generates a link to it.
   */
 case class LinkNode(
+  name: String,
   description : String,
   url : URL,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = LinkNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(ctxt : Request) : Future[Response] = Future.successful {
+  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
     HtmlResponse(Html.renderContents(Seq(a(href := url.toString, description))), Successful)
   }
 }

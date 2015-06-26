@@ -25,7 +25,7 @@ case class NodeSite(
   name : String,
   description : String,
   hostNames : Regex,
-  siteRoot : Node = Node.Empty,
+  siteRoot : Node = Node.empty,
   override val requireHttps : Boolean = false,
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None)(implicit scrpl : Scrupal) extends Site(id) {

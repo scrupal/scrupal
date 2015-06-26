@@ -100,13 +100,13 @@ object ActionProcessor extends ScrupalComponent {
 class ActionProcessor extends Actor with ActorLogging {
 
   def receive : Receive = {
-    case action : Reactor ⇒
+    case (request: DetailedRequest, reactor: Reactor) ⇒
       try {
-        val result = action()
+        val result = reactor(request)
         sender ! result
       } catch {
         case xcptn : Throwable ⇒
-          log.warning(s"The Command, $action, threw an exception: ", xcptn) // FIXME: doesn't print the exception
+          log.warning(s"The Command, $reactor($reactor), threw an exception: ", xcptn) // FIXME: doesn't print the exception
           sender ! Future.failed(xcptn)
       }
   }

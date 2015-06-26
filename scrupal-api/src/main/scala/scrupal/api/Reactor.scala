@@ -17,14 +17,15 @@ package scrupal.api
 
 import scala.concurrent.Future
 
-/** A function that generates content
+/** A function that generates a future response from a detailed request
   *
-  * This is the basic characteristic of a Node. It is simply a function that receives a Context
-  * and produces content as a Future Result. The Context provides the setting in which it is
-  * generating the content. All dynamic content in Scrupal is generated through a Generator.
-  * The Result embodies the notion of completing a request with some content and a disposition.
+  * This is the most fundamental kind of action in Scrupal. A Reaction is simply a function that maps
+  * a [[scrupal.api.DetailedRequest]] into a [[scala.concurrent.Future]] [[scrupal.api.Response]].
+  * All dynamic content in Scrupal is produced eventually through the use of a Reaction.
+  * The Result embodies the notion of completing a request with some content and a disposition on the processing.
+  * @see [[scrupal.api.Reactor]]
   */
-trait Reaction extends ((Request) ⇒ Future[Response])
+trait Reaction extends ((DetailedRequest) ⇒ Future[Response])
 
 /** An Reaction To A Request That Produces A Response
   *
@@ -42,27 +43,9 @@ trait Reaction extends ((Request) ⇒ Future[Response])
   * @see [[scrupal.api.Request]]
   *
   */
-trait Reactor extends ( () ⇒ Future[Response] ) with Reaction {
+trait Reactor extends Reaction with Nameable with Describable {
 
-  /** The Request to which this Reaction reacts to
-    *
-    * Reactions capture their request so that a contains everything it needs to generate a response and the reaction
-    * can be run without providing any further arguments.
-    * @return The request
-    */
-  def request : Request
-
-  /** The action part of an Action object.
-    *
-    * Objects mixing in this trait will define apply to implement the Action. Note that the result type is a generic
-    * Result[_]. The only things you have to return are a Disposition, a ContentType and some sort of payload of
-    * arbitrary type. Clients of the action should understand the actual type of result.
-    *
-    * @return The Result[_] yielded from executing the action.
-    */
-  def apply() : Future[Response] = this.apply(this.request)
-
-  def apply(request: Request) : Future[Response]
+  def apply(request: DetailedRequest) : Future[Response]
 }
 
 

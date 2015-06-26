@@ -33,13 +33,14 @@ import scala.concurrent.Future
   * @param created
   */
 case class FileNode(
+  name : String,
   description : String,
   file : File,
   override val mediaType : MediaType = MediaTypes.`text/html`,
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = FileNode.kind) extends Node {
-  def apply(request : Request) : Future[Response] = {
+  def apply(request : DetailedRequest) : Future[Response] = {
     val extension = {
       val name = file.getName
       name.lastIndexOf(".") match {

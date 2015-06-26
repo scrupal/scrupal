@@ -44,7 +44,7 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
 
   def genNode(id : Int) : Node = {
     val name = s"Node-$id"
-    nodes.MessageNode(name, "text-success", s"This is node $name")
+    nodes.MessageNode(name, "Descrition", "text-success", s"This is node $name")
   }
 
   def genFeature(id : Int, mod : Module) : Feature = {
@@ -91,6 +91,6 @@ case class ScenarioGenerator(dbName : String, sites : Int = 1, apps : Int = 1, m
       genApplication(i, mods, ents, instances, nodes)
     }
     val name = s"Site-$id"
-    NodeSite(Symbol(name), name, name, "localhost".r, Node.Empty)
+    NodeSite(Symbol(name), name, name, "localhost".r, Node.empty)
   }
 }
