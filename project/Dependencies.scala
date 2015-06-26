@@ -67,7 +67,7 @@ trait Dependencies
   // Akka Stuff
   val akka_actor              = "com.typesafe.akka"         %% "akka-actor"               % Ver.akka
   val akka_slf4j              = "com.typesafe.akka"         %% "akka-slf4j"               % Ver.akka
-  val akka_http               = "com.typesafe.akka"         %% "akka-http-experimental"   % "1.0-RC3"
+  val akka_http               = "com.typesafe.akka"         %% "akka-http-experimental"   % "1.0-RC4"
 
   // Fundamental Libraries
   val shapeless               = "com.chuusai"               %% "shapeless"                % "2.2.1"
