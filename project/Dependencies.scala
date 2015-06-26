@@ -84,7 +84,7 @@ trait Dependencies
   // UI Based Stuff
   val marked                  = "org.webjars"               %  "marked"                   % "0.3.2-1"
   val fontawesome             = "org.webjars"               %  "font-awesome"             % "4.2.0"
-  val scalatags               = "com.scalatags"             %% "scalatags"                % "0.5.0-SNAPSHOT"
+  val scalatags               = "com.lihaoyi"               %% "scalatags"                % "0.5.2"
 
   // Hashing Algorithms
   val pbkdf2                  = "io.github.nremond"         %% "pbkdf2-scala"             % "0.4"
