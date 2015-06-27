@@ -28,7 +28,7 @@ import scala.language.implicitConversions
 trait EntityCollectionReactor extends Reactor
 trait EntityInstanceReactor extends Reactor
 
-/** Provider of EntityCommands for command parameters
+/** Provider of Reactors for command parameters
   * This
   * TODO: Finish documenting EntityCommandProvider interface as it is necessary to understanding entities
   */

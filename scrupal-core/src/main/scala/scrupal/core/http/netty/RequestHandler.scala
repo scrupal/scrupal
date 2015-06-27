@@ -55,6 +55,13 @@ class RequestHandler @Inject() (
   scrupal.open()
 
   override def routeRequest(header: mvc.RequestHeader) : Option[mvc.Handler] = {
+    for ( site ← scrupal.Sites.forHost(header.host) ;
+          router <- site.routers ;
+          handler = router.handlerFor(header) if handler.isDefined
+    ) {
+      return handler
+    }
+
     val reactions : Iterable[(Context,Reactor)] = {
       for (
         site ← scrupal.Sites.forHost(header.host) ;

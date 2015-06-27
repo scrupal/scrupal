@@ -19,7 +19,9 @@ import akka.http.scaladsl.server.PathMatcher.{Unmatched, Matched}
 import akka.http.scaladsl.server.PathMatchers
 import akka.http.scaladsl.model.HttpMethods
 import org.joda.time.DateTime
+import play.api.routing.Router
 import scrupal.api._
+import scrupal.core.controllers.EntityRouter
 import scrupal.core.html.PlainPage
 import scrupal.core.impl.{NodeReactorProvider, FunctionalNodeReactorProvider}
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
@@ -66,11 +68,16 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
     )
   }
 
+
   val coreModule = scrupal.Modules('Core)
   val echoEntity = coreModule.flatMap { m ⇒ m.entity('Echo) }
   enable(coreModule)
   enable(echoEntity)
   // enable(echoEntity, coreModule)
+
+  val echoRouter = EntityRouter("echo", this, echoEntity.get)
+
+  override def routers : Seq[Router] = Seq ( echoRouter )
 }
 
 object WelcomeSite {

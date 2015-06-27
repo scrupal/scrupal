@@ -16,11 +16,9 @@
 package scrupal.core.controllers
 
 
-import play.api.Routes
-import play.api.routing.{SimpleRouter, Router}
+import play.api.routing.Router
 import play.api.routing.sird._
 import play.api.mvc.{Request ⇒ PRequest, _}
-import play.api.mvc.Results.{NotFound, Ok, Conflict}
 
 import scrupal.api._
 
@@ -34,7 +32,9 @@ import scala.concurrent.{Future, ExecutionContext}
   *
   * This maps
   */
-abstract class EntityRouter(val key : String, site: Site, ep: EntityProvider)(implicit scrupal: Scrupal) extends Router {
+case class EntityRouter(
+  key : String, site: Site, entityProvider: EntityProvider
+)(implicit scrupal: Scrupal) extends Router { self ⇒
 
   override def documentation : Seq[(String,String,String)] = {
     Seq( ("TBD", "TBD", "TBD") ) // TODO: Implement EntityRouter.documentation
@@ -67,41 +67,79 @@ abstract class EntityRouter(val key : String, site: Site, ep: EntityProvider)(im
   }
 
   val routesPattern : Router.Routes = {
-    case OPTIONS(p"$rest*") ⇒ convert( ep.query(rest) )
-    case GET(p"/${long(id)}$rest*") ⇒ convert( ep.retrieve(id, rest))
-    case PUT(p"/${long(id)}$rest*") ⇒ convert( ep.update(id, rest))
-    case POST(p"$rest*") ⇒ convert(ep.create(rest))
-    case DELETE(p"/${long(id)}$rest*") ⇒ convert( ep.delete(id, rest))
+    case GET(p"/${long(id)}/$facet/$facet_id$rest*") ⇒
+      convert(entityProvider.get(id, facet, facet_id, rest))
+    case GET(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      convert(entityProvider.get(id, facet, facet_id, rest))
+    case GET(p"/${long(id)}$rest*") ⇒
+      convert(entityProvider.retrieve(id, rest))
+    case GET(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
+      convert(entityProvider.retrieve(id, rest))
 
-    case GET(p"/$id<[^0-9]+>$rest*") ⇒ convert(ep.retrieve(id, rest))
-    case PUT(p"/$id<[^0-9]+>$rest*") ⇒ convert(ep.update(id, rest))
-    case DELETE(p"/$id<[^0-9]+>}$rest*") ⇒ convert( ep.delete(id, rest))
+    case OPTIONS(p"/${long(id)}/$facet$rest*") ⇒
+      convert(entityProvider.find(id, facet, rest))
+    case OPTIONS(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet$rest*") ⇒
+      convert(entityProvider.find(id, facet, rest))
+    case OPTIONS(p"/$rest*") ⇒
+      convert(entityProvider.query(rest))
 
-    case OPTIONS(p"${long(id)}/$facet$rest*") ⇒ convert(ep.find(id, facet, rest))
-    case GET(p"/${long(id)}/$facet/$facet_id$rest*") ⇒ convert(ep.get(id, facet, facet_id, rest))
-    case PUT(p"/${long(id)}/$facet/$facet_id$rest*") ⇒ convert(ep.set(id, facet, facet_id, rest))
-    case POST(p"${long(id)}/$facet$rest*") ⇒ convert(ep.add(id, facet, rest))
-    case DELETE(p"/${long(id)}/$facet/$facet_id$rest*") ⇒ convert(ep.remove(id, facet, facet_id, rest))
+    case POST(p"/${long(id)}/$facet$rest*") ⇒
+      convert(entityProvider.add(id, facet, rest))
+    case POST(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet$rest*") ⇒
+      convert(entityProvider.add(id, facet, rest))
+    case POST(p"/$rest*") ⇒
+      convert(entityProvider.create(rest))
 
-    case OPTIONS(p"$id<[^0-9]+>/$facet$rest*") ⇒ convert(ep.find(id, facet, rest))
-    case GET(p"/$id<[^0-9]+>/$facet/$facet_id$rest*") ⇒ convert(ep.get(id, facet, facet_id, rest))
-    case PUT(p"/$id<[^0-9]+>/$facet/$facet_id$rest*") ⇒ convert(ep.set(id, facet, facet_id, rest))
-    case POST(p"$id<[^0-9]+>/$facet$rest*") ⇒ convert(ep.add(id, facet, rest))
-    case DELETE(p"/$id<[^0-9]+>/$facet/$facet_id$rest*") ⇒ convert(ep.remove(id, facet, facet_id, rest))
+    case PUT(p"/${long(id)}/$facet/$facet_id$rest*") ⇒
+      convert(entityProvider.set(id, facet, facet_id, rest))
+    case PUT(p"/${long(id)}$rest*") ⇒
+      convert(entityProvider.update(id, rest))
+    case PUT(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      convert(entityProvider.set(id, facet, facet_id, rest))
+    case PUT(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
+      convert(entityProvider.update(id, rest))
+
+    case DELETE(p"/${long(id)}/$facet/$facet_id$rest*") ⇒
+      convert(entityProvider.remove(id, facet, facet_id, rest))
+    case DELETE(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      convert(entityProvider.remove(id, facet, facet_id, rest))
+    case DELETE(p"/${long(id)}$rest*") ⇒
+      convert(entityProvider.delete(id, rest))
+    case DELETE(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>}$rest*") ⇒
+      convert(entityProvider.delete(id, rest))
+    case rh: RequestHeader ⇒
+      throw new MatchError(s"EntityRouter could not match $rh")
   }
 
-  def routes : Router.Routes = {
-    val singular = withPrefix(routesPattern, singularPrefix)
-    val plural = withPrefix(routesPattern, pluralPrefix)
-    val routes = plural.orElse(singular)
-    routes
+  val singularRoutes : Router.Routes = withPrefix(routesPattern, singularPrefix)
+  val pluralRoutes : Router.Routes = withPrefix(routesPattern, pluralPrefix)
+  val combinedRoutes : Router.Routes = pluralRoutes.orElse(singularRoutes)
+
+  val routes : Router.Routes = combinedRoutes
+
+  def withPrefix(prefix: String) : Router = {
+    if (prefix == "/") {
+      self
+    } else {
+      new Router {
+        def routes = {
+          val p = if (prefix.endsWith("/")) prefix else prefix + "/"
+          val prefixed: PartialFunction[RequestHeader, RequestHeader] = {
+            case rh: RequestHeader if rh.path.startsWith(p) => rh.copy(path = rh.path.drop(p.length - 1))
+          }
+          Function.unlift(prefixed.lift.andThen(_.flatMap(self.routes.lift)))
+        }
+        def withPrefix(prefix: String) = self.withPrefix(prefix)
+        def documentation = self.documentation
+      }
+    }
   }
 
-  def withPrefix(routes: Router.Routes, prefix: String) : Router.Routes = {
-    val p = if (prefix.endsWith("/")) prefix else prefix + "/"
+  protected def withPrefix(routes: Router.Routes, prefix: String) : Router.Routes = {
+    val p = if (prefix.startsWith("/")) prefix else "/" + prefix
     val prefixed: PartialFunction[RequestHeader, RequestHeader] = {
       case header: RequestHeader if header.path.startsWith(p) =>
-        header.copy(path = header.path.drop(p.length - 1))
+        header.copy(path = header.path.drop(p.length))
     }
     Function.unlift(prefixed.lift.andThen(_.flatMap(routes.lift)))
   }
