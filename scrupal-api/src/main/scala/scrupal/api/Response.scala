@@ -59,6 +59,9 @@ trait Response {
     */
   def toEnumerator(implicit ec: ExecutionContext) : Enumerator[Array[Byte]]
 
+  def toEnumeratorResponse(implicit ec: ExecutionContext) : EnumeratorResponse = {
+    EnumeratorResponse(toEnumerator, mediaType, disposition)
+  }
 }
 
 object NoopResponse extends Response {
