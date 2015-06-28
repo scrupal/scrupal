@@ -17,48 +17,51 @@ package scrupal.api
 
 import java.util.concurrent.TimeUnit
 
+import org.specs2.execute.AsResult
+import scrupal.storage.api.{Collection, StoreContext, Schema}
 import scrupal.test.ScrupalApiSpecification
 import scrupal.utils.HasherKinds
 
-import scala.concurrent.Await
+import scala.concurrent.{ExecutionContext, Await}
 import scala.concurrent.duration.Duration
+import scala.concurrent.Future
 
 
 /**
  * Test that our basic abstractions for accessing the database hold water.
  */
 
-class PrincipalSpec extends ScrupalApiSpecification("PrincipalSpec")
+class PrincipalSpec extends ScrupalApiSpecification("Principal")
 {
-  sequential
-
 	"Principal" should {
 		"save, load and delete from DB" in {
-      pending("reinstatement")
-      /* FIXME: Reinstate Principal test case
-      withSchema { schema: Schema =>
-        withEmptyDB(schema.dbName) { database ⇒
-          val p = new Principal('id, "nobody@nowhere.ex", List("Nobody"), "openpw",
-            HasherKinds.SCrypt.toString, "", 0L, None)
-          p._id must beEqualTo('id)
-          val f1 = schema.principals.insert(p).flatMap { writeResult ⇒
-            writeResult.ok must beTrue
-            schema.principals.fetch('id) map {
-              case Some(principal) ⇒
-                principal._id must beEqualTo('id)
-                principal.aliases must beEqualTo(List("Nobody"))
-                principal.password must beEqualTo(p.password)
-                schema.principals.removeById(principal._id) map { writeResult ⇒
-                  writeResult.ok must beTrue
-                }
-                true
-              case None ⇒ failure("No principal fetched"); false
+      withStoreContext { sc: StoreContext =>
+        val p = new Principal('id, "nobody@nowhere.ex", List("Nobody"), "openpw",
+          HasherKinds.SCrypt.toString, "", 0L, None)
+        p._id must beEqualTo('id)
+        implicit val ec : ExecutionContext = sc.ec
+        val f = sc.addSchema(ApiSchemaDesign()).flatMap { schema : Schema ⇒
+          schema.withCollection("principals") { principals : Collection[Principal] ⇒
+            principals.insert(p).flatMap { writeResult ⇒
+              writeResult.isSuccess must beTrue
+              principals.fetch(p.getPrimaryId()) flatMap {
+                case Some(principal) ⇒
+                  principal.getPrimaryId() must beEqualTo(p.getPrimaryId())
+                  principal._id must beEqualTo('id)
+                  principal.aliases must beEqualTo(List("Nobody"))
+                  principal.password must beEqualTo(p.password)
+                  principals.delete(principal.getPrimaryId()) map { writeResult ⇒
+                    writeResult.isSuccess must beTrue
+                    success
+                  }
+                case None ⇒
+                  Future.successful { failure("No principal fetched") }
+              }
             }
           }
-          val r = Await.result(f1, Duration(1,TimeUnit.SECONDS))
-          r must beTrue
         }
-      } */
+        Await.result(f, Duration(1,TimeUnit.SECONDS))
+      }
     }
   }
 }
