@@ -46,11 +46,8 @@ case class Instance(
   tipe : BundleType,
   entityId : Identifier,
   payload : Map[String,Atom],
-  facets : Map[String,Facet],
+  facets : Map[String,Facet] = Map.empty[String,Facet],
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None) extends
     Storable with Nameable with Describable with Modifiable with Facetable {
-}
-
-object Instance {
 }

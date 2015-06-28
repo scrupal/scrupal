@@ -28,15 +28,15 @@ import scrupal.utils.Version
   * its functionality. The Core module defines the simple, trait, bundle and entity types
   * Further description here.
   */
-case class CoreModule(implicit scrpl : Scrupal) extends Module(scrpl) {
+case class CoreModule(implicit scrpl : Scrupal) extends Module {
   def id = Core
   val description = "Scrupal's Core module for core, essential functionality."
   val version = Version(0, 1, 0)
   val obsoletes = Version(0, 0, 0)
   val moreDetailsURL = new URL("http://modules.scrupal.org/doc/" + label)
-  val author = scrupal.author
-  val copyright = scrupal.copyright
-  val license = scrupal.license
+  val author = scrpl.author
+  val copyright = scrpl.copyright
+  val license = scrpl.license
 
   val notes_key = "Notes"
   override val _settings = Settings("Core Settings",
@@ -96,8 +96,8 @@ case class CoreModule(implicit scrpl : Scrupal) extends Module(scrpl) {
     DebugFooter, DevMode, ConfigWizard, RESTAPIAccess, RESTAPIDocumentation, OnePageApplications
   )
 
-  lazy val pageEntity = PageEntity()(scrupal)
-  lazy val echoEntity = EchoEntity()(scrupal)
+  lazy val pageEntity = PageEntity()(scrpl)
+  lazy val echoEntity = EchoEntity()(scrpl)
 
   def entities = Seq[Entity](pageEntity, echoEntity)
 

@@ -25,7 +25,7 @@ import scrupal.utils.{OSSLicense, Version}
   */
 abstract class AbstractFakeModule (
   id : Symbol,
-  dbName : String)(implicit scrpl: Scrupal) extends Module(scrpl) {
+  dbName : String)(implicit scrpl: Scrupal) extends Module {
   val description = "Fake Module"
   val version = Version(0, 1, 0)
   val obsoletes = Version(0, 0, 0)

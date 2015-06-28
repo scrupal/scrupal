@@ -147,10 +147,6 @@ abstract class Scrupal(
     Await.result(Storage.fromConfiguration(scrupalConfiguration, "scrupal", create=true), 2.seconds)
   }
 
-
-  // TODO: Decide if assetsLocator is part of API or Core
-  // val assetsLocator : AssetsLocator
-
   def withConfiguration[T](f : (Configuration) ⇒ T) : T = {
     f(_configuration)
   }
@@ -202,7 +198,7 @@ abstract class Scrupal(
     require(Modules.registryName == "Modules")
     require(Sites.registryName == "Sites")
     require(Entities.registryName == "Entities")
-    // FIXME: require(Template.registryName == "Templates")
+    require(Template.registryName == "Templates")
 
     _configuration
   }

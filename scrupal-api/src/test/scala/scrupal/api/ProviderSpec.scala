@@ -29,14 +29,14 @@ class ProviderSpec extends Specification {
     val description = "The Null Reactor"
     def apply(request: Stimulus) : Future[Response] = Future.successful { NoopResponse }
   }
-  case class SimpleProvider(id : Symbol) extends Provider {
+  case class NullProvider(id : Symbol) extends Provider {
     def provide : ReactionRoutes = {
-      case rh: RequestHeader ⇒ NullReactor
+      case null ⇒ NullReactor
     }
   }
 
-  val provider1 = SimpleProvider('One)
-  val provider2 = SimpleProvider('Two)
+  val provider1 = NullProvider('One)
+  val provider2 = NullProvider('Two)
 
   "DelegatingProvider" should {
     "delegate" in {

@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
   * such as Module, to make this possible. Everything else Scrupal provides is done as a module that extends the
   * functionality of the API.
   */
-abstract class Module(scrpl : Scrupal) extends {
+abstract class Module(implicit scrpl : Scrupal) extends {
   implicit val scrupal : Scrupal = scrpl
 } with Settingsable with Registrable[Module] with Authorable with Describable with Enablee
   with Enablement[Module] with Versionable with Bootstrappable {

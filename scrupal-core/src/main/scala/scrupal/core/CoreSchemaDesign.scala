@@ -15,13 +15,13 @@
 
 package scrupal.core
 
-import scrupal.api.APISchemaDesign
+import scrupal.api.ApiSchemaDesign
 import scrupal.storage.api.Index
 
 
 /** The basic schema for Scrupal. This is composed by merging together the various Components.
   */
-case class CoreSchemaDesign() extends APISchemaDesign {
+case class CoreSchemaDesign() extends ApiSchemaDesign {
 
   /*
   // case class AliasDao(db: DB) extends JsonDao[String,BSONObjectID](db,"aliases") with DataAccessObject[String]
