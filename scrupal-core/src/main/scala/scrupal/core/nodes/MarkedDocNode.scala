@@ -71,7 +71,7 @@ case class MarkedDocNode(
     fileMap → dirMap
   }
 
-  def apply(request : DetailedRequest) : Future[Response] = {
+  def apply(request : Stimulus) : Future[Response] = {
     val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")

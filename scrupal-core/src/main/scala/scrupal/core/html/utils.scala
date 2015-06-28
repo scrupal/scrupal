@@ -15,14 +15,14 @@
 
 package scrupal.core.html
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.{PrintWriter, StringWriter}
 
 import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.libs.json._
-import scrupal.api.Html._
 import scrupal.api.Context
-import scalatags.Text.Modifier
+import scrupal.api.Html._
 
+import scalatags.Text.Modifier
 import scalatags.Text.all._
 
 case class danger(message : Contents) extends SimpleGenerator {
@@ -123,7 +123,7 @@ case class display_exception(xcptn : Throwable) extends SimpleGenerator {
 }
 
 case class display_exception_result(xcptn : scrupal.api.ExceptionResponse) extends SimpleGenerator {
-  def apply() = { Seq(div(cls := "bg-danger", display_exception(xcptn.xcptn)())) }
+  def apply() = { Seq(div(cls := "bg-danger", display_exception(xcptn.content)())) }
 }
 
 trait json_fragment extends SimpleGenerator {

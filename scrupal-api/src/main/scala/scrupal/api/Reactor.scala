@@ -15,17 +15,19 @@
 
 package scrupal.api
 
-import scala.concurrent.Future
+import scrupal.storage.api.Collection
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /** A function that generates a future response from a detailed request
   *
   * This is the most fundamental kind of action in Scrupal. A Reaction is simply a function that maps
-  * a [[scrupal.api.DetailedRequest]] into a [[scala.concurrent.Future]] [[scrupal.api.Response]].
+  * a [[scrupal.api.Stimulus]] into a [[scala.concurrent.Future]] [[scrupal.api.Response]].
   * All dynamic content in Scrupal is produced eventually through the use of a Reaction.
   * The Result embodies the notion of completing a request with some content and a disposition on the processing.
   * @see [[scrupal.api.Reactor]]
   */
-trait Reaction extends ((DetailedRequest) ⇒ Future[Response])
+trait Reaction extends ((Stimulus) ⇒ Future[Response])
 
 /** An Reaction To A Request That Produces A Response
   *
@@ -40,13 +42,73 @@ trait Reaction extends ((DetailedRequest) ⇒ Future[Response])
   *
   * A request indicates what should be done to which processing entity and in what context.
   *
-  * @see [[scrupal.api.Request]]
+  * @see [[scrupal.api.Stimulus]]
+  * @see [[scrupal.api.Response]]
   *
   */
-trait Reactor extends Reaction with Nameable with Describable {
+trait Reactor extends Reaction with Nameable with Describable { self ⇒
 
-  def apply(request: DetailedRequest) : Future[Response]
+  def apply(request: Stimulus) : Future[Response]
+
 }
+
+/** Reactor From A Node
+  *
+  * This is an adapter that captures a request and a node and turns it into a reactor that invokes the
+  * Reaction function on the node to produce the reactor's result. This just allows a node to be used as an action.
+  * @param node The node that will produce the action's result
+  */
+case class NodeReactor(node : Node) extends Reactor {
+  val name = "NodeReactor"
+  val description = "A Reactor that returns the content of a provided Node."
+  def apply(request : Stimulus) : Future[Response] = {
+    node(request)
+  }
+}
+
+/** Reactor From A Stored Node
+  *
+  * This provides a Reactor from a stored node. It loads the node from the database and invokes the node's
+  * Reaction function to generate a Response or, if the node is not found, it generates an error response.
+  * @param id The primary id of the node
+  */
+case class NodeIdReactor(id : Long) extends Reactor {
+  val name = "NodeIdReactor"
+  val description = "A Reactor that returns the content of a node having a specific ID"
+  def apply(request: Stimulus) : Future[Response] = {
+    request.context.withSchema("core") { (storeContext, schema) ⇒
+      request.context.withExecutionContext { implicit ec : ExecutionContext ⇒
+        schema.withCollection("nodes") { nodes : Collection[Node] ⇒
+          nodes.fetch(id).flatMap {
+            case Some(node) ⇒
+              node(request)
+            case None ⇒
+              Future.successful(ErrorResponse(s"Node at id '${id.toString}' not found.", NotFound))
+          }
+        }
+      }
+    }
+  }
+}
+
+/* TODO: Reinstate NodeAliasAction if needed
+case class NodeAliasAction(path : String, context : Context) extends Action {
+  def apply() : Future[Result[_]] = {
+    val selector = BSONDocument("$eq" → BSONDocument("pathAlias" → BSONString(path)))
+    context.withSchema { (dbc, schema) ⇒
+      context.withExecutionContext { implicit ec : ExecutionContext ⇒
+        schema.nodes.findOne(selector).flatMap {
+          case Some(node) ⇒
+            node(context)
+          case None ⇒
+            Future.successful(ErrorResult(s"Node at path '$path' not found.", NotFound))
+        }
+      }
+    }
+  }
+}
+  */
+
 
 
 /* TODO: Remove extractor stuff if not needed

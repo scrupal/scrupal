@@ -64,7 +64,7 @@ abstract class Module(scrpl : Scrupal) extends {
     * used in templates and other places to generate dynamic content either from a template or directly from code.
     * @return The sequence of nodes defined by this module.
     */
-  def nodes : Seq[Node]
+  def nodes : Seq[Node] // FIXME: This should return a type of node, not node itself
 
   // TODO: Can modules provide instances ?
 

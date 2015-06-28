@@ -39,7 +39,7 @@ case class SubstitutionNode (
 
   final val mediaType: MediaType = MediaTypes.`text/html`
 
-  def apply(request : DetailedRequest) : Future[Response] = {
+  def apply(request : Stimulus) : Future[Response] = {
     Future.successful(NoopResponse) // FIXME: Return correct results
   }
 

@@ -16,6 +16,7 @@
 package scrupal.core.entities
 
 
+import play.api.mvc.AnyContent
 import scrupal.api.{Entity, Scrupal}
 import scrupal.core.PageBundle_t
 

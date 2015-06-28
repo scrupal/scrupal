@@ -67,7 +67,7 @@ sequential
       Some(stream.mediaType) must beEqualTo(MediaTypes.forExtension("js"))
       stream match {
         case s: StreamResponse ⇒
-          s.stream.available() === 1694
+          s.content.available() === 1694
         case _ ⇒ failure("unexpected result type")
       }
       success

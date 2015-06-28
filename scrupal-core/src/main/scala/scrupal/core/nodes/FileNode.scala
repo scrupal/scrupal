@@ -40,7 +40,7 @@ case class FileNode(
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = FileNode.kind) extends Node {
-  def apply(request : DetailedRequest) : Future[Response] = {
+  def apply(request : Stimulus) : Future[Response] = {
     val extension = {
       val name = file.getName
       name.lastIndexOf(".") match {

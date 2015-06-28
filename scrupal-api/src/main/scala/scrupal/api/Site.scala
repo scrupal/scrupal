@@ -53,8 +53,6 @@ abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
   }
 
   def isChildScope(e : Enablement[_]) : Boolean = applications.exists { x ⇒ x == e }
-
-  def routers : Seq[Router] = Seq.empty[Router]
 }
 
 /** The Registry of Sites for this Scrupal.

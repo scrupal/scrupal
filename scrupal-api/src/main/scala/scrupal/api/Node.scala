@@ -48,7 +48,7 @@ object Node {
     def mediaType: MediaType = MediaTypes.`application/octet-stream`
     def modified: Option[DateTime] = Some(DateTime.now())
     def created: Option[DateTime] = Some(DateTime.now())
-    def apply(v1: DetailedRequest): Future[Response] = Future.successful(NoopResponse)
+    def apply(v1: Stimulus): Future[Response] = Future.successful(NoopResponse)
     def description: String = "This node is completely empty."
   }
 
@@ -175,7 +175,7 @@ case class LayoutProducer (
         case Some(tagName) ⇒
           enums :+= Enumerator(template.slice(index, block_end))
           tags.get(tagName) match {
-            case Some((node, en)) ⇒ enums :+= en.payload
+            case Some((node, en)) ⇒ enums :+= en.toEnumerator
             case none ⇒ enums :+= Enumerator(s"@@@ Missing Tag '$tagName' @@@".getBytes(utf8))
           }
           index = next_index

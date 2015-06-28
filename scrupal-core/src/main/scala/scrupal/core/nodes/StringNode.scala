@@ -28,7 +28,7 @@ case class StringNode(
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = StringNode.kind) extends Node {
   final val mediaType = MediaTypes.`text/plain`
-  def apply(request : DetailedRequest) : Future[Response] = Future.successful { StringResponse(text) }
+  def apply(request : Stimulus) : Future[Response] = Future.successful { StringResponse(text) }
 }
 
 object StringNode {

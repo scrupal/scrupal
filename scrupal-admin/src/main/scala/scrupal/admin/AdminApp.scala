@@ -15,14 +15,10 @@
 
 package scrupal.admin
 
-import akka.http.scaladsl.server.PathMatchers.PathEnd
 import org.joda.time.DateTime
-import scrupal.api.Html.{Contents, ContentsArgs, EmptyContentsArgs}
+import scrupal.api.Html.{Contents, ContentsArgs}
 import scrupal.api._
-import scrupal.core.Site_t
 import scrupal.core.html.BootstrapPage
-import scrupal.core.impl.NodeReactorProvider
-import scrupal.core.nodes.HtmlNode
 import scrupal.utils.OSSLicense
 
 import scalatags.Text.all._

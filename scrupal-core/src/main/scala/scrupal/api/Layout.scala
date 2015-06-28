@@ -15,9 +15,9 @@
 
 package scrupal.api
 
+import akka.http.scaladsl.model.{MediaType, MediaTypes}
 import scrupal.api.Html._
-import scrupal.utils.{ Registry, Registrable }
-import akka.http.scaladsl.model.{ MediaTypes, MediaType }
+import scrupal.utils.{Registrable, Registry}
 
 import scalatags.Text.all._
 

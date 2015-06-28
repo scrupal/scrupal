@@ -40,13 +40,12 @@ case class BasicInstance(
 /** The basic unit of storage and operation in Scrupal
   * Further description needed here.
   */
-case class Instance[PT](
-  _id : Identifier,
+case class Instance(
   name : String,
   description : String,
-  tipe : Type[PT],
+  tipe : BundleType,
   entityId : Identifier,
-  payload : PT,
+  payload : Map[String,Atom],
   facets : Map[String,Facet],
   modified : Option[DateTime] = None,
   created : Option[DateTime] = None) extends

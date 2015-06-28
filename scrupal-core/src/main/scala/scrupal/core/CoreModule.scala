@@ -19,7 +19,7 @@ import java.net.URL
 
 import play.api.Configuration
 import scrupal.api._
-import scrupal.core.entities.{PageEntity, EchoEntity}
+import scrupal.core.entities.{EchoEntity, PageEntity}
 import scrupal.storage.api.SchemaDesign
 import scrupal.utils.Version
 

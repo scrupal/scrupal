@@ -16,7 +16,7 @@
 package scrupal.api
 
 import akka.http.scaladsl.model.MediaType
-import scrupal.utils.{ Registry, Registrable }
+import scrupal.utils.{Registrable, Registry}
 
 trait Template[T] extends Registrable[Template[_]] with Describable with ((Map[String, T], Context) ⇒ T) {
   def contentType : MediaType

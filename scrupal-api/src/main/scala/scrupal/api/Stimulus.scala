@@ -13,25 +13,53 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.impl
+package scrupal.api
 
-import scrupal.api._
-import scrupal.core.actions.NodeReactor
+import akka.http.scaladsl.model._
+import play.api.mvc._
 
-/** A provide of NodeReactor
-  *
-  * This adapts a node to being a provide of a NodeReactor that just uses the node.
-  */
-case class NodeReactorProvider(node : Node) extends Provider {
-  def canProvide(request : Request) : Boolean = true
-  def provide (request : Request) : Option[Reactor] = {
-    Some(NodeReactor(node))
+
+trait Stimulus extends Request[AnyContent] {
+  implicit val context : Context
+  def mediaTyp : MediaType = mediaType match {
+    case Some(mt) ⇒
+      MediaTypes.getForKey( mt.mediaType → mt.mediaSubType ).getOrElse(MediaTypes.`application/octet-stream`)
+    case None ⇒
+      MediaTypes.`application/octet-stream`
   }
 }
 
-case class FunctionalNodeReactorProvider(nodeF : (Request) ⇒ Node) extends Provider {
-  def canProvide(request : Request) : Boolean = true
-  def provide(request : Request) : Option[Reactor] = {
-    Some(NodeReactor(nodeF(request)))
+object Stimulus {
+  def apply(ctxt: Context, req : Request[AnyContent]) : Stimulus = {
+    new Stimulus {
+      implicit val context : Context = ctxt
+      override val id = req.id
+      override val tags = req.tags
+      override val uri = req.uri
+      override val path = req.path
+      override val method = req.method
+      override val version = req.version
+      override val queryString = req.queryString
+      override val headers = req.headers
+      override lazy val remoteAddress = req.remoteAddress
+      override lazy val secure = req.secure
+      override val body : AnyContent = req.body
+    }
   }
+
+  lazy val empty = new Stimulus {
+    val context : Context = null
+    val body: AnyContent = AnyContentAsEmpty
+    val secure: Boolean = false
+    val uri: String = ""
+    val queryString: Map[String, Seq[String]] = Map.empty[String,Seq[String]]
+    val remoteAddress: String = ""
+    val method: String = ""
+    val headers: Headers = new Headers(Seq.empty[(String,String)])
+    val path: String = ""
+    val version: String = ""
+    val tags: Map[String, String] = Map.empty[String,String]
+    val id: Long = Long.MinValue
+  }
+
 }

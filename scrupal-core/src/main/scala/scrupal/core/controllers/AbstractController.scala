@@ -15,12 +15,10 @@
 
 package scrupal.core.controllers
 
-import play.api.mvc.Results._
 import play.api.mvc._
 import play.api.mvc.{Request⇒PRequest}
 import scrupal.api._
 import scrupal.core.http.HttpUtils
-import scrupal.core.http.netty.PlayDetailedRequest
 
 import scala.concurrent.{Future, ExecutionContext}
 
@@ -30,11 +28,11 @@ import scala.concurrent.{Future, ExecutionContext}
   */
 abstract class AbstractController(site : Site)(implicit scrupal : Scrupal) extends Controller {
 
-  protected def cr2a(func: (DetailedRequest) => Option[Reactor]): Action[_] = {
-    Action.async(BodyParsers.parse.raw) { req: PRequest[RawBuffer] ⇒
+  protected def cr2a(func: (Stimulus) => Option[Reactor]): Action[_] = {
+    Action.async(BodyParsers.parse.anyContent) { req: PRequest[AnyContent] ⇒
       import HttpUtils._
       val context = Context(scrupal, site)
-      val details: DetailedRequest = PlayDetailedRequest(context, req)
+      val details: Stimulus = Stimulus(context, req)
       func(details) match {
         case Some (reactor) ⇒
           context.withExecutionContext { implicit ec: ExecutionContext ⇒
@@ -43,7 +41,7 @@ abstract class AbstractController(site : Site)(implicit scrupal : Scrupal) exten
               val status = d.toStatusCode.intValue()
               val msg = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
               val header = ResponseHeader(status, reasonPhrase = msg)
-              Result(header, response.payload)
+              Result(header, response.toEnumerator)
             }
           }
         case None ⇒

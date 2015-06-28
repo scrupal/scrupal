@@ -145,7 +145,7 @@ trait Dependencies
   )
 
   val common_dependencies : Seq[ModuleID] = Seq(
-    scala_pickling,    grizzled_slf4j, akka_slf4j, logback_classic,
+    scala_pickling,    grizzled_slf4j, akka_slf4j, logback_classic, commons_lang3,
     Test.specs2, Test.play_test, Test.play_specs2
   )
 

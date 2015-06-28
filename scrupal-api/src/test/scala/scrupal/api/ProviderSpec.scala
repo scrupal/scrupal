@@ -16,6 +16,7 @@
 package scrupal.api
 
 import org.specs2.mutable.Specification
+import play.api.mvc.RequestHeader
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -26,11 +27,12 @@ class ProviderSpec extends Specification {
   case object NullReactor extends Reactor {
     val name = "Null"
     val description = "The Null Reactor"
-    def apply(request: DetailedRequest) : Future[Response] = Future.successful { NoopResponse }
+    def apply(request: Stimulus) : Future[Response] = Future.successful { NoopResponse }
   }
   case class SimpleProvider(id : Symbol) extends Provider {
-    def canProvide(request: Request): Boolean = true
-    def provide(request: Request): Option[Reactor] = Some(NullReactor)
+    def provide : ReactionRoutes = {
+      case rh: RequestHeader ⇒ NullReactor
+    }
   }
 
   val provider1 = SimpleProvider('One)
@@ -42,12 +44,12 @@ class ProviderSpec extends Specification {
         def id: Identifier = 'DelegatingProvider
         def delegates: Iterable[Provider] = Seq(provider1, provider2)
       }
-      dp.canProvide(Request.empty) must beTrue
-      val maybe_reaction = dp.provide(Request.empty)
+      val req : RequestHeader = null
+      val maybe_reaction = dp.provide.lift(req)
       maybe_reaction.isDefined must beTrue
       val reaction = maybe_reaction.get
       reaction must beEqualTo(NullReactor)
-      val future = reaction(DetailedRequest.empty).map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
+      val future = reaction(Stimulus.empty).map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
       Await.result(future, 1.seconds)
     }
   }

@@ -15,16 +15,6 @@
 
 package scrupal.api
 
-import play.api.libs.json._
-import scrupal.core.CoreModule
-
-import scalatags.Text.all._
-
-import scrupal.api.Html._
-import scrupal.core.html.Forms._
-import scrupal.utils.Enablee
-import scrupal.utils.Validation._
-
 /** FIXME: Scrupal Forms - Revive as an API "Input" class that is much simpler and not connected to HTML5 forms
   * This trait brings together all the form related objects nd generically represents an HTML5 Form in Scrupal.
   *

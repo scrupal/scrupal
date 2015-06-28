@@ -15,11 +15,12 @@
 
 package scrupal
 
+import akka.http.scaladsl.model.{StatusCodes, StatusCode}
+
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 
 import play.api.libs.json.JsObject
-
 
 import shapeless._
 
@@ -85,4 +86,32 @@ package object api {
   implicit def atomFromSymbol(sym : Symbol) : Atom = Coproduct[Atom](sym)
   implicit def atomFromInstant(inst : Instant) : Atom = Coproduct[Atom](inst)
   implicit def atomFromDuration(dur: Duration) : Atom = Coproduct[Atom](dur)
+
+
+  implicit class Disposition2StatusCode(disposition : Disposition) {
+    def toStatusCode: StatusCode = {
+      disposition match {
+        case Successful ⇒ StatusCodes.OK
+        case Received ⇒ StatusCodes.Accepted
+        case Pending ⇒ StatusCodes.OK
+        case Promise ⇒ StatusCodes.OK
+        case Unspecified ⇒ StatusCodes.InternalServerError
+        case TimedOut ⇒ StatusCodes.GatewayTimeout
+        case Unintelligible ⇒ StatusCodes.BadRequest
+        case Unimplemented ⇒ StatusCodes.NotImplemented
+        case Unsupported ⇒ StatusCodes.NotImplemented
+        case Unauthorized ⇒ StatusCodes.Unauthorized
+        case Unavailable ⇒ StatusCodes.ServiceUnavailable
+        case Unacceptable ⇒ StatusCodes.NotAcceptable
+        case NotFound ⇒ StatusCodes.NotFound
+        case Ambiguous ⇒ StatusCodes.Conflict
+        case Conflict ⇒ StatusCodes.Conflict
+        case TooComplex ⇒ StatusCodes.Forbidden
+        case Exhausted ⇒ StatusCodes.ServiceUnavailable
+        case Exception ⇒ StatusCodes.InternalServerError
+        case _ ⇒ StatusCodes.InternalServerError
+      }
+    }
+  }
+
 }

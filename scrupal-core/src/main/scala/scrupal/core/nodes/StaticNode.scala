@@ -31,7 +31,7 @@ case class StaticNode(
   final val kind : Symbol = StaticNode.kind) extends Node {
   def args : ContentsArgs = Html.EmptyContentsArgs
   val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
+  def apply(request : Stimulus) : Future[Response] = Future.successful {
     HtmlResponse(body.render(request.context, args), Successful)
   }
 }

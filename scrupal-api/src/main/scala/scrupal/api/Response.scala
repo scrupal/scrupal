@@ -15,6 +15,8 @@
 
 package scrupal.api
 
+import org.apache.commons.lang3.exception.ExceptionUtils
+
 import java.io.InputStream
 
 import akka.http.scaladsl.model.{MediaType, MediaTypes}
@@ -41,62 +43,60 @@ trait Response {
     */
   def disposition : Disposition
 
-  /** Payload Content of The Result.
-    *
-    * This is the actual result. It can be any Scala type but should correspond to the ContentType
-    * @return
-    */
-  def payload(implicit ec: ExecutionContext) : Enumerator[Array[Byte]]
-
   /** Type Of Media Returned.
     *
-    * This is a ContentType value from Spray. It indicates what kind of media and character encoding is being
+    * This is a ContentType value form Akka-Http. It indicates what kind of media and character encoding is being
     * returned by the payload.
-    * @return A ContentType corresponding to the content type of `payload`
+    * @return A ContentType corresponding to the content type of `content`
     */
   def mediaType : MediaType
+
+  /** Convert Content of to Enumerator
+    *
+    * This allows the content of type RT to be converted into a standardized type for serialization to a stream.
+    * It converts the content into an Enumerator of Array[Byte].
+    * @return The content as an Enumerated byte array
+    */
+  def toEnumerator(implicit ec: ExecutionContext) : Enumerator[Array[Byte]]
+
 }
 
 object NoopResponse extends Response {
   def disposition = Unimplemented
-  def payload(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]
+  def toEnumerator(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]
   def mediaType = MediaTypes.`application/octet-stream`
 }
-
-trait ContainedResponse extends Response {
-  def body : Array[Byte]
-  def payload(implicit ec: ExecutionContext) = Enumerator(body)
-}
-
 
 /** Result with an InputStream.
   *
   * This kind of Result contains an InputStream for its payload that the client of the StreamResult can use to read
   * data. This is often a more convenient result than EnumeratorResult because Enumerator.fromStream(x) can be used to
   * turn the stream into an Enumerator; or, the client can just read the stream directly (and block!).
-  * @param stream The InputStream to be read
+  * @param content The InputStream to be read
   * @param mediaType The ContentType of the InputStream
   * @param disposition The disposition of the result.
   */
 case class StreamResponse(
-  stream : InputStream,
+  content : InputStream,
   mediaType : MediaType,
   disposition : Disposition = Successful) extends Response {
-  def payload(implicit ec: ExecutionContext) = Enumerator.fromStream(stream, 64 * 1024)
+  def toEnumerator(implicit ec: ExecutionContext) = Enumerator.fromStream(content, 64 * 1024)
 }
 
 /** Result with an Array of Bytes.
   *
   * This kind of Result contains an array of data that the client of the OctetsResult can use.
   *
-  * @param body The data of the result
+  * @param content The data of the result
   * @param mediaType The ContentType of the data
   * @param disposition The disposition of the result.
   */
 case class OctetsResponse(
-  body : Array[Byte],
+  content : Array[Byte],
   mediaType : MediaType,
-  disposition : Disposition = Successful) extends ContainedResponse
+  disposition : Disposition = Successful) extends Response {
+  def toEnumerator(implicit ec: ExecutionContext) = Enumerator(content)
+}
 
 /** Result with a simple text string.
   *
@@ -104,28 +104,28 @@ case class OctetsResponse(
   * should not be changed unless there is a significant need to as using UTF-8 as the base character encoding is
   * standard across Scrupal
   *
-  * @param string The data of the result
+  * @param content The string content of the response
   * @param disposition The disposition of the result.
   */
 case class StringResponse(
-  string : String,
-  disposition : Disposition = Successful) extends ContainedResponse {
+  content : String,
+  disposition : Disposition = Successful) extends Response {
   val mediaType : MediaType = MediaTypes.`text/plain`
-  val body = string.getBytes(utf8)
+  def toEnumerator(implicit ec: ExecutionContext) = Enumerator(content.getBytes(utf8))
 }
 
 /** Result with an HTMLFormat payload.
   *
   * This kind of result just encapsulates a Scalatags Html result and defaults its ContentType to text/html.
   *
-  * @param html The Html payload of the result.
+  * @param content The Html payload of the result.
   * @param disposition The disposition of the result.
   */
 case class HtmlResponse(
-  html : String,
-  disposition : Disposition = Successful) extends ContainedResponse {
+  content : String,
+  disposition : Disposition = Successful) extends Response {
   val mediaType : MediaType = MediaTypes.`text/html`
-  val body = html.getBytes(utf8)
+  def toEnumerator(implicit ec: ExecutionContext) = Enumerator(content.getBytes(utf8))
 }
 
 
@@ -134,14 +134,16 @@ case class HtmlResponse(
   * This kind of result just encapsulates a MongoDB BSONDocument result. Note that the ContentType is not modifiable
   * here as it is hard coded to ScrupalMediaTypes.bson. BSON is not a "standard" media type so we invent our own.
   *
-  * @param json The Html payload of the result.
+  * @param content The JsValue payload of the result.
   * @param disposition The disposition of the result.
   */
 case class JsonResponse(
-  json : JsObject,
+  content : JsValue,
   disposition : Disposition = Successful) extends Response {
   val mediaType : MediaType = MediaTypes.`application/json`
-  def payload(implicit ec: ExecutionContext) = Enumerator(Json.stringify(json).getBytes(utf8))
+  def toEnumerator(implicit ec: ExecutionContext) = {
+    Enumerator(Json.stringify(content).getBytes(utf8))
+  }
 }
 
 /** Result with an Throwable payload.
@@ -149,16 +151,32 @@ case class JsonResponse(
   * This kind of result just encapsulates an error embodied by a Throwable. This is how hard errors are returned from
   * a result. Note that the Disposition is always an Exception
   *
-  * @param xcptn The error that occurred
+  * @param content The error that occurred
   */
 case class ExceptionResponse(
-  xcptn : Throwable) extends ContainedResponse {
+  content : Throwable) extends Response {
   val disposition : Disposition = Exception
-  val mediaType = MediaTypes.`text/plain`
+  val mediaType : MediaType = MediaTypes.`text/plain`
+  def toText : String = {
+    val bldr = new StringBuilder()
+    bldr.append(ExceptionUtils.getMessage(content)).append(":\n")
+    bldr.append(ExceptionUtils.getStackTrace(content)).append("caused by: ")
+    bldr.append(ExceptionUtils.getRootCauseMessage(content)).append(":\n")
+    bldr.append("\tat ").append(ExceptionUtils.getRootCauseStackTrace(content).mkString("\n\tat "))
+    bldr.toString()
+  }
+  def toEnumerator(implicit ec: ExecutionContext) = {
+    Enumerator(toText.getBytes(utf8))
+  }
+}
+
+case class JsonExceptionResponse(content : Throwable) extends Response {
+  val disposition : Disposition = Exception
+  val mediaType = MediaTypes.`application/json`
   def toJson : JsObject = {
     JsObject(Seq(
-      "$error" → JsString(s"${xcptn.getClass.getName}: ${xcptn.getMessage}"),
-      "$stack" → JsArray(xcptn.getStackTrace.map { elem ⇒ JsString(elem.toString) })
+      "$error" → JsString(ExceptionUtils.getMessage(content)),
+      "$stack" → JsArray(content.getStackTrace.map { elem ⇒ JsString(elem.toString) })
     ))
   }
 
@@ -166,8 +184,9 @@ case class ExceptionResponse(
     JsonResponse(toJson, disposition)
   }
 
-  def body = Json.stringify(toJson).getBytes(utf8)
-
+  def toEnumerator(implicit ec: ExecutionContext) = {
+    Enumerator(Json.stringify(toJson).getBytes(utf8))
+  }
 }
 
 /** Result with a simple error payload.
@@ -175,21 +194,25 @@ case class ExceptionResponse(
   * This can be used when an error is detected that does not warrant an exception being thrown. Instead, just return
   * the ErrorResult. Note that Disposition is "Unspecified" but this is unlikely what you want so you should always
   * set the Disposition with an ErrorResult.
-  * @param error The error message
+  * @param content The error message
   * @param disposition The disposition of the result
   */
 case class ErrorResponse(
-  error : String,
-  disposition : Disposition = Unspecified) extends ContainedResponse {
+  content : String,
+  disposition : Disposition = Unspecified) extends Response {
   val mediaType = MediaTypes.`text/plain`
-  def formatted = s"Error: ${disposition.id.name}: $error"
-  def body = formatted.getBytes(utf8)
+  def formatted = s"Error: ${disposition.id.name}: $content"
+  def toEnumerator(implicit ec: ExecutionContext) = {
+    Enumerator(formatted.getBytes(utf8))
+  }
 }
 
 case class FormErrorResponse(
-  formError : Failure[JsValue],
+  content : Failure[JsValue],
   disposition : Disposition = Unacceptable) extends Response {
   val mediaType : MediaType = MediaTypes.`application/json`
-  def payload(implicit ec: ExecutionContext) = Enumerator(Json.stringify(formError.jsonMessage).getBytes(utf8))
-  def formatted : String = formError.msgBldr.toString()
+  def toEnumerator(implicit ec: ExecutionContext) = {
+    Enumerator(Json.stringify(content.jsonMessage).getBytes(utf8))
+  }
+  def formatted : String = content.msgBldr.toString()
 }

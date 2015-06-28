@@ -16,9 +16,8 @@
 package scrupal.api
 
 import org.joda.time.DateTime
-
 import scrupal.storage.api.Storable
-import scrupal.utils.{ AlertKind, Icons }
+import scrupal.utils.{AlertKind, Icons}
 
 /** Representation of an alert message that is shown at the top of every page. Alerts are queued and each user
   * has a "latest" alert they've seen. Alerts expire, however, so it is possible for a user to miss an alert.

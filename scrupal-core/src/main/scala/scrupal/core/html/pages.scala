@@ -15,11 +15,10 @@
 
 package scrupal.core.html
 
-import scrupal.api.Html.Contents
+import scrupal.api.Html.{Contents, _}
+import scrupal.api._
 
 import scalatags.Text.all._
-import scrupal.api._
-import scrupal.api.Html._
 
 trait BasicPageGenerator extends PageGenerator {
   def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {

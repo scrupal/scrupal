@@ -16,50 +16,81 @@
 package scrupal.api
 
 import akka.http.scaladsl.server.{PathMatcher, PathMatchers}
+import play.api.mvc._
 import scrupal.utils._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Provider Of Reactors
   *
-  * Scrupal objects that mix in this trait participate in the dispatching of [[Request]]s. Providers get a chance to
-  * indicate their interest in particular kinds of [[Request]]s by returning a [[Reactor]] that will
-  * yield a [[Response]] for each
+  * Scrupal objects that mix in this trait participate in the dispatching of [[scrupal.api.Stimulus]]s. Providers get a chance to
+  * indicate their interest in particular kinds of [[scrupal.api.Stimulus]]s by returning a [[Reactor]] that will
+  * yield a [[Response]]. Note that a provider is both a Play Controller and a Play Router. However, it must implement
+  * the reactions method rather than the routes method as the Response is converted automatically to a Play Result.
   */
-trait Provider {
+trait Provider { self ⇒
 
-  def canProvide(request: Request) : Boolean
-  def provide(request: Request) : Option[Reactor]
+  def resultFrom[CT](context: Context, request : Request[AnyContent], reactor : Reactor) : Future[Result] = {
+    context.withExecutionContext { implicit ec: ExecutionContext ⇒
+      val stimulus: Stimulus = Stimulus(context, request)
+      reactor(stimulus) map { response : Response ⇒
+        val d = response.disposition
+        val status = d.toStatusCode.intValue()
+        val reason = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
+        val header = ResponseHeader(status, reasonPhrase = reason)
+        Result(header, response.toEnumerator)
+      }
+    }
+  }
 
+  type ReactionRoutes = PartialFunction[RequestHeader,Reactor]
+
+  def provide : ReactionRoutes
+
+  def reactorFor(request: RequestHeader) : Option[Reactor] = {
+    provide.lift(request)
+  }
+
+  def withPrefix(prefix: String): Provider = {
+    if (prefix == "/") {
+      self
+    } else {
+      new Provider {
+        def provide = {
+          val p = if (prefix.endsWith("/")) prefix else prefix + "/"
+          val prefixed: PartialFunction[RequestHeader, RequestHeader] = {
+            case rh: RequestHeader if rh.path.startsWith(p) =>
+              rh.copy(path = rh.path.drop(p.length))
+          }
+          Function.unlift(prefixed.lift.andThen(_.flatMap(self.provide.lift)))
+        }
+        override def withPrefix(prefix: String) : Provider = self.withPrefix(prefix)
+      }
+    }
+  }
 }
+
+object Provider {
+  val empty = new Provider {
+    def provide: ReactionRoutes = PartialFunction.empty
+  }
+}
+
+trait IdentifiableProvider extends Provider with Identifiable
 
 /** Delegating Provider of Reactors
   *
   * This Reactor Provider just contains a set of delegates to which it delegates the job of providing the Reactors
   */
-trait DelegatingProvider extends Provider with Identifiable {
+trait DelegatingProvider extends Provider {
 
   def delegates : Iterable[Provider]
 
   def isTerminal : Boolean = delegates.isEmpty
 
-  def canProvide(request : Request) : Boolean = {
-    delegates.exists { delegate ⇒ delegate.canProvide(request) }
+  override def provide : ReactionRoutes = {
+    delegates.foldLeft(Provider.empty.provide) { case (accum,next) ⇒ accum.orElse(next.provide) }
   }
-
-  def provide(request: Request) : Option[Reactor] = {
-    delegates.find { delegate ⇒
-      delegate.canProvide(request)
-    } flatMap { delegate ⇒
-      delegate.provide(request)
-    }
-  }
-}
-
-trait TerminalProvider extends DelegatingProvider {
-
-  override val isTerminal = true
-
-  def delegates : Iterable[Provider] = Iterable.empty[Provider]
-
 }
 
 trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider with Enablement[T] with Enablee {
@@ -70,17 +101,47 @@ trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider 
   }
 }
 
-trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T] {
+trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T]
 
-  override def canProvide(request: Request): Boolean = {
-    request.context.site match {
-      case Some(site) ⇒ site.label == this.label && super.canProvide(request)
-      case None ⇒ false
-    }
+trait PluralityProvider extends IdentifiableProvider {
+
+  /** The routes for the singular prefix case */
+  def singularRoutes : ReactionRoutes
+
+  /** The routes for the plural prefix case */
+  def pluralRoutes : ReactionRoutes
+
+  /** Singular form of the entity's label */
+  final val singularPrefix = makeKey(label)
+
+  /** Plural form of the entity's label */
+  final val pluralPrefix = makeKey(Pluralizer.pluralize(label))
+
+  lazy val provide : ReactionRoutes = {
+    val prefixedSingular = withPrefix(singularRoutes, singularPrefix)
+    val prefixedPlural = withPrefix(pluralRoutes, pluralPrefix)
+    prefixedPlural.orElse(prefixedSingular)
   }
-}
 
-trait PluralityProvider extends TerminalProvider {
+  val singularMatcher = PathMatchers.Slash ~ PathMatcher(singularPrefix)
+  val pluralMatcher = PathMatchers.Slash ~ PathMatcher(pluralPrefix)
+
+  val matcher = singularMatcher | pluralMatcher
+
+  def isPlural(request: RequestHeader) : Boolean = {
+    request.path.startsWith(pluralPrefix)
+  }
+
+  protected def withPrefix(routes: ReactionRoutes, prefix: String) : ReactionRoutes = {
+    val p = if (prefix.startsWith("/")) prefix else "/" + prefix
+    val prefixed: PartialFunction[RequestHeader, RequestHeader] = {
+      case header: RequestHeader if header.path.startsWith(p) =>
+        header.copy(path = header.path.drop(p.length))
+    }
+    Function.unlift(prefixed.lift.andThen(_.flatMap(routes.lift)))
+  }
+
+
   /** Key For Identifying This Provider
     *
     * When matching a path, it is helpful to quickly identify which ActionProvider to apply to a given path. To that
@@ -95,27 +156,20 @@ trait PluralityProvider extends TerminalProvider {
     *
     * @return The constant string used to identify this ActionProvider
     */
-  def makeKey(name : String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern, "-")
+  protected def makeKey(name : String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern, "-")
+}
 
-  /** Singular form of the entity's label */
-  val singularKey = makeKey(label)
 
-  /** Plural form of the entity's label */
-  val pluralKey = makeKey(Pluralizer.pluralize(label))
+/** A provide of NodeReactor
+  *
+  * This adapts a node to being a provide of a NodeReactor that just uses the node.
+  */
+case class FunctionalNodeReactorProvider(nodeF : PartialFunction[RequestHeader,Node]) extends Provider {
+  def provide : ReactionRoutes = nodeF.andThen { node : Node ⇒ NodeReactor(node) }
+}
 
-  val singularMatcher = PathMatchers.Slash ~ PathMatcher(singularKey)
-  val pluralMatcher = PathMatchers.Slash ~ PathMatcher(pluralKey)
-
-  val matcher = singularMatcher | pluralMatcher
-
-  override def canProvide(request : Request) : Boolean = {
-    matcher(request.path) != PathMatcher.Unmatched
-  }
-
-  def isPlural(request: Request) : Boolean = {
-    pluralMatcher(request.path) != PathMatcher.Unmatched
-  }
-
+case class NodeReactorProvider(node : Node) extends Provider {
+  def provide : ReactionRoutes = { case request: RequestHeader ⇒ node }
 }
 
 /* TODO: Reinstate NodeProvider if needed

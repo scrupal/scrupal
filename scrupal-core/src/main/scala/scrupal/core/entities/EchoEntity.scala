@@ -16,17 +16,16 @@
 package scrupal.core.entities
 
 
-import akka.http.scaladsl.model.Uri
 import play.api.libs.json.JsObject
+import play.api.mvc.AnyContent
+
 import scrupal.api.Html.ContentsArgs
-
-import scalatags.Text.all._
-
-import scala.concurrent.Future
-
 import scrupal.api._
 import scrupal.core.html._
 import scrupal.utils.OSSLicense
+
+import scala.concurrent.Future
+import scalatags.Text.all._
 
 
 /** The Echo Entity
@@ -73,14 +72,14 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
     }
   }
 
-  def parseJSON(request: Request) : JsObject = {
+  def parseJSON(request: Stimulus) : JsObject = {
     // TODO: Implement payload parsing in EchoEntity
     JsObject(Seq())
   }
 
   override def create(details: String) : CreateReactor = {
     new CreateReactor {
-      def apply(request: DetailedRequest) : Future[Response] = {
+      def apply(request: Stimulus) : Future[Response] = {
         Future.successful {
           val content = parseJSON(request)
           HtmlResponse(echo_doc("Create", "<>", details, content).render(request.context))
@@ -91,7 +90,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def retrieve(instance_id: String, details: String) : RetrieveReactor = {
     new RetrieveReactor {
-      def apply(request: DetailedRequest) : Future[Response] = {
+      def apply(request: Stimulus) : Future[Response] = {
         Future.successful(HtmlResponse(echo_request("Retrieve", instance_id, details).render(request.context)))
       }
     }
@@ -99,7 +98,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def update(instance_id: String, details: String) : UpdateReactor = {
     new UpdateReactor {
-      def apply(request : DetailedRequest) : Future[Response] = {
+      def apply(request : Stimulus) : Future[Response] = {
         Future.successful {
           val content = parseJSON(request)
           HtmlResponse(echo_doc("Update", instance_id, details, content).render(request.context))
@@ -110,7 +109,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def delete(instance_id: String, details: String) : DeleteReactor = {
     new DeleteReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful(HtmlResponse(echo_request("Delete", instance_id, details).render(request.context)))
       }
     }
@@ -118,7 +117,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def query(details: String) : QueryReactor = {
     new QueryReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful(HtmlResponse(echo_request("Query", "<>", details).render(request.context)))
       }
     }
@@ -163,7 +162,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def add(id: String, facet: String, rest: String) : AddReactor = {
     new AddReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful{
           val content = parseJSON(request)
           HtmlResponse(facet_doc("Create", id, facet, "<>", rest, content).render(request.context))
@@ -174,7 +173,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def get(id: String, facet: String, facet_id: String, details: String) : GetReactor = {
     new GetReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful(HtmlResponse(facet_request("Retrieve", id, facet, facet_id, details).render(request.context)))
       }
     }
@@ -182,7 +181,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def set(id: String, facet: String, facet_id: String, details: String) : SetReactor = {
     new SetReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful {
           val content = parseJSON(request)
           HtmlResponse(facet_doc("Update", id, facet, facet_id, details, content).render(request.context))
@@ -193,7 +192,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def remove(id: String, facet: String, facet_id: String, details: String) : RemoveReactor = {
     new RemoveReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful(HtmlResponse(facet_request("Delete", id, facet, facet_id, details).render(request.context)))
       }
     }
@@ -201,7 +200,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   override def find(id: String, facet: String, details: String) : FindReactor = {
     new FindReactor {
-      override def apply(request : DetailedRequest) : Future[Response] = {
+      override def apply(request : Stimulus) : Future[Response] = {
         Future.successful(HtmlResponse(facet_request("Query", id, facet, "<>", details).render(request.context)))
       }
     }

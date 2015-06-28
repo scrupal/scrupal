@@ -15,17 +15,12 @@
 
 package scrupal.core.sites
 
-import akka.http.scaladsl.server.PathMatcher.{Unmatched, Matched}
-import akka.http.scaladsl.server.PathMatchers
-import akka.http.scaladsl.model.HttpMethods
 import org.joda.time.DateTime
-import play.api.routing.Router
+import play.api.mvc.RequestHeader
+import play.api.routing.sird._
 import scrupal.api._
-import scrupal.core.controllers.EntityRouter
 import scrupal.core.html.PlainPage
-import scrupal.core.impl.{NodeReactorProvider, FunctionalNodeReactorProvider}
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
-import scrupal.utils.Enablement
 
 import scala.util.matching.Regex
 import scalatags.Text.all._
@@ -45,39 +40,29 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
     created = Some(new DateTime(2014, 11, 18, 18, 0))
   )
 
-  object DocPathToDocs extends FunctionalNodeReactorProvider( { request: Request ⇒
-    val path = request.path.toString().split("/").toIterable
-    MarkedDocNode("", "doc", "docs", path)
-  }) {
-    private val pathMatcher = PathMatchers.Slash ~ "doc"
-    override def canProvide(request: Request) : Boolean = {
-      (request.method == HttpMethods.GET) && (pathMatcher(request.path) != Unmatched)
-    }
+  val docPathToDocsPF : PartialFunction[RequestHeader,Node] = {
+    case GET(p"/doc/$rest*") ⇒
+      val path = rest.split("/").toIterable
+      MarkedDocNode("", "doc", "docs", path)
   }
+  object DocPathToDocs extends FunctionalNodeReactorProvider(docPathToDocsPF)
 
-  object WelcomeSiteProvider extends NodeReactorProvider(WelcomeSiteRoot) {
-    val matcher = PathMatchers.Slash ~ PathMatchers.PathEnd
-    override def canProvide(request: Request) : Boolean = {
-      request.method == HttpMethods.GET && (matcher(request.path) != Unmatched)
+  object WelcomeSiteProvider extends Provider {
+    def provide : ReactionRoutes = {
+      case GET(p"/") ⇒ WelcomeSiteRoot
     }
   }
 
   override def delegates : Iterable[Provider] = {
     super.delegates ++ Iterable(
-      DocPathToDocs, WelcomeSiteProvider
+      WelcomeSiteProvider, DocPathToDocs
     )
   }
-
 
   val coreModule = scrupal.Modules('Core)
   val echoEntity = coreModule.flatMap { m ⇒ m.entity('Echo) }
   enable(coreModule)
   enable(echoEntity)
-  // enable(echoEntity, coreModule)
-
-  val echoRouter = EntityRouter("echo", this, echoEntity.get)
-
-  override def routers : Seq[Router] = Seq ( echoRouter )
 }
 
 object WelcomeSite {

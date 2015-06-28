@@ -44,7 +44,7 @@ case class ScalaNode(
   final val kind : Symbol = ScalaNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(request : DetailedRequest) : Future[Response] = request.context.withExecutionContext {
+  def apply(request : Stimulus) : Future[Response] = request.context.withExecutionContext {
     implicit ec : ExecutionContext ⇒
       Future {
         import javax.script.ScriptEngineManager

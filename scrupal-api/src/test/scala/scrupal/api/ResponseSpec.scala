@@ -29,7 +29,8 @@ class ResponseSpec extends ScrupalApiSpecification("Response") {
       val response = new Response {
         def disposition: Disposition = Successful
         def mediaType: MediaType = MediaTypes.`application/octet-stream`
-        def payload(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]
+        def content : Array[Byte] = Array.empty[Byte]
+        def toEnumerator(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]
       }
       success
     }

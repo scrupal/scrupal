@@ -15,7 +15,7 @@
 
 package scrupal.core
 
-import scrupal.api.{BundleType, DataCache, SelectionType, Title_t, Markdown_t}
+import scrupal.api.{BundleType, DataCache, Markdown_t, SelectionType, Title_t}
 
 object PageBundle_t
   extends BundleType('PageBundle, "Information bundle for a page entity.",

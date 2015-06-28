@@ -63,7 +63,7 @@ case class ScrupalesyNode(
   final val kind : Symbol = ScrupalesyNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(request : DetailedRequest) : Future[Response] = Future.successful {
+  def apply(request : Stimulus) : Future[Response] = Future.successful {
     // TODO: Implement ScrupaleasyNode
     HtmlResponse(Html.renderContents( Seq( span("Not Implemented"))), Unimplemented)
   }
