@@ -31,7 +31,7 @@ case class URLNode(
   modified : Option[DateTime] = Some(DateTime.now),
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = URLNode.kind) extends Node {
-  def apply(request : Stimulus) : Future[Response] = Future.successful {
+  def apply(context : Context) : Future[Response] = Future.successful {
     StreamResponse(url.openStream(), mediaType)
   }
 }

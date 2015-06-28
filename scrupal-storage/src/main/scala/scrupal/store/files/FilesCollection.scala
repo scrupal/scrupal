@@ -9,7 +9,6 @@ import scrupal.storage.impl.{CommonCollection, KryoFormatter, KryoFormat}
 import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /** A Collection Stored In Memory */
 case class FilesCollection[S <: Storable] private[files] (
@@ -32,7 +31,7 @@ case class FilesCollection[S <: Storable] private[files] (
     Files.walk(dir.toPath).count()
   }
 
-  def drop(implicit ec: ExecutionContext): Future[WriteResult] = Future {
+  def drop(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
     FilesStorageUtils.recursivelyDeleteDirectory(dir)
     WriteResult.success()
   }
@@ -104,38 +103,44 @@ case class FilesCollection[S <: Storable] private[files] (
     }
   }
 
-  override def update(obj : S, upd : Modification[S]) : Future[WriteResult] = update(obj.primaryId, upd)
+  override def update(obj : S, upd : Modification[S])(implicit ec: ExecutionContext) : Future[WriteResult] = {
+    update(obj.primaryId, upd)
+  }
 
-  override def update(id : ID, update : Modification[S]) : Future[WriteResult] = Future {
-    readObject(id) match {
-      case Some(s : S @unchecked) ⇒
-        val newObj = update(s)
-        newObj.primaryId = s.primaryId
-        writeObject(newObj)
-      case None ⇒
-        WriteResult.error(s"Collection '$name' does not contain object with id #$id")
+  override def update(id : ID, update : Modification[S])(implicit ec: ExecutionContext) : Future[WriteResult] = {
+    Future {
+      readObject(id) match {
+        case Some(s : S @unchecked) ⇒
+          val newObj = update(s)
+          newObj.primaryId = s.primaryId
+          writeObject(newObj)
+        case None ⇒
+          WriteResult.error(s"Collection '$name' does not contain object with id #$id")
+      }
     }
   }
 
-  override def insert(obj : S, update : Boolean) : Future[WriteResult] = Future.successful[WriteResult] {
-    readObject(obj.primaryId) match {
-      case Some(s : S @unchecked) ⇒
-        if (update) {
+  override def insert(obj : S, update : Boolean)(implicit ec: ExecutionContext) : Future[WriteResult] = {
+    Future.successful[WriteResult] {
+      readObject(obj.primaryId) match {
+        case Some(s : S @unchecked) ⇒
+          if (update) {
+            writeObject(obj)
+          } else {
+            WriteResult.error(s"Update not permitted during insert of #${obj.primaryId} in collection '$name")
+          }
+        case None ⇒
+          ensureUniquePrimaryId(obj)
           writeObject(obj)
-        } else {
-          WriteResult.error(s"Update not permitted during insert of #${obj.primaryId} in collection '$name")
-        }
-      case None ⇒
-        ensureUniquePrimaryId(obj)
-        writeObject(obj)
+      }
     }
   }
 
-  override def fetch(id : ID) : Future[Option[S]] = Future {
+  override def fetch(id : ID)(implicit ec: ExecutionContext) : Future[Option[S]] = Future {
     readObject(id)
   }
 
-  override def fetchAll() : Future[Iterable[S]] = Future {
+  override def fetchAll()(implicit ec: ExecutionContext) : Future[Iterable[S]] = Future {
     new Iterable[S] {
       val stream = Files.walk(dir.toPath).map[S]( new java.util.function.Function[Path,S] {
         def apply(p : Path) : S = {
@@ -155,32 +160,32 @@ case class FilesCollection[S <: Storable] private[files] (
     }
   }
 
-  override def delete(obj : S) : Future[WriteResult] = Future {
+  override def delete(obj : S)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
     deleteObject(obj.getPrimaryId())
   }
 
-  override def delete(id : ID) : Future[WriteResult] = Future {
+  override def delete(id : ID)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
     deleteObject(id)
   }
 
-  override def delete(ids : Seq[ID]) : Future[WriteResult] = {
+  override def delete(ids : Seq[ID])(implicit ec: ExecutionContext) : Future[WriteResult] = {
     val futures = for (id ← ids) yield {
       Future { deleteObject(id) }
     }
     WriteResult.coalesce( futures )
   }
 
-  override def find(query : Query) : Future[Seq[S]] = Future {
+  override def find(query : Query[S])(implicit ec: ExecutionContext) : Future[Seq[S]] = Future {
     // TODO: Implement FilesCollection.find(query)
     Seq.empty[S]
   }
 
-  override def addIndex(index : Index) : Future[WriteResult] = Future {
+  override def addIndex(index : Index)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
     // TODO: Implement FilesCollection.addIndex(field) not implemented
     WriteResult.failure(new Exception("MemoryCollection.addIndex(field) not implemented"))
   }
 
-  override def removeIndex(index : Index) : Future[WriteResult] = Future {
+  override def removeIndex(index : Index)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
     // TODO: Implement FilesCollection.removeIndex(field) not implemented
     WriteResult.failure(new Exception("MemoryCollection.removeIndex(field) not implemented"))
   }
@@ -195,11 +200,13 @@ case class FilesCollection[S <: Storable] private[files] (
     Seq.empty[Index]
   }
 
-  override def updateWhere(query : Query, update : Modification[S]) : Future[Seq[WriteResult]] = Future {
+  override def updateWhere(query : Query[S], update : Modification[S])(implicit ec: ExecutionContext)
+      : Future[Seq[WriteResult]] = Future {
     // TODO: Implement FilesCollection.updateWhere
     Seq.empty[WriteResult]
   }
 
+  def queriesFor[T <: Queries[S]]: T = ???
 }
 
 object FilesCollection extends ScrupalComponent {

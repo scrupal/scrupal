@@ -39,14 +39,14 @@ case class SubstitutionNode (
 
   final val mediaType: MediaType = MediaTypes.`text/html`
 
-  def apply(request : Stimulus) : Future[Response] = {
+  def apply(context : Context) : Future[Response] = {
     Future.successful(NoopResponse) // FIXME: Return correct results
   }
 
   def resolve(ctxt: Context, tags: Map[String,(Node,Response)]) : Response = {
     // val layout = Layout(layoutId).getOrElse(Layout.default)
     val template: Array[Byte] = script.getBytes(utf8)
-    // FIXME: Reinstate LayoutPRoducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
+    // FIXME: Reinstate LayoutProducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
     StringResponse("foo", Successful)
   }
 }

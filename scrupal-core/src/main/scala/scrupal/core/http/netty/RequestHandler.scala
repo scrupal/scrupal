@@ -67,16 +67,7 @@ class RequestHandler @Inject() (
         val (context: Context, reactor: Reactor) = handlers.head
         Some {
           Action.async { req: Request[AnyContent] ⇒
-            val details: Stimulus = Stimulus(context, req)
-            context.withExecutionContext { implicit ec: ExecutionContext ⇒
-              reactor(details) map { response: Response ⇒
-                val d = response.disposition
-                val status = d.toStatusCode.intValue()
-                val msg = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
-                val header = ResponseHeader(status, reasonPhrase = msg)
-                Result(header, response.toEnumerator)
-              }
-            }
+            reactor.resultFrom(context, req)
           }
         }
       case _ ⇒

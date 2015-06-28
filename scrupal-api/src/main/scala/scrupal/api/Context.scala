@@ -46,10 +46,10 @@ trait Context {
 
   def withConfiguration[T](f : (Configuration) ⇒ T) : T = { scrupal.withConfiguration(f) }
 
-  def withStorageContext[T](f : (StoreContext) ⇒ T) : T = { scrupal.withStoreContext(f) }
+  def withStoreContext[T](f : (StoreContext) ⇒ T) : T = { scrupal.withStoreContext(f) }
 
   def withSchema[T](name : String)(f : (StoreContext, Schema) ⇒ T) : T = {
-    withStorageContext { ctxt ⇒
+    withStoreContext { ctxt ⇒
       ctxt.withSchema(name) { schema ⇒ f(ctxt, schema) }
     }
   }

@@ -33,12 +33,12 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   override val themeName = "cyborg"
   def hostNames : Regex = ".*".r
 
-  object WelcomeSiteRoot extends HtmlNode("WelcomeSiteRoot",
+  val WelcomeSiteRoot = NodeReactor(HtmlNode("WelcomeSiteRoot",
     "Main index page for Welcome To Scrupal Site",
     WelcomeSite.WelcomePageTemplate,
     modified = Some(DateTime.now),
     created = Some(new DateTime(2014, 11, 18, 18, 0))
-  )
+  ))
 
   val docPathToDocsPF : PartialFunction[RequestHeader,Node] = {
     case GET(p"/doc/$rest*") ⇒

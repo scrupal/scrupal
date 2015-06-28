@@ -67,6 +67,27 @@ object NoopResponse extends Response {
   def mediaType = MediaTypes.`application/octet-stream`
 }
 
+/** Response With An Enumerator
+  *
+  */
+case class EnumeratorResponse(
+  content : Enumerator[Array[Byte]],
+  mediaType : MediaType,
+  disposition : Disposition = Successful
+) extends Response {
+  def toEnumerator(implicit ec: ExecutionContext) = content
+}
+
+case class EnumeratorsResponse(
+  content : Seq[Enumerator[Array[Byte]]],
+  mediaType : MediaType,
+  disposition : Disposition = Successful
+) extends Response {
+  def toEnumerator(implicit ec: ExecutionContext) = {
+    content.foldLeft(Enumerator.empty[Array[Byte]]) { case (combined,next) ⇒ combined.andThen(next) }
+  }
+}
+
 /** Result with an InputStream.
   *
   * This kind of Result contains an InputStream for its payload that the client of the StreamResult can use to read

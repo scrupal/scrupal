@@ -24,6 +24,15 @@ import scala.language.existentials
 
 import scrupal.storage.api._
 
+/** A function that generates content
+  *
+  * This is the basic characteristic of a Node. It is simply a function that receives a Context
+  * and produces content as a Future Result. The Context provides the setting in which it is
+  * generating the content. All dynamic content in Scrupal is generated through a Generator.
+  * The Result embodies the notion of completing a request with some content and a disposition.
+  */
+trait Generator extends ((Context) => Future[Response])
+
 /** Content Generating Node
   *
   * This is the fundamental type of a node. It has some housekeeping information and can generate
@@ -32,9 +41,9 @@ import scrupal.storage.api._
   * are possible to use with Scrupal. Note that Node instances are stored in the database and can be
   * very numerous. For that reason, they are not registered in an object registry.
   */
-trait Node extends Reactor with Storable with Modifiable with Bootstrappable {
+trait Node extends Generator with Storable with Modifiable with Bootstrappable {
   def mediaType : MediaType
-  def reference(schema: String, collection : String)(implicit sc : StoreContext) : Reference[Node] = {
+  def reference(schema: String, collection : String)(implicit sc : StoreContext) : Node.Ref = {
     StorableReference(sc.store, schema, collection, this)
   }
 }
@@ -48,7 +57,7 @@ object Node {
     def mediaType: MediaType = MediaTypes.`application/octet-stream`
     def modified: Option[DateTime] = Some(DateTime.now())
     def created: Option[DateTime] = Some(DateTime.now())
-    def apply(v1: Stimulus): Future[Response] = Future.successful(NoopResponse)
+    def apply(context: Context): Future[Response] = Future.successful(NoopResponse)
     def description: String = "This node is completely empty."
   }
 
@@ -78,43 +87,40 @@ object Node {
   */
 }
 
-/* FIXME: Reinstate when we need CompoundNodes
 abstract class CompoundNode extends Node {
+  type TagsMap = Map[String, (Node, Response)]
   def subordinates : Map[String, Either[Reference[Node], Node]]
-  def resolve(ctxt : Context, tagged_data : Map[String, (Node, Response)]) : Response
+  def resolve(ctxt : Context, tagged_data : TagsMap) : Response
   def apply(ctxt : Context) : Future[Response] = {
     ctxt.withExecutionContext { implicit ec : ExecutionContext ⇒
-      ctxt.withSchema {
-        case (dbc, schema) ⇒
-          schema.withDB { db : ScrupalDB ⇒
-            val futures_nested : Iterable[Future[(String, (Node, Response))]] = {
-              for ((name, nr) ← subordinates) yield {
-                if (nr.isLeft) {
-                  val dao = NodeDAO(db)
-                  val nodeRef = nr.left.get
-                  val future = dao.fetch(nodeRef.ref.id).map {
-                    case Some(node) ⇒ name → node(ctxt).map { r ⇒ node → r() }
-                    case None ⇒ throw new Exception(s"$nodeRef not found.")
-                  }
-                  val f = future.flatMap { case (key, value) ⇒ value.map { er ⇒ key → er } }
-                  f
-                } else {
-                  val node = nr.right.get
-                  val nested = node(ctxt).map { r ⇒ node → r() }
-                  val f = nested.map { x ⇒ name → x }
-                  f
-                }
+      ctxt.withStoreContext { sc : StoreContext ⇒
+        val futures_nested : Iterable[Future[(String, (Node, Response))]] = {
+          for ((name, nr) ← subordinates) yield {
+            if (nr.isLeft) {
+              val nodeRef = nr.left.get
+              val future = nodeRef.fetch(sc).map {
+                case Some(node) ⇒ name → node(ctxt).map { r ⇒ node → r }
+                case None ⇒ throw new Exception(s"$nodeRef not found.")
               }
+              val f = future.flatMap {
+                case (key, value) ⇒
+                  value.map { er ⇒ key → er }
+              }
+              f
+            } else {
+              val node = nr.right.get
+              val nested = node(ctxt).map { r ⇒ node → r }
+              val f = nested.map { x ⇒ name → x }
+              f
             }
-            val futures_mapped = (Future sequence futures_nested).map { pairs ⇒ pairs.toMap }
-            futures_mapped.map { x ⇒ resolve(ctxt, x) }
           }
+        }
+        val futures_mapped = (Future sequence futures_nested).map { pairs ⇒ pairs.toMap }
+        futures_mapped.map { x ⇒ resolve(ctxt, x) }
       }
     }
   }
 }
-
-*/
 
 case class LayoutProducer (
   template: Array[Byte],
@@ -194,8 +200,6 @@ case class LayoutProducer (
   }
 }
 
-/* FIXME: Reinstate  when we want LayoutNode
-
 /** A Node That Is A Layout.
   *
   * A Layout in Scrupal is an object that can generate a result, such as a page, with certain areas substituted by
@@ -210,30 +214,33 @@ case class LayoutProducer (
   */
 case class LayoutNode (
   description: String,
-  subordinates: Map[String,Html.Fragment],
+  subordinates: Map[String, Either[Reference[Node], Node]],
   layout: Layout,
   modified: Option[DateTime] = Some(DateTime.now),
   created: Option[DateTime] = Some(DateTime.now),
-  _id: BSONObjectID = BSONObjectID.generate,
   final val kind: Symbol = LayoutNode.kind
 ) extends CompoundNode {
   final val mediaType = layout.mediaType
-  def resolve(ctxt: Context, tags: Map[String,Html.Fragment]) : EnumeratorResult = {
+  def resolve(ctxt: Context, tags: TagsMap) : EnumeratorResponse = {
     // val layout = Layout(layoutId).getOrElse(Layout.default)
-    val template: Array[Byte] = layout(tags, ctxt)
-    EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
+    // FIXME: Generate the template -- val template: Array[Byte] = layout(tags, ctxt)
+    val template = Array.empty[Byte]
+    ctxt.withExecutionContext { implicit ec: ExecutionContext ⇒
+      EnumeratorResponse(LayoutProducer(template, tags).buildEnumerator, mediaType)
+    }
   }
 }
 
 object LayoutNode {
-  import BSONHandlers._
   final val kind = 'Layout
+
+  /* TODO: Move LayoutNode DB stuff to ReactiveMongo project
+  import BSONHandlers._
   object LayoutNodeVRW extends VariantReaderWriter[Node,LayoutNode] {
     implicit val LayoutNodeHandler : BSONHandler[BSONDocument,LayoutNode] = Macros.handler[LayoutNode]
     override def fromDoc(doc: BSONDocument): LayoutNode = LayoutNodeHandler.read(doc)
     override def toDoc(obj: Node): BSONDocument = LayoutNodeHandler.write(obj.asInstanceOf[LayoutNode])
   }
   Node.variants.register(kind, LayoutNodeVRW)
+  */
 }
-
-*/

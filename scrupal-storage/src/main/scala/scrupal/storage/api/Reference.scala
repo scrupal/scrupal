@@ -30,7 +30,7 @@ trait Reference[S <: Storable] {
 
 class FastReference[S <: Storable](collection : Collection[S], id : ID) extends Reference[S] {
   def fetch(implicit sc: StoreContext) : Future[Option[S]] = {
-    collection.asInstanceOf[Collection[S]].fetch(id)
+    collection.asInstanceOf[Collection[S]].fetch(id)(sc.ec)
   }
 }
 
@@ -59,7 +59,7 @@ case class StorableReference[S <: Storable](
 ) extends Reference[S] with Storable {
   def fetch(implicit sc: StoreContext) : Future[Option[S]] = {
     sc.withCollection(schemaName, collectionName) { coll : Collection[_] ⇒
-      coll.asInstanceOf[Collection[S]].fetch(id)
+      coll.asInstanceOf[Collection[S]].fetch(id)(sc.ec)
     }
   }
 }

@@ -13,29 +13,20 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.nodes
+package scrupal.storage.api
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
-import scrupal.api.Html.ContentsArgs
-import scrupal.api._
+/** An Abstract Trait To Represent A Query that can yield a set of Storable objects of type S
+  * @tparam S The type of object returned by the query.
+  */
+trait Query[S <: Storable]
 
-import scala.concurrent.Future
 
-case class StaticNode(
-  name : String,
-  description : String,
-  body : Html.Template,
-  modified : Option[DateTime] = Some(DateTime.now),
-  created : Option[DateTime] = Some(DateTime.now),
-  final val kind : Symbol = StaticNode.kind) extends Node {
-  def args : ContentsArgs = Html.EmptyContentsArgs
-  val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(context : Context) : Future[Response] = Future.successful {
-    HtmlResponse(body.render(context, args), Successful)
-  }
+/** An Abstract Trait to represent an object that defines methods that return Query[S] objects
+  *
+  * @tparam S The type of object returned by the queries this object provides
+  */
+trait Queries[S <: Storable] {
+
 }
 
-object StaticNode {
-  final val kind = 'Static
-}
+// FIXME: Implement queries in Scrupal Storage

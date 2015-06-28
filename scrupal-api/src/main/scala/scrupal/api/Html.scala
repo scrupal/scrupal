@@ -89,14 +89,15 @@ object Html {
     }
   }
 
-  abstract class Template(_i : Symbol) extends { val id : Symbol = _i } with Registrable[Template] with Describable with TemplateGenerator {
+  abstract class Template(_i : Symbol) extends {
+    val id : Symbol = _i
+  } with Registrable[Template] with Describable with TemplateGenerator {
     def registry = Template
   }
 
   object Template extends Registry[Template] {
     def registryName = "Html Templates"
     def registrantsName = "html template"
-
   }
 
   trait PageGenerator extends Describable with TemplateGenerator {

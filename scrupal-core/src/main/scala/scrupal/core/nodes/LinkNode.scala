@@ -35,7 +35,7 @@ case class LinkNode(
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = LinkNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(request : Stimulus) : Future[Response] = Future.successful {
+  def apply(context: Context) : Future[Response] = Future.successful {
     HtmlResponse(Html.renderContents(Seq(a(href := url.toString, description))), Successful)
   }
 }

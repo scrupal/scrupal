@@ -45,7 +45,7 @@ case class MarkedDocNode(
   created : Option[DateTime] = Some(DateTime.now()),
   final val kind : Symbol = MarkedDocNode.kind) extends Node {
   override def mediaType : MediaType = MediaTypes.`text/html`
-  override def description : String = "A node that provides a marked document from a resource as html."
+  def description : String = "A node that provides a marked document from a resource as html."
 
   /** Traverse the directories and generate the menu structure
     *
@@ -71,12 +71,11 @@ case class MarkedDocNode(
     fileMap → dirMap
   }
 
-  def apply(request : Stimulus) : Future[Response] = {
+  def apply(context: Context) : Future[Response] = {
     val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
     val dirPath = if (path.isEmpty) root else root + "/" + relPath
-    val context = request.context
     val locator = context.scrupal._assetsLocator
     val directory = locator.fetchDirectory(dirPath, recurse = true)
     directory match {

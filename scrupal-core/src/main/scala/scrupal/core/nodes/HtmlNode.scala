@@ -26,8 +26,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 abstract class AbstractHtmlNode extends Node {
   final val mediaType : MediaType = MediaTypes.`text/html`
   def content(context : Context)(implicit ec : ExecutionContext) : Future[Html.Contents]
-  def apply(request : Stimulus) : Future[Response] = {
-    val context = request.context
+  def apply(context: Context) : Future[Response] = {
     context.withExecutionContext { implicit ec : ExecutionContext ⇒
       content(context)(ec).map { html ⇒ HtmlResponse(Html.renderContents(html), Successful) }
     }
@@ -58,7 +57,7 @@ case class HtmlNode(
 }
 
 object HtmlNode {
-  /*
+  /* TODO: Move HTMLNode database code to ReactiveMongo Store
   import BSONHandlers._
   final val kind = 'Html
   object HtmlNodeVRW extends VariantReaderWriter[Node, HtmlNode] {

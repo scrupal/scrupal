@@ -43,7 +43,7 @@ case class CommandNode(
   final val kind : Symbol = CommandNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
-  def apply(request : Stimulus) : Future[Response] = Future.successful {
+  def apply(context: Context) : Future[Response] = Future.successful {
     // TODO: implement CommandNode
     HtmlResponse(span("Not Implemented").toString(), Unimplemented)
   }

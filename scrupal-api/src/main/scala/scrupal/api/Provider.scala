@@ -17,31 +17,23 @@ package scrupal.api
 
 import akka.http.scaladsl.server.{PathMatcher, PathMatchers}
 import play.api.mvc._
+import play.api.routing.sird._
 import scrupal.utils._
-
-import scala.concurrent.{ExecutionContext, Future}
 
 /** Provider Of Reactors
   *
-  * Scrupal objects that mix in this trait participate in the dispatching of [[scrupal.api.Stimulus]]s. Providers get a chance to
-  * indicate their interest in particular kinds of [[scrupal.api.Stimulus]]s by returning a [[Reactor]] that will
-  * yield a [[Response]]. Note that a provider is both a Play Controller and a Play Router. However, it must implement
-  * the reactions method rather than the routes method as the Response is converted automatically to a Play Result.
+  * Scrupal objects that mix in this trait participate in the routing of [[scrupal.api.Stimulus]]s to a
+  * [[scrupal.api.Reactor]]. Providers work very much like Play's Router and can even use the SIRD DSL for matching
+  * RequestHeader. The only difference is that a Provider is a partial function returning a Reactor instead of a
+  * Play Action. The Reactor's Response is converted into a Play Result by the core module. To implemen ta
+  * Provider, just implement the provide method as a PartialFunction[RequestHeader,Reaction]. For Example:
+  * {{{
+  *   def provide : ReactionRoutes = {
+  *     case GET(p"/foo") => NodeIdReactor(23)
+  *   }
+  * }}}
   */
 trait Provider { self ⇒
-
-  def resultFrom[CT](context: Context, request : Request[AnyContent], reactor : Reactor) : Future[Result] = {
-    context.withExecutionContext { implicit ec: ExecutionContext ⇒
-      val stimulus: Stimulus = Stimulus(context, request)
-      reactor(stimulus) map { response : Response ⇒
-        val d = response.disposition
-        val status = d.toStatusCode.intValue()
-        val reason = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
-        val header = ResponseHeader(status, reasonPhrase = reason)
-        Result(header, response.toEnumerator)
-      }
-    }
-  }
 
   type ReactionRoutes = PartialFunction[RequestHeader,Reactor]
 
@@ -169,85 +161,7 @@ case class FunctionalNodeReactorProvider(nodeF : PartialFunction[RequestHeader,N
 }
 
 case class NodeReactorProvider(node : Node) extends Provider {
-  def provide : ReactionRoutes = { case request: RequestHeader ⇒ node }
+  def provide : ReactionRoutes = { case request: RequestHeader ⇒ NodeReactor(node) }
 }
 
-/* TODO: Reinstate NodeProvider if needed
-object NodeProvider extends { val id : Symbol = 'Node; val segment = id.name } with TerminalActionProvider {
-  override def provideAction(matchingSegment : String, context : Context) : Option[Action] = {
-    if (matchingSegment == singularKey) {
-      val path = context.request.unmatchedPath
-
-      {
-        ScrupalPathMatchers.BSONObjectIdentifier(path) match {
-          case Matched(pathRest, extractions) ⇒
-            if (pathRest.isEmpty) {
-              val id = extractions.head
-              Some(NodeIdAction(id, context))
-            } else {
-              None
-            }
-          case Unmatched ⇒ None
-        }
-      } match {
-        case Some(action) ⇒ Some(action)
-        case None ⇒
-          Segments(path) match {
-            case Matched(pathRest, extractions) ⇒
-              val path = extractions.head.mkString("/")
-              Some(NodeAliasAction(path, context))
-            case Unmatched ⇒
-              None
-          }
-      }
-    } else {
-      None
-    }
-  }
-}
-*/
-
-/* TODO: Reinstate ActionExtractorToActionProvider if needed
-  * An ActionProvider that uses PathMatcherToAction instances for its matching actions
-  *
-  * PathMatcherToActionProviders convert an path into an action by searching a list of PathMatcherToAction instances.
-  * PathMatchersToAction use a PathMatcher to implement a matches method that matches a Path against a PathMatcher. If
-  * the match succeeds, the corresponding Action is returned. Because the PathMatcherToAction instances are searched
-  * sequentially, this is not highly performant and the order of the PathMatcherToAction instances matters.
-  *
-  * trait ActionExtractorToActionProvider extends ActionProvider {
-  *
-  * /** The Acceptable Matches
-  *
-  * This method should return a set of PathMatcherToAction instances that translate the matched path to an Action.
-  * Be sure to list the longest patterns first as the first one that matches any prefix will win. So if you want
-  * to match `/path/to/42` and `/path` then put the longer one first or else /path will get recognized first.
-  * @return A Seq of PathMatcherToAction
-  * */
-  * def extractors: Seq[ActionExtractor] = Seq.empty[ActionExtractor]
-  *
-  * /** Resolve An Action
-  *
-  * Give a key, a path and a context, find the matching PathToAction and then invoke it to yield the corresponding
-  * Action.
-  *
-  * @param key The key used to select this ActionProvider
-  * @param path The path to use to match the PathToAction function
-  * @param context The context to use to match the PathToAction function
-  * @return
-  * */
-  * override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-  * for (p2a ← extractors ; action = p2a.matches(path, context) if action != None) { return action }
-  * None
-  * }
-  * }
-  *
-  * trait EnablementActionExtractorToActionProvider[T <: EnablementActionExtractorToActionProvider[T]]
-  * extends EnablementActionProvider[T] with ActionExtractorToActionProvider {
-  * override def actionFor(key: String, path: Uri.Path, context: Context) : Option[Action] = {
-  * for (p2a ← extractors ; action = p2a.matches(path, context) if action != None) { return action }
-  * super.actionFor(key, path, context)
-  * }
-  * }
-  */
-
+case class NodeProvider()

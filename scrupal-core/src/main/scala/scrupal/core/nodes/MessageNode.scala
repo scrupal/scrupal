@@ -36,7 +36,7 @@ case class MessageNode(
   created : Option[DateTime] = Some(DateTime.now),
   final val kind : Symbol = MessageNode.kind) extends Node {
   final val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(request : Stimulus) : Future[Response] = Future.successful {
+  def apply(context: Context) : Future[Response] = Future.successful {
     val text = div(cls := css_class, message)
     HtmlResponse(Html.renderContents(Seq(text)), Successful)
   }

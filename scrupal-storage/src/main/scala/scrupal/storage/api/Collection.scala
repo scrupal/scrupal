@@ -17,7 +17,7 @@
 
 package scrupal.storage.api
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Collection[S <: Storable] extends StorageLayer {
   type SF <: StorageFormat
@@ -26,23 +26,24 @@ trait Collection[S <: Storable] extends StorageLayer {
   def schema : Schema
   override def toString = { s"Collection $name in ${schema.name}" }
   def indexOf(field : Seq[Indexable]) : Option[Index]
-  def addIndex(index : Index) : Future[WriteResult]
-  def removeIndex(index : Index) : Future[WriteResult]
+  def addIndex(index : Index)(implicit ec: ExecutionContext) : Future[WriteResult]
+  def removeIndex(index : Index)(implicit ec: ExecutionContext) : Future[WriteResult]
   def indices : Seq[Index]
-  def fetch(id : ID) : Future[Option[S]]
-  def fetchAll() : Future[Iterable[S]]
-  def find(query : Query) : Future[Seq[S]]
-  def insert(obj : S, update : Boolean = false) : Future[WriteResult]
-  def update(obj : S) : Future[WriteResult] = update(obj, IdentityModification(obj))
-  def update(obj : S, update : Modification[S]) : Future[WriteResult]
-  def update(id : ID, update : Modification[S]) : Future[WriteResult]
-  def updateWhere(query : Query, update : Modification[S]) : Future[Seq[WriteResult]]
-  def delete(obj : S) : Future[WriteResult]
-  def delete(id : ID) : Future[WriteResult]
-  def delete(ids : Seq[ID]) : Future[WriteResult]
+  def fetch(id : ID)(implicit ec: ExecutionContext) : Future[Option[S]]
+  def fetchAll()(implicit ec: ExecutionContext) : Future[Iterable[S]]
+  def find(query : Query[S])(implicit ec: ExecutionContext) : Future[Seq[S]]
+  def findOne(query : Query[S])(implicit ec: ExecutionContext) : Future[Option[S]] = find(query).map { seq ⇒ seq.headOption }
+  def insert(obj : S, update : Boolean = false)(implicit ec: ExecutionContext) : Future[WriteResult]
+  def queriesFor[T <: Queries[S]] : T
+  def update(obj : S)(implicit ec: ExecutionContext) : Future[WriteResult] = update(obj, IdentityModification(obj))
+  def update(obj : S, update : Modification[S])(implicit ec: ExecutionContext) : Future[WriteResult]
+  def update(id : ID, update : Modification[S])(implicit ec: ExecutionContext) : Future[WriteResult]
+  def updateWhere(query : Query[S], update : Modification[S])(implicit ec: ExecutionContext) : Future[Seq[WriteResult]]
+  def delete(obj : S)(implicit ec: ExecutionContext) : Future[WriteResult]
+  def delete(id : ID)(implicit ec: ExecutionContext) : Future[WriteResult]
+  def delete(ids : Seq[ID])(implicit ec: ExecutionContext) : Future[WriteResult]
 }
 
 trait IndexKind
 trait Modification[S <: Storable] { def apply(s : S) : S = s }
 case class IdentityModification[S <: Storable](s : S) extends Modification[S]
-trait Query

@@ -15,32 +15,30 @@
 
 package scrupal.api
 
-import scrupal.storage.api.Collection
+import play.api.mvc.{ResponseHeader, Result, AnyContent, Request}
+import scrupal.storage.api.{Queries, Query, StoreContext, Collection}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/** A function that generates a future response from a detailed request
+/** A function that produces a future response from a stimulus.
   *
   * This is the most fundamental kind of action in Scrupal. A Reaction is simply a function that maps
-  * a [[scrupal.api.Stimulus]] into a [[scala.concurrent.Future]] [[scrupal.api.Response]].
-  * All dynamic content in Scrupal is produced eventually through the use of a Reaction.
-  * The Result embodies the notion of completing a request with some content and a disposition on the processing.
+  * a [[scrupal.api.Stimulus]] into a [[scala.concurrent.Future]] of a [[scrupal.api.Response]].
+  * All dynamic content in Scrupal is produced eventually through the use of a Reaction. The Response embodies the
+  * notion of completing a request with some content and a disposition on the processing.
   * @see [[scrupal.api.Reactor]]
   */
 trait Reaction extends ((Stimulus) ⇒ Future[Response])
 
-/** An Reaction To A Request That Produces A Response
+/** An Named, Described Reaction
   *
-  * Reactions bring extensible behavior to Scrupal. A reaction object should be considered as the processing necessary
-  * to convert a request into a response. A reaction:
+  * Reactors bring extensible behavior to Scrupal. A Reactor should be considered as the processing necessary
+  * to convert a stimulus into a response. Some Reactor types are storable in the database and they are all
+  * self-describing. A Reactor:
   *
-  * - is a function that returns a generic result (Result[_]) in the Future
-  *
-  * - contains the request that initiates it so the result can be run multiple times and invoked without arguments
+  * - is a function that converts a Stimulus to a Response in the Future, since it inherits Reaction
   *
   * - can be extended to include other information or behavior peculiar to a given type of action
-  *
-  * A request indicates what should be done to which processing entity and in what context.
   *
   * @see [[scrupal.api.Stimulus]]
   * @see [[scrupal.api.Response]]
@@ -50,6 +48,18 @@ trait Reactor extends Reaction with Nameable with Describable { self ⇒
 
   def apply(request: Stimulus) : Future[Response]
 
+  def resultFrom[CT](context: Context, request : Request[AnyContent]) : Future[Result] = {
+    context.withExecutionContext { implicit ec: ExecutionContext ⇒
+      val stimulus: Stimulus = Stimulus(context, request)
+      apply(stimulus) map { response : Response ⇒
+        val d = response.disposition
+        val status = d.toStatusCode.intValue()
+        val reason = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
+        val header = ResponseHeader(status, reasonPhrase = reason)
+        Result(header, response.toEnumerator)
+      }
+    }
+  }
 }
 
 /** Reactor From A Node
@@ -61,8 +71,8 @@ trait Reactor extends Reaction with Nameable with Describable { self ⇒
 case class NodeReactor(node : Node) extends Reactor {
   val name = "NodeReactor"
   val description = "A Reactor that returns the content of a provided Node."
-  def apply(request : Stimulus) : Future[Response] = {
-    node(request)
+  def apply(stimulus : Stimulus) : Future[Response] = {
+    node(stimulus.context)
   }
 }
 
@@ -75,13 +85,14 @@ case class NodeReactor(node : Node) extends Reactor {
 case class NodeIdReactor(id : Long) extends Reactor {
   val name = "NodeIdReactor"
   val description = "A Reactor that returns the content of a node having a specific ID"
-  def apply(request: Stimulus) : Future[Response] = {
-    request.context.withSchema("core") { (storeContext, schema) ⇒
-      request.context.withExecutionContext { implicit ec : ExecutionContext ⇒
+  def apply(stimulus: Stimulus) : Future[Response] = {
+    val context = stimulus.context
+    context.withSchema("core") { (storeContext, schema) ⇒
+      context.withExecutionContext { implicit ec : ExecutionContext ⇒
         schema.withCollection("nodes") { nodes : Collection[Node] ⇒
           nodes.fetch(id).flatMap {
             case Some(node) ⇒
-              node(request)
+              node(context)
             case None ⇒
               Future.successful(ErrorResponse(s"Node at id '${id.toString}' not found.", NotFound))
           }
@@ -91,23 +102,33 @@ case class NodeIdReactor(id : Long) extends Reactor {
   }
 }
 
-/* TODO: Reinstate NodeAliasAction if needed
-case class NodeAliasAction(path : String, context : Context) extends Action {
-  def apply() : Future[Result[_]] = {
-    val selector = BSONDocument("$eq" → BSONDocument("pathAlias" → BSONString(path)))
-    context.withSchema { (dbc, schema) ⇒
-      context.withExecutionContext { implicit ec : ExecutionContext ⇒
-        schema.nodes.findOne(selector).flatMap {
-          case Some(node) ⇒
-            node(context)
-          case None ⇒
-            Future.successful(ErrorResult(s"Node at path '$path' not found.", NotFound))
+/** A Query to Find Nodes by their alias path
+  *     val selector = BSONDocument("$eq" → BSONDocument("pathAlias" → BSONString(path)))
+  */
+trait NodeQueries extends Queries[Node] {
+  def byAlias(alias: String) : Query[Node]
+}
+
+case class NodeAliasReactor(alias : String) extends Reactor {
+  val name = "NodeAlias"
+  val description = "A Reactor that returns the node found at a path alias"
+  def apply(stimulus: Stimulus): Future[Response] = {
+    val context = stimulus.context
+    context.withStoreContext { sc: StoreContext ⇒
+      context.withExecutionContext { implicit ec: ExecutionContext ⇒
+        sc.withCollection("core", "nodes") { coll: Collection[Node] ⇒
+          val queries : NodeQueries = coll.queriesFor[NodeQueries]
+          coll.findOne(queries.byAlias(alias)).flatMap {
+            case Some(node) ⇒
+              node(context)
+            case None ⇒
+              Future.successful(ErrorResponse(s"Node alias '$name' for path '$alias' could not found.", NotFound))
+          }
         }
       }
     }
   }
 }
-  */
 
 
 
