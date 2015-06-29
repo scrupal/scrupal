@@ -15,7 +15,7 @@
 
 package scrupal.api
 
-import scrupal.storage.api.{Index, SchemaDesign}
+import scrupal.storage.api.SchemaDesign
 
 /** Database Schema For API
   *
@@ -27,8 +27,6 @@ class ApiSchemaDesign extends SchemaDesign {
   override def name: String = "API"
 
   override def requiredNames: Seq[String] = Seq("sites", "nodes", "instances", "principals")
-
-  override def indicesFor(name: String): Seq[Index] = Seq.empty[Index]
 }
 
 object ApiSchemaDesign {

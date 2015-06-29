@@ -17,13 +17,12 @@ package scrupal.api
 
 import org.joda.time.DateTime
 import org.specs2.execute.{Error, Result}
-
 import scrupal.storage.api._
 import scrupal.test.ScrupalSpecification
 
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 
 /**
@@ -45,7 +44,6 @@ case class TestEntity(
 object TestSchemaDesign extends SchemaDesign {
   def name: String = "TestSchema"
   def requiredNames: Seq[String] = Seq("test_entities")
-  def indicesFor(name: String): Seq[Index] = Seq.empty[Index]
 }
 
 class EntitySpec extends ScrupalSpecification("EntitySpec")

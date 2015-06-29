@@ -1,11 +1,26 @@
+/**********************************************************************************************************************
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
+ *                                                                                                                    *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
+ *                                                                                                                    *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
+ *                                                                                                                    *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
+ *                                                                                                                    *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
+ **********************************************************************************************************************/
+
 package scrupal.store.files
 
-import java.io.{FileInputStream, FileOutputStream, File}
-import java.nio.file.{Path, Files}
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.nio.file.{Files, Path}
 
 import com.esotericsoftware.kryo.io.{Input, Output}
 import scrupal.storage.api._
-import scrupal.storage.impl.{CommonCollection, KryoFormatter, KryoFormat}
+import scrupal.storage.impl.{CommonCollection, KryoFormat, KryoFormatter}
 import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -178,26 +193,6 @@ case class FilesCollection[S <: Storable] private[files] (
   override def find(query : Query[S])(implicit ec: ExecutionContext) : Future[Seq[S]] = Future {
     // TODO: Implement FilesCollection.find(query)
     Seq.empty[S]
-  }
-
-  override def addIndex(index : Index)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
-    // TODO: Implement FilesCollection.addIndex(field) not implemented
-    WriteResult.failure(new Exception("MemoryCollection.addIndex(field) not implemented"))
-  }
-
-  override def removeIndex(index : Index)(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
-    // TODO: Implement FilesCollection.removeIndex(field) not implemented
-    WriteResult.failure(new Exception("MemoryCollection.removeIndex(field) not implemented"))
-  }
-
-  override def indexOf(field : Seq[Indexable]) : Option[Index] = {
-    // TODO: Implement FilesCollection.indexOf(field)
-    None
-  }
-
-  override def indices : Seq[Index] = {
-    // TODO: Implement FilesCollection.indices
-    Seq.empty[Index]
   }
 
   override def updateWhere(query : Query[S], update : Modification[S])(implicit ec: ExecutionContext)

@@ -15,15 +15,14 @@
 
 package scrupal.storage.api
 
-import org.specs2.execute.{Error, Success, ResultLike, Result}
-import org.specs2.matcher.MatchResult
+import org.specs2.execute.{Error, Result}
 import play.api.libs.json.Json
 import scrupal.storage.impl.JsonFormatter
 import scrupal.test.ScrupalSpecification
 
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 case class DingBot(id : Long, ding : String, bot : Long) extends Storable
 
@@ -32,9 +31,8 @@ object DingBotFormatter$ extends JsonFormatter[DingBot](Json.format[DingBot])
 object DingBotsSchema extends SchemaDesign {
   override def name : String = "dingbots"
 
-  override def requiredNames : Seq[String] = Seq("dingbots")
 
-  override def indicesFor(name : String) : Seq[Index] = Seq.empty[Index]
+  override def requiredNames : Seq[String] = Seq("dingbots")
 }
 
 /** TestSuite Pattern For Testing Storage Implementations

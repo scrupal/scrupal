@@ -16,8 +16,6 @@
 package scrupal.core
 
 import scrupal.api.ApiSchemaDesign
-import scrupal.storage.api.Index
-
 
 /** The basic schema for Scrupal. This is composed by merging together the various Components.
   */
@@ -57,6 +55,4 @@ case class CoreSchemaDesign() extends ApiSchemaDesign {
   override def name: String = "Core"
 
   override def requiredNames: Seq[String] = super.requiredNames ++ Seq("alias", "token")
-
-  override def indicesFor(name: String): Seq[Index] = super.indicesFor(name) ++ Seq.empty[Index]
 }
