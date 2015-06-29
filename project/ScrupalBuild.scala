@@ -23,6 +23,7 @@ import play.sbt.routes.RoutesKeys._
 import sbt.Keys._
 import sbt._
 import scrupal.sbt.ScrupalPlugin
+import scrupal.sbt.ScrupalPlugin.autoImport._
 
 object ScrupalBuild extends Build with AssetsSettings with Dependencies {
 
