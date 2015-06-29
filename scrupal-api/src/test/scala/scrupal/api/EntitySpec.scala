@@ -52,7 +52,7 @@ class EntitySpec extends ScrupalSpecification("EntitySpec")
 
   def withTestSchema[T <: Result](name: String)(func : Schema ⇒ Future[T]) : Result = {
     val f = Storage.fromURI(s"scrupal-mem://localhost/$name",create=true) flatMap { context ⇒
-      context.addSchema(TestSchemaDesign) flatMap { schema ⇒ func(schema) }
+      context.ensureSchema(TestSchemaDesign) flatMap { schema ⇒ func(schema) }
     }
     val g = f.recover { case x: Throwable ⇒
       Error(s"Unexpected exception: ${x.getClass.getSimpleName}: ${x.getMessage}", x)

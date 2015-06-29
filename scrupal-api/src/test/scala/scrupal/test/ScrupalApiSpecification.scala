@@ -17,10 +17,13 @@ package scrupal.test
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import scrupal.api.Scrupal
-import scrupal.storage.api.{StoreContext, Schema}
+import scrupal.storage.api.{Schema, StoreContext}
+import scrupal.utils.ConfigHelpers
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /** One line sentence description here.
   * Further description here.
@@ -31,22 +34,42 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
-  lazy val testScrupal : Scrupal = FakeScrupal(ScrupalSpecification.next(specName))
+
+  lazy val testScrupal: Scrupal = FakeScrupal(
+    ScrupalSpecification.next(specName),
+    ScrupalApiSpecification.storageTestConfig(specName)
+  )
 
   implicit lazy val scrupal : Scrupal = testScrupal
-
-  override protected def beforeAll() = {}
-
-  override protected def afterAll() = {}
 
   def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
 
   def withSchema[T](schemaName : String)(f : Schema ⇒ T) : T =  scrupal.withSchema(schemaName)(f)
+
+  override protected def beforeAll() = {}
+
+  override protected def afterAll() = {}
 }
 
 object ScrupalApiSpecification {
 
-  def next(name : String) : String = name + "-" + counter.incrementAndGet()
   val counter = new AtomicInteger(0)
 
+  def next(name: String): String = name + "-" + counter.incrementAndGet()
+
+  def storageTestConfig(name: String): Option[Configuration] = {
+    Some(
+      ConfigHelpers.default() ++ Configuration(
+        ConfigFactory.parseString(
+          s"""storage {
+             | scrupal {
+             |   user :"",
+             |   pass :"",
+             |   uri  :"scrupal-mem://localhost/$name"
+                                                       | }
+                                                       |}""".stripMargin
+        )
+      )
+    )
+  }
 }

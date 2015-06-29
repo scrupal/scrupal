@@ -15,7 +15,7 @@
 
 package scrupal.api
 
-import scrupal.storage.api.{Schema, WriteResult, Collection, StoreContext}
+import scrupal.storage.api.{Collection, Schema, StoreContext, WriteResult}
 import scrupal.test.{FakeEntity, FakeModule, ScrupalApiSpecification}
 
 import scala.concurrent.Await
@@ -26,20 +26,18 @@ import scala.concurrent.duration._
 class InstanceSpec extends ScrupalApiSpecification("InstanceSpec") {
 
   class TestModule(db: String) extends FakeModule('foo, db) {
+    override val types = Seq(thai, buns)
+    override val entities = Seq(plun)
     val thai = StringType('Thai, "Thai Foon", ".*".r)
     val buns = BundleType('Buns, "Buns Aye", Map("tie" -> thai))
     val plun = FakeEntity("Plun", buns)
-
-    override val types = Seq(thai, buns)
-
-    override val entities = Seq(plun)
   }
 
   "Module Type, Entity and Instance " should {
     "support CRUD" in {
       testScrupal.withStoreContext { sc : StoreContext ⇒
         implicit val ec = sc.ec
-        val future = sc.addSchema(ApiSchemaDesign()) flatMap { schema : Schema ⇒
+        val future = sc.ensureSchema(ApiSchemaDesign()) flatMap { schema: Schema ⇒
           schema.withCollection("instances") { coll: Collection[Instance] ⇒
             val foo = new TestModule(specName)
             foo.id must beEqualTo('foo)
