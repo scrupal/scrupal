@@ -66,8 +66,8 @@ object ScrupalApiSpecification {
              |   user :"",
              |   pass :"",
              |   uri  :"scrupal-mem://localhost/$name"
-                                                       | }
-                                                       |}""".stripMargin
+             | }
+             |}""".stripMargin
         )
       )
     )
