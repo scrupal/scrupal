@@ -15,9 +15,7 @@
 
 package scrupal.api
 
-import akka.http.scaladsl.server.{PathMatcher, PathMatchers}
 import play.api.mvc._
-import play.api.routing.sird._
 import scrupal.utils._
 
 /** Provider Of Reactors
@@ -95,36 +93,22 @@ trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider 
 
 trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T]
 
-trait PluralityProvider extends IdentifiableProvider {
-
+trait SingularProvider extends IdentifiableProvider {
   /** The routes for the singular prefix case */
   def singularRoutes : ReactionRoutes
-
-  /** The routes for the plural prefix case */
-  def pluralRoutes : ReactionRoutes
 
   /** Singular form of the entity's label */
   final val singularPrefix = makeKey(label)
 
-  /** Plural form of the entity's label */
-  final val pluralPrefix = makeKey(Pluralizer.pluralize(label))
-
-  lazy val provide : ReactionRoutes = {
-    val prefixedSingular = withPrefix(singularRoutes, singularPrefix)
-    val prefixedPlural = withPrefix(pluralRoutes, pluralPrefix)
-    prefixedPlural.orElse(prefixedSingular)
+  lazy val provide: ReactionRoutes = {
+    withPrefix(singularRoutes, singularPrefix)
   }
 
-  val singularMatcher = PathMatchers.Slash ~ PathMatcher(singularPrefix)
-  val pluralMatcher = PathMatchers.Slash ~ PathMatcher(pluralPrefix)
-
-  val matcher = singularMatcher | pluralMatcher
-
-  def isPlural(request: RequestHeader) : Boolean = {
-    request.path.startsWith(pluralPrefix)
+  def isSingular(request: RequestHeader): Boolean = {
+    request.path.startsWith(singularPrefix)
   }
 
-  protected def withPrefix(routes: ReactionRoutes, prefix: String) : ReactionRoutes = {
+  protected def withPrefix(routes: ReactionRoutes, prefix: String): ReactionRoutes = {
     val p = if (prefix.startsWith("/")) prefix else "/" + prefix
     val prefixed: PartialFunction[RequestHeader, RequestHeader] = {
       case header: RequestHeader if header.path.startsWith(p) =>
@@ -132,7 +116,6 @@ trait PluralityProvider extends IdentifiableProvider {
     }
     Function.unlift(prefixed.lift.andThen(_.flatMap(routes.lift)))
   }
-
 
   /** Key For Identifying This Provider
     *
@@ -148,7 +131,27 @@ trait PluralityProvider extends IdentifiableProvider {
     *
     * @return The constant string used to identify this ActionProvider
     */
-  protected def makeKey(name : String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern, "-")
+  protected def makeKey(name: String) = name.toLowerCase.replaceAll(Patterns.NotAllowedInUrl.pattern.pattern, "-")
+
+}
+
+trait PluralProvider extends SingularProvider {
+
+  /** The routes for the plural prefix case */
+  def pluralRoutes : ReactionRoutes
+
+  /** Plural form of the entity's label */
+  final val pluralPrefix = makeKey(Pluralizer.pluralize(label))
+
+  override lazy val provide: ReactionRoutes = {
+    val prefixedSingular = withPrefix(singularRoutes, singularPrefix)
+    val prefixedPlural = withPrefix(pluralRoutes, pluralPrefix)
+    prefixedPlural.orElse(prefixedSingular)
+  }
+
+  def isPlural(request: RequestHeader) : Boolean = {
+    request.path.startsWith(pluralPrefix)
+  }
 }
 
 

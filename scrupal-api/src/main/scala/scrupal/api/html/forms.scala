@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.html
+package scrupal.api.html
 
 import org.joda.time._
 import org.joda.time.format.ISODateTimeFormat

@@ -72,7 +72,6 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
   }
 
   "EnumType(fibonacci)" should {
-    import EnumType._
     "accept 'five'" in TestTypes(scrupal) { t: TestTypes ⇒
       t.enumTy.validate(t.vLoc, "five").isError must beFalse
     }
@@ -161,10 +160,10 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     }
   }
 
-  /* FIXME: TEst complex entities with traits
+  /* TODO: Reinstate Complex Entity With Traits test
   "Complex Entity With Traits" should {
     "accept matching input" in TestTypes(scrupal) { t: TestTypes ⇒
-      val js = Map[String,Type[_]]( "trait1" -> t.js1, "trait2" -> t.js2)
+      val js = Map( "trait1" -> t.js1, "trait2" -> t.js2)
       val result = t.AnEntity.validate(t.vLoc, js)
       result.isError must beFalse
     }
@@ -179,7 +178,7 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
       result.isError must beFalse
     }
   }
-  */
+*/
 
   "Identifier_t" should {
     "accept ***My-Funky.1d3nt1f13r###" in TestTypes(scrupal) { t: TestTypes ⇒
@@ -190,6 +189,7 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     }
   }
 
+  // TODO: Implement more type tests
   "AnyType_t" should {
     "have some test cases" in { pending }
   }

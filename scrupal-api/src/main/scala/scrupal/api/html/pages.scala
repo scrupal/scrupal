@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.html
+package scrupal.api.html
 
 import scrupal.api.Html.{Contents, _}
 import scrupal.api._

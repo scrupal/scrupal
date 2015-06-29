@@ -19,7 +19,7 @@ import org.joda.time.DateTime
 import play.api.mvc.RequestHeader
 import play.api.routing.sird._
 import scrupal.api._
-import scrupal.core.html.PlainPage
+import scrupal.api.html.PlainPage
 import scrupal.core.nodes.{HtmlNode, MarkedDocNode}
 
 import scala.util.matching.Regex

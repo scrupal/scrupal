@@ -18,18 +18,18 @@ package scrupal.api
 import java.time.Instant
 import java.util.regex.Pattern
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model.{MediaType, MediaTypes}
 import play.api.libs.json.{JsArray, JsObject, JsValue}
 import scrupal.utils.Patterns._
 import scrupal.utils.Validation._
-import scrupal.utils.{Validation, Pluralizer, Registrable, Registry}
+import scrupal.utils.{Pluralizer, Registrable, Registry, Validation}
 import shapeless.Poly1
 
 import scala.collection.Map
 import scala.concurrent.duration.Duration
+import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
-import scala.language.postfixOps
 
 case class TypeFailure[VT, T <: Type[VT]](ref : Location, value : VT, t : T, errors : String*)
   extends Validation.Failure[VT] {
@@ -495,25 +495,15 @@ case class RangeType(
     }
 
     implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(if (b) 1 else 0, b) }
-
     implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toLong, b) }
-
     implicit def caseShort = at[Short] { s: Short ⇒ check(s.toLong, s) }
-
     implicit def caseInt = at[Int] { i: Int ⇒ check(i.toLong, i) }
-
     implicit def caseLong = at[Long] { l: Long ⇒ check(l, l) }
-
     implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toLong, f) }
-
     implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toLong, d) }
-
     implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ checkString(s.name) }
-
     implicit def caseString = at[String] { s : String ⇒ checkString(s) }
-
     implicit def caseInstant = at[Instant] { i : Instant ⇒ check(i.toEpochMilli, i) }
-
     implicit def caseDuration = at[Duration] { i : Duration ⇒ check(i.toMillis, i)  }
 
     def checkString(s: String) : Option[String] = {
@@ -572,27 +562,16 @@ case class RealType(
     }
 
     implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(if (b) 1.0D else 0.0D, b) }
-
     implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toDouble, b) }
-
     implicit def caseShort = at[Short] { s: Short ⇒ check(s.toDouble, s) }
-
     implicit def caseInt = at[Int] { i: Int ⇒ check(i.toDouble, i) }
-
     implicit def caseLong = at[Long] { l: Long ⇒ check(l.toDouble, l) }
-
     implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toDouble, f) }
-
     implicit def caseDouble = at[Double] { d: Double ⇒ check(d, d) }
-
     implicit def caseSymbol = at[Symbol] { s : Symbol ⇒ checkString(s.name) }
-
     implicit def caseString = at[String] { s : String ⇒ checkString(s) }
-
     implicit def caseInstant = at[Instant] { i : Instant ⇒ check(i.toEpochMilli.toDouble, i) }
-
     implicit def caseDuration = at[Duration] { i : Duration ⇒ check(i.toMillis.toDouble, i)  }
-
 
     def checkString(s: String) : Option[String] = {
       try {
@@ -624,16 +603,47 @@ object AnyReal_t extends RealType('AnyReal,
 case class RegexType(
   id : Identifier,
   description : String
-) extends Type[String] {
-  def validate(ref : Location, value : String) : VResult = {
-    simplify(ref, value, "String") {
-      case s: String ⇒ Try {
-        Pattern.compile(s)
-      } match {
-        case Success(x) ⇒ None
-        case Failure(x) ⇒ Some(s"Error in pattern: ${x.getClass.getName}: ${x.getMessage}")
+  ) extends Type[Atom] {
+  override def kind = 'Regex
+
+  private object validation extends Poly1 {
+    def check(value: String): Option[String] = {
+      value match {
+        case s: String ⇒ Try {
+          Pattern.compile(s)
+        } match {
+          case Success(x) ⇒ None
+          case Failure(x) ⇒ Some(s"Error in pattern '$value': ${x.getClass.getName}: ${x.getMessage}")
+        }
       }
-      case _ ⇒ Some("") // A signal to simplify that its the wrong class
+    }
+
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(b.toString) }
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toString) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toString) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i.toString) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toString) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toString) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toString) }
+
+    implicit def caseSymbol = at[Symbol] { s: Symbol ⇒ check(s.name) }
+
+    implicit def caseString = at[String] { s: String ⇒ check(s) }
+
+    implicit def caseInstant = at[Instant] { i: Instant ⇒ check(i.toEpochMilli.toString) }
+
+    implicit def caseDuration = at[Duration] { i: Duration ⇒ check(i.toMillis.toString) }
+  }
+
+  def validate(ref: Location, value: Atom): VResult = {
+    simplify(ref, value, "Double, Long or Integer") { value ⇒
+      value.map(validation).unify
     }
   }
 }
@@ -646,14 +656,44 @@ case class SelectionType(
   id : Identifier,
   description : String,
   choices : Seq[String]
-) extends Type[String] {
-  override type ValueType = String
+  ) extends Type[Atom] {
+  override def kind = 'Selection
   require(choices.nonEmpty)
-  def validate(ref : Location, value : String) : VResult = {
-    simplify(ref, value, "BSONString") {
-      case s: String if !choices.contains(s) ⇒ Some(s"Invalid selection. Options are: ${choices.mkString(", ")}")
-      case s: String ⇒ None
-      case _ ⇒ Some("")
+
+  private object validation extends Poly1 {
+    def check(s: String): Option[String] = {
+      if (!choices.contains(s))
+        Some(s"Invalid selection. Options are: ${choices.mkString(", ")}")
+      else
+        None
+    }
+
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(b.toString) }
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toString) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toString) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i.toString) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toString) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toString) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toString) }
+
+    implicit def caseSymbol = at[Symbol] { s: Symbol ⇒ check(s.name) }
+
+    implicit def caseString = at[String] { s: String ⇒ check(s) }
+
+    implicit def caseInstant = at[Instant] { i: Instant ⇒ check(i.toEpochMilli.toString) }
+
+    implicit def caseDuration = at[Duration] { i: Duration ⇒ check(i.toMillis.toString) }
+  }
+
+  def validate(ref: Location, value: Atom): VResult = {
+    simplify(ref, value, "Atom") { value ⇒
+      value.map(validation).unify
     }
   }
 }
@@ -675,9 +715,7 @@ case class SetType[ET](
   description : String,
   elemType : Type[ET]
 ) extends IndexableType[ET,Set[ET]] {
-  override type ValueType = Set[ET]
   override def kind = 'Set
-
   def toSeq(st: Set[ET]): Seq[ET] = st.toSeq
   def validateElement(ref: IndexedLocation, v: ET): Results[ET] = {
     elemType.validate(ref, v)
@@ -698,21 +736,49 @@ case class StringType(
   regex : Regex,
   maxLen : Int = Int.MaxValue,
   patternName : String = "pattern"
-) extends Type[String] {
+  ) extends Type[Atom] {
+  override def kind = 'String
   require(maxLen >= 0)
-  def validate(ref : Location, value : String) = {
-    simplify(ref, value, "String") {
-      case s : String if s.length > maxLen ⇒
-        Some(s"String of length ${s.length} exceeds maximum of $maxLen.")
-      case s : String if !regex.pattern.matcher(s).matches() ⇒
-        Some(s"'$s' does not match $patternName.")
-      case s : String ⇒
-        None
-      case _ ⇒
-        Some("")
+
+  protected def check(s: String): Option[String] = {
+    if (s.length > maxLen)
+      Some(s"String of length ${s.length} exceeds maximum of $maxLen.")
+    if (!regex.pattern.matcher(s).matches())
+      Some(s"'$s' does not match $patternName.")
+    else
+      None
+  }
+
+  protected object validation extends Poly1 {
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check(b.toString) }
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toString) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toString) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i.toString) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toString) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toString) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toString) }
+
+    implicit def caseSymbol = at[Symbol] { s: Symbol ⇒ check(s.name) }
+
+    implicit def caseString = at[String] { s: String ⇒ check(s) }
+
+    implicit def caseInstant = at[Instant] { i: Instant ⇒ check(i.toEpochMilli.toString) }
+
+    implicit def caseDuration = at[Duration] { i: Duration ⇒ check(i.toMillis.toString) }
+  }
+
+  def validate(ref: Location, value: Atom): VResult = {
+    simplify(ref, value, "Atom") { value ⇒
+      value.map(validation).unify
     }
   }
-  override def kind = 'String
+
 }
 
 
@@ -729,17 +795,13 @@ object Identifier_t extends StringType('Identifier,
 
 object Password_t extends StringType('Password,
   "A type for human written passwords", anchored(Password), 64, "a password") {
-  override def validate(ref : Location, value : String) = {
-    simplify(ref, value, "String") {
-      case bs : String if bs.length > maxLen ⇒
-        Some(s"Value is too short for a password.")
-      case bs : String if !regex.pattern.matcher(bs).matches() ⇒
-        Some(s"Value is not legal for a password.")
-      case bs : String ⇒
+  override def check(bs: String) = {
+    if (bs.length > maxLen)
+      Some(s"Value is too short for a password.")
+    else if (!regex.pattern.matcher(bs).matches())
+      Some(s"Value is not legal for a password.")
+    else
         None
-      case _ ⇒
-        Some("")
-    }
   }
 }
 
@@ -785,16 +847,45 @@ case class TimestampType(
   description : String,
   min : Instant = Instant.ofEpochMilli(0L),
   max : Instant = Instant.ofEpochMilli(Long.MaxValue / 2)
-) extends Type[Long] {
+  ) extends Type[Atom] {
   assert(min.toEpochMilli <= max.toEpochMilli)
-  def validate(ref : Location, value : Long) = {
-    simplify(ref, value, "Long") {
-      case l : Long if l < min.toEpochMilli ⇒
+
+  private object validation extends Poly1 {
+    def check(l: Long): Option[String] = {
+      if (l < min.toEpochMilli)
         Some(s"Timestamp $l is out of range, below minimum of $min")
-      case l : Long if l > max.toEpochMilli ⇒
+      else if (l > max.toEpochMilli)
         Some(s"Timestamp $l is out of range, above maximum of $max")
-      case l : Long ⇒
+      else
         None
+    }
+
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ Some("") }
+
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toLong) }
+
+    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toLong) }
+
+    implicit def caseInt = at[Int] { i: Int ⇒ check(i.toLong) }
+
+    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toLong) }
+
+    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toLong) }
+
+    implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toLong) }
+
+    implicit def caseSymbol = at[Symbol] { s: Symbol ⇒ check(s.name.toLong) }
+
+    implicit def caseString = at[String] { s: String ⇒ check(s.toLong) }
+
+    implicit def caseInstant = at[Instant] { i: Instant ⇒ check(i.toEpochMilli) }
+
+    implicit def caseDuration = at[Duration] { i: Duration ⇒ check(i.toMillis) }
+  }
+
+  def validate(ref: Location, value: Atom): VResult = {
+    simplify(ref, value, "Atom") { value ⇒
+      value.map(validation).unify
     }
   }
 }

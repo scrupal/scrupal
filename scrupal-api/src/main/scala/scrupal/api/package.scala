@@ -15,13 +15,11 @@
 
 package scrupal
 
-import akka.http.scaladsl.model.{StatusCodes, StatusCode}
-
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 
+import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import play.api.libs.json.JsObject
-
 import shapeless._
 
 import scala.concurrent.duration.Duration
@@ -73,7 +71,7 @@ package object api {
     * as strings, etc.
     */
   type Atom = Boolean :+: Byte :+: Short :+: Int :+: Long :+: Float :+: Double :+:
-              String :+: Symbol :+: Instant :+: Duration :+:CNil
+    String :+: Symbol :+: Instant :+: Duration :+: CNil
 
   implicit def atomFromBoolean(b: Boolean) : Atom = Coproduct[Atom](b)
   implicit def atomFromByte(b : Byte) : Atom = Coproduct[Atom](b)

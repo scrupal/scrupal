@@ -75,56 +75,7 @@ trait FindReactor extends EntityInstanceReactor {
   *
   * This maps
   */
-trait EntityProvider extends PluralityProvider {
-
-  def create(details: String) : CreateReactor
-
-  /** Query Command (OPTIONS/plural)
-    * @return The QueryReaction to generate the response for the Query request
-    */
-  def query(details: String) : QueryReactor
-
-
-  /** Retrieve Command (GET/plural) - Retrieve an existing entity by its identifier
-    * This is a command on the entity type's contain to retrieve a specific entity. The full instance should be
-    * retrieved, including all retrievable facets.
-    * @return
-    */
-  def retrieve(instance_id: String, details: String) : RetrieveReactor
-  def retrieve(instance_id: Long, details: String) : RetrieveReactor
-
-  /** Update Command (PUT/plural) - Updates all or a few of the fields of an entity
-    * @return
-    */
-  def update(instance_id: String, details: String) : UpdateReactor
-  def update(instance_id: Long, details: String) : UpdateReactor
-
-  /** Delete Command (DELETE/plural) */
-  /** Delete an entity
-    * @return THe DeleteReaction to generate the response for the Delete request
-    */
-  def delete(instance_id: String, details: String) : DeleteReactor
-  def delete(instance_id: Long, details: String) : DeleteReactor
-
-  /** XXX Command (OPTIONS/singular) */
-  def find(instance_id: String, facet: String, details: String) : FindReactor
-  def find(instance_id: Long, facet: String, details: String) : FindReactor
-
-  /** Create Facet Command (POST/singular) */
-  def add(instance_id: String, facet: String, details: String) : AddReactor
-  def add(instance_id: Long, facet: String, details: String) : AddReactor
-
-  /** RetrieveAspect Command (GET/singular) */
-  def get(instance_id: String, facet: String, facet_id: String, details: String) : GetReactor
-  def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor
-
-  /** UpdateAspect Command (PUT/singular) */
-  def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor
-  def set(instance_id: Long, facet: String, facet_id: String, details: String) : SetReactor
-
-  /** XXX Command (DELETE/singular) */
-  def remove(instance_id: String, facet: String, facet_id: String, details: String) : RemoveReactor
-  def remove(instance_id: Long, facet: String, facet_id: String, details: String) : RemoveReactor
+trait EntityProvider extends PluralProvider {
 
   final val pluralRoutes: ReactionRoutes = {
     case GET(p"/${long(id)}$rest*") ⇒
@@ -144,7 +95,6 @@ trait EntityProvider extends PluralityProvider {
     case DELETE(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>}$rest*") ⇒
       delete(id, rest)
   }
-
   final val singularRoutes: ReactionRoutes = {
     case GET(p"/${long(id)}/$facet/$facet_id$rest*") ⇒
       get(id, facet, facet_id, rest)
@@ -167,4 +117,61 @@ trait EntityProvider extends PluralityProvider {
     case DELETE(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
       remove(id, facet, facet_id, rest)
   }
+
+  def create(details: String) : CreateReactor
+
+  /** Query Command (OPTIONS/plural)
+    * @return The QueryReaction to generate the response for the Query request
+    */
+  def query(details: String) : QueryReactor
+
+  /** Retrieve Command (GET/plural) - Retrieve an existing entity by its identifier
+    * This is a command on the entity type's contain to retrieve a specific entity. The full instance should be
+    * retrieved, including all retrievable facets.
+    * @return
+    */
+  def retrieve(instance_id: String, details: String) : RetrieveReactor
+
+  def retrieve(instance_id: Long, details: String) : RetrieveReactor
+
+  /** Delete Command (DELETE/plural) */
+
+  /** Update Command (PUT/plural) - Updates all or a few of the fields of an entity
+    * @return
+    */
+  def update(instance_id: String, details: String) : UpdateReactor
+
+  def update(instance_id: Long, details: String) : UpdateReactor
+
+  /** Delete an entity
+    * @return THe DeleteReaction to generate the response for the Delete request
+    */
+  def delete(instance_id: String, details: String) : DeleteReactor
+
+  def delete(instance_id: Long, details: String) : DeleteReactor
+
+  /** XXX Command (OPTIONS/singular) */
+  def find(instance_id: String, facet: String, details: String) : FindReactor
+
+  def find(instance_id: Long, facet: String, details: String) : FindReactor
+
+  /** Create Facet Command (POST/singular) */
+  def add(instance_id: String, facet: String, details: String) : AddReactor
+
+  def add(instance_id: Long, facet: String, details: String) : AddReactor
+
+  /** RetrieveAspect Command (GET/singular) */
+  def get(instance_id: String, facet: String, facet_id: String, details: String) : GetReactor
+
+  def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor
+
+  /** UpdateAspect Command (PUT/singular) */
+  def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor
+
+  def set(instance_id: Long, facet: String, facet_id: String, details: String) : SetReactor
+
+  /** XXX Command (DELETE/singular) */
+  def remove(instance_id: String, facet: String, facet_id: String, details: String) : RemoveReactor
+
+  def remove(instance_id: Long, facet: String, facet_id: String, details: String) : RemoveReactor
 }

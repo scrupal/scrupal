@@ -15,14 +15,14 @@
 
 package scrupal.core.nodes
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model.{MediaType, MediaTypes}
 import org.joda.time.DateTime
 import scrupal.api.AssetsLocator.Directory
-import scrupal.api.Html.{ ContentsArgs, Contents }
+import scrupal.api.Html.{Contents, ContentsArgs}
 import scrupal.api._
-import scrupal.core.html.MarkedPageGenerator
+import scrupal.api.html.MarkedPageGenerator
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 import scalatags.Text.all._
 
@@ -46,30 +46,6 @@ case class MarkedDocNode(
   final val kind : Symbol = MarkedDocNode.kind) extends Node {
   override def mediaType : MediaType = MediaTypes.`text/html`
   def description : String = "A node that provides a marked document from a resource as html."
-
-  /** Traverse the directories and generate the menu structure
-    *
-    * @param dirPath The url path to the directory
-    * @param dir The directory to generate the menu from
-    * @return A pair of maps, one for files, one for directories
-    */
-  def menuItems(dirPath : String, dir : Directory) : (Map[String, String], Map[String, Map[String, String]]) = {
-    val fileMap = for ((filename, (title, url)) ← dir.files) yield {
-      title → (dirPath + "/" + filename)
-    }
-    val dirMap = for ((dirName, optdir) ← dir.dirs if optdir.isDefined) yield {
-      val subdirPath = dirPath + "/" + dirName
-      val subfilesMap = optdir match {
-        case Some(d2) ⇒
-          for ((filename, (title, url)) ← d2.files) yield {
-            title → (subdirPath + "/" + filename)
-          }
-        case None ⇒ Map.empty[String, String]
-      }
-      dirName → subfilesMap
-    }
-    fileMap → dirMap
-  }
 
   def apply(context: Context) : Future[Response] = {
     val pathStr = path.mkString("/")
@@ -125,10 +101,55 @@ case class MarkedDocNode(
         }
     }
   }
+
+  /** Traverse the directories and generate the menu structure
+    *
+    * @param dirPath The url path to the directory
+    * @param dir The directory to generate the menu from
+    * @return A pair of maps, one for files, one for directories
+    */
+  def menuItems(dirPath : String, dir : Directory) : (Map[String, String], Map[String, Map[String, String]]) = {
+    val fileMap = for ((filename, (title, url)) ← dir.files) yield {
+      title → (dirPath + "/" + filename)
+    }
+    val dirMap = for ((dirName, optdir) ← dir.dirs if optdir.isDefined) yield {
+      val subdirPath = dirPath + "/" + dirName
+      val subfilesMap = optdir match {
+        case Some(d2) ⇒
+          for ((filename, (title, url)) ← d2.files) yield {
+            title → (subdirPath + "/" + filename)
+          }
+        case None ⇒ Map.empty[String, String]
+      }
+      dirName → subfilesMap
+    }
+    fileMap → dirMap
+  }
 }
 
 object MarkedDocNode {
   final val kind = 'MarkedDoc
+
+  def docNav(uplink : String, files : Map[String, String], dirs : Map[String, Map[String, String]]) = {
+    div(cls := "well-small col-md-2",
+      div(cls := "btn-toolbar-vertical", role := "group",
+        a(href := uplink, cls := "btn btn-xs btn-primary active", role := "button", "Up"), {
+          for ((title, link) ← files) yield { a(href := link, cls := "btn btn-xs btn-primary", role := "button", title) }
+        }.toSeq,
+        {
+          for ((title, map) ← dirs) yield {
+            div(cls := "btn-group-xs btn-group-vertical", role := "group",
+              button(`type` := "button", cls := "btn btn-xs btn-primary dropdown-toggle", data("toggle") := "dropdown",
+                aria.expanded := "false", title, span(cls := "caret")),
+              ul(cls := "dropdown-menu", role := "menu", {
+                for ((label, link) ← map) yield { li(a(data("target") := "#", href := link, role := "button", label)) }
+              }.toSeq)
+            )
+          }
+        }.toSeq
+      )
+    )
+  }
 
   case class DocPage(title : String, description : String, menu : Html.Contents, content : String, footer : Html.Contents)
     extends MarkedPageGenerator {
@@ -150,27 +171,6 @@ object MarkedDocNode {
         )
       )
     }
-  }
-
-  def docNav(uplink : String, files : Map[String, String], dirs : Map[String, Map[String, String]]) = {
-    div(cls := "well-small col-md-2",
-      div(cls := "btn-toolbar-vertical", role := "group",
-        a(href := uplink, cls := "btn btn-xs btn-primary active", role := "button", "Up"), {
-          for ((title, link) ← files) yield { a(href := link, cls := "btn btn-xs btn-primary", role := "button", title) }
-        }.toSeq,
-        {
-          for ((title, map) ← dirs) yield {
-            div(cls := "btn-group-xs btn-group-vertical", role := "group",
-              button(`type` := "button", cls := "btn btn-xs btn-primary dropdown-toggle", data("toggle") := "dropdown",
-                aria.expanded := "false", title, span(cls := "caret")),
-              ul(cls := "dropdown-menu", role := "menu", {
-                for ((label, link) ← map) yield { li(a(data("target") := "#", href := link, role := "button", label)) }
-              }.toSeq)
-            )
-          }
-        }.toSeq
-      )
-    )
   }
 
 }

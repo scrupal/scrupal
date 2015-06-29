@@ -17,11 +17,9 @@ package scrupal.core.entities
 
 
 import play.api.libs.json.JsObject
-import play.api.mvc.AnyContent
-
 import scrupal.api.Html.ContentsArgs
 import scrupal.api._
-import scrupal.core.html._
+import scrupal.api.html._
 import scrupal.utils.OSSLicense
 
 import scala.concurrent.Future

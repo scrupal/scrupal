@@ -16,13 +16,12 @@
 package scrupal.core.http.akkahttp
 
 import akka.actor._
-import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives._
 import akka.util.Timeout
 import scrupal.api.Html.ContentsArgs
 import scrupal.api._
-import scrupal.core.html.PlainPageGenerator
+import scrupal.api.html.PlainPageGenerator
 import scrupal.utils.ScrupalComponent
 
 import scalatags.Text.all._
@@ -84,7 +83,7 @@ trait ScrupalService extends ScrupalComponent
 
   def createRouter(scrupal : Scrupal) : Route = {
     reject
-    /*
+    /* TODO: Review and delete or reinstate
     Try {
       new AssetsController(scrupal).routes(scrupal) ~
         new ActionProviderController().routes(scrupal)
