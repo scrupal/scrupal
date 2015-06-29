@@ -24,9 +24,9 @@ trait BasicPageGenerator extends PageGenerator {
   def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
     implicit val ctxt : Context = context
     Seq(
-      link(rel := "stylesheet", media := "screen", href := PathOf.theme(context.themeProvider, context.themeName)),
       link(rel := "stylesheet", href := PathOf.lib("font-awesome", "css/font-awesome.css"), media := "screen"),
-      link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen")
+      link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen"),
+      jslib("marked", "marked.js")
     )
   }
 
@@ -48,10 +48,14 @@ abstract class BasicPage(
 
 trait BootstrapPageGenerator extends BasicPageGenerator {
   override def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
-    super.headSuffix(context) ++ Seq(
+    implicit val ctxt: Context = context
+    Seq(
+      link(rel := "stylesheet", media := "screen", href := PathOf.theme("css/bootstrap.min.css")),
+      link(rel := "stylesheet", media := "screen", href := PathOf.theme("css/bootstrap-theme.min.css")),
+      link(rel := "stylesheet", media := "screen", href := PathOf.theme("css/bootstrap-theme.min.css")),
       jslib("jquery", "jquery.js"),
-      jslib("bootstrap", "js/bootstrap.js")
-    )
+      script(`type` := "application/javascript", src := PathOf.theme("js/bootstrap.min.js"))
+    ) ++ super.headSuffix(context)
   }
 
   def body_content(context : Context, args : ContentsArgs) : Contents = {
@@ -63,7 +67,7 @@ trait BootstrapPageGenerator extends BasicPageGenerator {
   }
 }
 
-abstract class BootstrapPage(
+class BootstrapPage(
   override val id : Symbol,
   override val title : String,
   override val description : String) extends BasicPage(id, title, description) with BootstrapPageGenerator
@@ -97,7 +101,7 @@ trait MarkedPageGenerator extends BootstrapPageGenerator {
   }
 }
 
-abstract class MarkedPage(
+class MarkedPage(
   override val id : Symbol,
   override val title : String,
   override val description : String) extends BootstrapPage(id, title, description) with MarkedPageGenerator
@@ -153,11 +157,12 @@ case class NotFoundPage(
   causes : Seq[String] = Seq(),
   suggestions : Seq[String] = Seq()) extends Html.Template(id) with NotFoundPageGenerator
 
-trait PlainPageGenerator extends BasicPageGenerator {
+trait PlainPageGenerator extends BootstrapPageGenerator {
   def content(context : Context, args : ContentsArgs) : Html.Contents
-  def bodyMain(context : Context, args : ContentsArgs) : Contents = Seq(
-    div(cls := "container", content(context, args), debug_footer(context))
-  )
+
+  override def body_content(context: Context, args: ContentsArgs): Contents = {
+    content(context, args)
+  }
 }
 
 abstract class GenericPlainPage(_id : Symbol, title : String, description : String)
@@ -168,5 +173,5 @@ case class PlainPage(
   override val title : String,
   override val description : String,
   the_content : Html.Contents) extends GenericPlainPage(id, title, description) {
-  def content(context : Context, args : ContentsArgs) : Html.Contents = the_content
+  def content(context: Context, args: ContentsArgs): Contents = the_content
 }

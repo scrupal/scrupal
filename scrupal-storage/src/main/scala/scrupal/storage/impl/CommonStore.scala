@@ -15,15 +15,12 @@
 
 package scrupal.storage.impl
 
-import java.util.concurrent.{Semaphore, ConcurrentHashMap}
-import java.util.concurrent.atomic.AtomicInteger
-
-import scala.collection.concurrent
-import scala.collection.convert.decorateAsScala._
+import java.util.concurrent.ConcurrentHashMap
 
 import scrupal.storage.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.concurrent
+import scala.collection.convert.decorateAsScala._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait CommonStore extends Store {

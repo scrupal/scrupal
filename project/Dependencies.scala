@@ -1,17 +1,16 @@
 /**********************************************************************************************************************
- * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * Copyright © 2015 Reactific Software LLC                                                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
- * except in compliance with the License. You may obtain a copy of the License at                                     *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- *        http://www.apache.org/licenses/LICENSE-2.0                                                                  *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * Unless required by applicable law or agreed to in writing, software distributed under the                          *
- * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
- * either express or implied. See the License for the specific language governing permissions                         *
- * and limitations under the License.                                                                                 *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
 
@@ -82,9 +81,14 @@ trait Dependencies
   val chill                   = "com.twitter"               %% "chill"                    % "0.6.0"
 
   // UI Based Stuff
-  val marked                  = "org.webjars"               %  "marked"                   % "0.3.2-1"
-  val fontawesome             = "org.webjars"               %  "font-awesome"             % "4.2.0"
   val scalatags               = "com.lihaoyi"               %% "scalatags"                % "0.5.2"
+
+  // WebJars We Use
+  val wj_bootstrap = "org.webjars" % "bootstrap" % "3.3.5"
+  val wj_marked = "org.webjars" % "marked" % "0.3.2-1"
+  val wj_requirejs = "org.webjars" % "requirejs" % "2.1.18"
+  val wj_requirejs_domready = "org.webjars" % "requirejs-domready" % "2.0.1-2"
+  val wj_font_awesome = "org.webjars" % "font-awesome" % "4.3.0"
 
   // Hashing Algorithms
   val pbkdf2                  = "io.github.nremond"         %% "pbkdf2-scala"             % "0.4"
@@ -145,7 +149,7 @@ trait Dependencies
   )
 
   val common_dependencies : Seq[ModuleID] = Seq(
-    scala_pickling,    grizzled_slf4j, akka_slf4j, logback_classic, commons_lang3,
+    scala_pickling, grizzled_slf4j, akka_slf4j, logback_classic, commons_lang3,
     Test.specs2, Test.play_test, Test.play_specs2
   )
 
@@ -178,19 +182,42 @@ trait Dependencies
   ) ++ common_dependencies
 
   val ui_dependencies : Seq[ModuleID] = Seq (
-    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, marked, fontawesome,
+    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, wj_marked, wj_font_awesome,
     commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
     Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies
 
+  val bootswatch_themes: Seq[ModuleID] = Seq(
+    "org.webjars" % "bootswatch-amelia" % "3.2.0-1",
+    "org.webjars" % "bootswatch-cerulean" % "3.3.1+2",
+    "org.webjars" % "bootswatch-cosmo" % "3.3.1+2",
+    "org.webjars" % "bootswatch-cupid" % "3.1.0+1",
+    "org.webjars" % "bootswatch-cyborg" % "3.3.1+2",
+    "org.webjars" % "bootswatch-darkly" % "3.3.1+2",
+    "org.webjars" % "bootswatch-default" % "3.3.1+2",
+    "org.webjars" % "bootswatch-flatly" % "3.3.1+2",
+    "org.webjars" % "bootswatch-journal" % "3.3.1+2",
+    "org.webjars" % "bootswatch-lumen" % "3.3.1+2",
+    "org.webjars" % "bootswatch-paper" % "3.3.1+2",
+    "org.webjars" % "bootswatch-readable" % "3.3.1+2",
+    "org.webjars" % "bootswatch-sandstone" % "3.3.1+2",
+    "org.webjars" % "bootswatch-simplex" % "3.3.1+2",
+    "org.webjars" % "bootswatch-slate" % "3.3.1+2",
+    "org.webjars" % "bootswatch-spacelab" % "3.3.1+2",
+    "org.webjars" % "bootswatch-superhero" % "3.3.1+2",
+    "org.webjars" % "bootswatch-united" % "3.3.1+2",
+    "org.webjars" % "bootswatch-yeti" % "3.3.1+2"
+  )
+
   val core_dependencies : Seq[ModuleID] = Seq(
     commons_lang3, scala_arm, scala_pickling, livestream_scredis, akka_actor, play_iteratees, akka_http, shapeless,
+    scalatags, wj_marked, wj_font_awesome, wj_bootstrap,
     Test.akka_testkit, Test.commons_io, Test.nu_validator
-  ) ++ common_dependencies
+  ) ++ common_dependencies ++ bootswatch_themes
 
   val config_dependencies : Seq[ModuleID] = Seq()
 
   val admin_dependencies : Seq[ModuleID] = Seq()
 
-  val welcome_dependencies : Seq[ModuleID] = Seq()
+  val doc_dependencies: Seq[ModuleID] = Seq()
 }

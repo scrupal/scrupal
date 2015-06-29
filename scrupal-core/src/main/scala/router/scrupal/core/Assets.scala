@@ -13,41 +13,27 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.controllers
+package router.scrupal.core
 
-import play.api.mvc._
-import play.api.mvc.{Request⇒PRequest}
-import scrupal.api._
-import scrupal.core.http.HttpUtils
+import javax.inject.{Inject, Singleton}
 
-import scala.concurrent.{Future, ExecutionContext}
+import controllers.Assets.Asset
+import play.api.http.HttpErrorHandler
+import play.api.mvc.{Action, AnyContent}
 
-/** Title Of Thing.
-  *
-  * Description of thing
-  */
-abstract class AbstractController(site : Site)(implicit scrupal : Scrupal) extends Controller {
+@Singleton
+class Assets @Inject()(errHandler: HttpErrorHandler) extends controllers.Assets(errHandler) {
 
-  protected def cr2a(func: (Stimulus) => Option[Reactor]): Action[_] = {
-    Action.async(BodyParsers.parse.anyContent) { req: PRequest[AnyContent] ⇒
-      import HttpUtils._
-      val context = Context(scrupal, site)
-      val details: Stimulus = Stimulus(context, req)
-      func(details) match {
-        case Some (reactor) ⇒
-          context.withExecutionContext { implicit ec: ExecutionContext ⇒
-            reactor(details) map { response ⇒
-              val d = response.disposition
-              val status = d.toStatusCode.intValue()
-              val msg = Some(s"HTTP($status): ${d.id.name}(${d.code}): ${d.msg}")
-              val header = ResponseHeader(status, reasonPhrase = msg)
-              Result(header, response.toEnumerator)
-            }
-          }
-        case None ⇒
-          Future.successful { NotFound("") }
-      }
-    }
-  }
+  override def versioned(path: String, file: Asset): Action[AnyContent] = super.versioned(path, file)
+
+  def js(file: String) = super.at("/public/javascripts", file, aggressiveCaching = true)
+
+  def img(file: String) = super.at("/public/images", file, aggressiveCaching = true)
+
+  def css(file: String) = super.at("/public/stylesheets", file, aggressiveCaching = true)
+
+  def thm(theme: String, file: String) = super.at("/public/lib", s"bootswatch-$theme/$file", aggressiveCaching = true)
+
+  def ac(path: String, file: String) = super.at(path, file, aggressiveCaching = true)
 
 }

@@ -13,48 +13,13 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.welcome
 
-import play.api.mvc.RequestHeader
-import scrupal.test.ScrupalApiSpecification
+import com.google.inject.AbstractModule
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-
-class ProviderSpec extends ScrupalApiSpecification("Provider") {
-
-  val provider1 = NullProvider('One)
-  val provider2 = NullProvider('Two)
-
-  case class NullProvider(id : Symbol) extends Provider {
-    def provide : ReactionRoutes = {
-      case null ⇒ NullReactor
-    }
-  }
-
-  case object NullReactor extends Reactor {
-    val name = "Null"
-    val description = "The Null Reactor"
-
-    def apply(request: Stimulus): Future[Response] = Future.successful {NoopResponse}
-  }
-
-  "DelegatingProvider" should {
-    "delegate" in {
-      testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-        val dp = new DelegatingProvider {
-          def id: Identifier = 'DelegatingProvider
-
-          def delegates: Iterable[Provider] = Seq(provider1, provider2)
-        }
-        val req: RequestHeader = null
-        val maybe_reaction = dp.provide.lift(req)
-        maybe_reaction.isDefined must beTrue
-        val reaction = maybe_reaction.get
-        reaction must beEqualTo(NullReactor)
-        val future = reaction(Stimulus.empty).map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
-        Await.result(future, 1.seconds)
-      }
-    }
+class WelcomeModule extends AbstractModule {
+  def configure() = {
+    bind(classOf[scrupal.api.Scrupal])
+      .to(classOf[scrupal.welcome.Scrupal]).asEagerSingleton()
   }
 }

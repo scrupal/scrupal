@@ -15,8 +15,8 @@
 
 package scrupal.api
 
-import play.api.mvc.{ResponseHeader, Result, AnyContent, Request}
-import scrupal.storage.api.{Queries, Query, StoreContext, Collection}
+import play.api.mvc.{AnyContent, Request, ResponseHeader, Result}
+import scrupal.storage.api.{Collection, Queries, Query, StoreContext}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -59,6 +59,15 @@ trait Reactor extends Reaction with Nameable with Describable { self ⇒
         Result(header, response.toEnumerator)
       }
     }
+  }
+}
+
+case class UnimplementedReactor(what: String) extends Reactor {
+  val name = "NotImplementedReactor"
+  val description = "A Reactor that returns a not-implemented response"
+
+  def apply(stimulus: Stimulus): Future[Response] = {
+    Future.successful {UnimplementedResponse(what)}
   }
 }
 

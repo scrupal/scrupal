@@ -17,15 +17,15 @@ package scrupal.admin
 
 import org.joda.time.DateTime
 import scrupal.api.Html.{Contents, ContentsArgs}
-import scrupal.api.{Form, _}
 import scrupal.api.html.BootstrapPage
+import scrupal.api.{Form, _}
 import scrupal.core.Site_t
 import scrupal.core.nodes.HtmlNode
 import scrupal.utils.OSSLicense
 
 import scalatags.Text.all._
 
-class AdminApp(implicit scrupal: Scrupal) extends Application('admin) {
+case class AdminApp(implicit scrpl: Scrupal) extends Application('admin) {
   val kind : Symbol = 'Admin
   val author = "Reactific Software LLC"
   val copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
@@ -44,7 +44,7 @@ class AdminApp(implicit scrupal: Scrupal) extends Application('admin) {
   StatusBar.siteSelectionForm.enable(this)
 
   override def delegates: Iterable[Provider] = {
-    super.delegates ++ Iterable(NodeReactorProvider(adminLayout(dbForm)))
+    super.delegates ++ Iterable(new NodeReactorProvider(adminLayout(dbForm)))
   }
 
   def adminLayout(dbForm: Form.Form) = {
@@ -222,6 +222,79 @@ class SiteAdminEntity(implicit scrupal: Scrupal) extends Entity('SiteAdmin) {
   def description: String = "An entity that handles administration of Scrupal sites."
 
   def instanceType : BundleType = BundleType.empty
+
+  override def create(details: String): CreateReactor = {
+    NoOpCreateReactor(details)
+  }
+
+  override def retrieve(instance_id: Long, details: String): RetrieveReactor = {
+    retrieve(instance_id.toString, details)
+  }
+
+  override def retrieve(instance_id: String, details: String): RetrieveReactor = {
+    NoOpRetrieveReactor(instance_id, details)
+  }
+
+  override def update(instance_id: Long, details: String): UpdateReactor = {
+    update(instance_id.toString, details)
+  }
+
+  override def update(instance_id: String, details: String): UpdateReactor = {
+    NoOpUpdateReactor(instance_id, details)
+  }
+
+  override def delete(instance_id: Long, details: String): DeleteReactor = {
+    delete(instance_id.toString, details)
+  }
+
+  override def delete(instance_id: String, details: String): DeleteReactor = {
+    NoOpDeleteReactor(instance_id, details)
+  }
+
+  override def query(details: String): QueryReactor = {
+    NoOpQueryReactor(details)
+  }
+
+  override def add(instance_id: Long, facet: String, details: String): AddReactor = {
+    add(instance_id.toString, facet, details)
+  }
+
+  override def add(instance_id: String, facet: String, details: String): AddReactor = {
+    NoOpAddReactor(instance_id, facet, details)
+  }
+
+  override def get(instance_id: Long, facet: String, facet_id: String, details: String): GetReactor = {
+    get(instance_id.toString, facet, facet_id, details)
+  }
+
+  override def get(instance_id: String, facet: String, facet_id: String, details: String): GetReactor = {
+    NoOpGetReactor(instance_id, facet, facet_id, details)
+  }
+
+  override def set(instance_id: Long, facet: String, facet_id: String, details: String): SetReactor = {
+    set(instance_id.toString, facet, facet_id, details)
+  }
+
+  override def set(instance_id: String, facet: String, facet_id: String, details: String): SetReactor = {
+    NoOpSetReactor(instance_id, facet, facet_id, details)
+  }
+
+  override def remove(instance_id: Long, facet: String, facet_id: String, details: String): RemoveReactor = {
+    remove(instance_id.toString, facet, facet_id, details)
+  }
+
+  override def remove(instance_id: String, facet: String, facet_id: String, details: String): RemoveReactor = {
+    NoOpRemoveReactor(instance_id, facet, facet_id, details)
+  }
+
+  override def find(instance_id: Long, facet: String, details: String): FindReactor = {
+    find(instance_id.toString, facet, details)
+  }
+
+  override def find(instance_id: String, facet: String, details: String): FindReactor = {
+    NoOpFindReactor(instance_id, facet, details)
+  }
+
 
   /* FIXME: Implement SiteAdminEntity methods (currently defaulting to noop)
     override def create(context: Context, id: String, instance: BSONDocument) : Create = {

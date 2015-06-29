@@ -40,7 +40,7 @@ class PrincipalSpec extends ScrupalApiSpecification("Principal")
           HasherKinds.SCrypt.toString, "", 0L, None)
         p._id must beEqualTo('id)
         implicit val ec : ExecutionContext = sc.ec
-        val f = sc.addSchema(ApiSchemaDesign()).flatMap { schema : Schema ⇒
+        val f = sc.ensureSchema(ApiSchemaDesign()).flatMap { schema: Schema ⇒
           schema.withCollection("principals") { principals : Collection[Principal] ⇒
             principals.insert(p).flatMap { writeResult ⇒
               writeResult.isSuccess must beTrue

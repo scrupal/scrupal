@@ -15,7 +15,6 @@
 
 package scrupal.api
 
-import play.api.routing.Router
 import scrupal.storage.api.Storable
 import scrupal.utils._
 
@@ -45,6 +44,8 @@ abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
   def themeProvider : String = "bootswatch"
 
   def themeName : String = "default" // = getString("theme").get
+
+  def favicon: String = "scrupal.ico"
 
   def applications = forEach[Application] { e ⇒
     e.isInstanceOf[Application] && isEnabled(e, this)

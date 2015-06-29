@@ -13,48 +13,38 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.welcome
 
-import play.api.mvc.RequestHeader
-import scrupal.test.ScrupalApiSpecification
+import org.joda.time.DateTime
+import scrupal.doc.DocumentationProvider
+import scrupal.admin.AdminApp
+import scrupal.config.ConfigWizard
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.matching.Regex
 
-class ProviderSpec extends ScrupalApiSpecification("Provider") {
+import scrupal.api._
 
-  val provider1 = NullProvider('One)
-  val provider2 = NullProvider('Two)
+case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(sym) {
+  val name : String = "Welcome To Scrupal"
+  val description : String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
+  val modified : Option[DateTime] = Some(DateTime.now)
+  val created : Option[DateTime] = Some(new DateTime(2014, 11, 18, 17, 40))
+  override val themeName = "cyborg"
+  def hostNames : Regex = ".*".r
 
-  case class NullProvider(id : Symbol) extends Provider {
-    def provide : ReactionRoutes = {
-      case null ⇒ NullReactor
-    }
+  val documentation = DocumentationProvider()
+  val welcomeSite = WelcomeSiteProvider()
+  // val adminApp = AdminApp()
+  val configWizard = ConfigWizard()
+
+  override def delegates : Iterable[Provider] = {
+    super.delegates ++ Iterable(
+      welcomeSite, documentation, configWizard //, adminApp
+    )
   }
 
-  case object NullReactor extends Reactor {
-    val name = "Null"
-    val description = "The Null Reactor"
-
-    def apply(request: Stimulus): Future[Response] = Future.successful {NoopResponse}
-  }
-
-  "DelegatingProvider" should {
-    "delegate" in {
-      testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-        val dp = new DelegatingProvider {
-          def id: Identifier = 'DelegatingProvider
-
-          def delegates: Iterable[Provider] = Seq(provider1, provider2)
-        }
-        val req: RequestHeader = null
-        val maybe_reaction = dp.provide.lift(req)
-        maybe_reaction.isDefined must beTrue
-        val reaction = maybe_reaction.get
-        reaction must beEqualTo(NullReactor)
-        val future = reaction(Stimulus.empty).map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
-        Await.result(future, 1.seconds)
-      }
-    }
-  }
+  val coreModule = scrupal.Modules('Core)
+  val echoEntity = coreModule.flatMap { m ⇒ m.entity('Echo) }
+  enable(coreModule)
+  enable(echoEntity)
 }

@@ -15,8 +15,9 @@
 
 package scrupal.config
 
+import play.api.routing.sird._
+
 import scrupal.api._
-import scrupal.core._
 import scrupal.utils.ScrupalComponent
 
 /** The Entity definition for the Configuration workflow/wizard.
@@ -25,11 +26,17 @@ import scrupal.utils.ScrupalComponent
   * not even a database is configured.
   * Further description here.
   */
-object ConfigWizard extends ScrupalComponent {
-
-  val cw = ConfigWizard
+case class ConfigWizard() extends {
+  val id: Symbol = 'Config
+} with SingularProvider with ScrupalComponent {
 
   type SiteMap = Map[Symbol, String]
+
+  def singularRoutes: ReactionRoutes = {
+    case GET(p"$rest") ⇒ foo(rest)
+  }
+
+  def foo(rest: String): Reactor = UnimplementedReactor(s"ConfigWizard@$rest")
 
   object Step extends Enumeration {
     type Kind = Value

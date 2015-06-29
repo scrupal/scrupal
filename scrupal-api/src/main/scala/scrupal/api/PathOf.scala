@@ -28,16 +28,23 @@ package scrupal.api
 object PathOf {
   // TODO: Add validation and context awareness, customization by applications, entities, etc.
 
-  def favicon()(implicit context : Context) = "/assets/favicon"
+  def favicon()(implicit context: Context) = {
+    s"/assets/images/${context.favicon}"
+  }
 
-  def theme(provider : String, name : String)(implicit context : Context) = s"/assets/themes/$provider/$name.css"
+  def lib(library: String, path: String)(implicit context: Context) = {
+    s"/assets/lib/$library/$path"
+  }
 
-  def css(name : String)(implicit context : Context) = s"/assets/stylesheets/$name.css"
+  def theme(file: String)(implicit context: Context) = {
+    s"/assets/lib/${context.themeProvider}-${context.themeName}/$file"
+  }
 
-  def js(name : String)(implicit context : Context) = s"/assets/javascripts/$name.js"
+  def css(name: String)(implicit context: Context) = {
+    s"/assets/stylesheets/$name.min.css"
+  }
 
-  def font(provider : String, name : String)(implicit context : Context) = s"/assets/fonts/$provider/$name.css"
-
-  def lib(library : String, path : String)(implicit context : Context) = s"/assets/lib/$library/$path"
-
+  def js(name: String)(implicit context: Context) = {
+    s"/assets/javascripts/$name.min.js"
+  }
 }

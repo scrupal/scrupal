@@ -37,6 +37,8 @@ trait Context {
   val principal : Option[Principal] = None
 
   def siteName : String = "<NoSite>"
+
+  val favicon: String = "scrupal.ico"
   val themeProvider : String = "bootswatch"
   val themeName : String = "default"
   val description : String = ""
@@ -78,6 +80,7 @@ class SiteContext(scrupal : Scrupal, theSite : Site) extends SimpleContext(scrup
   override val site : Option[Site] = Some(theSite)
   override val siteName : String = theSite.name
   override val description : String = theSite.description
+  override val favicon: String = theSite.favicon
   override val themeProvider : String = theSite.themeProvider
   override val themeName : String = theSite.themeName
 }

@@ -13,48 +13,24 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.welcome
 
-import play.api.mvc.RequestHeader
-import scrupal.test.ScrupalApiSpecification
+import org.joda.time.DateTime
+import play.api.routing.sird._
+import scrupal.api.{NodeReactor, Provider}
+import scrupal.core.nodes.HtmlNode
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+case class WelcomeSiteProvider() extends Provider {
 
-class ProviderSpec extends ScrupalApiSpecification("Provider") {
+  val WelcomeSiteRoot = NodeReactor(
+    HtmlNode("WelcomeSiteRoot", "Main index page for Welcome To Scrupal Site",
+      WelcomePageTemplate,
+      modified = Some(DateTime.now),
+      created = Some(new DateTime(2014, 11, 18, 18, 0))
+    )
+  )
 
-  val provider1 = NullProvider('One)
-  val provider2 = NullProvider('Two)
-
-  case class NullProvider(id : Symbol) extends Provider {
-    def provide : ReactionRoutes = {
-      case null ⇒ NullReactor
-    }
-  }
-
-  case object NullReactor extends Reactor {
-    val name = "Null"
-    val description = "The Null Reactor"
-
-    def apply(request: Stimulus): Future[Response] = Future.successful {NoopResponse}
-  }
-
-  "DelegatingProvider" should {
-    "delegate" in {
-      testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-        val dp = new DelegatingProvider {
-          def id: Identifier = 'DelegatingProvider
-
-          def delegates: Iterable[Provider] = Seq(provider1, provider2)
-        }
-        val req: RequestHeader = null
-        val maybe_reaction = dp.provide.lift(req)
-        maybe_reaction.isDefined must beTrue
-        val reaction = maybe_reaction.get
-        reaction must beEqualTo(NullReactor)
-        val future = reaction(Stimulus.empty).map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
-        Await.result(future, 1.seconds)
-      }
-    }
+  def provide: ReactionRoutes = {
+    case GET(p"/") ⇒ WelcomeSiteRoot
   }
 }

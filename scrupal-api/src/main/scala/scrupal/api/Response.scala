@@ -15,11 +15,10 @@
 
 package scrupal.api
 
-import org.apache.commons.lang3.exception.ExceptionUtils
-
 import java.io.InputStream
 
 import akka.http.scaladsl.model.{MediaType, MediaTypes}
+import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import scrupal.utils.Validation.Failure
@@ -69,6 +68,7 @@ object NoopResponse extends Response {
   def toEnumerator(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]
   def mediaType = MediaTypes.`application/octet-stream`
 }
+
 
 /** Response With An Enumerator
   *
@@ -239,4 +239,14 @@ case class FormErrorResponse(
     Enumerator(Json.stringify(content.jsonMessage).getBytes(utf8))
   }
   def formatted : String = content.msgBldr.toString()
+}
+
+case class UnimplementedResponse(what: String) extends Response {
+  def disposition = Unimplemented
+
+  def formatted = s"${disposition.id.name}: $what"
+
+  def toEnumerator(implicit ec: ExecutionContext) = Enumerator(formatted.getBytes(utf8))
+
+  def mediaType = MediaTypes.`text/plain`
 }

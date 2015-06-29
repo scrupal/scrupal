@@ -13,62 +13,36 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.netty
+package scrupal.welcome
 
 import javax.inject.{Inject, Singleton}
 
-import play.api.http.{DefaultHttpRequestHandler, HttpConfiguration, HttpErrorHandler, HttpFilters}
+import _root_.scrupal.api.Site
+import _root_.scrupal.storage.api.StoreContext
+import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
-import play.api.mvc.Results.Conflict
-import play.api.mvc._
-import play.api.{Configuration, Environment}
-import scrupal.api.{Context, Reactor}
+import scrupal.core
 
-import scala.annotation.switch
-import scala.language.implicitConversions
+import scala.concurrent.Future
 
-/** Scrupal Request Handler
-  *
-  * Play will invoke this handler to dispatch HTTP Requests as they come in. It's job is
-  */
 @Singleton
-class RequestHandler @Inject() (
-  env: Environment,
-  scrupal: _root_.scrupal.api.Scrupal,
-  play_config : Configuration,
-  errorHandler: HttpErrorHandler,
-  http_config: HttpConfiguration,
-  filters: HttpFilters,
-  lifecycle: ApplicationLifecycle,
-  globalRouter: router.Routes
-  ) extends DefaultHttpRequestHandler(globalRouter, errorHandler, http_config, filters) {
+case class Scrupal @Inject()(
+  override val name: String = "WelcomeToScrupal",
+  config: Configuration,
+  lifecycle: ApplicationLifecycle
+  ) extends core.http.netty.Scrupal(name, config, lifecycle) {
 
-  scrupal.open()
-
-  override def routeRequest(header: RequestHeader): Option[Handler] = {
-    val handlers = {
-      for ( site ← scrupal.Sites.forHost(header.host) ;
-            context = Context(scrupal, site) ;
-            reactor ← site.reactorFor(header)
-      ) yield {
-        context → reactor
+  override protected def load(config: Configuration, context: StoreContext): Future[Seq[Site]] = {
+    super.load(config, context).map { sites ⇒
+      if (sites.isEmpty) {
+        val ws = new WelcomeSite(Symbol(name + "-Welcome"))(this)
+        ws.enable(this)
+        // AdminApp.enable(ws)
+        // CoreModule.enable(AdminApp)
+        Seq(ws)
+      } else {
+        sites
       }
-    }
-
-    (handlers.size : @switch) match {
-      case 0 ⇒
-        super.routeRequest(header)
-      case 1 ⇒
-        val (context: Context, reactor: Reactor) = handlers.head
-        Some {
-          Action.async { req: Request[AnyContent] ⇒
-            reactor.resultFrom(context, req)
-          }
-        }
-      case _ ⇒
-        Some {
-          Action { r: RequestHeader ⇒ Conflict(s"Found ${handlers.size} possible reactions to $r") }
-        }
     }
   }
 }

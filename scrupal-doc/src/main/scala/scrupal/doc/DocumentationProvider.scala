@@ -13,48 +13,27 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.api
+package scrupal.doc
 
 import play.api.mvc.RequestHeader
-import scrupal.test.ScrupalApiSpecification
+import play.api.routing.sird._
+import scrupal.api.{FunctionalNodeReactorProvider, Node}
+import scrupal.core.nodes.MarkedDocNode
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
 
-class ProviderSpec extends ScrupalApiSpecification("Provider") {
-
-  val provider1 = NullProvider('One)
-  val provider2 = NullProvider('Two)
-
-  case class NullProvider(id : Symbol) extends Provider {
-    def provide : ReactionRoutes = {
-      case null ⇒ NullReactor
-    }
+object DocumentationProvider {
+  val docPathToDocsPF: PartialFunction[RequestHeader, Node] = {
+    case GET(p"/doc/$rest*") ⇒
+      val path = rest.split("/").toIterable
+      MarkedDocNode("", "doc", "docs", path)
   }
+}
 
-  case object NullReactor extends Reactor {
-    val name = "Null"
-    val description = "The Null Reactor"
+/** Provider Of Documentation
+  * This is the essential thing provided bt the scrupal-doc project. It is a NodeReactorProvider that provides
+  * things on the /doc sub-path from the docs assets. Documentation for scrupal is written in MarkDown format and
+  * this provider uses the MarkedDocNode to translate between the two.
+  */
+case class DocumentationProvider() extends FunctionalNodeReactorProvider(DocumentationProvider.docPathToDocsPF) {
 
-    def apply(request: Stimulus): Future[Response] = Future.successful {NoopResponse}
-  }
-
-  "DelegatingProvider" should {
-    "delegate" in {
-      testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-        val dp = new DelegatingProvider {
-          def id: Identifier = 'DelegatingProvider
-
-          def delegates: Iterable[Provider] = Seq(provider1, provider2)
-        }
-        val req: RequestHeader = null
-        val maybe_reaction = dp.provide.lift(req)
-        maybe_reaction.isDefined must beTrue
-        val reaction = maybe_reaction.get
-        reaction must beEqualTo(NullReactor)
-        val future = reaction(Stimulus.empty).map { resp ⇒ resp.disposition must beEqualTo(Unimplemented) }
-        Await.result(future, 1.seconds)
-      }
-    }
-  }
 }

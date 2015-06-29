@@ -159,11 +159,11 @@ trait PluralProvider extends SingularProvider {
   *
   * This adapts a node to being a provide of a NodeReactor that just uses the node.
   */
-case class FunctionalNodeReactorProvider(nodeF : PartialFunction[RequestHeader,Node]) extends Provider {
+class FunctionalNodeReactorProvider(nodeF: PartialFunction[RequestHeader, Node]) extends Provider {
   def provide : ReactionRoutes = nodeF.andThen { node : Node ⇒ NodeReactor(node) }
 }
 
-case class NodeReactorProvider(node : Node) extends Provider {
+class NodeReactorProvider(node: Node) extends Provider {
   def provide : ReactionRoutes = { case request: RequestHeader ⇒ NodeReactor(node) }
 }
 

@@ -1,26 +1,26 @@
-/** ********************************************************************************************************************
-  * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
-  *                                                                                                     *
-  * Copyright © 2015 Reactific Software LLC                                                                            *
-  *                                                                                                     *
-  * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
-  * except in compliance with the License. You may obtain a copy of the License at                                     *
-  *                                                                                                     *
-  * http://www.apache.org/licenses/LICENSE-2.0                                                                  *
-  *                                                                                                     *
-  * Unless required by applicable law or agreed to in writing, software distributed under the                          *
-  * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
-  * either express or implied. See the License for the specific language governing permissions                         *
-  * and limitations under the License.                                                                                 *
-  * ********************************************************************************************************************
-  */
+/**********************************************************************************************************************
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
+ *                                                                                                                    *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
+ *                                                                                                                    *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
+ *                                                                                                                    *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
+ *                                                                                                                    *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
+ **********************************************************************************************************************/
 
 package scrupal.storage.api
 
 import java.io.Closeable
 import java.net.URI
+
 import scrupal.utils.ScrupalComponent
-import scala.concurrent.{Future, ExecutionContext}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Context For Storage
   *
@@ -48,6 +48,16 @@ case class StoreContext(
 
   def withSchema[T](schema : String)(f : (Schema) ⇒ T) : T = {
     store.withSchema(schema)(f)
+  }
+
+  def ensureSchema[T](schemaDesign: SchemaDesign)(implicit ec: ExecutionContext): Future[Schema] = {
+    withStore { store: Store ⇒
+      if (store.hasSchema(schemaDesign.name)) {
+        Future.successful {store.withSchema(schemaDesign.name)(identity)}
+      } else {
+        addSchema(schemaDesign)
+      }
+    }
   }
 
   def withCollection[T, S <: Storable](schema : String, collection : String)(f : (Collection[S]) ⇒ T) : T = {

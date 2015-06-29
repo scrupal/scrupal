@@ -15,36 +15,21 @@
 
 package scrupal.core.http.netty
 
-import com.google.inject.AbstractModule
-
 import com.typesafe.config.ConfigValue
-
-import javax.inject.{Inject, Singleton}
-
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 import scrupal.api._
-import scrupal.core.{CoreSchemaDesign, CoreModule, Core}
-import scrupal.core.sites.WelcomeSite
-import scrupal.storage.api.{Collection, Schema, StoreContext}
+import scrupal.core.{CoreModule, CoreSchemaDesign}
+import scrupal.storage.api.{Collection, StoreContext}
 import scrupal.utils.LoggingHelpers
 
 import scala.collection.immutable.TreeMap
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
 
-class ScrupalModule extends AbstractModule {
-  def configure() = {
-    bind(classOf[scrupal.api.Scrupal])
-      .to(classOf[Scrupal]).asEagerSingleton()
-  }
-}
-
-@Singleton
-case class Scrupal @Inject() (
-  override val name : String = "Scrupal",
+class Scrupal(
+  override val name: String = "CoreScrupal",
   config : Configuration,
   lifecycle : ApplicationLifecycle
 ) extends scrupal.api.Scrupal(name, Some(config), None, None, None) {
@@ -140,7 +125,7 @@ case class Scrupal @Inject() (
       context.addSchema(coreSchema) flatMap { schema ⇒
         schema.collectionFor[Site]("sites") match {
           case Some(sitesCollection: Collection[Site]) ⇒ {
-            sitesCollection.fetchAll().map {
+            val result = sitesCollection.fetchAll().map {
               sites ⇒ {
                 for (site ← sites) yield {
                   log.debug(s"Loading site '${site.name}' for host ${site.hostNames}, enabled=${site.isEnabled(this)}")
@@ -148,19 +133,9 @@ case class Scrupal @Inject() (
                   site
                 }
               }.toSeq
-            } map { sites ⇒
-              if (sites.isEmpty) {
-                val ws = new WelcomeSite(Symbol(name + "-Welcome"))(this)
-                ws.enable(this)
-                DataCache.update(this, schema)
-                // AdminApp.enable(ws)
-                // CoreModule.enable(AdminApp)
-                Seq(ws)
-              } else {
-                DataCache.update(this, schema)
-                sites
-              }
             }
+            DataCache.update(this, schema)
+            result
           }
           case None ⇒
             toss("Collection 'sites' was not found")
