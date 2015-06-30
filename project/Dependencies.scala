@@ -158,7 +158,8 @@ trait Dependencies
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(
-    play_json, shapeless, akka_http, akka_actor
+    play_json, shapeless, akka_http, akka_actor,
+    Test.nu_validator
   ) ++ common_dependencies
 
   val storage_dependencies : Seq[ModuleID] = Seq(
@@ -212,7 +213,7 @@ trait Dependencies
   val core_dependencies : Seq[ModuleID] = Seq(
     commons_lang3, scala_arm, scala_pickling, livestream_scredis, akka_actor, play_iteratees, akka_http, shapeless,
     scalatags, wj_marked, wj_font_awesome, wj_bootstrap,
-    Test.akka_testkit, Test.commons_io, Test.nu_validator
+    Test.akka_testkit, Test.commons_io
   ) ++ common_dependencies ++ bootswatch_themes
 
   val config_dependencies : Seq[ModuleID] = Seq()

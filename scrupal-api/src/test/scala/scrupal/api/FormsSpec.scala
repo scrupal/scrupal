@@ -17,8 +17,8 @@ package scrupal.api
 
 import org.specs2.mutable.Specification
 import scrupal.api.Form._
+import scrupal.utils.Validation.{Failure, Success}
 import scrupal.test.HTML5Validator
-import scrupal.utils.Validation.{Failure, Success, Failures}
 
 /** Test Suite for Forms */
 class FormsSpec extends Specification {
@@ -94,7 +94,7 @@ class FormsSpec extends Specification {
       Simple('Foo, "Foo", "Description", "/foo", Seq.empty[Form.Field]) must throwRequirementFailed
     }
 
-    "accept a valid form" in {
+    "validate a valid form" in {
       val form = Simple('Foo2, "Foo", "Description", "/foo", Seq(TextField("A", "An A", Identifier_t)))
       val doc : Map[String,Atom] = Map("A" → "foo")
       form.validate(doc) must beEqualTo(Success(form.location, doc))

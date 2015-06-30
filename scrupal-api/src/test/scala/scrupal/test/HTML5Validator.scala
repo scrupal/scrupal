@@ -15,16 +15,17 @@
 
 package scrupal.test
 
-import java.io.{ InputStream, ByteArrayInputStream }
+import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.charset.StandardCharsets
 
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder
+
 import org.xml.sax.InputSource
 import scrupal.api.Context
-import scrupal.api.Html.{ Page, TagContent }
+import scrupal.api.Html.{Page, TagContent}
 import scrupal.utils.ScrupalComponent
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object HTML5Validator extends ScrupalComponent {
 
