@@ -76,12 +76,12 @@ case class AdminApp(implicit scrpl: Scrupal) extends Application('admin) {
     Form.PasswordField("Password:", "The password for the MongoDB server authentication", Password_t, inline = true),
     Form.SubmitField("", "Submit database configuration to Scrupal server.", "Configure Database")
   )) {
-    override def provideAcceptFormAction(matchingSegment : String) : Form.AcceptReaction = {
+    override def provideAcceptReactor(matchingSegment : String) : Form.AcceptReactor = {
       DataBaseFormAcceptance(this)
     }
   }
 
-  case class DataBaseFormAcceptance(override val form: Form.Form) extends Form.AcceptReaction(form) {
+  case class DataBaseFormAcceptance(override val form: Form.Form) extends Form.AcceptReactor(form) {
     /*
     override def handleValidatedFormData(doc : BSONDocument) : Response = {
       super.handleValidatedFormData(doc)

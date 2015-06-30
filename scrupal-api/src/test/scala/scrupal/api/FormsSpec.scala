@@ -15,13 +15,17 @@
 
 package scrupal.api
 
-import org.specs2.mutable.Specification
+import play.api.mvc.{AnyContent, AnyContentAsFormUrlEncoded, Request, RequestHeader}
+import play.api.test.FakeRequest
 import scrupal.api.Form._
 import scrupal.utils.Validation.{Failure, Success}
-import scrupal.test.HTML5Validator
+import scrupal.test.{ScrupalApiSpecification, HTML5Validator}
+
+import scala.concurrent.{ExecutionContext, Await}
+import scala.concurrent.duration._
 
 /** Test Suite for Forms */
-class FormsSpec extends Specification {
+class FormsSpec extends ScrupalApiSpecification("Forms") {
 
   def throwRequirementFailed = throwA[IllegalArgumentException]("requirement failed")
   "Forms.TextField" should {
@@ -115,5 +119,54 @@ class FormsSpec extends Specification {
         ))
       HTML5Validator.validate(form.render) must beTrue
     }
+
+    "accept content correctly" in {
+      val form =
+        Simple('Foo4, "Foo", "Description", "/foo", Seq(
+          TextField("A", "An A", Identifier_t),
+          PasswordField("P", "A P", Password_t),
+          TextAreaField("TA", "A TA", AnyString_t),
+          BooleanField("B", "A B", Boolean_t),
+          IntegerField("I", "An I", AnyInteger_t, minVal = 0, maxVal = 100),
+          RangeField("Rng", "A Rng", AnyReal_t),
+          RealField("R", "A R", AnyReal_t, minVal = 0.0, maxVal = 100.0),
+          SelectionField("S", "A S", UnspecificQuantity_t),
+          TimestampField("T", "A T", AnyTimestamp_t)
+        ))
+      val acceptor : Form.AcceptReactor = form.provideAcceptReactor("/foo")
+
+      val context = Context(testScrupal)
+      val data : Map[String,Seq[String]] = Map (
+        "A" → Seq("foo"),
+        "P" → Seq("AvbC123!@#"),
+        "TA" → Seq(";lkjasdf;lkjasd;flkja;sdflkjas;ldfkja;lsdfkja;sdlkfja;sldkjf"),
+        "B" → Seq("false"),
+        "I" → Seq("42"),
+        "Rng" → Seq("42.0"),
+        "R" → Seq("42.0"),
+        "S" → Seq("Some"),
+        "T" → Seq("1435691518000")
+      )
+
+      val header : RequestHeader = FakeRequest("GET","/")
+      val stimulus = Stimulus(context, Request[AnyContent](header, AnyContentAsFormUrlEncoded(data)))
+      context.withExecutionContext { implicit ec : ExecutionContext ⇒
+        val f = acceptor.apply(stimulus) map {
+          case e: ErrorResponse ⇒
+            println(e)
+            e.disposition.isSuccessful must beTrue
+          case t: ExceptionResponse ⇒
+            println(t)
+            t.disposition.isSuccessful must beTrue
+          case s: StringResponse ⇒
+            s.content.contains( "Submission of 'Foo' succeeded.") must beTrue
+          case x: Response ⇒
+            println(x)
+            x.disposition must beEqualTo(Successful)
+        }
+        Await.result(f, 2.seconds)
+      }
+    }
+    // TODO: Validate that forms reject each kind of data type correctly
   }
 }

@@ -85,6 +85,7 @@ package object api {
   implicit def atomFromInstant(inst : Instant) : Atom = Coproduct[Atom](inst)
   implicit def atomFromDuration(dur: Duration) : Atom = Coproduct[Atom](dur)
 
+  val emptyAtom : Atom = Coproduct[Atom](false)
 
   implicit class Disposition2StatusCode(disposition : Disposition) {
     def toStatusCode: StatusCode = {

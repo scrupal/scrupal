@@ -465,8 +465,8 @@ object Form {
       * GET to the form name path renders the form. POST to the form name path decodes submitted form data.
       */
     def singularRoutes: ReactionRoutes = {
-      case GET(p"$rest") ⇒ provideRenderFormAction(singularPrefix + rest)
-      case POST(p"$rest") ⇒ provideAcceptFormAction(singularPrefix + rest)
+      case GET(p"$rest") ⇒ provideRenderReactor(singularPrefix + rest)
+      case POST(p"$rest") ⇒ provideAcceptReactor(singularPrefix + rest)
     }
 
     /** Provide the form action
@@ -479,17 +479,17 @@ object Form {
       * @return
       */
 
-    def provideRenderFormAction(matchingSegment: String): RenderFormReaction = {
-      new RenderFormReaction(this)
+    def provideRenderReactor(matchingSegment: String): RenderReactor = {
+      new RenderReactor(this)
     }
 
-    def provideAcceptFormAction(matchingSegment: String): AcceptReaction = {
-      new AcceptReaction(this)
+    def provideAcceptReactor(matchingSegment: String): AcceptReactor = {
+      new AcceptReactor(this)
     }
 
   }
 
-  class RenderFormReaction(val form: Form) extends Reactor {
+  class RenderReactor(val form: Form) extends Reactor {
     def name = "RenderForm"
 
     def description = "A Reaction that renders a form"
@@ -503,105 +503,109 @@ object Form {
     }
   }
 
-  class AcceptReaction(val form: Form) extends Reactor {
+  class AcceptReactor(val form: Form) extends Reactor {
     def name = "AcceptForm"
 
     def description = "A Reaction that decodes submitted form data"
 
-    /* FIXME: Rewrite Form Accept Handling to use Play
-    def decodeFormData(r: Stimulus): Failure[JsValue] = {
-      type FF = _root_.scrupal.api.FormField // spray unmarshalling also defines FormField
-      val formItems: Map[String, FF] = {
-          for (item ← form.items if item.isInstanceOf[FF]) yield {item.name → item.asInstanceOf[FF]}
+    def decodeFormData(r: Stimulus): Results[_] = {
+      try {
+        val formItems: Map[String, Field] = {
+          for (item ← form.items if item.isInstanceOf[Field]) yield {
+            item.name → item.asInstanceOf[Field]
+          }
         }.toMap
-      val formData = FormData(r.uri.query)
-      val data: LinearSeq[Results[JsObject]] = {
-        for ((name, value) ← formData.fields if value.nonEmpty) yield {
-          formItems.get(name) match {
-            case Some(item) ⇒
-              try {
-                item.decode(value) match {
-                  case JsNull ⇒ Success(form.location, emptyJsObject)
-                  case v: JsValue ⇒ Success(form.location, JsObject(Map(name → v)))
+
+        r.body.asFormUrlEncoded match {
+          case None ⇒
+            StringFailure(form.location, emptyAtom, s"Unsupported content type: ${r.contentType}")
+          case Some(formData: Map[String, Seq[String]]) ⇒
+            val data: Map[String, Results[Atom]] = {
+              for ((name, value) ← formData if value.nonEmpty) yield {
+                val joined = value.mkString(",")
+                val asAtom: Atom = joined
+                formItems.get(name) match {
+                  case Some(item) ⇒ {
+                    try {
+                      name → Success(form.location.select(name), item.decode(joined))
+                    } catch {
+                      case x: Throwable ⇒ name → ThrowableFailure(form.location, asAtom, x)
+                    }
+                  }
+                  case None ⇒
+                    name → StringFailure(form.location.select(name), asAtom, s"Spurious field '$name'")
                 }
-              } catch {
-                case x: Throwable ⇒ ThrowableFailure(form.location, JsObject(Map(name → JsString(value))), x)
               }
-            case None ⇒
-              StringFailure(form.location, JsObject(Map(name → JsString(value))), "Spurious field '" + name + "'")
-          }
+            }
+
+            val elems: Map[String, Atom] = data.map {
+              case (name: String, value: Results[Atom]) ⇒ name → value.value
+            }
+
+            val errors: Iterable[Failure[Atom]] = {
+              for ((n, v) ← data if v.isError) yield {
+                v.asInstanceOf[Failure[Atom]]
+              }
+            } ++ {
+              for (
+                (name, item) ← formItems if item.optional;
+                value = elems.get(name) if value.isEmpty && !item.hasDefaultValue
+              ) yield {
+                StringFailure(form.location, emptyAtom, s"Required field '$name' has no value.")
+              }
+            }
+
+            val vr: Results[Map[String, Atom]] = form.validate(elems)
+
+            if (errors.isEmpty)
+              vr
+            else
+              Failures(vr.ref, vr.value, errors.toSeq: _*)
         }
+      } catch {
+        case x: Throwable ⇒ ThrowableFailure(form.location, emptyAtom, x)
       }
-      val elems: Map[String, JsValue] = data.foldLeft(Seq.empty[(String, JsValue)]) {
-        case (last, results) ⇒ last ++ results.value.value
-      }.toMap
-      val errors: Seq[Failure[JsValue]] = {
-        {data.filter { result ⇒ result.isError }.map { r ⇒ r.asInstanceOf[Failure[JsValue]] }} ++ {
-          for (
-            (name, item) ← formItems if item.optional;
-            value = elems.get(name) if value.isEmpty && !item.hasDefaultValue
-          ) yield {
-            StringFailure(form.location, JsObject(Seq(name → JsNull)), s"Required field '$name' has no value.")
+    }
+
+    def formWithErrors(validationResults: Results[_]): Form = {
+      val errorMap : Form#ErrorMap = validationResults.errorMap map {
+        case (ref, errors) ⇒
+          val msgs : Seq[String] = for (error ← errors) yield {
+            error.message
           }
-        }
+          val msg : Contents = msgs.map{ m ⇒ span(m) }
+          ref.asInstanceOf[TypedLocation[_]].value.asInstanceOf[Field] -> msg
       }
-      val doc = JsObject(elems)
-      val vr = form.validate(doc)
-      if (errors.isEmpty)
-        vr
-      else
-        Failures(vr.ref, vr.value, errors: _*)
-
-      case Left(RequestEntityExpectedRejection) ⇒
-      StringFailure(form.location, emptyJsObject, "Content Expected")
-      case Left(MalformedRequestContentRejection(msg, cause)) ⇒ cause match {
-        case Some(throwable) ⇒ ThrowableFailure(form.location, emptyJsObject, throwable)
-        case None ⇒ StringFailure(form.location, emptyJsObject, msg)
-      }
-      case Left(UnacceptedResponseContentTypeRejection(msg)) ⇒
-      StringFailure(form.location, emptyJsObject, "Unsupported content type: " + msg)
-      case Left(x) ⇒
-      StringFailure(form.location, emptyJsObject, "Unspecified error")
+      form.withErrorMap(errorMap)
     }
-  }
 
-  def formWithErrors(validationResults: Failure[JsValue]): Form = {
-    val errorMap = validationResults.errorMap map {
-      case (ref, msg) ⇒
-        ref.asInstanceOf[FormItem] -> msg
+    def handleValidatedFormData(doc: Map[String, Atom]): Response = {
+      StringResponse(s"Submission of '${form.name}' succeeded.", Successful)
     }
-    form.withErrorMap(errorMap)
-  }
 
-  def handleValidatedFormData(doc: JsObject): Result[_] = {
-    StringResult(s"Submission of '${form.name}' succeeded.", Successful)
-  }
+    def handleValidationFailure(failures: Failures[_]): Response = {
+      val msg: StringBuilder = new StringBuilder()
+      for (e ← failures.errors) msg.append(e.msgBldr).append("\n")
+      FormErrorResponse(failures, Unacceptable)
+    }
 
-  def handleValidationFailure(failure: ValidationFailed[JsValue]): Result[_] = {
-    val msg: StringBuilder = new StringBuilder()
-    for (e ← failure.errors) msg.append(e.msgBldr).append("\n")
-    FormErrorResult(failure, Unacceptable)
-  }
-*/
     def apply(stimulus: Stimulus): Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒
         Future {
-          ErrorResponse("Form Submission is not implemented", Unimplemented)
+          decodeFormData(stimulus) match {
+            case Success(ref, doc: Map[String,Atom] @unchecked) ⇒
+              handleValidatedFormData(doc)
+            case err: Failures[_] ⇒
+              handleValidationFailure(err)
+            case vr: Failure[_] ⇒
+              handleValidationFailure(Failures(form.location, emptyAtom, Seq(vr): _*))
+            case r: Results[_] ⇒
+              handleValidationFailure(Failures(form.location, emptyAtom,
+                StringFailure[Atom](form.location, emptyAtom, s"Decoding form data produced invalid result: $r")))
+          }
         }
       }
     }
-
-    /*
-    decodeFormData(stimulus.context) match {
-      case Success(ref, doc) ⇒
-        handleValidatedFormData(doc.asInstanceOf[JsObject])
-      case err: ValidationFailed[JsValue] ⇒
-        handleValidationFailure(err)
-      case vr: Failure[JsValue] ⇒
-        handleValidationFailure(ValidationFailed(form, JsNull, Seq(vr)))
-    }
-  }(context.scrupal._executionContext)
-  */
   }
 
   case class Simple(

@@ -21,7 +21,7 @@ import akka.http.scaladsl.model.{MediaType, MediaTypes}
 import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
-import scrupal.utils.Validation.Failure
+import scrupal.utils.Validation.Results
 
 import scala.concurrent.ExecutionContext
 
@@ -231,8 +231,10 @@ case class ErrorResponse(
   }
 }
 
+import scala.language.existentials
+
 case class FormErrorResponse(
-  content : Failure[JsValue],
+  content : Results[_],
   disposition : Disposition = Unacceptable) extends Response {
   val mediaType : MediaType = MediaTypes.`application/json`
   def toEnumerator(implicit ec: ExecutionContext) = {

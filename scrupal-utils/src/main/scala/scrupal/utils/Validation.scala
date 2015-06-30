@@ -90,7 +90,7 @@ object Validation {
   }
 
   /** What is returned when the validation succeeds */
-  case class Success[VAL](ref : Location, value : VAL) extends Results[VAL] {
+  case class Success[VT](ref : Location, value : VT) extends Results[VT] {
     def isError = false
 
     override def msgBldr = { super.msgBldr.append("Validation succeeded") }
@@ -101,7 +101,7 @@ object Validation {
   }
 
   /** Base class of the various kinds of error results */
-  trait Failure[VAL] extends Results[VAL] {
+  trait Failure[VT] extends Results[VT] {
     def ref : Location
 
     def isError = true
@@ -112,7 +112,7 @@ object Validation {
   }
 
   /** Validation failure consisting of other error results */
-  case class Failures[VAL, ET](ref : Location, value : VAL, errors : Failure[_]*) extends Failure[VAL] {
+  case class Failures[VT](ref : Location, value : VT, errors : Failure[_]*) extends Failure[VT] {
 
     override def msgBldr : StringBuilder = {
       val s = super.msgBldr
@@ -153,12 +153,12 @@ object Validation {
 
   /** The Validator of a type of thing
     *
-    * @tparam VType The type of the thing being validated
+    * @tparam VT The type of the thing being validated
     */
-  trait Validator[VType] {
+  trait Validator[VT] {
 
     /** A Type alias for the ValidationResult, for brevity  */
-    type VResult = Results[VType]
+    type VResult = Results[VT]
 
     /** Validate value of type VType with this validator
       *
@@ -166,9 +166,9 @@ object Validation {
       * @param value the VType to be validated
       * @return Any of the ValidationResults
       */
-    def validate(ref : Location, value : VType) : VResult
+    def validate(ref : Location, value : VT) : VResult
 
-    protected def simplify(ref : Location, value : VType, classes : String)(validator : (VType) ⇒ Option[String]) : VResult = {
+    protected def simplify(ref : Location, value : VT, classes : String)(validator : (VT) ⇒ Option[String]) : VResult = {
 
       validator(value) match {
         case Some("") ⇒ wrongClass(ref, value, classes)
@@ -177,7 +177,7 @@ object Validation {
       }
     }
 
-    protected def wrongClass(ref : Location, value : VType, expected : String) : VResult = {
+    protected def wrongClass(ref : Location, value : VT, expected : String) : VResult = {
       StringFailure(ref, value, s"Expected value of type $expected but got ${value.getClass.getSimpleName} instead.")
     }
   }
@@ -206,7 +206,7 @@ object Validation {
       if (errors.isEmpty)
         Success(ref, value)
       else
-        Failures[ST, ET](ref, value, errors : _*)
+        Failures[ST](ref, value, errors : _*)
     }
   }
 
@@ -226,7 +226,7 @@ object Validation {
       if (errors.isEmpty)
         Success(ref, value)
       else
-        Failures[MT, ET](ref, value, errors : _*)
+        Failures[MT](ref, value, errors : _*)
     }
   }
 
