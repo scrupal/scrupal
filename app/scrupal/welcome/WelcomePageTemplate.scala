@@ -19,11 +19,13 @@ import scrupal.api.html.PlainPage
 
 import scalatags.Text.all._
 
+import scrupal.ScrupalInfo
+
 object WelcomePageTemplate
-  extends PlainPage('WelcomePage, "Welcome To Scrupal!", "An introduction to Scrupal", Seq(
+  extends PlainPage('WelcomePage, s"Welcome To Scrupal ${ScrupalInfo.version}!", "An introduction to Scrupal", Seq(
     div(cls := "panel panel-primary",
       div(cls := "panel-heading",
-        h1(cls := "panel-title", "Welcome To Scrupal!")
+        h1(cls := "panel-title", s"Welcome To Scrupal ${ScrupalInfo.version}!")
       ),
       div(cls := "panel-body",
         p( """You are seeing this page because Scrupal has not found an enabled site in its database. There could
