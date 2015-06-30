@@ -51,7 +51,7 @@ case class MarkedDocNode(
     val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
-    val dirPath = if (path.isEmpty) root else root + "/" + relPath
+    val dirPath = if (relPath.isEmpty) root else root + "/" + relPath
     val locator = context.scrupal._assetsLocator
     val directory = locator.fetchDirectory(dirPath, recurse = true)
     directory match {

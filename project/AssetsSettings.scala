@@ -1,39 +1,33 @@
 /**********************************************************************************************************************
- * This file is part of Scrupal, a Scalable Reactive Content Management System.                                       *
+ * This file is part of Scrupal, a Scalable Reactive Web Application Framework for Content Management                 *
  *                                                                                                                    *
- * Copyright © 2015 Reactific Software LLC                                                                            *
+ * Copyright (c) 2015, Reactific Software LLC. All Rights Reserved.                                                   *
  *                                                                                                                    *
- * Licensed under the Apache License, Version 2.0 (the "License");  you may not use this file                         *
- * except in compliance with the License. You may obtain a copy of the License at                                     *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance     *
+ * with the License. You may obtain a copy of the License at                                                          *
  *                                                                                                                    *
- *        http://www.apache.org/licenses/LICENSE-2.0                                                                  *
+ *     http://www.apache.org/licenses/LICENSE-2.0                                                                     *
  *                                                                                                                    *
- * Unless required by applicable law or agreed to in writing, software distributed under the                          *
- * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                          *
- * either express or implied. See the License for the specific language governing permissions                         *
- * and limitations under the License.                                                                                 *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed   *
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for  *
+ * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-/*
 import com.typesafe.sbt.digest.Import._
 import com.typesafe.sbt.gzip.Import._
 import com.typesafe.sbt.rjs.Import._
 import com.typesafe.sbt.less.Import.LessKeys
 import com.typesafe.sbt.web.Import._
-*/
+
 import sbt._
 import sbt.Keys._
 
-
 import scala.language.postfixOps
 
-
-/** Settings for the Asset pipeline tools
- */
+/** Settings for the Asset pipeline tools */
 trait AssetsSettings {
 
-  lazy val sbt_web_settings = Seq.empty[Setting[_]]
-  /*(
+  lazy val sbt_web_settings = Seq[Setting[_]](
     unmanagedSourceDirectories in Assets := Seq(baseDirectory.value / "assets"),
     unmanagedSourceDirectories in TestAssets := Seq(baseDirectory.value / "test" / "assets"),
     moduleName in Assets := "scrupal"
@@ -74,5 +68,4 @@ trait AssetsSettings {
     // strictUnits	Whether all unit should be strict, or if mixed units are allowed.
     LessKeys.verbose in Assets := true // Be verbose.
   )
-  */
 }

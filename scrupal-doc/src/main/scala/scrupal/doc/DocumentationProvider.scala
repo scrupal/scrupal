@@ -20,12 +20,11 @@ import play.api.routing.sird._
 import scrupal.api.{FunctionalNodeReactorProvider, Node}
 import scrupal.core.nodes.MarkedDocNode
 
-
 object DocumentationProvider {
   val docPathToDocsPF: PartialFunction[RequestHeader, Node] = {
     case GET(p"/doc/$rest*") ⇒
       val path = rest.split("/").toIterable
-      MarkedDocNode("", "doc", "docs", path)
+      MarkedDocNode(s"Scrupal Documentation", "doc", "/assets/docs", path)
   }
 }
 
