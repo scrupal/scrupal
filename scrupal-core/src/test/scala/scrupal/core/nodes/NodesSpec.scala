@@ -26,7 +26,7 @@ import scrupal.api.Html.{Contents, ContentsArgs}
 import scrupal.api._
 import scrupal.test.{ScrupalApiSpecification, FakeContext}
 
-import scala.concurrent.Await
+import scala.concurrent.{ExecutionContext, Future, Await}
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.existentials
@@ -56,7 +56,7 @@ class NodesSpec extends ScrupalApiSpecification("Nodes") {
       "two" -> Right(html)
     )
 
-    // val layout = LayoutNode("Description", tags, Layout.default)
+    val layout = LayoutNode("Description", tags, Layout.default)
   }
 
   def consume(e: Enumerator[Array[Byte]]) : Array[Byte] = {
@@ -160,25 +160,33 @@ class NodesSpec extends ScrupalApiSpecification("Nodes") {
 
   }
 
-  /* FIXME: Reinstate LayoutNode test
   "LayoutNode" should {
     "handle missing tags with missing layout" in {
       val f = Fixture("LayoutNode")
       val ts1 = System.nanoTime()
-      val future : Future[Array[Byte]] = f.layout(f) flatMap { r: Result[_] ⇒
-        val i = Iteratee.fold(Array.empty[Byte]) { (x:Array[Byte],y:Array[Byte]) ⇒ Array.concat(x, y) }
-        r.asInstanceOf[EnumeratorResult].payload.run(i)
+      withExecutionContext { implicit ec: ExecutionContext ⇒
+        val future : Future[Array[Byte]] = f.layout(f) flatMap { r: Response ⇒
+          val i = Iteratee.fold(Array.empty[Byte]) {
+            (x:Array[Byte],y:Array[Byte]) ⇒ Array.concat(x, y)
+          }
+          r.toEnumerator.run(i)
+        }
+        val data = Await.result(future, Duration(3, TimeUnit.SECONDS))
+        val ts2 = System.nanoTime()
+        val dt = (ts2 - ts1).toDouble / 1000000.0
+        log.info(s"Resolve layout time = $dt milliseconds")
+        val str = new String(data, utf8)
+        str.contains("@@one@@") must beFalse
+        str.contains("@@two@@") must beFalse
       }
-      val data = Await.result(future, Duration(3, TimeUnit.SECONDS))
-      val ts2 = System.nanoTime()
-      val dt = (ts2 - ts1).toDouble / 1000000.0
-      log.info(s"Resolve layout time = $dt milliseconds")
-      val str = new String(data, utf8)
-      str.contains("@@one@@") must beFalse
-      str.contains("@@two@@") must beFalse
     }
   }
-  */
 
+  "MarkedDocNode" should {
+    "find a directory" in {
+      val f = Fixture("MarkedDocNode")
+      pending
+    }
+  }
 
 }

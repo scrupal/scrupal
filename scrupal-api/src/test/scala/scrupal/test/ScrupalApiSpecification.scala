@@ -43,6 +43,8 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
 
   implicit lazy val scrupal : Scrupal = testScrupal
 
+  def withExecutionContext[T](f : ExecutionContext ⇒ T) : T = scrupal.withExecutionContext[T](f)
+
   def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
 
   def withSchema[T](schemaName : String)(f : Schema ⇒ T) : T =  scrupal.withSchema(schemaName)(f)
