@@ -15,7 +15,8 @@
 
 package scrupal.admin
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import scrupal.api.Html.{Contents, ContentsArgs}
 import scrupal.api.html.BootstrapPage
 import scrupal.api.{Form, _}
@@ -30,16 +31,16 @@ case class AdminApp(implicit scrpl: Scrupal) extends Application('admin) {
   val author = "Reactific Software LLC"
   val copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
   val license = OSSLicense.ApacheV2
-  val timestamp = Some(new DateTime(2014, 12, 5, 12, 20, 6))
+  val timestamp = Some(Instant.parse("2014-12-05T12:20:06.00Z"))
   val dbForm = new DBForm
 
   def description : String = "The Scrupal Administrative Application"
 
   def name : String = "AdminApp"
 
-  def created : Option[DateTime] = timestamp
+  def created : Option[Instant] = timestamp
 
-  def modified : Option[DateTime] = timestamp
+  def modified : Option[Instant] = timestamp
 
   StatusBar.siteSelectionForm.enable(this)
 

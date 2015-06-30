@@ -15,8 +15,9 @@
 
 package scrupal.core.nodes
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
 import scalatags.Text.all._
 import scrupal.api._
 
@@ -58,8 +59,8 @@ case class ScrupalesyNode(
   name: String,
   description : String,
   scrupalesy : String,
-  modified : Option[DateTime] = Some(DateTime.now()),
-  created : Option[DateTime] = Some(DateTime.now()),
+  modified : Option[Instant] = Some(Instant.now()),
+  created : Option[Instant] = Some(Instant.now()),
   final val kind : Symbol = ScrupalesyNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 

@@ -15,7 +15,8 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import scrupal.storage.api.Storable
 import scrupal.utils.Hash
 
@@ -37,7 +38,7 @@ case class Principal(
   hasher : String,
   salt : String = Hash.salt,
   complexity : Long = 0,
-  override val created : Option[DateTime] = None) extends Storable with Creatable
+  override val created : Option[Instant] = None) extends Storable with Creatable
 
 object Principal {
 }

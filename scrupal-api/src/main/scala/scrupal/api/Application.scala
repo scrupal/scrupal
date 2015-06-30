@@ -15,8 +15,9 @@
 
 package scrupal.api
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.{HttpMethod, HttpMethods}
-import org.joda.time.DateTime
 import scrupal.storage.api.Storable
 import scrupal.utils._
 
@@ -55,8 +56,8 @@ case class BasicApplication(
   copyright : String,
   license: OSSLicense,
   description : String,
-  modified : Option[DateTime] = None,
-  created : Option[DateTime] = None
+  modified : Option[Instant] = None,
+  created : Option[Instant] = None
 )(implicit scrupal : Scrupal) extends Application(sym)(scrupal) {
   final val method : HttpMethod = HttpMethods.GET
   final val kind = 'BasicApplication

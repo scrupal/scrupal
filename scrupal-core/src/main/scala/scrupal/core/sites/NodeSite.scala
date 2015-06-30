@@ -15,7 +15,8 @@
 
 package scrupal.core.sites
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import scrupal.api._
 
 import scala.util.matching.Regex
@@ -27,8 +28,8 @@ case class NodeSite(
   hostNames : Regex,
   siteRoot : Node = Node.empty,
   override val requireHttps : Boolean = false,
-  modified : Option[DateTime] = None,
-  created : Option[DateTime] = None)(implicit scrpl : Scrupal) extends Site(id) {
+  modified : Option[Instant] = Some(Instant.now),
+  created : Option[Instant] = Some(Instant.now))(implicit scrpl : Scrupal) extends Site(id) {
   final override val kind = NodeSite.kind
 }
 

@@ -15,8 +15,10 @@
 
 package scrupal.api
 
-import scrupal.storage.api.Schema
+import scrupal.storage.api.{Collection, Schema}
 import scrupal.utils.ScrupalUtilsInfo
+
+import scala.concurrent.{Future, ExecutionContext}
 
 abstract class DataCache {
 
@@ -35,10 +37,19 @@ object DataCache extends DataCache {
   private var _alerts = Seq.empty[Alert]
   def alerts : Seq[Alert] = _alerts
 
-  def update(scrupal : Scrupal, schema : Schema) = {
+  def update(scrupal : Scrupal, schema : Schema) : Unit = {
     _themes = ScrupalUtilsInfo.themes
-    _sites = scrupal.Sites.values.map { site ⇒ site.name }
-    _alerts = Seq.empty[Alert] // FIXME: Retrieve alerts from storage
+    scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+      val f1 = {
+        schema.withCollection("alerts") { alertsColl : Collection[Alert] ⇒
+          val queries = alertsColl.queriesFor[AlertQueries]
+          alertsColl.find(queries.unexpired).map { a ⇒ _alerts = a ; Unit }
+        }
+      }
+      val f2 = Future {
+        _sites = scrupal.Sites.values.map { site ⇒ site.name }
+      }
+      Future sequence Seq(f1, f2)
+    }
   }
-
 }

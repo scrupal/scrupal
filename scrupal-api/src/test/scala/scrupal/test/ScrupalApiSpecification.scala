@@ -20,9 +20,10 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import scrupal.api.Scrupal
-import scrupal.storage.api.{Schema, StoreContext}
+import scrupal.storage.api.{SchemaDesign, Schema, StoreContext}
 import scrupal.utils.ConfigHelpers
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /** One line sentence description here.
@@ -45,6 +46,14 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
   def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
 
   def withSchema[T](schemaName : String)(f : Schema ⇒ T) : T =  scrupal.withSchema(schemaName)(f)
+
+  def ensureSchema[T](d: SchemaDesign)(f : Schema ⇒ T) : Future[T] = {
+    testScrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
+      scrupal.withStoreContext { sc : StoreContext ⇒
+        sc.ensureSchema(d).map { schema: Schema ⇒ f(schema) }
+      }
+    }
+  }
 
   override protected def beforeAll() = {}
 

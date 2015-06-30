@@ -15,7 +15,8 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import org.specs2.mutable.Specification
 import scrupal.storage.api.Storable
 
@@ -26,14 +27,14 @@ import scrupal.storage.api.Storable
 class AblesSpec extends Specification {
   case class TestCreatable(
     _id: Symbol = Symbol(""),
-    override val created: Option[DateTime] = None
+    override val created: Option[Instant] = None
   ) extends Creatable with Storable {
     def blah : Int = 3
   }
 
   case class Identified[FOO](it: FOO,
     _id: Symbol,
-    override val created: Option[DateTime] = Some(DateTime.now())
+    override val created: Option[Instant] = Some(Instant.now())
   ) extends Creatable with Storable {
     def apply() : FOO = it
   }
@@ -59,8 +60,8 @@ class AblesSpec extends Specification {
   }
 
   case class TestModifiable(
-    created: Option[DateTime] = Some(DateTime.now()),
-    modified: Option[DateTime] = Some(DateTime.now()) )
+    created: Option[Instant] = Some(Instant.now()),
+    modified: Option[Instant] = Some(Instant.now()) )
     extends Modifiable
 
   "Modifiable" should {

@@ -15,12 +15,12 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import java.time.Instant
 
 /** One line sentence description here.
   * Further description here.
   */
 case class Profile(
   principal : Long,
-  created : Option[DateTime]) extends Creatable {
+  created : Option[Instant]) extends Creatable {
 }

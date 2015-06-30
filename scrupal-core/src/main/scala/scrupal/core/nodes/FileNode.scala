@@ -16,8 +16,8 @@
 package scrupal.core.nodes
 
 import java.io.{ FileInputStream, File }
+import java.time.Instant
 
-import org.joda.time.DateTime
 import scrupal.api._
 import akka.http.scaladsl.model.{ MediaTypes, MediaType }
 
@@ -37,8 +37,8 @@ case class FileNode(
   description : String,
   file : File,
   override val mediaType : MediaType = MediaTypes.`text/html`,
-  modified : Option[DateTime] = Some(DateTime.now),
-  created : Option[DateTime] = Some(DateTime.now),
+  modified : Option[Instant] = Some(Instant.now),
+  created : Option[Instant] = Some(Instant.now),
   final val kind : Symbol = FileNode.kind) extends Node {
   def apply(context: Context) : Future[Response] = {
     val extension = {

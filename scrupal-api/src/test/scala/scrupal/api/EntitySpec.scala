@@ -15,7 +15,7 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import java.time.Instant
 import org.specs2.execute.{Error, Result}
 import scrupal.storage.api._
 import scrupal.test.ScrupalSpecification
@@ -35,8 +35,8 @@ case class TestEntity(
   name: String,
   description: String,
   testVal : SomeValue,
-  modified : Option[DateTime] = None,
-  created : Option[DateTime] = None
+  modified : Option[Instant] = None,
+  created : Option[Instant] = None
 ) extends Storable with Nameable with Describable with Modifiable {
 }
 

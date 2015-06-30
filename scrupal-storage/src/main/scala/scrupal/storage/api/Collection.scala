@@ -36,6 +36,7 @@ trait Collection[S <: Storable] extends StorageLayer {
   def delete(obj : S)(implicit ec: ExecutionContext) : Future[WriteResult]
   def delete(id : ID)(implicit ec: ExecutionContext) : Future[WriteResult]
   def delete(ids : Seq[ID])(implicit ec: ExecutionContext) : Future[WriteResult]
+  def deleteAll()(implicit ec: ExecutionContext) : Future[WriteResult]
 }
 
 trait Modification[S <: Storable] {

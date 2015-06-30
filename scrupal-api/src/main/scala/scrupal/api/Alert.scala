@@ -15,8 +15,10 @@
 
 package scrupal.api
 
+import java.time.Instant
+
 import org.joda.time.DateTime
-import scrupal.storage.api.Storable
+import scrupal.storage.api.{Query, Queries, Storable}
 import scrupal.utils.{AlertKind, Icons}
 
 /** Representation of an alert message that is shown at the top of every page. Alerts are queued and each user
@@ -37,13 +39,14 @@ case class Alert(
   name : String,
   description : String,
   message : String,
-  alertKind : AlertKind.Value,
+  alertKind : AlertKind,
   iconKind : Icons.Value,
   prefix : String,
   cssClass : String,
-  expiry : Option[DateTime],
-  override val modified : Option[DateTime] = None,
-  override val created : Option[DateTime] = None) extends Storable with Nameable with Describable with Modifiable with Expirable {
+  expiry : Option[Instant],
+  override val modified : Option[Instant] = Some(Instant.now),
+  override val created : Option[Instant] = Some(Instant.now)
+) extends Storable with Nameable with Describable with Modifiable with Expirable {
   /** A shorthand constructor for Alerts.
     * This makes it possible to construct alerts with fewer parameters. The remaining parameters are chosen sanely
     * based on the alertKind parameter, which defaults to a Note
@@ -52,18 +55,15 @@ case class Alert(
     * @param message Text of the message to deliver to users
     * @param alertKind The kind of alert
     */
-  def this(id : Identifier, name : String, description : String, message : String, alertKind : AlertKind.Value) =
+  def this(id : Identifier, name : String, description : String, message : String, alertKind : AlertKind) =
     {
-      this(id, name, description, message, alertKind, AlertKind.toIcon(alertKind), AlertKind.toPrefix(alertKind),
-        AlertKind.toCss(alertKind), AlertKind.toExpiry(alertKind), None, None)
+      this(id, name, description, message, alertKind, alertKind.icon, alertKind.prefix, alertKind.css,
+           Some(alertKind.expiry), Some(Instant.now()), Some(Instant.now()))
     }
 
   def iconHtml : Html.TagContent = Icons.html(iconKind)
 }
 
-object Alert {
-  /*
-  import BSONHandlers._
-
-  */
+trait AlertQueries extends Queries[Alert] {
+  def unexpired : Query[Alert]
 }

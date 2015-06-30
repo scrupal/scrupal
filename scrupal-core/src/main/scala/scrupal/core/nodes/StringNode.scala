@@ -15,8 +15,9 @@
 
 package scrupal.core.nodes
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.MediaTypes
-import org.joda.time.DateTime
 import scrupal.api._
 import scala.concurrent.Future
 
@@ -24,8 +25,8 @@ case class StringNode(
   name : String,
   description : String,
   text : String,
-  modified : Option[DateTime] = Some(DateTime.now),
-  created : Option[DateTime] = Some(DateTime.now),
+  modified : Option[Instant] = Some(Instant.now),
+  created : Option[Instant] = Some(Instant.now),
   final val kind : Symbol = StringNode.kind) extends Node {
   final val mediaType = MediaTypes.`text/plain`
   def apply(context : Context) : Future[Response] = {

@@ -15,8 +15,9 @@
 
 package scrupal.core.nodes
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
 import scrupal.api.Html.ContentsArgs
 import scrupal.api._
 
@@ -26,8 +27,8 @@ case class StaticNode(
   name : String,
   description : String,
   body : Html.Template,
-  modified : Option[DateTime] = Some(DateTime.now),
-  created : Option[DateTime] = Some(DateTime.now),
+  modified : Option[Instant] = Some(Instant.now),
+  created : Option[Instant] = Some(Instant.now),
   final val kind : Symbol = StaticNode.kind) extends Node {
   def args : ContentsArgs = Html.EmptyContentsArgs
   val mediaType : MediaType = MediaTypes.`text/html`

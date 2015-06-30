@@ -15,7 +15,8 @@
 
 package scrupal.core.nodes
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import scalatags.Text.all._
 import scrupal.api._
 import akka.http.scaladsl.model.{ MediaType, MediaTypes }
@@ -38,8 +39,8 @@ case class CommandNode(
   name : String,
   description : String,
   command : String,
-  modified : Option[DateTime] = Some(DateTime.now()),
-  created : Option[DateTime] = Some(DateTime.now()),
+  modified : Option[Instant] = Some(Instant.now()),
+  created : Option[Instant] = Some(Instant.now()),
   final val kind : Symbol = CommandNode.kind) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 

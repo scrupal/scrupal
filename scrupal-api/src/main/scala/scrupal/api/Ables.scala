@@ -15,8 +15,10 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import play.api.Configuration
+
 import scrupal.utils.{OSSLicense, Patterns, Version}
 
 trait Authorable {
@@ -31,7 +33,7 @@ trait Authorable {
   * the same justifications for this design as does [[scrupal.storage.api.Storable]]
   */
 trait Creatable {
-  def created : Option[DateTime]
+  def created : Option[Instant]
   def isCreated = created.isDefined
   def exists = isCreated
   def canModify = false
@@ -43,7 +45,7 @@ trait Creatable {
   * the same justifications for this design as does [[scrupal.storage.api.Storable]]
   */
 trait Modifiable extends Creatable {
-  def modified : Option[DateTime]
+  def modified : Option[Instant]
   def isModified = modified.isDefined
   def changed = isModified
   override def canModify = true
@@ -84,14 +86,13 @@ trait Versionable {
 
 /** Something that has an expiration date */
 trait Expirable {
-  def expiry : Option[DateTime]
+  def expiry : Option[Instant]
   def expires = expiry.isDefined
   def expired = expiry match {
     case None     ⇒ false
-    case Some(dt) ⇒ dt.isBeforeNow
+    case Some(instant) ⇒ instant.isBefore(Instant.now())
   }
   def unexpired : Boolean = !expired
-
 }
 
 /** Something that contains facets */

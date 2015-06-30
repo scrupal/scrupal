@@ -15,7 +15,8 @@
 
 package scrupal.welcome
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import scrupal.doc.DocumentationProvider
 import scrupal.admin.AdminApp
 import scrupal.config.ConfigWizard
@@ -27,8 +28,8 @@ import scrupal.api._
 case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(sym) {
   val name : String = "Welcome To Scrupal"
   val description : String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
-  val modified : Option[DateTime] = Some(DateTime.now)
-  val created : Option[DateTime] = Some(new DateTime(2014, 11, 18, 17, 40))
+  val modified : Option[Instant] = Some(Instant.now)
+  val created : Option[Instant] = Some(Instant.parse("2014-11-18T17:40:00.00Z"))
   override val themeName = "cyborg"
   def hostNames : Regex = ".*".r
 

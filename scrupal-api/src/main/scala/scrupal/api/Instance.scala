@@ -15,7 +15,8 @@
 
 package scrupal.api
 
-import org.joda.time.DateTime
+import java.time.Instant
+
 import scrupal.storage.api.Storable
 
 /* TODO: Generalize Instance to carry any kind of payload, using VariantDataAccessObject like Node[_]
@@ -47,7 +48,7 @@ case class Instance(
   entityId : Identifier,
   payload : Map[String,Atom],
   facets : Map[String,Facet] = Map.empty[String,Facet],
-  modified : Option[DateTime] = None,
-  created : Option[DateTime] = None) extends
+  modified : Option[Instant] = None,
+  created : Option[Instant] = None) extends
     Storable with Nameable with Describable with Modifiable with Facetable {
 }

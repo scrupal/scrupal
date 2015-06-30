@@ -190,6 +190,11 @@ case class FilesCollection[S <: Storable] private[files] (
     WriteResult.coalesce( futures )
   }
 
+  override def deleteAll()(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
+    WriteResult.failure(new NotImplementedError("FilesCollection.deleteAll()"))
+    // TODO: Write FilesCollection.deleteAll
+  }
+
   override def find(query : Query[S])(implicit ec: ExecutionContext) : Future[Seq[S]] = Future {
     // TODO: Implement FilesCollection.find(query)
     Seq.empty[S]

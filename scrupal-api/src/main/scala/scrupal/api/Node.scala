@@ -15,8 +15,10 @@
 
 package scrupal.api
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
+
 import play.api.libs.iteratee.Enumerator
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,8 +57,8 @@ object Node {
   lazy val empty = new Node {
     def name: String = "empty"
     def mediaType: MediaType = MediaTypes.`application/octet-stream`
-    def modified: Option[DateTime] = Some(DateTime.now())
-    def created: Option[DateTime] = Some(DateTime.now())
+    def modified: Option[Instant] = Some(Instant.now())
+    def created: Option[Instant] = Some(Instant.now())
     def apply(context: Context): Future[Response] = Future.successful(NoopResponse)
     def description: String = "This node is completely empty."
   }
@@ -216,8 +218,8 @@ case class LayoutNode (
   description: String,
   subordinates: Map[String, Either[Reference[Node], Node]],
   layout: Layout,
-  modified: Option[DateTime] = Some(DateTime.now),
-  created: Option[DateTime] = Some(DateTime.now),
+  modified: Option[Instant] = Some(Instant.now),
+  created: Option[Instant] = Some(Instant.now),
   final val kind: Symbol = LayoutNode.kind
 ) extends CompoundNode {
   final val mediaType = layout.mediaType

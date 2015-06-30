@@ -15,71 +15,81 @@
 
 package scrupal.utils
 
-import org.joda.time.DateTime
+import java.time.Instant
 
-/** The kinds of alerts that can be generated. Selecting the alert kind can also pre-select the prefix text, css class,
-  * icon and expiration time of the alert via the various kind2xxx methods on this enumeration. The Alert class makes
-  * use of those methods in its constructors
+/** The kinds of alerts that can be generated are subclasses of this sealed trait. Each alert defines the prefix
+  * text, css class, icon and expiration time of the alert via the various kind2xxx methods on this enumeration.
+  * Alert instances make use of these values in their constructors.
   */
-object AlertKind extends Enumeration {
-  type Kind = Value
-  val Success = Value("Success") ///< Denotes a successful operation that was completed
-  val Note = Value("Note") ///< An FYI for the user to take note of
-  val Help = Value("Help") ///< A helpful tip the user may need to proceed successfully
-  val Warning = Value("Warning") ///< Warning about something the user has just done and how it will affect things later
-  val Caution = Value("Caution") ///< Alternate to Warning
-  val Error = Value("Error") ///< An error in the user's input or use of the site
-  val Danger = Value("Danger") ///< A caution about the potential loss of information or other significant action
-  val Critical = Value("Critical") ///< Alternate to Danger
 
-  def toPrefix(kind : Kind) : String =
-    {
-      kind match {
-        case Success  ⇒ "Success!"
-        case Note     ⇒ "Note:"
-        case Warning  ⇒ "Warning!"
-        case Caution  ⇒ "Caution!"
-        case Error    ⇒ "Error:"
-        case Danger   ⇒ "Danger!"
-        case Critical ⇒ "Critical!"
-      }
-    }
+sealed trait AlertKind {
+  def label : String
+  def prefix : String
+  def icon : Icons.Kind
+  def css : String
+  def expiry: Instant
+}
 
-  def toIcon(kind : Kind) : Icons.Kind =
-    {
-      kind match {
-        case Success  ⇒ Icons.ok
-        case Note     ⇒ Icons.info
-        case Warning  ⇒ Icons.exclamation
-        case Caution  ⇒ Icons.exclamation
-        case Error    ⇒ Icons.remove
-        case Danger   ⇒ Icons.warning_sign
-        case Critical ⇒ Icons.warning_sign
-      }
-    }
+case object SuccessAlert extends AlertKind{
+  val label = "Success"
+  val prefix = "Success!"
+  val icon = Icons.ok
+  val css = "alert alert-success"
+  def expiry: Instant = Instant.now().plusMillis(100)
+}
 
-  def toCss(kind : Kind) : String = {
-    kind match {
-      case Success  ⇒ "alert-success"
-      case Note     ⇒ "alert-info"
-      case Warning  ⇒ ""
-      case Caution  ⇒ ""
-      case Error    ⇒ "alert-danger"
-      case Danger   ⇒ "alert-danger"
-      case Critical ⇒ "alert-danger"
-    }
-  }
+case object NoteAlert extends AlertKind {
+  val label = "Note"
+  val prefix = "Note:"
+  val icon = Icons.info
+  val css = "alert alert-info"
+  def expiry: Instant = Instant.now().plusSeconds(30)
+}
 
-  def toExpiry(kind : Kind) : Option[DateTime] = {
-    Some(kind match {
-      case Success  ⇒ DateTime.now().plusMillis(100)
-      case Note     ⇒ DateTime.now().plusSeconds(30)
-      case Warning  ⇒ DateTime.now().plusMinutes(30)
-      case Caution  ⇒ DateTime.now().plusHours(1)
-      case Error    ⇒ DateTime.now().plusHours(4)
-      case Danger   ⇒ DateTime.now().plusHours(12)
-      case Critical ⇒ DateTime.now().plusHours(24)
-    })
-  }
+case object HelpAlert extends AlertKind {
+  val label = "Help"
+  val prefix = "Help:"
+  val icon = Icons.info
+  val css = "alert alert-info"
+  def expiry: Instant = Instant.now().plusSeconds(30)
 
+}
+case object WarningAlert extends AlertKind {
+  val label = "Warning"
+  val prefix = "Warning!"
+  val icon = Icons.exclamation
+  val css = "alert alert-warning"
+  def expiry: Instant = Instant.now().plusSeconds(30*60)
+}
+
+case object CautionAlert extends AlertKind {
+  val label = "Caution"
+  val prefix = "Caution!"
+  val icon = Icons.exclamation_sign
+  val css = "alert alert-warning"
+  def expiry: Instant = Instant.now().plusSeconds(60*60)
+}
+
+case object ErrorAlert extends AlertKind {
+  val label = "Error"
+  val prefix = "Error:"
+  val icon = Icons.remove
+  val css = "alert alert-danger"
+  def expiry: Instant = Instant.now().plusSeconds(4*3600)
+}
+
+case object DangerAlert extends AlertKind {
+  val label = "Danger"
+  val prefix = "Danger!"
+  val icon = Icons.warning_sign
+  val css = "alert alert-danger"
+  def expiry: Instant = Instant.now().plusSeconds(12*3600)
+}
+
+case object CriticalAlert extends AlertKind {
+  val label = "Critical"
+  val prefix = "Critial!"
+  val icon = Icons.warning_sign
+  val css = "alert alert-danger"
+  def expiry: Instant = Instant.now().plusSeconds(24*3600)
 }

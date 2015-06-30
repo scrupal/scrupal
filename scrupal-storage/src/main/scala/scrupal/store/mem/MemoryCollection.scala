@@ -108,6 +108,13 @@ case class MemoryCollection[S <: Storable] private[mem] (schema : MemorySchema, 
     }
   }
 
+  override def deleteAll()(implicit ec: ExecutionContext) : Future[WriteResult] = Future {
+    WriteResult.failure(new NotImplementedError("MemoryCollection.deleteAll()"))
+    // TODO: Write MemoryCollection.deleteAll
+  }
+
+
+
   override def find(query : Query[S])(implicit ec: ExecutionContext) : Future[Seq[S]] = Future {
     // TODO: Implement MemoryCollection.find(query)
     Seq.empty[S]

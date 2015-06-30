@@ -15,8 +15,9 @@
 
 package scrupal.core.nodes
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
 import scrupal.api._
 
 import scala.concurrent.Future
@@ -32,8 +33,8 @@ case class SubstitutionNode (
   description: String,
   script: String,
   subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
-  modified: Option[DateTime] = Some(DateTime.now()),
-  created: Option[DateTime] = Some(DateTime.now()),
+  modified: Option[Instant] = Some(Instant.now()),
+  created: Option[Instant] = Some(Instant.now()),
   final val kind: Symbol = SubstitutionNode.kind
 ) extends Node {
 

@@ -15,16 +15,14 @@
 
 package scrupal.api
 
-import java.util.concurrent.TimeUnit
+import java.time.Instant
 
-import org.joda.time.DateTime
-import scrupal.storage.api.Schema
+import scrupal.storage.api.{Collection, Schema}
 import scrupal.test.ScrupalApiSpecification
-import scrupal.utils.Icons
-import scrupal.utils.AlertKind
+import scrupal.utils._
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Await}
+import scala.concurrent.duration._
 
 /**
  * One line sentence description here.
@@ -35,72 +33,72 @@ class AlertSpec extends ScrupalApiSpecification("AlertSpec") {
 
 	"Alert" should {
 
-		lazy val t :DateTime =  DateTime.now().plusDays(1)
+		lazy val t: Instant = Instant.now().plusSeconds(24 * 3600)
 
 		"construct with one argument and give sane results" in {
-			val alert =  new Alert( 'Alert, "Alert", "Description", "<span>Note Message</span>", AlertKind.Note )
+			val alert = new Alert('Alert, "Alert", "Description", "<span>Note Message</span>", NoteAlert)
 			alert.message.toString must beEqualTo("<span>Note Message</span>")
-			alert.alertKind must beEqualTo(AlertKind.Note)
+			alert.alertKind must beEqualTo(NoteAlert)
 			alert.iconKind must beEqualTo(Icons.info)
-			alert.cssClass must beEqualTo("alert-info")
+			alert.cssClass must beEqualTo("alert alert-info")
 			alert.prefix must beEqualTo("Note:")
 		}
 
 		"construct with two arguments and give sane results" in {
-			val alert = new Alert('Alert, "Alert", "Description", "<span>Danger Message</span>", AlertKind.Danger )
+			val alert = new Alert('Alert, "Alert", "Description", "<span>Danger Message</span>", DangerAlert)
 			alert.message.toString must beEqualTo("<span>Danger Message</span>")
-			alert.alertKind must beEqualTo(AlertKind.Danger)
+			alert.alertKind must beEqualTo(DangerAlert)
 			alert.iconKind must beEqualTo(Icons.warning_sign)
-			alert.cssClass must beEqualTo("alert-danger")
+			alert.cssClass must beEqualTo("alert alert-danger")
 			alert.prefix must beEqualTo("Danger!")
 		}
 
 		"construct with three arguments and give sane results" in {
-			val alert = Alert('Alert, "Alert", "Description", "<span>Warning Message</span>", AlertKind.Warning,
-        AlertKind.toIcon(AlertKind.Warning), AlertKind.toPrefix(AlertKind.Warning),
-        AlertKind.toCss(AlertKind.Warning), Some(t) )
+			val alert = Alert('Alert, "Alert", "Description", "<span>Warning Message</span>", WarningAlert,
+				WarningAlert.icon, WarningAlert.prefix, WarningAlert.css, Some(t))
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
-			alert.alertKind must beEqualTo(AlertKind.Warning)
+			alert.alertKind must beEqualTo(WarningAlert)
 			alert.iconKind must beEqualTo(Icons.exclamation)
 			alert.prefix must beEqualTo("Warning!")
-			alert.cssClass must beEqualTo("")
-			alert.expiry.get must beEqualTo( t)
+			alert.cssClass must beEqualTo("alert alert-warning")
+			alert.expiry.get must beEqualTo(t)
 		}
 
 		"construct with four arguments and give sane results" in {
-			val alert = Alert('Alert, "Alert", "Description", "<span>Caution Message</span>", AlertKind.Caution,
-        Icons.align_center, "Alignment!", "", Some(new DateTime(0)))
+			val alert = Alert('Alert, "Alert", "Description", "<span>Caution Message</span>", CautionAlert,
+				Icons.align_center, "Alignment!", "", Some(Instant.ofEpochMilli(0L)))
 			alert.message.toString must beEqualTo("<span>Caution Message</span>")
-			alert.alertKind must beEqualTo(AlertKind.Caution)
+			alert.alertKind must beEqualTo(CautionAlert)
 			alert.iconKind must beEqualTo(Icons.align_center)
 			alert.cssClass must beEqualTo("")
 			alert.prefix must beEqualTo("Alignment!")
 		}
 
 		"produce correct icon html" in {
-			val alert = new Alert('A, "A", "Description", "<span>Html Message</span>", AlertKind.Note)
+			val alert = new Alert('A, "A", "Description", "<span>Html Message</span>", NoteAlert)
 			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
 
-    "save to and fetch from the DB" in  {
-			pending
-			/* FIXME: Reinstate saving alerts test
-      withSchema { schema: Schema =>
-				withEmptyDB(schema.nodes.db.name) { db =>
-					val future = db.dropCollection("alerts") flatMap { result =>
-						val a1 = new Alert('foo, "Alert", "Description", "Message", AlertKind.Warning )
-						schema.alerts.insert(a1) flatMap { wr =>
-							schema.alerts.fetch('foo) map { optAlert =>
-								val a2 = optAlert.get
-								val saved_time = a2.expires
-								a2._id must beEqualTo('foo)
-								a1._id must beEqualTo('foo)
-							}
-						}
-					}
-					Await.result(future,Duration(5,TimeUnit.SECONDS))
-				}
-      } */
-    }
+		"save to and fetch from the DB" in {
+      testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+        val future = {
+          super.ensureSchema(ApiSchemaDesign()) { case schema: Schema =>
+            schema.withCollection("alerts") { alerts: Collection[Alert] ⇒
+              alerts.deleteAll().flatMap { result ⇒
+                val a1 = new Alert('foo, "Alert", "Description", "Message", WarningAlert)
+                alerts.insert(a1) flatMap { wr =>
+                  alerts.fetch(a1.getPrimaryId()) map { optAlert =>
+                    val a2 = optAlert.get
+                    val saved_time = a2.expires
+                    a2.getPrimaryId() must beEqualTo(a1.getPrimaryId())
+                  }
+                }
+              }
+            }
+          } flatMap { x ⇒ x }
+        }
+        Await.result(future, 5.seconds)
+      }
+		}
 	}
 }

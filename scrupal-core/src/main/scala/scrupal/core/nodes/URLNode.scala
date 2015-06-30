@@ -16,9 +16,9 @@
 package scrupal.core.nodes
 
 import java.net.URL
+import java.time.Instant
 
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
 import scrupal.api._
 
 import scala.concurrent.Future
@@ -28,8 +28,8 @@ case class URLNode(
   description : String,
   url : URL,
   mediaType : MediaType = MediaTypes.`text/html`,
-  modified : Option[DateTime] = Some(DateTime.now),
-  created : Option[DateTime] = Some(DateTime.now),
+  modified : Option[Instant] = Some(Instant.now),
+  created : Option[Instant] = Some(Instant.now),
   final val kind : Symbol = URLNode.kind) extends Node {
   def apply(context : Context) : Future[Response] = Future.successful {
     StreamResponse(url.openStream(), mediaType)

@@ -15,8 +15,9 @@
 
 package scrupal.core.nodes
 
+import java.time.Instant
+
 import akka.http.scaladsl.model.{MediaType, MediaTypes}
-import org.joda.time.DateTime
 import scrupal.api.AssetsLocator.Directory
 import scrupal.api.Html.{Contents, ContentsArgs}
 import scrupal.api._
@@ -41,8 +42,8 @@ case class MarkedDocNode(
   contextPath : String,
   root : String,
   path : Iterable[String],
-  modified : Option[DateTime] = Some(DateTime.now()),
-  created : Option[DateTime] = Some(DateTime.now()),
+  modified : Option[Instant] = Some(Instant.now()),
+  created : Option[Instant] = Some(Instant.now()),
   final val kind : Symbol = MarkedDocNode.kind) extends Node {
   override def mediaType : MediaType = MediaTypes.`text/html`
   def description : String = "A node that provides a marked document from a resource as html."

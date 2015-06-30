@@ -15,7 +15,6 @@
 
 package scrupal.welcome
 
-import org.joda.time.DateTime
 import play.api.routing.sird._
 import scrupal.api.{NodeReactor, Provider}
 import scrupal.core.nodes.HtmlNode
@@ -24,9 +23,7 @@ case class WelcomeSiteProvider() extends Provider {
 
   val WelcomeSiteRoot = NodeReactor(
     HtmlNode("WelcomeSiteRoot", "Main index page for Welcome To Scrupal Site",
-      WelcomePageTemplate,
-      modified = Some(DateTime.now),
-      created = Some(new DateTime(2014, 11, 18, 18, 0))
+      WelcomePageTemplate
     )
   )
 

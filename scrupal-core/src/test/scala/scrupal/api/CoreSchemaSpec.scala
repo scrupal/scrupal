@@ -33,7 +33,7 @@ class CoreSchemaSpec extends ScrupalApiSpecification("CoreSchema") {
       val future = withStoreContext { context ⇒
         context.addSchema(CoreSchemaDesign()).map { schema ⇒
           val names = schema.collectionNames.toSeq
-          val required = Seq("instances", "sites", "nodes", "principals", "alias", "token")
+          val required = Seq("instances", "sites", "nodes", "principals", "alias", "token", "alerts")
           for (name ← required) {
             names.contains(name) must beTrue
           }

@@ -15,7 +15,7 @@
 
 package scrupal.test
 
-import org.joda.time.DateTime
+import java.time.Instant
 import org.specs2.execute.{Result, AsResult}
 import org.specs2.specification.Fixture
 import scrupal.api.{Site, Context, BundleType}
@@ -37,8 +37,8 @@ trait FakeContext[T] extends Context with Fixture[T] {
     val description  = "Just For Testing"
     val y = nm("localhost")
     def hostNames: Regex = ".*".r
-    def modified: Option[DateTime] = None
-    def created: Option[DateTime] = None
+    def modified: Option[Instant] = None
+    def created: Option[Instant] = None
     val settingsTypes = BundleType.empty
   })
 

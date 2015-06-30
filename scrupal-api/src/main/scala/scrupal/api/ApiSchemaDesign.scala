@@ -26,7 +26,7 @@ class ApiSchemaDesign extends SchemaDesign {
 
   override def name: String = "API"
 
-  override def requiredNames: Seq[String] = Seq("sites", "nodes", "instances", "principals")
+  override def requiredNames: Seq[String] = Seq("sites", "nodes", "instances", "principals", "alerts")
 }
 
 object ApiSchemaDesign {
