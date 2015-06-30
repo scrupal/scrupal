@@ -84,11 +84,11 @@ trait Dependencies
   val scalatags               = "com.lihaoyi"               %% "scalatags"                % "0.5.2"
 
   // WebJars We Use
-  val wj_bootstrap = "org.webjars" % "bootstrap" % "3.3.5"
-  val wj_marked = "org.webjars" % "marked" % "0.3.2-1"
-  val wj_requirejs = "org.webjars" % "requirejs" % "2.1.18"
-  val wj_requirejs_domready = "org.webjars" % "requirejs-domready" % "2.0.1-2"
-  val wj_font_awesome = "org.webjars" % "font-awesome" % "4.3.0"
+  val wj_bootstrap            = "org.webjars"               % "bootstrap"                 % "3.3.5"
+  val wj_marked               = "org.webjars"               % "marked"                    % "0.3.2-1"
+  val wj_requirejs            = "org.webjars"               % "requirejs"                 % "2.1.18"
+  val wj_requirejs_domready   = "org.webjars"               % "requirejs-domready"        % "2.0.1-2"
+  val wj_font_awesome         = "org.webjars"               % "font-awesome"              % "4.3.0"
 
   // Hashing Algorithms
   val pbkdf2                  = "io.github.nremond"         %% "pbkdf2-scala"             % "0.4"
@@ -209,6 +209,8 @@ trait Dependencies
     "org.webjars" % "bootswatch-united" % "3.3.1+2",
     "org.webjars" % "bootswatch-yeti" % "3.3.1+2"
   )
+
+  val bootswatch_theme_names : Seq[String] = bootswatch_themes.map { mid ⇒ mid.name.replace("bootswatch-","") }
 
   val core_dependencies : Seq[ModuleID] = Seq(
     commons_lang3, scala_arm, scala_pickling, livestream_scredis, akka_actor, play_iteratees, akka_http, shapeless,

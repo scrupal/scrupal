@@ -19,7 +19,7 @@ import java.io.{PrintWriter, StringWriter}
 
 import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.libs.json._
-import scrupal.api.Context
+import scrupal.api.{DataCache, Context}
 import scrupal.api.Html._
 
 import scalatags.Text.Modifier
@@ -83,15 +83,12 @@ object debug_footer extends FragmentGenerator {
 
 object display_alerts extends FragmentGenerator {
   def apply(context : Context) : Contents = {
-    /* FIXME: REinstate display of alerts
-    for (alert ← context.alerts if alert.unexpired) yield {
+    for (alert ← DataCache.alerts if alert.unexpired) yield {
       div(cls := "alert alert-dismissible @alert.cssClass",
         button(`type` := "button", cls := "close", data("dismiss") := "alert", aria.hidden := "true",
           i(cls := "icon-remove-sign")),
         strong(alert.iconHtml, "&nbsp;", alert.prefix), "&nbsp;", alert.message)
     }
-    */
-    Seq(div())
   }
 }
 

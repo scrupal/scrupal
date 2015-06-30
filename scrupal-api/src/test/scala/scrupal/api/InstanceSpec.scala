@@ -26,11 +26,11 @@ import scala.concurrent.duration._
 class InstanceSpec extends ScrupalApiSpecification("InstanceSpec") {
 
   class TestModule(db: String) extends FakeModule('foo, db) {
-    override val types = Seq(thai, buns)
-    override val entities = Seq(plun)
     val thai = StringType('Thai, "Thai Foon", ".*".r)
     val buns = BundleType('Buns, "Buns Aye", Map("tie" -> thai))
     val plun = FakeEntity("Plun", buns)
+    override val types = Seq(thai, buns)
+    override val entities = Seq(plun)
   }
 
   "Module Type, Entity and Instance " should {

@@ -16,6 +16,7 @@
 package scrupal.api
 
 import scrupal.storage.api.Schema
+import scrupal.utils.ScrupalUtilsInfo
 
 abstract class DataCache {
 
@@ -28,11 +29,16 @@ object DataCache extends DataCache {
 
   def themes : Seq[String] = _themes
 
-  def update(scrupal : Scrupal, schema : Schema) = {
-    _themes = Seq("amelia", "cyborg", "default", "readable") // FIXME: allow new themes from theme providers in modules
-    _sites = scrupal.Sites.values.map { site ⇒ site.name }
-  }
-
   private var _sites = Seq.empty[String]
   def sites : Seq[String] = _sites
+
+  private var _alerts = Seq.empty[Alert]
+  def alerts : Seq[Alert] = _alerts
+
+  def update(scrupal : Scrupal, schema : Schema) = {
+    _themes = ScrupalUtilsInfo.themes
+    _sites = scrupal.Sites.values.map { site ⇒ site.name }
+    _alerts = Seq.empty[Alert] // FIXME: Retrieve alerts from storage
+  }
+
 }

@@ -22,7 +22,7 @@ import play.sbt.PlayLayoutPlugin
 import play.sbt.routes.RoutesKeys._
 import sbt.Keys._
 import sbt._
-import sbtbuildinfo.BuildInfoPlugin
+import sbtbuildinfo.{BuildInfoKeys, BuildInfoPlugin}
 import scrupal.sbt.ScrupalPlugin
 import scrupal.sbt.ScrupalPlugin.autoImport._
 
@@ -55,12 +55,13 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Utils",
       scrupalPackage := "scrupal.utils",
+      BuildInfoKeys.buildInfoKeys += ( "themes" → bootswatch_theme_names),
       libraryDependencies ++= utils_dependencies
     )
 
   lazy val utils_deps = utils_proj % "compile->compile;test->test"
   lazy val storage_proj = Project(base_name + "-storage", file("./scrupal-storage"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
@@ -71,7 +72,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps)
   lazy val storage_deps = storage_proj % "compile->compile;test->test"
   lazy val api_proj = Project(base_name + "-api", file("./scrupal-api"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
@@ -82,7 +83,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, storage_deps)
   lazy val api_deps = api_proj % "compile->compile;test->test"
   lazy val store_reactivemongo_proj = Project(base_name + "-store-reactivemongo", file("./scrupal-store-reactivemongo"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
@@ -93,7 +94,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, storage_deps, api_deps)
   lazy val store_reactivemongo_deps = store_reactivemongo_proj % "compile->compile;test->test"
   lazy val store_rxmongo_proj = Project(base_name + "-store-rxmongo", file("./scrupal-store-rxmongo"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
@@ -104,7 +105,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, storage_deps, api_deps)
   lazy val store_rxmongo_deps = store_rxmongo_proj % "compile->compile;test->test"
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
-    .enablePlugins(ScrupalPlugin, SbtWeb, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin, SbtWeb)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(sbt_web_settings:_*)
@@ -118,7 +119,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(storage_deps, api_deps, utils_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
   lazy val admin_proj = Project(base_name + "-admin", file("./scrupal-admin"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
@@ -128,7 +129,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, api_deps, core_deps, storage_deps)
   lazy val admin_deps = admin_proj % "compile->compile;test->test"
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
@@ -138,18 +139,18 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .dependsOn(utils_deps, core_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
   lazy val doc_proj = Project(base_name + "-doc", file("./scrupal-doc"))
-    .enablePlugins(ScrupalPlugin, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Administration Module",
+      scrupalTitle := "Scrupal Documentation Module",
       scrupalPackage := "scrupal.doc",
       resolvers ++= all_resolvers,
       libraryDependencies ++= doc_dependencies)
     .dependsOn(utils_deps, api_deps, core_deps, storage_deps)
   lazy val doc_deps = doc_proj % "compile->compile;test->test"
   lazy val root = Project(base_name, file("."))
-    .enablePlugins(ScrupalPlugin, SbtWeb, BuildInfoPlugin)
+    .enablePlugins(ScrupalPlugin, SbtWeb)
     .settings(buildSettings:_*)
     .settings(
       scrupalTitle := "Scrupal",
