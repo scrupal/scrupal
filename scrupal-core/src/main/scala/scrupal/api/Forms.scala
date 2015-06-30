@@ -617,10 +617,9 @@ object Form {
     def withErrorMap(em: ErrorMap): Form = copy(errorMap = em)
   }
 
-  object emptyForm extends Form {
-    val id = 'emptyForm;
-    val name = "";
-    val description = "";
+  object emptyForm extends { val id = 'emptyForm } with Form {
+    val name = ""
+    val description = ""
     val actionPath = ""
     val items = Seq.empty[Field]
     val values = Settings.empty
