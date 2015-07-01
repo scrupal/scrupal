@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.netty
+package scrupal.core.http
 
 import javax.inject.{Inject, Singleton}
 
@@ -22,7 +22,7 @@ import play.api.inject.ApplicationLifecycle
 import play.api.mvc.Results.Conflict
 import play.api.mvc._
 import play.api.{Configuration, Environment}
-import scrupal.api.{Context, Reactor}
+import scrupal.api.{Scrupal, Context, Reactor}
 
 import scala.annotation.switch
 import scala.language.implicitConversions
@@ -34,7 +34,7 @@ import scala.language.implicitConversions
 @Singleton
 class RequestHandler @Inject() (
   env: Environment,
-  scrupal: _root_.scrupal.api.Scrupal,
+  scrupal: Scrupal,
   play_config : Configuration,
   errorHandler: HttpErrorHandler,
   http_config: HttpConfiguration,

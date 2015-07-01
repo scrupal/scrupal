@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http.netty
+package scrupal.core.http
 
 import com.typesafe.config.ConfigValue
 import play.api.Configuration
@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
 
-class Scrupal(
+class CoreScrupal(
   override val name: String = "CoreScrupal",
   config : Configuration,
   lifecycle : ApplicationLifecycle

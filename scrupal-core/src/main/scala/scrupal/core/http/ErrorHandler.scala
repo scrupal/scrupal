@@ -15,26 +15,35 @@
 
 package scrupal.core.http
 
-import scrupal.api.Context
+import javax.inject.Inject
 
-/** Simple Reverse Routing For Scrupal
-  *
-  * Reverse Routing is the process of generating a URI path for a certain resource. In Scrupal, paths are not arbitrary
-  * but highly structured and regular. Because of this regularity, the corresponding path can be constructed quite
-  * easily especially from a given context. Every operation in Scrupal has a context in which that operation occurs.
-  * The context provides the site, application, request context, and other details of the operation that is
-  * requesting a reverse route. Because the context is present, the reverse route can be generated easily by simply
-  * substituting context and requested elements.
-  *
-  * Each controller must provide the ReverseRoute objects that it serves. These ReverseRoute objects are really
-  * just patterns for constructing the path. When needed,
-  */
-trait ReverseRoute {
-  def kind : Symbol
-  def path(implicit context : Context) : String
-}
+import com.google.inject.Provider
+import play.api.http.DefaultHttpErrorHandler
+import play.api.mvc.RequestHeader
+import play.api.mvc.Results._
+import play.api.routing.Router
+import play.api.{Configuration, Environment, OptionalSourceMapper, UsefulException}
+import scrupal.api.Scrupal
 
-class ApplicationRoute(app : Symbol) {
-  def kind = 'Application
-  val path = s"/${app.name}"
+import scala.concurrent.Future
+
+class ErrorHandler @Inject()(
+  scrupal: Scrupal,
+  env: Environment,
+  config: Configuration,
+  sourceMapper: OptionalSourceMapper,
+  router: Provider[Router]
+  ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
+
+  override def onProdServerError(request: RequestHeader, exception: UsefulException) = {
+    Future.successful(
+      InternalServerError("A server error occurred: " + exception.getMessage)
+    )
+  }
+
+  override def onForbidden(request: RequestHeader, message: String) = {
+    Future.successful(
+      Forbidden("You're not allowed to access this resource.")
+    )
+  }
 }

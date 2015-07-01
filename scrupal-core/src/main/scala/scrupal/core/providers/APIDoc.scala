@@ -13,18 +13,176 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.providers
 
-import akka.http.scaladsl.server.Route
-import scrupal.api.Scrupal
-import scrupal.core.http.akkahttp.Controller
-import akka.http.scaladsl.server.directives._
+import play.api.routing.sird._
 
-/** One line sentence description here.
-  * Further description here.
+import scrupal.api.{Response, Stimulus, Reactor, SingularProvider}
+
+import scala.concurrent.Future
+
+/** A Provider Of Entity API Documentation
+  * This provider can generate the documentation for any entities that are reachable in the current context.
+  * Each of the standard HTTP Method/Path pairs that entities respond to are provided in the routing for this
+  * provider and will respond with HTML documentation for the kind of entity requested.
   */
-case class APIDoc(id : Symbol, priority : Int) extends Controller with RouteDirectives {
-  def routes(implicit scrupal : Scrupal) : Route = reject
+case class APIDoc() extends { val id : Symbol = 'apidoc } with SingularProvider {
+  def singularRoutes : ReactionRoutes = {
+    case GET(p"/$kind/GET/${long(num)}/$facet/$facet_id$rest*") ⇒
+      GetNumDoc(kind, num, facet, facet_id, rest)
+    case GET(p"/$kind/GET/$name<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      GetNameDoc(kind, name, facet, facet_id, rest)
+    case GET(p"/$kind/OPTIONS/${long(num)}/$facet$rest*") ⇒
+      FindNumDoc(kind, num, facet, rest)
+    case GET(p"/$kind/OPTIONS/$name<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet$rest*") ⇒
+      FindNameDoc(kind, name, facet, rest)
+    case GET(p"/$kind/POST/${long(num)}/$facet$rest*") ⇒
+      AddNumDoc(kind, num, facet, rest)
+    case GET(p"/$kind/POST/$name<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet$rest*") ⇒
+      AddNameDoc(kind, name, facet, rest)
+    case GET(p"/$kind/PUT/${long(num)}/$facet/$facet_id$rest*") ⇒
+      SetNumDoc(kind, num, facet, facet_id, rest)
+    case GET(p"/$kind/PUT/$name<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      SetNameDoc(kind, name, facet, facet_id, rest)
+    case GET(p"/$kind/DELETE/${long(num)}/$facet/$facet_id$rest*") ⇒
+      RemoveNumDoc(kind, num, facet, facet_id, rest)
+    case GET(p"/$kind/DELETE/$name<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      RemoveNameDoc(kind, name, facet, facet_id, rest)
+
+    case GET(p"/$kind/GET/${long(num)}$rest*") ⇒
+      RetrieveNumDoc(kind, num, rest)
+    case GET(p"/$kind/GET/$name<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
+      RetrieveNameDoc(kind, name, rest)
+    case GET(p"/$kind/OPTIONS/$rest*") ⇒
+      QueryDoc(kind, rest)
+    case GET(p"/$kind/POST/$rest*") ⇒
+      CreateDoc(kind, rest)
+    case GET(p"/$kind/PUT/${long(num)}$rest*") ⇒
+      UpdateNumDoc(kind, num, rest)
+    case GET(p"/$kind/PUT/$name<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
+      UpdateNameDoc(kind, name, rest)
+    case GET(p"/$kind/DELETE/${long(num)}$rest*") ⇒
+      DeleteNumDoc(kind, num, rest)
+    case GET(p"/$kind/DELETE/$name<[A-Za-z][-_.~a-zA-Z0-9]*>}$rest*") ⇒
+      DeleteNameDoc(kind, name, rest)
+    case GET(p"/$kind") ⇒
+      EntityIntroduction(kind)
+    case GET(p"") ⇒
+      ApiDocIntroduction()
+  }
+
+  // TODO: Implement the APIDoc Reactors to provide documentation for Entities
+
+  case class RetrieveNumDoc(kind: String, num: Long, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class RetrieveNameDoc(kind: String, nam: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class QueryDoc(kind: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class CreateDoc(kind: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class UpdateNumDoc(kind: String, num: Long, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class UpdateNameDoc(kind: String, nam: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class DeleteNumDoc(kind: String, num: Long, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class DeleteNameDoc(kind: String, nam: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class EntityIntroduction(kind: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class ApiDocIntroduction() extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+
+  case class GetNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class GetNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class FindNumDoc(kind : String, num: Long, facet: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class FindNameDoc(kind : String, nam: String, facet: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class AddNumDoc(kind : String, num: Long, facet: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class AddNameDoc(kind : String, nam: String, facet: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class SetNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class SetNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class RemoveNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
+  case class RemoveNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
+    def name: String = ""
+    def description: String = ""
+    def apply(request: Stimulus) : Future[Response] = ???
+  }
 
   /*
 # Routes for the REST based API Documentation facility. Same as /api but all GET requests with METHOD inserted at start

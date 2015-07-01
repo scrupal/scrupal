@@ -23,8 +23,6 @@ import scala.collection.immutable.HashMap
 /** Test specifications for the API Module class */
 class ModuleSpec extends ScrupalApiSpecification("Module") {
 
-//  sequential // FIXME: Garbage collection affects this when run in parallel
-
   val db = "test-modules"
 
   object Module1 extends FakeModule('Module1, db, Version(1,0,0), Version(0,8,20)) {

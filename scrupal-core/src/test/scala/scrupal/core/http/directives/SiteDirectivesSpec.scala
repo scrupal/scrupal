@@ -16,8 +16,8 @@
 package scrupal.core.http.directives
 
 import org.specs2.mutable.Specification
-import scrupal.core.http.akkahttp.SiteDirectives
-import scrupal.core.http.netty.Scrupal
+import scrupal.core.akkahttp.SiteDirectives
+import scrupal.core.http.CoreScrupal
 import scrupal.core.sites.NodeSite
 import scrupal.test.CaseClassFixture
 

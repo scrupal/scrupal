@@ -30,6 +30,11 @@ trait RetrieveReactor extends EntityCollectionReactor {
   val description = "Retrieve a specific instance of the entity from the entity collection."
 }
 
+trait InfoReactor extends EntityCollectionReactor {
+  val name : String = "Info"
+  val description = "Get information about a specific instance of the entity from the entity collection."
+}
+
 trait UpdateReactor extends EntityCollectionReactor {
   val name : String = "Update"
   val description = "Update a specific instance of the entity."
@@ -53,6 +58,11 @@ trait AddReactor extends EntityInstanceReactor {
 trait GetReactor extends EntityInstanceReactor {
   val name : String = "Get"
   val description = "Retrieve a facet from a specific entity in the collection."
+}
+
+trait FacetInfoReactor extends EntityInstanceReactor {
+  val name : String = "FacetInfo"
+  val description = "Get information about a facet from a specific entity in the collection."
 }
 
 trait SetReactor extends EntityInstanceReactor {
@@ -82,6 +92,10 @@ trait EntityProvider extends PluralProvider {
       retrieve(id, rest)
     case GET(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
       retrieve(id, rest)
+    case HEAD(p"/${long(id)}$rest*") ⇒
+      info(id, rest)
+    case HEAD(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
+      info(id, rest)
     case OPTIONS(p"/$rest*") ⇒
       query(rest)
     case POST(p"/$rest*") ⇒
@@ -100,6 +114,10 @@ trait EntityProvider extends PluralProvider {
       get(id, facet, facet_id, rest)
     case GET(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
       get(id, facet, facet_id, rest)
+    case HEAD(p"/${long(id)}/$facet/$facet_id$rest*") ⇒
+      facetInfo(id, facet, facet_id, rest)
+    case HEAD(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet/$facet_id$rest*") ⇒
+      facetInfo(id, facet, facet_id, rest)
     case OPTIONS(p"/${long(id)}/$facet$rest*") ⇒
       find(id, facet, rest)
     case OPTIONS(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>/$facet$rest*") ⇒
@@ -134,6 +152,10 @@ trait EntityProvider extends PluralProvider {
 
   def retrieve(instance_id: Long, details: String) : RetrieveReactor
 
+  def info(instance_id: String, details: String) : InfoReactor
+
+  def info(instance_id: Long, details: String) : InfoReactor
+
   /** Delete Command (DELETE/plural) */
 
   /** Update Command (PUT/plural) - Updates all or a few of the fields of an entity
@@ -150,27 +172,26 @@ trait EntityProvider extends PluralProvider {
 
   def delete(instance_id: Long, details: String) : DeleteReactor
 
-  /** XXX Command (OPTIONS/singular) */
   def find(instance_id: String, facet: String, details: String) : FindReactor
 
   def find(instance_id: Long, facet: String, details: String) : FindReactor
 
-  /** Create Facet Command (POST/singular) */
   def add(instance_id: String, facet: String, details: String) : AddReactor
 
   def add(instance_id: Long, facet: String, details: String) : AddReactor
 
-  /** RetrieveAspect Command (GET/singular) */
   def get(instance_id: String, facet: String, facet_id: String, details: String) : GetReactor
 
   def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor
 
-  /** UpdateAspect Command (PUT/singular) */
+  def facetInfo(instance_id: String, facet: String, facet_id: String, details: String) : FacetInfoReactor
+
+  def facetInfo(instance_id: Long, facet: String, facet_id: String, details: String) : FacetInfoReactor
+
   def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor
 
   def set(instance_id: Long, facet: String, facet_id: String, details: String) : SetReactor
 
-  /** XXX Command (DELETE/singular) */
   def remove(instance_id: String, facet: String, facet_id: String, details: String) : RemoveReactor
 
   def remove(instance_id: Long, facet: String, facet_id: String, details: String) : RemoveReactor

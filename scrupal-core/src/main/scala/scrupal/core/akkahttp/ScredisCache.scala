@@ -13,7 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.http
+package scrupal.core.akkahttp
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.MediaType
@@ -21,7 +21,7 @@ import scredis._
 import scrupal.api.Scrupal
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Cacheable[PT] {
   def mediaType : MediaType

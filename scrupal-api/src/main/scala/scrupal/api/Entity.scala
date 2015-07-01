@@ -64,6 +64,14 @@ abstract class Entity(sym : Symbol)(implicit scrpl : Scrupal) extends {
     retrieve (instance_id.toString, details)
   }
 
+  def info(instance_id: String, details: String) : InfoReactor = {
+    NoOpInfoReactor(instance_id, details)
+  }
+
+  def info(instance_id: Long, details: String) : InfoReactor = {
+    info (instance_id.toString, details)
+  }
+
   def update(instance_id: String, details: String) : UpdateReactor = {
     NoOpUpdateReactor(instance_id, details)
   }
@@ -94,6 +102,13 @@ abstract class Entity(sym : Symbol)(implicit scrpl : Scrupal) extends {
   }
   def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor = {
     get(instance_id.toString, facet, facet_id, details)
+  }
+
+  def facetInfo(instance_id: String, facet: String, facet_id: String, details: String) : FacetInfoReactor = {
+    NoOpFacetInfoReactor(instance_id, facet, facet_id, details)
+  }
+  def facetInfo(instance_id: Long, facet: String, facet_id: String, details: String) : FacetInfoReactor = {
+    facetInfo(instance_id.toString, facet, facet_id, details)
   }
 
   def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor = {
@@ -138,6 +153,8 @@ case class NoOpCreateReactor(details: String)
   extends CreateReactor with NoOpReactor
 case class NoOpRetrieveReactor(instance_id: String, details: String)
   extends RetrieveReactor with NoOpReactor
+case class NoOpInfoReactor(instance_id: String, details: String)
+  extends InfoReactor with NoOpReactor
 case class NoOpUpdateReactor(instance_id: String, details: String)
   extends UpdateReactor with NoOpReactor
 case class NoOpDeleteReactor(instance_id: String, details: String)
@@ -148,6 +165,8 @@ case class NoOpAddReactor(instance_id: String, facet: String, details: String)
   extends AddReactor with NoOpReactor
 case class NoOpGetReactor(instance_id: String, facet: String, facet_id: String, details: String)
   extends GetReactor with NoOpReactor
+case class NoOpFacetInfoReactor(instance_id: String, facet: String, facet_id: String, details: String)
+  extends FacetInfoReactor with NoOpReactor
 case class NoOpSetReactor(instance_id: String, facet: String, facet_id: String, details: String)
   extends SetReactor with NoOpReactor
 case class NoOpRemoveReactor(instance_id: String, facet: String, facet_id: String, details: String)

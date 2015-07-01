@@ -17,11 +17,10 @@ package scrupal.welcome
 
 import javax.inject.{Inject, Singleton}
 
-import _root_.scrupal.api.Site
-import _root_.scrupal.storage.api.StoreContext
+import scrupal.api.Site
+import scrupal.storage.api.StoreContext
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
-import scrupal.core
 
 import scala.concurrent.Future
 
@@ -30,7 +29,7 @@ case class Scrupal @Inject()(
   override val name: String = "WelcomeToScrupal",
   config: Configuration,
   lifecycle: ApplicationLifecycle
-  ) extends core.http.netty.Scrupal(name, config, lifecycle) {
+  ) extends scrupal.core.http.CoreScrupal(name, config, lifecycle) {
 
   override protected def load(config: Configuration, context: StoreContext): Future[Seq[Site]] = {
     super.load(config, context).map { sites ⇒

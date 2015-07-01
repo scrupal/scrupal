@@ -19,7 +19,8 @@ import java.time.Instant
 
 import play.api.routing.sird._
 import scrupal.api.Html._
-import scrupal.api.html.Forms._
+import scrupal.api.html.Forms
+import scrupal.api.html.Forms.{AttrList,EmptyAttrList}
 import scrupal.utils.Enablee
 import scrupal.utils.Validation._
 
@@ -154,7 +155,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      text(name, form.values.getString(name), attributes(attrs))
+      Forms.text(name, form.values.getString(name), attributes(attrs))
     }
 
     def decode(value: String): Atom = value
@@ -171,7 +172,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      password(name, form.values.getString(name), attributes(attrs))
+      Forms.password(name, form.values.getString(name), attributes(attrs))
     }
 
     def decode(value: String): Atom = value
@@ -188,7 +189,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      _root_.scrupal.api.html.Forms.textarea(name, form.values.getString(name), attributes(attrs))
+      Forms.textarea(name, form.values.getString(name), attributes(attrs))
     }
 
     def decode(value: String): Atom = value
@@ -205,7 +206,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      checkbox(name, form.values.getBoolean(name).getOrElse(false), attributes(attrs))
+      Forms.checkbox(name, form.values.getBoolean(name).getOrElse(false), attributes(attrs))
     }
 
     def decode(value: String): Atom = value.toBoolean
@@ -225,7 +226,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
 
     def render(form: Form): TagContent = {
-      number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attributes(attrs))
+      Forms.number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attributes(attrs))
     }
 
     def decode(value: String): Atom = value.toLong
@@ -245,7 +246,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
 
     def render(form: Form): TagContent = {
-      number(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
+      Forms.number(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
     }
 
     def decode(value: String): Atom = value.toDouble
@@ -265,7 +266,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
 
     def render(form: Form): TagContent = {
-      range(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
+      Forms.range(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
     }
 
     def decode(value: String): Atom = value.toDouble
@@ -283,7 +284,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
       val options = fieldType.choices.map { choice ⇒ choice → choice }
-      _root_.scrupal.api.html.Forms.select(name, form.values.getString(name), options.toMap, attributes(attrs))
+      Forms.select(name, form.values.getString(name), options.toMap, attributes(attrs))
     }
 
     def decode(value: String): Atom = value
@@ -300,7 +301,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      datetime(name, form.values.getInstant(name), attributes(attrs))
+      Forms.datetime(name, form.values.getInstant(name), attributes(attrs))
     }
 
     def decode(value: String): Atom = Instant.ofEpochMilli(value.toLong)
@@ -324,7 +325,7 @@ object Form {
     def defaultValue: Atom = false
 
     def render(form: Form): TagContent = {
-      reset(name, Some(label), attributes(attrs))
+      Forms.reset(name, Some(label), attributes(attrs))
     }
 
     def decode(value: String): Atom = value.nonEmpty
@@ -352,7 +353,7 @@ object Form {
     def defaultValue = false
 
     def render(form: Form): TagContent = {
-      submit(name, label, attributes(attrs))
+      Forms.submit(name, label, attributes(attrs))
     }
 
     def decode(value: String): Atom = value.nonEmpty
@@ -416,7 +417,7 @@ object Form {
       * @return The TagContent for the final markup for the field
       */
     def wrap(field: Field): TagContent = {
-      val the_label = _root_.scrupal.api.html.Forms.label(field.name, field.name, Seq(cls := "control-label text-info"))
+      val the_label = html.Forms.label(field.name, field.name, Seq(cls := "control-label text-info"))
       val the_field = field.render(this)
       div(cls := "clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
         if (field.name.isEmpty) {
