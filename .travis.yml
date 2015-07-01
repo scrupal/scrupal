@@ -10,7 +10,7 @@ jdk:
    - oraclejdk8
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION -Dfile.encoding=UTF8 test
+  - sbt ++$TRAVIS_SCALA_VERSION -Dfile.encoding=UTF8 coverage test
 
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" | xargs rm
