@@ -17,7 +17,6 @@ package scrupal.api
 
 import java.time.Instant
 
-import org.joda.time.DateTime
 import scrupal.storage.api.{Query, Queries, Storable}
 import scrupal.utils.{AlertKind, Icons}
 

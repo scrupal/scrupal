@@ -15,11 +15,8 @@
 
 package scrupal.utils
 
-import java.util.Locale
-import java.util.concurrent.TimeUnit
-
-import org.joda.time.{ DateTime, Period }
-import org.joda.time.format.{ ISODateTimeFormat, PeriodFormatterBuilder }
+import java.time.format.DateTimeFormatter
+import java.time.{Period, Instant}
 
 import scala.concurrent.duration._
 
@@ -27,58 +24,79 @@ import scala.concurrent.duration._
   */
 object DateTimeHelpers {
 
-  def dateStr(millis : Long) : String = new DateTime(millis).toString(ISODateTimeFormat.dateTime)
-  def dateStr(dt : DateTime) : String = dateStr(dt.getMillis)
+  def dateStr(millis : Long) : String = dateStr(Instant.ofEpochMilli(millis))
+  def dateStr(dt : Instant) : String = DateTimeFormatter.ISO_INSTANT.format(dt)
 
-  def makeDurationReadable(duration : Duration) = {
-    var builder = new PeriodFormatterBuilder()
-    val days = if (duration.toDays > 365) {
-      builder = builder.appendYears().appendSuffix(" year", "years").appendSeparator(", ")
-      val remaining_days = duration.toDays % 365
-      Duration(remaining_days, TimeUnit.DAYS)
-    } else {
-      duration
+  implicit class StringBuilderPimps(bldr: StringBuilder) {
+    def appendSuffix(value: Long, singular: String) : StringBuilder = {
+      bldr.append(" ").append{if (value == 1) singular else Pluralizer.pluralize(singular) }.append(", ")
+    }
+  }
+
+  def makeReadable(period: Period) : String = {
+    val builder = new StringBuilder()
+    if (period.getYears > 0) {
+      builder.appendSuffix(period.getYears, "year")
+    }
+    if (period.getMonths > 0) {
+      builder.appendSuffix(period.getMonths, "month")
+    }
+    if (period.getDays > 0) {
+      builder.appendSuffix(period.getDays, "day")
+    }
+    builder.toString().dropRight(2)
+  }
+
+  def makeReadable(duration: java.time.Duration) : String = {
+    val builder = new StringBuilder()
+
+    val days : java.time.Duration = {
+      if (duration.toDays >= 365.2425) {
+        val num_years = (duration.toDays / 365.2425).toInt
+        builder.append(num_years).appendSuffix(num_years, "year")
+        duration.minusDays((num_years*365.2425).toLong)
+      } else {
+        duration
+      }
     }
 
-    val hours : Duration = if (days.toHours > 24) {
-      builder = builder.appendDays().appendSuffix(" day", "days").appendSeparator(", ")
-      val remaining_hours = days.toHours % 24
-      Duration(remaining_hours, TimeUnit.HOURS)
+    val hours : java.time.Duration = if (days.toHours > 24) {
+      val num_days = days.toDays
+      builder.append(num_days).appendSuffix(num_days, "day")
+      days.minusDays(num_days)
     } else {
       days
     }
 
-    val minutes = if (hours.toMinutes > 60) {
-      builder = builder.appendHours().appendSuffix(" hour", "hours").appendSeparator(", ")
-      val remaining_minutes = hours.toMinutes % 60
-      Duration(remaining_minutes, TimeUnit.MINUTES)
+    val minutes : java.time.Duration  = if (hours.toMinutes > 60) {
+      val num_hours = hours.toHours
+      builder.append(num_hours).appendSuffix(num_hours, "hour")
+      hours.minusHours(num_hours)
     } else {
       hours
     }
 
-    val seconds = if (minutes.toSeconds > 60) {
-      builder = builder.appendMinutes().appendSuffix(" minute", "minutes").appendSeparator(", ")
-      val remaining_seconds = minutes.toSeconds % 60
-      Duration(remaining_seconds, TimeUnit.SECONDS)
+    val millis = if (minutes.toMillis > 60000L) {
+      val num_minutes = minutes.toMinutes
+      builder.append(num_minutes).appendSuffix(num_minutes, "minute")
+      minutes.minusMinutes(num_minutes)
     } else {
       minutes
     }
 
-    if (seconds.toMillis > 1000) {
-      builder = builder.appendSecondsWithMillis().appendSuffix(" second", "seconds")
+    if (millis.toMillis > 1000L) {
+      val num_seconds : Double = millis.toMillis / 1000.0
+      builder.append(f"$num_seconds%2.3f").appendSuffix({if(num_seconds == 1.0) 1L else 2L}, "second")
     } else {
-      builder = builder.appendMillis().appendSuffix(" ms", " ms")
+      builder.append(millis.toMillis).append(" ms, ")
     }
-
-    val formatter = builder.toFormatter
-
-    val period = new Period(duration.toMillis)
-
-    val buff = new StringBuffer
-
-    formatter.getPrinter.printTo(buff, period, Locale.US)
-
-    buff.toString
-
+    builder.toString().drop(2)
   }
+
+  def makeReadable(duration : Duration) : String = {
+    makeReadable(java.time.Duration.ofNanos(duration.toNanos))
+  }
+
+  @deprecated("Use makeReadable(duration: Duration) instead", "0.2.0")
+  def makeDurationReadable(duration : Duration) : String = makeReadable(duration)
 }

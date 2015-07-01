@@ -18,7 +18,6 @@ package scrupal.core.nodes
 import java.time.Instant
 
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import org.joda.time.DateTime
 import scrupal.api.Html
 import scrupal.api.Html.ContentsArgs
 import scrupal.api._

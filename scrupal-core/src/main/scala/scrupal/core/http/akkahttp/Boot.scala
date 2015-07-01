@@ -58,7 +58,7 @@ case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalCompon
   def runDuration = {
     val run_time = Platform.currentTime - executionStart
     val duration = Duration(run_time, TimeUnit.MILLISECONDS)
-    DateTimeHelpers.makeDurationReadable(duration)
+    DateTimeHelpers.makeReadable(duration)
   }
 
 }

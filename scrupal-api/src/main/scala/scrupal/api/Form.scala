@@ -17,7 +17,6 @@ package scrupal.api
 
 import java.time.Instant
 
-import org.joda.time.DateTime
 import play.api.routing.sird._
 import scrupal.api.Html._
 import scrupal.api.html.Forms._
@@ -297,7 +296,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      datetime(name, form.values.getInstant(name).map { i ⇒ new DateTime(i) }, attributes(attrs))
+      datetime(name, form.values.getInstant(name), attributes(attrs))
     }
 
     def decode(value: String): Atom = Instant.ofEpochMilli(value.toLong)

@@ -15,8 +15,9 @@
 
 package scrupal.api.html
 
-import org.joda.time._
-import org.joda.time.format.ISODateTimeFormat
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+
 import scrupal.api.Html.TagContent
 
 import scalatags.Text.all._
@@ -48,24 +49,24 @@ object Forms {
     input(`type` := "color", name := fld_name, with_value(fld_value), attributes)
   }
 
-  def date(fld_name : String, fld_value : Option[LocalDate], attributes : AttrList = EmptyAttrList) = {
+  def date(fld_name : String, fld_value : Option[Instant], attributes : AttrList = EmptyAttrList) = {
     input(`type` := "date", name := fld_name, with_value(fld_value), attributes)
   }
 
-  def datetime(fld_name : String, fld_value : Option[DateTime], attributes : AttrList = EmptyAttrList) = {
+  def datetime(fld_name : String, fld_value : Option[Instant], attributes : AttrList = EmptyAttrList) = {
     val value = fld_value match {
       case Some(dt) ⇒
-        Seq(scalatags.Text.attrs.value := ISODateTimeFormat.dateTime().print(dt.toDateTime(DateTimeZone.UTC)))
+        Seq(scalatags.Text.attrs.value := DateTimeFormatter.ISO_INSTANT.format(dt))
       case None ⇒
         Seq.empty[AttrPair]
     }
     input(`type` := "datetime", name := fld_name, value, attributes)
   }
 
-  def datetime_local(fld_name : String, fld_value : Option[DateTime], attributes : AttrList = EmptyAttrList) = {
+  def datetime_local(fld_name : String, fld_value : Option[Instant], attributes : AttrList = EmptyAttrList) = {
     val value = fld_value match {
       case Some(dt) ⇒
-        Seq(scalatags.Text.attrs.value := ISODateTimeFormat.dateTime().print(dt))
+        Seq(scalatags.Text.attrs.value := DateTimeFormatter.ISO_INSTANT.format(dt))
       case None ⇒
         Seq.empty[AttrPair]
     }
@@ -89,7 +90,7 @@ object Forms {
     input(`type` := "image", name := fld_name, attributes)
   }
 
-  def month(fld_name : String, fld_value : Option[YearMonth], attributes : AttrList = EmptyAttrList) = {
+  def month(fld_name : String, fld_value : Option[Instant], attributes : AttrList = EmptyAttrList) = {
     input(`type` := "month", name := fld_name, with_value(fld_value), attributes)
   }
 
@@ -131,7 +132,7 @@ object Forms {
     input(`type` := "text", name := fld_name, with_value(fld_value), attributes)
   }
 
-  def time(fld_name : String, fld_value : Option[LocalTime], attributes : AttrList = EmptyAttrList) = {
+  def time(fld_name : String, fld_value : Option[Instant], attributes : AttrList = EmptyAttrList) = {
     input(`type` := "time", name := fld_name, with_value(fld_value), attributes)
   }
 

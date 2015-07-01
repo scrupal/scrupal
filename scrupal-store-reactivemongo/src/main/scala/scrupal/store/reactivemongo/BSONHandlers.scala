@@ -27,7 +27,7 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import scrupal.api._
-import scrupal.api.types.{StructuredType, BundleType}
+
 
 
 import scrupal.utils._

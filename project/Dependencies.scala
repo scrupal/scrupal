@@ -111,8 +111,6 @@ trait Dependencies
 
   // Miscellaneous
   val osgi_core               = "org.osgi"                  % "org.osgi.core"             % "6.0.0"
-  val joda_time               = "joda-time"                 %  "joda-time"                % "2.5"
-  val joda_convert            = "org.joda"                  % "joda-convert"              % "1.2"
   val config                  =  "com.typesafe"             %  "config"                   % "1.2.1"
   val commons_lang3           = "org.apache.commons"        % "commons-lang3"             % "3.3.2"
   val hsp                     = "com.reactific"             %% "hotspot-profiler"         % "0.1.0-SNAPSHOT"
@@ -154,7 +152,7 @@ trait Dependencies
   )
 
   val utils_dependencies : Seq[ModuleID] = Seq(
-    scalatags, pbkdf2, bcrypt, scrypt, joda_time, joda_convert, config, shapeless
+    scalatags, pbkdf2, bcrypt, scrypt, config, shapeless
   ) ++ common_dependencies
 
   val api_dependencies : Seq[ModuleID] = Seq(
