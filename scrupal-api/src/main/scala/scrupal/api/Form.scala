@@ -105,16 +105,20 @@ object Form {
       }
     }
 
+    /** Validate a value
+      * The location is implied to be this container.
+      * @param value The value to validate
+      * @return The validation result
+      */
+    def validate(value: Map[String, Atom]): VResult = validate(location, value)
+
     /** Validate value of type VType with this validator
       *
       * @param ref The location at which the value occurs
-      * @param value the VType to be validated
+      * @param k The key of the value to validate
+      * @param v The VType to be validated
       * @return Any of the ValidationResults
       */
-    def validate(ref: Location, value: Atom): VResult = ??? // FIXME: Need single value validator ?
-
-    def validate(value: Map[String, Atom]): VResult = validate(location, value)
-
     def validateElement(ref: SelectedLocation[String], k: String, v: Atom): Results[Atom] = {
       fieldMap.get(k) match {
         case Some(field: Field) ⇒
