@@ -28,11 +28,11 @@ import scalatags.Text.all._
 
 /** The Echo Entity
   *
-  * An entity object that takes in an HTTP request and formats it into HTML content which is the response. As such,
+  * An entity object that takes in an HTTP stimulus and formats it into HTML content which is the response. As such,
   * it simply echos its input to its output. This can be be used for benchmarking the routing and dispatch and layout
   * parts of Scrupal since the response content is generated computationally without blocking.
   */
-case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
+case class EchoEntity(override val id : Symbol = 'Echo)(implicit scrpl : Scrupal) extends Entity(id)(scrpl) {
 
   def instanceType : BundleType = BundleType.empty
 
@@ -42,7 +42,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
 
   def license : OSSLicense = OSSLicense.GPLv3
 
-  def description : String = "An entity that stores nothing and merely echos its requests"
+  def description : String = "An entity that stores nothing and merely echos its stimuluss"
 
   case class echo_doc(kind : String, id : String, details: String, instance : JsObject)
     extends PlainPageGenerator {
@@ -58,7 +58,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
     }
   }
 
-  case class echo_request(kind : String, id : String, details: String) extends PlainPageGenerator {
+  case class echo_stimulus(kind : String, id : String, details: String) extends PlainPageGenerator {
     val title = kind + " - " + id
     val description = "Echo " + kind + " Request"
     def content(context : Context, args : ContentsArgs) : Html.Contents = {
@@ -70,53 +70,67 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
     }
   }
 
-  def parseJSON(request: Stimulus) : JsObject = {
+  def parseJSON(stimulus: Stimulus) : JsObject = {
     // TODO: Implement payload parsing in EchoEntity
     JsObject(Seq())
   }
 
-  override def create(details: String) : CreateReactor = {
-    new CreateReactor {
-      def apply(request: Stimulus) : Future[Response] = {
+  override def create(details: String) : EntityCreate = {
+    new EntityCreate {
+      override def name = "EchoCreate"
+      def apply(stimulus: Stimulus) : Future[Response] = {
         Future.successful {
-          val content = parseJSON(request)
-          HtmlResponse(echo_doc("Create", "<>", details, content).render(request.context))
+          val content = parseJSON(stimulus)
+          HtmlResponse(echo_doc("Create", "<>", details, content).render(stimulus.context))
         }
       }
     }
   }
 
-  override def retrieve(instance_id: String, details: String) : RetrieveReactor = {
-    new RetrieveReactor {
-      def apply(request: Stimulus) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_request("Retrieve", instance_id, details).render(request.context)))
+  override def retrieve(instance_id: String, details: String) : EntityRetrieve = {
+    new EntityRetrieve {
+      override def name = "EchoRetrieve"
+      def apply(stimulus: Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_stimulus("Retrieve", instance_id, details).render(stimulus.context)))
       }
     }
   }
 
-  override def update(instance_id: String, details: String) : UpdateReactor = {
-    new UpdateReactor {
-      def apply(request : Stimulus) : Future[Response] = {
+  override def info(instance_id: String, details: String) : EntityInfo = {
+    new EntityInfo {
+      override def name= "EchoInfo"
+      def apply(stimulus: Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_stimulus("Info", instance_id, details).render(stimulus.context)))
+      }
+    }
+  }
+
+  override def update(instance_id: String, details: String) : EntityUpdate = {
+    new EntityUpdate {
+      override def name = "EchoUpdate"
+      def apply(stimulus : Stimulus) : Future[Response] = {
         Future.successful {
-          val content = parseJSON(request)
-          HtmlResponse(echo_doc("Update", instance_id, details, content).render(request.context))
+          val content = parseJSON(stimulus)
+          HtmlResponse(echo_doc("Update", instance_id, details, content).render(stimulus.context))
         }
       }
     }
   }
 
-  override def delete(instance_id: String, details: String) : DeleteReactor = {
-    new DeleteReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_request("Delete", instance_id, details).render(request.context)))
+  override def delete(instance_id: String, details: String) : EntityDelete = {
+    new EntityDelete {
+      override def name = "EchoDelete"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_stimulus("Delete", instance_id, details).render(stimulus.context)))
       }
     }
   }
 
-  override def query(details: String) : QueryReactor = {
-    new QueryReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
-        Future.successful(HtmlResponse(echo_request("Query", "<>", details).render(request.context)))
+  override def query(details: String) : EntityQuery = {
+    new EntityQuery {
+      override def name = "EchoQuery"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(echo_stimulus("Query", "<>", details).render(stimulus.context)))
       }
     }
   }
@@ -140,7 +154,7 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
     }
   }
 
-  case class facet_request(kind : String, instance_id: String, facet: String, facet_id: String, details: String)
+  case class facet_stimulus(kind : String, instance_id: String, facet: String, facet_id: String, details: String)
     extends PlainPageGenerator {
     val title = "Facet " + kind + " - " + facet
     val description = "Echo Facet " + kind + " Request"
@@ -158,48 +172,62 @@ case class EchoEntity(implicit scrpl : Scrupal) extends Entity('Echo)(scrpl) {
     }
   }
 
-  override def add(id: String, facet: String, rest: String) : AddReactor = {
-    new AddReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
+  override def add(id: String, facet: String, rest: String) : EntityAdd = {
+    new EntityAdd {
+      override def name = "EchoAdd"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
         Future.successful{
-          val content = parseJSON(request)
-          HtmlResponse(facet_doc("Create", id, facet, "<>", rest, content).render(request.context))
+          val content = parseJSON(stimulus)
+          HtmlResponse(facet_doc("Add", id, facet, "<>", rest, content).render(stimulus.context))
         }
       }
     }
   }
 
-  override def get(id: String, facet: String, facet_id: String, details: String) : GetReactor = {
-    new GetReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_request("Retrieve", id, facet, facet_id, details).render(request.context)))
+  override def get(id: String, facet: String, facet_id: String, details: String) : EntityGet = {
+    new EntityGet {
+      override def name = "EchoGet"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_stimulus("Get", id, facet, facet_id, details).render(stimulus.context)))
       }
     }
   }
 
-  override def set(id: String, facet: String, facet_id: String, details: String) : SetReactor = {
-    new SetReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
+  override def facetInfo(id: String, facet: String, facet_id: String, details: String) : EntityFacetInfo = {
+    new EntityFacetInfo {
+      override def name = "EchoFacetInfo"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_stimulus("FacetInfo", id, facet, facet_id, details).render(stimulus.context)))
+      }
+    }
+  }
+
+  override def set(id: String, facet: String, facet_id: String, details: String) : EntitySet = {
+    new EntitySet {
+      override def name = "EchoSet"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
         Future.successful {
-          val content = parseJSON(request)
-          HtmlResponse(facet_doc("Update", id, facet, facet_id, details, content).render(request.context))
+          val content = parseJSON(stimulus)
+          HtmlResponse(facet_doc("Set", id, facet, facet_id, details, content).render(stimulus.context))
         }
       }
     }
   }
 
-  override def remove(id: String, facet: String, facet_id: String, details: String) : RemoveReactor = {
-    new RemoveReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_request("Delete", id, facet, facet_id, details).render(request.context)))
+  override def remove(id: String, facet: String, facet_id: String, details: String) : EntityRemove = {
+    new EntityRemove {
+      override def name = "EchoRemove"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_stimulus("Remove", id, facet, facet_id, details).render(stimulus.context)))
       }
     }
   }
 
-  override def find(id: String, facet: String, details: String) : FindReactor = {
-    new FindReactor {
-      override def apply(request : Stimulus) : Future[Response] = {
-        Future.successful(HtmlResponse(facet_request("Query", id, facet, "<>", details).render(request.context)))
+  override def find(id: String, facet: String, details: String) : EntityFind = {
+    new EntityFind {
+      override def name = "EchoFind"
+      override def apply(stimulus : Stimulus) : Future[Response] = {
+        Future.successful(HtmlResponse(facet_stimulus("Find", id, facet, "<>", details).render(stimulus.context)))
       }
     }
   }

@@ -12,6 +12,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-config-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-core-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-doc.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-doc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-doc-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-doc-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-storage.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-storage.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-storage-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-storage-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/scrupal-store-reactivemongo.iml" filepath="$PROJECT_DIR$/.idea/modules/scrupal-store-reactivemongo.iml" />

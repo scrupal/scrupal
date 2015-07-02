@@ -33,9 +33,7 @@ class ProviderSpec extends ScrupalApiSpecification("Provider") {
   }
 
   case object NullReactor extends Reactor {
-    val name = "Null"
     val description = "The Null Reactor"
-
     def apply(request: Stimulus): Future[Response] = Future.successful {NoopResponse}
   }
 

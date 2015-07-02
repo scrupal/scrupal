@@ -45,11 +45,13 @@ class NodesSpec extends ScrupalApiSpecification("Nodes") {
       def apply(context: Context, args: ContentsArgs) : Contents = Seq(span("scrupal"))
     }
 
+//    val command = CommandNode("Command", "A command node", "echo 'Hello, World!'")
     val message = MessageNode("Message", "A message node", "text-warning", "This is boring.")
     val html = HtmlNode("Html", "An Html Node", template)
     val file = FileNode("File", "A File Node",
                         new File("scrupal-core/src/test/resources/fakeAsset.txt"), MediaTypes.`text/plain`)
     val link = LinkNode("Link", "A Link Node", new URL("http://scrupal.org/"))
+//    val mdn = MarkedDocNode("MarkedDoc", "mdn", "docs", Iterable.empty[String])
 
     val tags = Map[String,Either[Node.Ref,Node]](
       "one" -> Right(message),

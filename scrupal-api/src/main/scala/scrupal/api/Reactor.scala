@@ -46,7 +46,9 @@ trait Reaction extends ((Stimulus) ⇒ Future[Response])
   */
 trait Reactor extends Reaction with Nameable with Describable { self ⇒
 
-  def apply(request: Stimulus) : Future[Response]
+  def name : String = self.getClass.getSimpleName
+
+  def apply(stimulus: Stimulus) : Future[Response]
 
   def resultFrom[CT](context: Context, request : Request[AnyContent]) : Future[Result] = {
     context.withExecutionContext { implicit ec: ExecutionContext ⇒
@@ -63,7 +65,6 @@ trait Reactor extends Reaction with Nameable with Describable { self ⇒
 }
 
 case class UnimplementedReactor(what: String) extends Reactor {
-  val name = "NotImplementedReactor"
   val description = "A Reactor that returns a not-implemented response"
 
   def apply(stimulus: Stimulus): Future[Response] = {
@@ -78,7 +79,6 @@ case class UnimplementedReactor(what: String) extends Reactor {
   * @param node The node that will produce the action's result
   */
 case class NodeReactor(node : Node) extends Reactor {
-  val name = "NodeReactor"
   val description = "A Reactor that returns the content of a provided Node."
   def apply(stimulus : Stimulus) : Future[Response] = {
     node(stimulus.context)
@@ -92,7 +92,6 @@ case class NodeReactor(node : Node) extends Reactor {
   * @param id The primary id of the node
   */
 case class NodeIdReactor(id : Long) extends Reactor {
-  val name = "NodeIdReactor"
   val description = "A Reactor that returns the content of a node having a specific ID"
   def apply(stimulus: Stimulus) : Future[Response] = {
     val context = stimulus.context
@@ -119,7 +118,6 @@ trait NodeQueries extends Queries[Node] {
 }
 
 case class NodeAliasReactor(alias : String) extends Reactor {
-  val name = "NodeAlias"
   val description = "A Reactor that returns the node found at a path alias"
   def apply(stimulus: Stimulus): Future[Response] = {
     val context = stimulus.context

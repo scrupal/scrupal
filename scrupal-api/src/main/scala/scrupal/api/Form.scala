@@ -483,19 +483,17 @@ object Form {
       * @return
       */
 
-    def provideRenderReactor(matchingSegment: String): RenderReactor = {
-      new RenderReactor(this)
+    def provideRenderReactor(matchingSegment: String): RenderForm = {
+      new RenderForm(this)
     }
 
-    def provideAcceptReactor(matchingSegment: String): AcceptReactor = {
-      new AcceptReactor(this)
+    def provideAcceptReactor(matchingSegment: String): AcceptForm = {
+      new AcceptForm(this)
     }
 
   }
 
-  class RenderReactor(val form: Form) extends Reactor {
-    def name = "RenderForm"
-
+  class RenderForm(val form: Form) extends Reactor {
     def description = "A Reaction that renders a form"
 
     def apply(stimulus: Stimulus): Future[Response] = {
@@ -507,9 +505,7 @@ object Form {
     }
   }
 
-  class AcceptReactor(val form: Form) extends Reactor {
-    def name = "AcceptForm"
-
+  class AcceptForm(val form: Form) extends Reactor {
     def description = "A Reaction that decodes submitted form data"
 
     def decodeFormData(r: Stimulus): Results[_] = {

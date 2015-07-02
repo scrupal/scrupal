@@ -77,12 +77,12 @@ case class AdminApp(implicit scrpl: Scrupal) extends Application('admin) {
     Form.PasswordField("Password:", "The password for the MongoDB server authentication", Password_t, inline = true),
     Form.SubmitField("", "Submit database configuration to Scrupal server.", "Configure Database")
   )) {
-    override def provideAcceptReactor(matchingSegment : String) : Form.AcceptReactor = {
+    override def provideAcceptReactor(matchingSegment : String) : Form.AcceptForm = {
       DataBaseFormAcceptance(this)
     }
   }
 
-  case class DataBaseFormAcceptance(override val form: Form.Form) extends Form.AcceptReactor(form) {
+  case class DataBaseFormAcceptance(override val form: Form.Form) extends Form.AcceptForm(form) {
     /*
     override def handleValidatedFormData(doc : BSONDocument) : Response = {
       super.handleValidatedFormData(doc)
@@ -224,76 +224,76 @@ class SiteAdminEntity(implicit scrupal: Scrupal) extends Entity('SiteAdmin) {
 
   def instanceType : BundleType = BundleType.empty
 
-  override def create(details: String): CreateReactor = {
-    NoOpCreateReactor(details)
+  override def create(details: String): EntityCreate = {
+    NoOpEntityCreate(details)
   }
 
-  override def retrieve(instance_id: Long, details: String): RetrieveReactor = {
+  override def retrieve(instance_id: Long, details: String): EntityRetrieve = {
     retrieve(instance_id.toString, details)
   }
 
-  override def retrieve(instance_id: String, details: String): RetrieveReactor = {
-    NoOpRetrieveReactor(instance_id, details)
+  override def retrieve(instance_id: String, details: String): EntityRetrieve = {
+    NoOpEntityRetrieve(instance_id, details)
   }
 
-  override def update(instance_id: Long, details: String): UpdateReactor = {
+  override def update(instance_id: Long, details: String): EntityUpdate = {
     update(instance_id.toString, details)
   }
 
-  override def update(instance_id: String, details: String): UpdateReactor = {
-    NoOpUpdateReactor(instance_id, details)
+  override def update(instance_id: String, details: String): EntityUpdate = {
+    NoOpEntityUpdate(instance_id, details)
   }
 
-  override def delete(instance_id: Long, details: String): DeleteReactor = {
+  override def delete(instance_id: Long, details: String): EntityDelete = {
     delete(instance_id.toString, details)
   }
 
-  override def delete(instance_id: String, details: String): DeleteReactor = {
-    NoOpDeleteReactor(instance_id, details)
+  override def delete(instance_id: String, details: String): EntityDelete = {
+    NoOpEntityDelete(instance_id, details)
   }
 
-  override def query(details: String): QueryReactor = {
-    NoOpQueryReactor(details)
+  override def query(details: String): EntityQuery = {
+    NoOpEntityQuery(details)
   }
 
-  override def add(instance_id: Long, facet: String, details: String): AddReactor = {
+  override def add(instance_id: Long, facet: String, details: String): EntityAdd = {
     add(instance_id.toString, facet, details)
   }
 
-  override def add(instance_id: String, facet: String, details: String): AddReactor = {
-    NoOpAddReactor(instance_id, facet, details)
+  override def add(instance_id: String, facet: String, details: String): EntityAdd = {
+    NoOpEntityAdd(instance_id, facet, details)
   }
 
-  override def get(instance_id: Long, facet: String, facet_id: String, details: String): GetReactor = {
+  override def get(instance_id: Long, facet: String, facet_id: String, details: String): EntityGet = {
     get(instance_id.toString, facet, facet_id, details)
   }
 
-  override def get(instance_id: String, facet: String, facet_id: String, details: String): GetReactor = {
-    NoOpGetReactor(instance_id, facet, facet_id, details)
+  override def get(instance_id: String, facet: String, facet_id: String, details: String): EntityGet = {
+    NoOpEntityGet(instance_id, facet, facet_id, details)
   }
 
-  override def set(instance_id: Long, facet: String, facet_id: String, details: String): SetReactor = {
+  override def set(instance_id: Long, facet: String, facet_id: String, details: String): EntitySet = {
     set(instance_id.toString, facet, facet_id, details)
   }
 
-  override def set(instance_id: String, facet: String, facet_id: String, details: String): SetReactor = {
-    NoOpSetReactor(instance_id, facet, facet_id, details)
+  override def set(instance_id: String, facet: String, facet_id: String, details: String): EntitySet = {
+    NoOpEntitySet(instance_id, facet, facet_id, details)
   }
 
-  override def remove(instance_id: Long, facet: String, facet_id: String, details: String): RemoveReactor = {
+  override def remove(instance_id: Long, facet: String, facet_id: String, details: String): EntityRemove = {
     remove(instance_id.toString, facet, facet_id, details)
   }
 
-  override def remove(instance_id: String, facet: String, facet_id: String, details: String): RemoveReactor = {
-    NoOpRemoveReactor(instance_id, facet, facet_id, details)
+  override def remove(instance_id: String, facet: String, facet_id: String, details: String): EntityRemove = {
+    NoOpEntityRemove(instance_id, facet, facet_id, details)
   }
 
-  override def find(instance_id: Long, facet: String, details: String): FindReactor = {
+  override def find(instance_id: Long, facet: String, details: String): EntityFind = {
     find(instance_id.toString, facet, details)
   }
 
-  override def find(instance_id: String, facet: String, details: String): FindReactor = {
-    NoOpFindReactor(instance_id, facet, details)
+  override def find(instance_id: String, facet: String, details: String): EntityFind = {
+    NoOpEntityFind(instance_id, facet, details)
   }
 
 

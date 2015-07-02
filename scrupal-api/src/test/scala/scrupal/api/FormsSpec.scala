@@ -133,7 +133,7 @@ class FormsSpec extends ScrupalApiSpecification("Forms") {
           SelectionField("S", "A S", UnspecificQuantity_t),
           TimestampField("T", "A T", AnyTimestamp_t)
         ))
-      val acceptor : Form.AcceptReactor = form.provideAcceptReactor("/foo")
+      val acceptor : Form.AcceptForm = form.provideAcceptReactor("/foo")
 
       val context = Context(testScrupal)
       val data : Map[String,Seq[String]] = Map (

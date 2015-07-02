@@ -20,63 +20,51 @@ import play.api.routing.sird._
 trait EntityCollectionReactor extends Reactor
 trait EntityInstanceReactor extends Reactor
 
-trait CreateReactor extends EntityCollectionReactor {
-  val name : String = "Create"
+trait EntityCreate extends EntityCollectionReactor {
   val description = "Create a specific instance of the entity and insert it in the entity collection."
 }
 
-trait RetrieveReactor extends EntityCollectionReactor {
-  val name : String = "Retrieve"
+trait EntityRetrieve extends EntityCollectionReactor {
   val description = "Retrieve a specific instance of the entity from the entity collection."
 }
 
-trait InfoReactor extends EntityCollectionReactor {
-  val name : String = "Info"
+trait EntityInfo extends EntityCollectionReactor {
   val description = "Get information about a specific instance of the entity from the entity collection."
 }
 
-trait UpdateReactor extends EntityCollectionReactor {
-  val name : String = "Update"
+trait EntityUpdate extends EntityCollectionReactor {
   val description = "Update a specific instance of the entity."
 }
 
-trait DeleteReactor extends EntityCollectionReactor {
-  val name : String = "Delete"
+trait EntityDelete extends EntityCollectionReactor {
   val description = "Delete a specific instance from the entity collection."
 }
 
-trait QueryReactor extends EntityCollectionReactor {
-  val name : String = "Query"
+trait EntityQuery extends EntityCollectionReactor {
   val description = "Query the entity collection for an entity of a certain id or containing certain data."
 }
 
-trait AddReactor extends EntityInstanceReactor {
-  val name : String = "Add"
+trait EntityAdd extends EntityInstanceReactor {
   val description = "Create a facet on a specific entity in the collection."
 }
 
-trait GetReactor extends EntityInstanceReactor {
-  val name : String = "Get"
+trait EntityGet extends EntityInstanceReactor {
   val description = "Retrieve a facet from a specific entity in the collection."
 }
 
-trait FacetInfoReactor extends EntityInstanceReactor {
-  val name : String = "FacetInfo"
+trait EntityFacetInfo extends EntityInstanceReactor {
   val description = "Get information about a facet from a specific entity in the collection."
 }
 
-trait SetReactor extends EntityInstanceReactor {
-  val name : String = "Set"
+trait EntitySet extends EntityInstanceReactor {
   val description = "Update a facet from a specific entity in the collection."
 }
 
-trait RemoveReactor extends EntityInstanceReactor {
-  val name : String = "Remove"
+trait EntityRemove extends EntityInstanceReactor {
   val description = "Delete a facet from a specific entity in the collection."
 }
 
-trait FindReactor extends EntityInstanceReactor {
-  val name : String = "Find"
+trait EntityFind extends EntityInstanceReactor {
   val description = "Query a specific entity in the collection for a facet of a certain id or containing certain data."
 }
 
@@ -106,7 +94,7 @@ trait EntityProvider extends PluralProvider {
       update(id, rest)
     case DELETE(p"/${long(id)}$rest*") ⇒
       delete(id, rest)
-    case DELETE(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>}$rest*") ⇒
+    case DELETE(p"/$id<[A-Za-z][-_.~a-zA-Z0-9]*>$rest*") ⇒
       delete(id, rest)
   }
   final val singularRoutes: ReactionRoutes = {
@@ -136,63 +124,55 @@ trait EntityProvider extends PluralProvider {
       remove(id, facet, facet_id, rest)
   }
 
-  def create(details: String) : CreateReactor
+  def create(details: String) : EntityCreate
 
   /** Query Command (OPTIONS/plural)
     * @return The QueryReaction to generate the response for the Query request
     */
-  def query(details: String) : QueryReactor
+  def query(details: String) : EntityQuery
 
   /** Retrieve Command (GET/plural) - Retrieve an existing entity by its identifier
     * This is a command on the entity type's contain to retrieve a specific entity. The full instance should be
     * retrieved, including all retrievable facets.
     * @return
     */
-  def retrieve(instance_id: String, details: String) : RetrieveReactor
+  def retrieve(instance_id: String, details: String) : EntityRetrieve
 
-  def retrieve(instance_id: Long, details: String) : RetrieveReactor
+  def retrieve(instance_id: Long, details: String) : EntityRetrieve
 
-  def info(instance_id: String, details: String) : InfoReactor
+  def info(instance_id: String, details: String) : EntityInfo
 
-  def info(instance_id: Long, details: String) : InfoReactor
+  def info(instance_id: Long, details: String) : EntityInfo
 
-  /** Delete Command (DELETE/plural) */
+  def update(instance_id: String, details: String) : EntityUpdate
 
-  /** Update Command (PUT/plural) - Updates all or a few of the fields of an entity
-    * @return
-    */
-  def update(instance_id: String, details: String) : UpdateReactor
+  def update(instance_id: Long, details: String) : EntityUpdate
 
-  def update(instance_id: Long, details: String) : UpdateReactor
+  def delete(instance_id: String, details: String) : EntityDelete
 
-  /** Delete an entity
-    * @return THe DeleteReaction to generate the response for the Delete request
-    */
-  def delete(instance_id: String, details: String) : DeleteReactor
+  def delete(instance_id: Long, details: String) : EntityDelete
 
-  def delete(instance_id: Long, details: String) : DeleteReactor
+  def find(instance_id: String, facet: String, details: String) : EntityFind
 
-  def find(instance_id: String, facet: String, details: String) : FindReactor
+  def find(instance_id: Long, facet: String, details: String) : EntityFind
 
-  def find(instance_id: Long, facet: String, details: String) : FindReactor
+  def add(instance_id: String, facet: String, details: String) : EntityAdd
 
-  def add(instance_id: String, facet: String, details: String) : AddReactor
+  def add(instance_id: Long, facet: String, details: String) : EntityAdd
 
-  def add(instance_id: Long, facet: String, details: String) : AddReactor
+  def get(instance_id: String, facet: String, facet_id: String, details: String) : EntityGet
 
-  def get(instance_id: String, facet: String, facet_id: String, details: String) : GetReactor
+  def get(instance_id: Long, facet: String, facet_id: String, details: String) : EntityGet
 
-  def get(instance_id: Long, facet: String, facet_id: String, details: String) : GetReactor
+  def facetInfo(instance_id: String, facet: String, facet_id: String, details: String) : EntityFacetInfo
 
-  def facetInfo(instance_id: String, facet: String, facet_id: String, details: String) : FacetInfoReactor
+  def facetInfo(instance_id: Long, facet: String, facet_id: String, details: String) : EntityFacetInfo
 
-  def facetInfo(instance_id: Long, facet: String, facet_id: String, details: String) : FacetInfoReactor
+  def set(instance_id: String, facet: String, facet_id: String, details: String) : EntitySet
 
-  def set(instance_id: String, facet: String, facet_id: String, details: String) : SetReactor
+  def set(instance_id: Long, facet: String, facet_id: String, details: String) : EntitySet
 
-  def set(instance_id: Long, facet: String, facet_id: String, details: String) : SetReactor
+  def remove(instance_id: String, facet: String, facet_id: String, details: String) : EntityRemove
 
-  def remove(instance_id: String, facet: String, facet_id: String, details: String) : RemoveReactor
-
-  def remove(instance_id: Long, facet: String, facet_id: String, details: String) : RemoveReactor
+  def remove(instance_id: Long, facet: String, facet_id: String, details: String) : EntityRemove
 }
