@@ -54,14 +54,7 @@ trait Dependencies
   // Play Plugins
   val mail_plugin             = "com.typesafe.play.plugins" %% "play-plugins-mailer"      % "3.0.1"
   val silhouette              = "com.mohiva"                %% "play-silhouette"          % "3.0.0-RC1"
-//val play_plugins_redis      = "com.typesafe.play.plugins" %% "play-plugins-redis"       % "2.3.1"
-
-  // Spray Stuff
-  val spray_can               = "io.spray"                  %%  "spray-can"               % Ver.spray
-  val spray_routing           = "io.spray"                  %%  "spray-routing"           % Ver.spray
-  val spray_http              = "io.spray"                  %%  "spray-http"              % Ver.spray
-  val spray_httpx             = "io.spray"                  %%  "spray-httpx"             % Ver.spray
-  val spray_caching           = "io.spray"                  %%  "spray-caching"           % Ver.spray
+  val play_plugins_redis      = "com.typesafe.play.modules" %% "play-modules-redis"       % "2.4.0"
 
   // Akka Stuff
   val akka_actor              = "com.typesafe.akka"         %% "akka-actor"               % Ver.akka
@@ -181,7 +174,7 @@ trait Dependencies
   ) ++ common_dependencies
 
   val ui_dependencies : Seq[ModuleID] = Seq (
-    scalatags, spray_http, spray_httpx, spray_caching, spray_routing, spray_can, wj_marked, wj_font_awesome,
+    scalatags, wj_marked, wj_font_awesome,
     commons_lang3, scala_arm, livestream_scredis, akka_actor, play_iteratees,
     Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies

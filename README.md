@@ -2,66 +2,59 @@
 
 # Scrupal
 
+Welcome to Scrupal, a content management system and web application platform. Scrupal aims to provide similar
+functionality as [Drupal](https://drupal.org) did a decade ago: the ability to construct modular, content focused
+web applications without doing much or even any coding. However, the similarity ends there. Scrupal is based on
+scalable and reactive technologies and aims to handle even the most challenging applications.
 
-## Introduction
-Welcome to  Scrupal, an open source platform for building the next generation of web applications. The original
-idea for Scrupal was to do what [Drupal](https://drupal.org) did a decade ago: create a platform on which web
-applications could be constructed without doing much or even any coding. Furthermore, it needed to be scalable and
-so the name was derived by combining `Scalable` with `Drupal`. However, Scrupal and Drupal have nothing in common
-except the common goal of making it simple to build rich and useful web sites.
+## Current Status
 
-## Mnemonic Name
-Scrupal's name is a mnemonic for its goals. Scrupal aims to be the foundation of the next generation of web
-applications with the following goals:
+Although Scrupal has been under development for several years, it has undergone several refactoring stages to align
+with other technologies better. At this point, July 2015, many of the technical decisions on the architecture have
+been decided and work is resuming on making it stable and functional again. It is expected by the end of 2015 that
+Scrupal may be nearing its initial releases that could be tried in production.
 
-- Scalable - Scrupal uses a [reactive](http://www.reactivemanifesto.org/) platform as the basis of a scalable framework that runs on the JVM.
+## Quick Start
 
-- Comprehensive - Through a modular approach to extensibility Scrupal
 
-- Reactive - Scrupal supports the [Reactive Manifesto](http://www.reactivemanifesto.org/) by focusing on events, scale, resiliency, and responsiveness.
-
-- Uniform - Scrupal's uniform design at the right level of abstraction make large scale applications understandable without sacrificing customization or extensibility.
-
-- Productive - Scrupal aims to be a highly productive tool for developers, users and operators of web systems because it applies [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) throughout.
-
-- Application - Scrupal is application-oriented-software. It is not suited for systems programming but very adept at enterprise, mobile, and large scale web applications.
-
-- Layer - Scrupal is a software layer that hides the complexities of integrating a suite of other technologies:
-
-Scrupal has scruples. It is built on a set of principles honed from decades of software development experience.
-For more details, please read [the documentation](http://scrupal.org/docs).
 
 ## Technologies
 Scrupal is opinionated as it integrates the best modern web technologies and will continue to utilize the best as
 new technologies develop. Some of the technologies Scrupal utilizes are:
 
+- [JVM 8]() - Version 8 of the Java Virtual Machine
+
 - [Scala](http://scala-lang.org/) - A hybrid functional object-oriented language.
+
+- [Play Framework](http://playframework.com/) - A reactive web application framework
 
 - [Akka](http://akka.io/) - An actor system executor for reactive distributed systems.
 
-- [Spray](http://spray.io/) - An efficient HTTP request/response router and processor
+- [Akka Streams](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-RC4/scala.html) - An actor based implementation of Reactive Streams
 
 - [Scalatags](https://github.com/lihaoyi/scalatags) - A templating system integrated with Scala
 
+- [RxMongo](https://github.com/reactific/RxMongo) - An asynchronous non-blocking driver for MongoDB
+
 - [MongoDB](http://www.mongodb.org/) - A NoSQL Database
 
-- ReactiveMongo - An asynchronous non-blocking database driver for MongoDB
+- [Twitter Chill](https://github.com/twitter/chill) - Scala extension to the Kryo serialization library
 
-- Redis - A best-of-breed caching system
+- [shapeless](https://github.com/milessabin/shapeless) - A generic programming library for Scala
 
-- Twitter Bootstrap - The standard for modern HTML5 web site construction
 
-- AngularJS - The framework chosen for delivering One Page Applications
+- [Twitter Bootstrap](http://getbootstrap.com/) - The standard for modern HTML5 web site construction
 
-- Specs2 - BDD style testing
+- [marked](https://github.com/chjj/marked) - An efficient mardown processor
 
-- marked - Efficient markdown processor
+- [sbt-web]() - A web assets pipeline system
 
-## Status
+- [WebJars] - A system for easily incorporating web assets into a project
 
-Scrupal is nowhere near ready for prime time. Although it has been in development for several years, there has ben only
-one developer working on it until 2015 and it has undergone several machinations to arrive at its current form. It is
-patterned after the spray and akka projects in terms of its structure.
+
+- [Specs2](https://github.com/etorreborre/specs2) - BDD style testing
+
+
 
 - - -
 
