@@ -20,6 +20,6 @@ import com.google.inject.AbstractModule
 class WelcomeModule extends AbstractModule {
   def configure() = {
     bind(classOf[scrupal.api.Scrupal])
-      .to(classOf[scrupal.welcome.Scrupal]).asEagerSingleton()
+      .to(classOf[scrupal.welcome.WelcomeScrupal]).asEagerSingleton()
   }
 }

@@ -15,19 +15,29 @@
 
 package scrupal.welcome
 
-import play.api.routing.sird._
-import scrupal.api.{NodeReactor, Provider}
-import scrupal.core.nodes.HtmlNode
+import akka.http.scaladsl.model.MediaTypes
+import play.api.test.FakeRequest
+import scrupal.api.Response
+import scrupal.test.ScrupalApiSpecification
 
-case class WelcomeSiteProvider() extends Provider {
+/** Title Of Thing.
+  *
+  * Description of thing
+  */
+class WelcomeSiteSpec extends ScrupalApiSpecification("WelcomeSite") {
 
-  val WelcomeSiteRoot = NodeReactor(
-    HtmlNode("WelcomeSiteRoot", "Main index page for Welcome To Scrupal Site",
-      WelcomePageTemplate
-    )
-  )
+  lazy val ws : WelcomeSite = WelcomeSite('welcome)(testScrupal)
 
-  def provide: ReactionRoutes = {
-    case GET(p"/") ⇒ WelcomeSiteRoot
+  lazy val root = FakeRequest("GET", "/")
+  lazy val doc = FakeRequest("GET", "/doc")
+  "$specName" should {
+    s"route $root to WelcomeSite Root" in providerTest(ws, ws, root) { response: Response ⇒
+      response.disposition.isSuccessful must beTrue
+      response.mediaType must beEqualTo(MediaTypes.`text/html`)
+    }
+    "route GET:/doc to Documentation Root" in providerTest(ws, ws, doc) { response : Response ⇒
+      response.disposition.isSuccessful must beTrue
+      response.mediaType must beEqualTo(MediaTypes.`text/html`)
+    }
   }
 }

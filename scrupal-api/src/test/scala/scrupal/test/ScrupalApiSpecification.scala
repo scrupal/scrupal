@@ -15,18 +15,22 @@
 
 package scrupal.test
 
-import java.util.concurrent.atomic.AtomicInteger
 
 import com.typesafe.config.ConfigFactory
 
+import java.util.concurrent.atomic.AtomicInteger
+
+import org.specs2.execute.Result
+
 import play.api.Configuration
+import play.api.mvc.{Request, AnyContent}
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.{Duration, FiniteDuration}
-
-import scrupal.api.Scrupal
+import scrupal.api._
 import scrupal.storage.api.{SchemaDesign, Schema, StoreContext}
 import scrupal.utils.ConfigHelpers
+
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 
 
 /** One line sentence description here.
@@ -56,6 +60,22 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
         sc.ensureSchema(d).map { schema: Schema ⇒ f(schema) }
       }
     }
+  }
+
+  def providerTest(site: Site, provider: Provider, request: Request[AnyContent])(f : Response ⇒ Result) : Result = {
+    testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+      provider.provide.lift(request) match {
+        case Some(rx) ⇒
+          val stim = Stimulus(Context(testScrupal, site), request)
+          val future = rx(stim).map { response ⇒
+            f(response)
+          }
+          Await.result(future, 1.second)
+        case None ⇒
+          failure
+      }
+    }
+
   }
 }
 

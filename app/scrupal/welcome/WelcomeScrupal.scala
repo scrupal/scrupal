@@ -25,7 +25,7 @@ import play.api.inject.ApplicationLifecycle
 import scala.concurrent.Future
 
 @Singleton
-case class Scrupal @Inject()(
+case class WelcomeScrupal @Inject()(
   override val name: String = "WelcomeToScrupal",
   config: Configuration,
   lifecycle: ApplicationLifecycle

@@ -17,13 +17,16 @@ package scrupal.welcome
 
 import java.time.Instant
 
-import scrupal.doc.DocumentationProvider
+import play.api.routing.sird._
+
+import scrupal.api._
 import scrupal.admin.AdminApp
 import scrupal.config.ConfigWizard
+import scrupal.core.nodes.HtmlNode
+import scrupal.doc.DocumentationProvider
 
 import scala.util.matching.Regex
 
-import scrupal.api._
 
 case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(sym) {
   val name : String = "Welcome To Scrupal"
@@ -34,13 +37,12 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   def hostNames : Regex = ".*".r
 
   val documentation = DocumentationProvider()
-  val welcomeSite = WelcomeSiteProvider()
   // val adminApp = AdminApp()
   val configWizard = ConfigWizard()
 
   override def delegates : Iterable[Provider] = {
     super.delegates ++ Iterable(
-      welcomeSite, documentation, configWizard //, adminApp
+      documentation, configWizard //, adminApp
     )
   }
 
@@ -48,4 +50,15 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   val echoEntity = coreModule.flatMap { m ⇒ m.entity('Echo) }
   enable(coreModule)
   enable(echoEntity)
+
+  val WelcomeSiteRoot = NodeReactor(
+    HtmlNode("WelcomeSiteRoot", "Main index page for Welcome To Scrupal Site",
+      WelcomePageTemplate
+    )
+  )
+
+  override def provide: ReactionRoutes = super.provide.orElse {
+    case GET(p"/") ⇒
+      WelcomeSiteRoot
+  }
 }
