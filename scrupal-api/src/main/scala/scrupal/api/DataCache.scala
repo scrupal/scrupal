@@ -42,8 +42,10 @@ object DataCache extends DataCache {
     scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
       val f1 = {
         schema.withCollection("alerts") { alertsColl : Collection[Alert] ⇒
-          val queries = alertsColl.queriesFor[AlertQueries]
-          alertsColl.find(queries.unexpired).map { a ⇒ _alerts = a ; Unit }
+          alertsColl.fetchAll().map { alerts ⇒
+            val unexpired = for (a ← alerts if a.unexpired) yield { a }
+            _alerts = unexpired.toSeq
+          }
         }
       }
       val f2 = Future {

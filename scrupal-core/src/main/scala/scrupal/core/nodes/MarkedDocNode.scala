@@ -49,57 +49,58 @@ case class MarkedDocNode(
   def description : String = "A node that provides a marked document from a resource as html."
 
   def apply(context: Context) : Future[Response] = {
-    val pathStr = path.mkString("/")
+    //val pathStr = path.mkString("/")
     val relPath = path.dropRight(1).mkString("/")
     val page = path.takeRight(1).headOption.getOrElse("")
     val dirPath = if (relPath.isEmpty) root else root + "/" + relPath
-    val locator = context.scrupal._assetsLocator
-    val directory = locator.fetchDirectory(dirPath, recurse = true)
-    directory match {
-      case None ⇒ Future.successful(ErrorResponse(s"Directory at $dirPath was not found", NotFound))
-      case Some(dir) ⇒
-        val doc : String = {
-          if (page.nonEmpty)
-            page
-          else dir.index match {
-            case None ⇒ return Future.successful(ErrorResponse(s"Document at $dirPath was not found", NotFound))
-            case Some(index) ⇒ index
+    context.scrupal.withAssetsLocator { locator: AssetsLocator ⇒
+      val maybeDirectory = locator.fetchDirectory(dirPath, recurse = true)
+      maybeDirectory match {
+        case None ⇒ Future.successful(ErrorResponse(s"Directory at $dirPath was not found", NotFound))
+        case Some(directory) ⇒
+          val doc : String = {
+            if (page.nonEmpty)
+              page
+            else directory.index match {
+              case None ⇒ return Future.successful(ErrorResponse(s"Document at $dirPath was not found", NotFound))
+              case Some(index) ⇒ index
+            }
           }
-        }
-        dir.files.get(doc) match {
-          case None ⇒ Future.successful(ErrorResponse(s"Document at $dirPath/$doc was not found", NotFound))
-          case Some((docTitle, urlOpt)) ⇒ context.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
-            Future {
-              urlOpt match {
-                case Some(url) ⇒
-                  val title = docTitle + " - " + dir.title.getOrElse("Documentation")
-                  val content = URLNode("docURL", "docUrl", url)
-                  val linkPath = if (relPath.isEmpty) "/" + contextPath else "/" + contextPath + "/" + relPath
-                  val parentPath = path.dropRight(2).mkString("/")
-                  val parentDir = if (parentPath.isEmpty)
-                    locator.fetchDirectory(root, recurse = false)
-                  else
-                    locator.fetchDirectory(parentPath, recurse = false)
-                  val upLink = "/" + contextPath + {
-                    (parentDir, parentPath) match {
-                      case (Some(pd), pp) if pp.isEmpty ⇒ "/" + pd.index.getOrElse("index.md")
-                      case (Some(pd), pp) ⇒ "/" + parentPath + "/" + pd.index.getOrElse("index.md")
-                      case (None, pp) ⇒ "/" + parentPath + "/index.md"
+          directory.files.get(doc) match {
+            case None ⇒ Future.successful(ErrorResponse(s"Document at $dirPath/$doc was not found", NotFound))
+            case Some((docTitle, urlOpt)) ⇒ context.scrupal.withExecutionContext { implicit ec : ExecutionContext ⇒
+              Future {
+                urlOpt match {
+                  case Some(url) ⇒
+                    val title = docTitle + " - " + directory.title.getOrElse("Documentation")
+                    //val content = URLNode("docURL", "docUrl", url)
+                    val linkPath = if (relPath.isEmpty) "/" + contextPath else "/" + contextPath + "/" + relPath
+                    val parentPath = path.dropRight(2).mkString("/")
+                    val parentDir = if (parentPath.isEmpty)
+                      locator.fetchDirectory(root, recurse = false)
+                    else
+                      locator.fetchDirectory(parentPath, recurse = false)
+                    val upLink = "/" + contextPath + {
+                      (parentDir, parentPath) match {
+                        case (Some(pd), pp) if pp.isEmpty ⇒ "/" + pd.index.getOrElse("index.md")
+                        case (Some(pd), pp) ⇒ "/" + parentPath + "/" + pd.index.getOrElse("index.md")
+                        case (None, pp) ⇒ "/" + parentPath + "/index.md"
+                      }
                     }
-                  }
-                  val (files, dirs) = menuItems(linkPath, dir)
-                  val nav = Seq(MarkedDocNode.docNav(upLink, files, dirs))
-                  val footerText : String = dir.copyright.getOrElse("Footer")
-                  val footer = Seq(div(cls := "footer", sub(sub(footerText))))
-                  val contents = Source.fromInputStream(url.openStream()).mkString
-                  val page = MarkedDocNode.DocPage(title, "Description", nav, contents, footer)
-                  HtmlResponse(page.render(context), Successful)
-                case None ⇒
-                  ErrorResponse(s"Document at $root/$doc was not listed in directory", NotFound)
+                    val (files, dirs) = menuItems(linkPath, directory)
+                    val nav = Seq(MarkedDocNode.docNav(upLink, files, dirs))
+                    val footerText : String = directory.copyright.getOrElse("Footer")
+                    val footer = Seq(div(cls := "footer", sub(sub(footerText))))
+                    val contents = Source.fromInputStream(url.openStream()).mkString
+                    val page = MarkedDocNode.DocPage(title, "Description", nav, contents, footer)
+                    HtmlResponse(page.render(context), Successful)
+                  case None ⇒
+                    ErrorResponse(s"Document at $root/$doc was not listed in directory", NotFound)
+                }
               }
             }
           }
-        }
+      }
     }
   }
 

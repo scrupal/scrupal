@@ -50,9 +50,11 @@ object Storage extends ScrupalComponent {
 
   def fromConfiguration(
     conf: Option[Configuration] = None, name : String = "scrupal", create: Boolean = false)(implicit ec: ExecutionContext) : Future[StoreContext] = {
-    val topConfig = conf.getOrElse(ConfigHelpers.default())
-    val helper = new StorageConfigHelper(topConfig)
-    val config = helper.getStorageConfig
+    val config = conf.getOrElse{
+      val dflt = ConfigHelpers.default()
+      val helper = new StorageConfigHelper(dflt)
+      helper.getStorageConfig
+    }
     val config_name = s"storage.$name"
     config.getConfig(config_name) match {
       case Some(cfg) ⇒

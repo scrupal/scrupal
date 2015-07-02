@@ -15,27 +15,165 @@
 
 package scrupal.core.http
 
+import akka.actor.ActorSystem
+import akka.util.Timeout
+
 import com.typesafe.config.ConfigValue
+
+import java.lang.Thread.UncaughtExceptionHandler
+import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicInteger
+
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
-import scrupal.api._
-import scrupal.core.{CoreModule, CoreSchemaDesign}
-import scrupal.storage.api.{Collection, StoreContext}
-import scrupal.utils.LoggingHelpers
 
 import scala.collection.immutable.TreeMap
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
 
+import scrupal.api._
+import scrupal.core.{CoreModule, CoreSchemaDesign}
+import scrupal.storage.api.{Storage, Collection, StoreContext}
+import scrupal.utils.ConfigHelpers
+
 class CoreScrupal(
   override val name: String = "CoreScrupal",
   config : Configuration,
   lifecycle : ApplicationLifecycle
-) extends scrupal.api.Scrupal(name, Some(config), None, None, None) {
+) extends {
+  implicit protected val _configuration: Configuration = config
+} with scrupal.api.Scrupal(name) {
 
   lifecycle.addStopHook { () ⇒
-    Future.successful { this.close() }
+    Future.successful {this.close()}
+  }
+
+  // NOTE: Because implicits are used during construction, the order of initialization here is important.
+
+  implicit protected val _executionContext: ExecutionContext = getExecutionContext
+
+  implicit val _assetsLocator: AssetsLocator = getAssetsLocator
+
+  implicit protected val _actorSystem: ActorSystem = getActorSystem
+
+  implicit val _timeout = getTimeout
+
+  implicit val _storeContext: StoreContext = getStoreContext
+
+  protected def getActorSystem: ActorSystem = {
+    ActorSystem("Scrupal", _configuration.underlying)
+  }
+
+  protected def getTimeout: Timeout = {
+    Timeout(
+      _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
+    )
+  }
+
+  protected def getAssetsLocator: AssetsLocator = {
+    new ConfiguredAssetsLocator(_configuration)
+  }
+
+  protected def getStoreContext: StoreContext = {
+    val configToSearch: Configuration = {
+      _configuration.getConfig("scrupal") match {
+        case None ⇒
+          toss("Invalid configuration provided to scrupal. No 'scrupal' at top level")
+        case Some(config1) ⇒
+          config1.getString("storage.config.file") match {
+            case Some(configFileName) ⇒
+              ConfigHelpers.from(configFileName) match {
+                case Some(config2) ⇒
+                  config2
+                case None ⇒
+                  log.warn(s"The configured file name, '$configFileName' did not contain storage configuration. Trying default.")
+
+                  getDefaultStoreConfig(_configuration)
+              }
+            case None ⇒
+              log.warn("The key 'storage.config.file' is missing from scrupal configuration. Trying default.")
+              getDefaultStoreConfig(_configuration)
+          }
+      }
+    }
+    Await.result(Storage.fromConfiguration(Some(configToSearch), "scrupal", create = true), 2.seconds)
+  }
+
+  /** Scrupal Thread Factory
+    * This thread factory just names and numbers the threads created so we have a monotonically increasing number of
+    * threads in the pool. It also ensures these are not Daemon threads and that there is an UncaughtExceptionHandler
+    * in place that will log the escaped exception but otherwise take no action. These things help with with
+    * identification of the threads during debugging and knowing that we have an escaped exception.
+    */
+  private object ScrupalThreadFactory extends ThreadFactory {
+    val counter = new AtomicInteger(0)
+    val ueh = new UncaughtExceptionHandler {
+      def uncaughtException(t: Thread, x: Throwable) = {
+        log.error("Exception escaped thread: " + t.getName + ", Id: " + t.getId + " error:", x)
+      }
+    }
+
+    def newThread(r: Runnable) = {
+      val result = new Thread(r)
+      result.setDaemon(false)
+      result.setUncaughtExceptionHandler(ueh)
+      val num = counter.incrementAndGet()
+      result.setName(s"$name-$num")
+      result
+    }
+  }
+
+  private object ScrupalRejectionHandler extends RejectedExecutionHandler {
+    def rejectedExecution(r: Runnable, executor: ThreadPoolExecutor): Unit = {
+      log.error(s"Execution rejected for $r in executor $executor")
+    }
+  }
+
+  protected def getExecutionContext: ExecutionContext = {
+
+    def makeFixedThreadPool(config: Configuration): ExecutionContext = {
+      val numThreads = config.getInt("num-threads").getOrElse(16)
+      ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(numThreads))
+    }
+
+    def makeWorkStealingPool(): ExecutionContext = {
+      ExecutionContext.fromExecutorService(Executors.newWorkStealingPool())
+    }
+
+    def makeThreadPoolExecutionContext(config: Configuration): ExecutionContext = {
+      val corePoolSize = config.getInt("core-pool-size").getOrElse(16)
+      val maxPoolSize = config.getInt("max-pool-size").getOrElse(corePoolSize * 2)
+      val keepAliveTime = config.getInt("keep-alive-secs").getOrElse(60)
+      val queueCapacity = config.getInt("queue-capacity").getOrElse(maxPoolSize * 8)
+      val queue = new ArrayBlockingQueue[Runnable](queueCapacity)
+
+      ExecutionContext.fromExecutorService(
+        new ThreadPoolExecutor(
+          corePoolSize, maxPoolSize, keepAliveTime, TimeUnit.SECONDS, queue, ScrupalThreadFactory,
+          ScrupalRejectionHandler)
+      )
+    }
+
+    _configuration.getString("scrupal.executor") match {
+      case Some("akka") ⇒ _actorSystem.dispatcher
+      case Some("fixed-thread-pool") ⇒
+        makeFixedThreadPool(_configuration.getConfig("fixed-thread-pool").getOrElse(Configuration()))
+      case Some("work-stealing-pool") ⇒
+        makeWorkStealingPool()
+      case Some("thread-pool") ⇒
+        makeThreadPoolExecutionContext(_configuration.getConfig("thread-pool").getOrElse(Configuration()))
+      case Some("default") ⇒
+        makeWorkStealingPool()
+      case _ ⇒
+        makeWorkStealingPool()
+    }
+  }
+
+  def getDefaultStoreConfig(config: Configuration): Configuration = {
+    config.getConfig("scrupal.storage.default").getOrElse {
+      toss("Scrupal configuration is missing default storage configuration in scrupal.storage.default")
+    }
   }
 
   /** Called before the application starts.
@@ -43,26 +181,17 @@ class CoreScrupal(
     * Resources managed by plugins, such as database connections, are likely not available at this point.
     *
     */
-  override def open() : Configuration = {
-    LoggingHelpers.initializeLogging(forDebug = true)
-
+  override def open(): Configuration = {
+    super.open()
     log.debug("Scrupal startup initiated.")
-
-    // We do a lot of stuff in API objects and they need to be instantiated in the right order,
-    // so "touch" them now because they are otherwise initialized randomly as used
-    require(Types.registryName == "Types")
-    require(Modules.registryName == "Modules")
-    require(Sites.registryName == "Sites")
-    require(Entities.registryName == "Entities")
-    require(Template.registryName == "Templates")
 
     // Instantiate the core module and make sure that we registered it as 'Core
 
     val core = CoreModule()(this)
-    require (Modules('Core).isDefined, "Failed to find the CoreModule as 'Core")
+    require(Modules('Core).isDefined, "Failed to find the CoreModule as 'Core")
     core.bootstrap(_configuration)
 
-    val configured_modules : Seq[String] = {
+    val configured_modules: Seq[String] = {
       // FIXME: can we avoid configuring the specific modules here?
       // How about JSR 367?  in JSE 9? https://www.jcp.org/en/jsr/detail?id=376
       _configuration.getStringSeq("scrupal.modules") match {
@@ -74,7 +203,7 @@ class CoreScrupal(
     // Now we go through the configured modules and bootstrap them
     for (class_name ← configured_modules) {
       scrupal.api.Scrupal.findModuleOnClasspath(class_name) match {
-        case Some(module) ⇒ module.bootstrap(config)
+        case Some(module) ⇒ module.bootstrap(_configuration)
         case None ⇒ log.warn("Could not locate module with class name: " + class_name)
       }
     }
@@ -84,17 +213,17 @@ class CoreScrupal(
       if (sites.isEmpty)
         toss("Refusing to start because of load errors. Check logs for details.")
       else {
-        log.info("Loaded Sites:\n" + sites.map { site ⇒ s"${site.label}"})
+        log.info("Loaded Sites:\n" + sites.map { site ⇒ s"${site.label}" })
       }
       log.debug("Scrupal startup completed.")
-      config
+      _configuration
     }
     Await.result(future, 10.seconds)
   }
 
   override def close() = {
     log.debug("Scrupal shutdown initiated")
-    withExecutionContext { implicit ec : ExecutionContext ⇒
+    withExecutionContext { implicit ec: ExecutionContext ⇒
       _actorSystem.shutdown()
       _storeContext.close()
     }
@@ -148,3 +277,4 @@ class CoreScrupal(
     }
   }
 }
+

@@ -18,13 +18,16 @@ package scrupal.test
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.typesafe.config.ConfigFactory
+
 import play.api.Configuration
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.{Duration, FiniteDuration}
+
 import scrupal.api.Scrupal
 import scrupal.storage.api.{SchemaDesign, Schema, StoreContext}
 import scrupal.utils.ConfigHelpers
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /** One line sentence description here.
   * Further description here.
@@ -35,10 +38,8 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
-
   lazy val testScrupal: Scrupal = FakeScrupal(
-    ScrupalSpecification.next(specName),
-    ScrupalApiSpecification.storageTestConfig(specName)
+    ScrupalSpecification.next(specName), Map.empty[String,AnyRef]
   )
 
   implicit lazy val scrupal : Scrupal = testScrupal

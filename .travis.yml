@@ -10,11 +10,9 @@ jdk:
    - oraclejdk8
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION -Dfile.encoding=UTF8 clean coverage test &&
-    sbt coverageAggregate
+  - sbt ++$TRAVIS_SCALA_VERSION -Dfile.encoding=UTF8 clean coverage test coverageAggregate
 after_success:
   - sbt coveralls
-
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" | xargs rm
   - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm

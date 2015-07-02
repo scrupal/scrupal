@@ -13,6 +13,8 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
+package scrupal.core.akkahttp
+
 import akka.http.scaladsl.server.{PathMatcher, PathMatcher1}
 
 object ScrupalPathMatchers {

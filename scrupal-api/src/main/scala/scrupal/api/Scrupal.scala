@@ -18,134 +18,42 @@ package scrupal.api
 import akka.actor.ActorSystem
 import akka.util.Timeout
 
-import java.lang.Thread.UncaughtExceptionHandler
-import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicInteger
-
 import play.api.Configuration
 
-import scrupal.storage.api.{Schema, Storage, StoreContext}
+import scala.concurrent.{ExecutionContext, Future}
+
+import scrupal.storage.api.{Schema, StoreContext}
 import scrupal.utils._
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
 
-abstract class Scrupal(
-  val name : String = "Scrupal",
-  config : Option[Configuration] = Some(ConfigHelpers.default()),
-  ec : Option[ExecutionContext] = None,
-  sc : Option[StoreContext] = None,
-  actSys : Option[ActorSystem] = None
-) extends { final val id : Symbol = Symbol(name); final val registry = Scrupal }
-  with ScrupalComponent with AutoCloseable with Authorable with Enablement[Scrupal] with Registrable[Scrupal] {
+abstract class Scrupal (
+  val name : String = "Scrupal"
+) extends {
+  final val id : Symbol = Symbol(name)
+  final val registry = Scrupal
+} with ScrupalComponent with AutoCloseable with Authorable with Enablement[Scrupal] with Registrable[Scrupal] {
 
   val author = "Reactific Software LLC"
   val copyright = "© 2013-2015 Reactific Software LLC. All Rights Reserved."
   val license = OSSLicense.ApacheV2
+
+  implicit protected val _configuration : Configuration
+
+  implicit protected val _actorSystem : ActorSystem
+
+  implicit protected val _executionContext : ExecutionContext
+
+  implicit protected val _storeContext : StoreContext
+
+  implicit protected val _timeout : Timeout
+
+  implicit protected val _assetsLocator : AssetsLocator
 
   val Sites = SitesRegistry()
   val Applications = ApplicationsRegistry()
   val Modules = ModulesRegistry()
   val Entities = EntitiesRegistry()
   val Features = FeaturesRegistry()
-
-  implicit protected val _configuration : Configuration = config.getOrElse(ConfigHelpers.default())
-
-  implicit protected val _actorSystem : ActorSystem = actSys.getOrElse(ActorSystem("Scrupal", _configuration.underlying))
-
-  implicit protected val _executionContext : ExecutionContext = ec.getOrElse(getExecutionContext(_configuration))
-
-  implicit val _storeContext : StoreContext = sc.getOrElse(getStoreContext(_configuration))
-
-  implicit val _timeout = Timeout(
-    _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
-  )
-
-  implicit val _assetsLocator : AssetsLocator = new ConfiguredAssetsLocator(_configuration)
-
-
-
-  /** Scrupal Thread Factory
-    * This thread factory just names and numbers the threads created so we have a monotonically increasing number of
-    * threads in the pool. It also ensures these are not Daemon threads and that there is an UncaughtExceptionHandler
-    * in place that will log the escaped exception but otherwise take no action. These things help with with
-    * identification of the threads during debugging and knowing that we have an escaped exception.
-    */
-  private object ScrupalThreadFactory extends ThreadFactory {
-    val counter = new AtomicInteger(0)
-    val ueh = new UncaughtExceptionHandler {
-      def uncaughtException(t: Thread, x: Throwable) = {
-        log.error("Exception escaped thread: " + t.getName + ", Id: " + t.getId + " error:", x)
-      }
-    }
-
-    def newThread(r: Runnable) = {
-      val result = new Thread(r)
-      result.setDaemon(false)
-      result.setUncaughtExceptionHandler(ueh)
-      val num = counter.incrementAndGet()
-      result.setName(s"$name-$num")
-      result
-    }
-  }
-
-  private object ScrupalRejectionHandler extends RejectedExecutionHandler {
-    def rejectedExecution(r: Runnable, executor: ThreadPoolExecutor): Unit = {
-      log.error(s"Execution rejected for $r in executor $executor")
-    }
-  }
-
-  private[this] def getExecutionContext(config: Configuration): ExecutionContext = {
-    def makeFixedThreadPool(config: Configuration) : ExecutionContext = {
-      val numThreads = config.getInt("num-threads").getOrElse(16)
-      ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(numThreads))
-    }
-
-    def makeWorkStealingPool() : ExecutionContext = {
-      ExecutionContext.fromExecutorService(Executors.newWorkStealingPool())
-    }
-
-    def makeThreadPoolExecutionContext(config : Configuration) : ExecutionContext = {
-      val corePoolSize = config.getInt("core-pool-size").getOrElse(16)
-      val maxPoolSize = config.getInt("max-pool-size").getOrElse(corePoolSize*2)
-      val keepAliveTime = config.getInt("keep-alive-secs").getOrElse(60)
-      val queueCapacity = config.getInt("queue-capacity").getOrElse(maxPoolSize*8)
-      val queue = new ArrayBlockingQueue[Runnable](queueCapacity)
-
-      ExecutionContext.fromExecutorService(
-        new ThreadPoolExecutor(
-          corePoolSize, maxPoolSize, keepAliveTime, TimeUnit.SECONDS, queue, ScrupalThreadFactory,
-          ScrupalRejectionHandler)
-      )
-    }
-
-    config.getString("scrupal.executor") match {
-      case Some("akka") ⇒ _actorSystem.dispatcher
-      case Some("fixed-thread-pool") ⇒
-        makeFixedThreadPool(config.getConfig("fixed-thread-pool").getOrElse(Configuration()))
-      case Some("work-stealing-pool") ⇒
-        makeWorkStealingPool()
-      case Some("thread-pool") ⇒
-        makeThreadPoolExecutionContext(config.getConfig("thread-pool").getOrElse(Configuration()))
-      case Some("default") ⇒
-        makeWorkStealingPool()
-      case _ ⇒
-        makeWorkStealingPool()
-    }
-  }
-
-  def getStoreContext(config : Configuration) : StoreContext = {
-    val configToSearch = {
-      config.getString("scrupal.storage.config.file") match {
-        case Some(fileName) ⇒
-          ConfigHelpers.from(fileName).getOrElse(config)
-        case None ⇒
-          config
-      }
-    }
-    val scrupalConfiguration = configToSearch.getConfig("scrupal")
-    Await.result(Storage.fromConfiguration(scrupalConfiguration, "scrupal", create=true), 2.seconds)
-  }
 
   def withConfiguration[T](f : (Configuration) ⇒ T) : T = {
     f(_configuration)
@@ -167,6 +75,10 @@ abstract class Scrupal(
 
   def withActorExec[T](f : (ActorSystem, ExecutionContext, Timeout) ⇒ T) : T = {
     f(_actorSystem, _executionContext, _timeout)
+  }
+
+  def withAssetsLocator[T](f : (AssetsLocator) ⇒ T) : T = {
+    f(_assetsLocator)
   }
 
   /** Simple utility to determine if we are considered "ready" or not. Basically, if we have a non empty Site
@@ -235,5 +147,4 @@ object Scrupal extends Registry[Scrupal] {
   private[scrupal] def findModuleOnClasspath(name : String) : Option[Module] = {
     None // TODO: Write ClassLoader code to load foreign modules on the classpath - maybe use OSGi ?
   }
-
 }

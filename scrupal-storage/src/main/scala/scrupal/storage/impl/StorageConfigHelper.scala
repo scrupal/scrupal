@@ -27,36 +27,7 @@ import scala.util.Try
 
 /** Extend the Configuration class via the pimp-my-library pattern
   */
-class StorageConfigHelper(config : Configuration) extends ScrupalComponent {
-
-  import scrupal.utils.ClassHelpers._
-
-  /** Convert any class name into an instance of that class, assuming it has an empty args constructor
-    *
-    * @param name The class name
-    * @param m A manifest for the class
-    * @tparam C The kind of class expected, a base class
-    * @return An instance of C that is of class `name` or None if it couldn't be instantiated.
-    */
-  def getInstance[C <: AnyRef](name : String)(implicit m : Manifest[C]) : Option[C] = {
-    try {
-      Option(string2instance[C](name))
-    } catch {
-      case x : IllegalAccessException ⇒
-        log.error("Cannot access class " + name + " while instantiating: ", x); None
-      case x : InstantiationException ⇒
-        log.error("Cannot instantiate uninstantiable class " + name + ": ", x); None
-      case x : ExceptionInInitializerError ⇒
-        log.error("Instance initialization of " + name + " failed: ", x); None
-      case x : SecurityException ⇒
-        log.error("Security exception while instantiating " + name + ": ", x); None
-      case x : LinkageError ⇒
-        log.error("Linkage error while instantiating " + name + ": ", x); None
-      case x : ClassNotFoundException ⇒
-        log.error("Cannot find class " + name + " to instantiate: ", x); None
-      case x : Throwable ⇒ throw x
-    }
-  }
+class StorageConfigHelper(config : Configuration) extends scrupal.utils.ConfigHelpers.ConfigurationPimps(config) {
 
   type StorageConfig = Map[String, Option[Configuration]]
   val emptyStorageConfig = Map.empty[String, Option[Configuration]]
