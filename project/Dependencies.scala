@@ -34,7 +34,7 @@ trait Dependencies
   )
 
   object Ver {
-    val play = "2.4.1"
+    val play = "2.4.2"
     val akka = "2.3.9"
     val spray = "1.3.2"
     val akka_http = "1.0-RC3"
@@ -129,11 +129,8 @@ trait Dependencies
 
   object Test {
     val akka_testkit     = "com.typesafe.akka"        %% "akka-testkit"             % Ver.akka        % "test"
-    val specs2           = "org.specs2"               %% "specs2-core"              % "3.6.1"         % "test"
     val commons_io       = "commons-io"                %  "commons-io"              % "2.4"           % "test"
     val nu_validator     = "nu.validator.htmlparser"   % "htmlparser"               % "1.4"           % "test"
-    val play_specs2      = "com.typesafe.play"        %% "play-specs2"              % Ver.play        % "test"
-    val play_test        = "com.typesafe.play"        %% "play-test"                % Ver.play        % "test"
     val silhouette_test  = "com.mohiva"               %% "play-silhouette-testkit"  % "3.0.0-RC1"     % "test"
   }
 
@@ -141,8 +138,7 @@ trait Dependencies
   )
 
   val common_dependencies : Seq[ModuleID] = Seq(
-    scala_pickling, grizzled_slf4j, akka_slf4j, logback_classic, commons_lang3,
-    Test.specs2, Test.play_test, Test.play_specs2
+    scala_pickling, grizzled_slf4j, akka_slf4j, logback_classic, commons_lang3
   )
 
   val utils_dependencies : Seq[ModuleID] = Seq(
