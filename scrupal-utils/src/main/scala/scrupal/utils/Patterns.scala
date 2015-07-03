@@ -41,6 +41,7 @@ object Patterns {
   }
   def optional(r : Regex) = ("(?:" + r.pattern.pattern + ")?").r
   def atLeastOne(r : Regex) = ("(?:" + r.pattern.pattern + ")+").r
+  def oneOrMore(r : Regex) = atLeastOne(r)
   def zeroOrMore(r : Regex) = ("(?:" + r.pattern.pattern + ")*").r
   def between(min : Int, max : Int, r : Regex) = ("(?:" + r.pattern.pattern + s"){$min,$max}").r
   def alternate(r1 : Regex, r2 : Regex) = ("(?:" + r1.pattern.pattern + ")|(?:" + r2.pattern.pattern + ")").r
@@ -62,7 +63,7 @@ object Patterns {
 
   val EmailAddress = addr_spec
   val Identifier = "[-\\w_+=|!.^@#%*?]+".r
-  val Markdown = "[-\\s\\w~`!@#$%^&*()_+={}\\[]|\\\\:;\"'<>,.?/]*".r
+  val Markdown = "[-\\s\\w~`!@#$%^&*()_+={}\\[]|\\\\:;\"'<>,.?/ ]*".r
   val Password = between(6, 64, Markdown)
   val LegalName = join(Identifier, zeroOrMore(join(" ".r, Identifier)))
 

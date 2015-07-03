@@ -249,13 +249,16 @@ case class BLOBType(
 
 }
 
+object BooleanType {
+  def verity = List("true", "on", "yes", "confirmed")
+  def falsity = List("false", "off", "no", "denied")
+}
+
 case class BooleanType(
   id : Identifier,
   description : String
 ) extends Type[Atom] {
   override def kind = 'Boolean
-  def verity = List("true", "on", "yes", "confirmed")
-  def falseness = List("false", "off", "no", "denied")
 
   private object validation extends Poly1 {
     def check[T](value: T): Option[String] = {
@@ -265,8 +268,9 @@ case class BooleanType(
         Some(s"Value '$value' could not be converted to boolean (0 or 1 required")
     }
     def checkString(s: String) : Option[String] = {
+      import BooleanType._
       if (verity.contains(s)) None
-      else if (falseness.contains(s)) None
+      else if (falsity.contains(s)) None
       else Some(s"Value '$s' could not be interpreted as a boolean")
     }
 
@@ -735,17 +739,20 @@ case class StringType(
   description : String,
   regex : Regex,
   maxLen : Int = Int.MaxValue,
+  minLen : Int = 0,
   patternName : String = "pattern"
   ) extends Type[Atom] {
   override def kind = 'String
   require(maxLen >= 0)
 
   protected def check(s: String): Option[String] = {
-    if (s.length > maxLen)
+    if (s.length > maxLen) {
       Some(s"String of length ${s.length} exceeds maximum of $maxLen.")
-    if (!regex.pattern.matcher(s).matches())
+    } else if (s.length < minLen) {
+      Some(s"String of length ${s.length} is shorter than minimum of $minLen")
+    } else if (!regex.pattern.matcher(s).matches()) {
       Some(s"'$s' does not match $patternName.")
-    else
+    } else
       None
   }
 
@@ -791,10 +798,10 @@ object NonEmptyString_t extends StringType('NonEmptyString,
 
 /** The Scrupal Type for the identifier of things */
 object Identifier_t extends StringType('Identifier,
-  "Scrupal Identifier", anchored(Identifier), 64, "an identifier")
+  "Scrupal Identifier", anchored(Identifier), 64, 1, "an identifier")
 
 object Password_t extends StringType('Password,
-  "A type for human written passwords", anchored(Password), 64, "a password") {
+  "A type for human written passwords", anchored(Password), 64, 6, "a password") {
   override def check(bs: String) = {
     if (bs.length > maxLen)
       Some(s"Value is too short for a password.")
@@ -806,14 +813,14 @@ object Password_t extends StringType('Password,
 }
 
 object Description_t extends StringType('Description,
-  "Scrupal Description", anchored(".+".r), 1024)
+  "Scrupal Description", anchored(".+".r), 1024, 10, "a description")
 
 object Markdown_t extends StringType('Markdown,
-  "Markdown document type", anchored(Markdown), patternName = "markdown formatting")
+  "Markdown document type", anchored(oneOrMore(Markdown)), patternName = "markdown formatting")
 
 /** The Scrupal Type for domain names per  RFC 1035, RFC 1123, and RFC 2181 */
 object DomainName_t extends StringType('DomainName,
-  "RFC compliant Domain Name", anchored(DomainName), 253, "a domain name")
+  "RFC compliant Domain Name", anchored(DomainName), 253, 3, "a domain name")
 
 /** The Scrupal Type for Uniform Resource Locators.
   * We should probably have one for URIs too,  per http://tools.ietf.org/html/rfc3986
@@ -823,17 +830,17 @@ object URL_t extends StringType('URL,
 
 /** The Scrupal Type for IP version 4 addresses */
 object IPv4Address_t extends StringType('IPv4Address,
-  "A type for IP v4 Addresses", anchored(IPv4Address), 15, "an IPv4 address")
+  "A type for IP v4 Addresses", anchored(IPv4Address), 15, 7, "an IPv4 address")
 
 /** The Scrupal Type for Email addresses */
 object EmailAddress_t extends StringType('EmailAddress,
-  "An email address", anchored(EmailAddress), 253, "an e-mail address")
+  "An email address", anchored(EmailAddress), 253, 7, "an e-mail address")
 
 object LegalName_t extends StringType('LegalName,
-  "The name of a person or corporate entity", anchored(LegalName), 128, "a legal name.")
+  "The name of a person or corporate entity", anchored(LegalName), 128, 2, "a legal name.")
 
 object Title_t extends StringType('Title,
-  "A string that is valid for a page title", anchored(Title), 70, "a page title")
+  "A string that is valid for a page title", anchored(Title), 70, 3, "a page title")
 
 /** A point-in-time value between a minimum and maximum time point
   *

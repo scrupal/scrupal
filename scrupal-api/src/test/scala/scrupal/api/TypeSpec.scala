@@ -15,7 +15,9 @@
 
 package scrupal.api
 
-import scrupal.test.{ScrupalApiSpecification, TestTypes}
+import java.time.Instant
+
+import scrupal.test.{TestTypes, ScrupalApiSpecification}
 
 import scala.language.implicitConversions
 
@@ -189,38 +191,101 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     }
   }
 
-  // TODO: Implement more type tests
   "AnyType_t" should {
-    "have some test cases" in { pending }
-  }
-  "AnyString_t" should {
-    "have some test cases" in { pending }
-  }
-  "AnyInteger_t" should {
-    "have some test cases" in { pending }
-  }
-  "AnyReal_t" should {
-    "have some test cases" in { pending }
-  }
-  "AnyTimestamp_t" should {
-    "have some test cases" in { pending }
-  }
-  "Boolean_t" should {
-    "have some test cases" in { pending }
-  }
-  "NonEmptyString_t" should {
-    "have some test cases" in { pending }
-  }
-  "Password_t" should {
-    "have some test cases" in { pending }
-  }
-  "Description_t" should {
-    "have some test cases" in { pending }
-  }
-  "Markdown_t" should {
-    "have some test cases" in { pending }
+    "accept pretty much anything" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyType_t.validate(t.vLoc, 42).isError must beFalse
+      AnyType_t.validate(t.vLoc, 42.0F).isError must beFalse
+      AnyType_t.validate(t.vLoc, 42.0D).isError must beFalse
+      AnyType_t.validate(t.vLoc, 42L).isError must beFalse
+      AnyType_t.validate(t.vLoc, 42.toShort).isError must beFalse
+      AnyType_t.validate(t.vLoc, 42.toByte).isError must beFalse
+      AnyType_t.validate(t.vLoc, true).isError must beFalse
+      AnyType_t.validate(t.vLoc, "42.0").isError must beFalse
+      AnyType_t.validate(t.vLoc, Instant.now()).isError must beFalse
+    }
   }
 
+  "AnyString_t" should {
+    "accept some Atom types" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyString_t.validate(t.vLoc, "aString").isError must beFalse
+      AnyString_t.validate(t.vLoc, 42.0).isError must beFalse
+    }
+  }
+
+  "AnyInteger_t" should {
+    "accept 42" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyInteger_t.validate(t.vLoc, 42).isError must beFalse
+    }
+    "reject non-numeric string" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyInteger_t.validate(t.vLoc, "Hello, World!").isError must beTrue
+    }
+  }
+
+  "AnyReal_t" should {
+    "accept 42.0" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyInteger_t.validate(t.vLoc, 42.0D).isError must beFalse
+      AnyInteger_t.validate(t.vLoc, 42.0F).isError must beFalse
+    }
+    "reject non-numeric string" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyInteger_t.validate(t.vLoc, "Hello, World!").isError must beTrue
+    }
+  }
+
+  "AnyTimestamp_t" should {
+    "accept Instant and Long" in TestTypes(scrupal) { t: TestTypes ⇒
+      AnyTimestamp_t.validate(t.vLoc, Instant.now()).isError must beFalse
+      AnyTimestamp_t.validate(t.vLoc, 141231512L).isError must beFalse
+    }
+  }
+
+  "Boolean_t" should {
+    "accept verity and falsity words" in TestTypes(scrupal) { t: TestTypes ⇒
+      for (word ← BooleanType.verity ++ BooleanType.falsity) {
+        Boolean_t.validate(t.vLoc, word).isError must beFalse
+      }
+      success
+    }
+    "accept Boolean true/false values" in TestTypes(scrupal) { t: TestTypes ⇒
+      Boolean_t.validate(t.vLoc, true).isError must beFalse
+      Boolean_t.validate(t.vLoc, false).isError must beFalse
+    }
+  }
+
+  "NonEmptyString_t" should {
+    "accept a non-empty string" in TestTypes(scrupal) { t: TestTypes ⇒
+      NonEmptyString_t.validate(t.vLoc, "not empty").isError must beFalse
+    }
+    "reject an empty string" in TestTypes(scrupal) { t: TestTypes ⇒
+      NonEmptyString_t.validate(t.vLoc, "").isError must beTrue
+    }
+  }
+
+  "Password_t" should {
+    "accept a valid password" in TestTypes(scrupal) { t: TestTypes ⇒
+      Password_t.validate(t.vLoc, "ABC123!@#").isError must beFalse
+    }
+    "reject an invalid password" in TestTypes(scrupal) { t: TestTypes ⇒
+      Password_t.validate(t.vLoc, "short").isError must beTrue
+    }
+  }
+
+  "Description_t" should {
+    "accept" in TestTypes(scrupal) { t: TestTypes ⇒
+      Description_t.validate(t.vLoc, "A Long Enough Description").isError must beFalse
+    }
+    "reject" in TestTypes(scrupal) { t: TestTypes ⇒
+      Description_t.validate(t.vLoc, "Too short").isError must beTrue
+    }
+  }
+
+  "Markdown_t" should {
+    "accept '# Title'" in TestTypes(scrupal) { t: TestTypes ⇒
+      Markdown_t.validate(t.vLoc, "# Title").isError must beFalse
+    }
+    "reject empty string" in TestTypes(scrupal) { t: TestTypes ⇒
+      Markdown_t.validate(t.vLoc, "").isError must beTrue
+    }
+  }
 
   "DomainName_t" should {
     "accept scrupal.org" in TestTypes(scrupal) { t: TestTypes ⇒
@@ -228,6 +293,9 @@ class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
     }
     "reject ###.999" in TestTypes(scrupal) { t: TestTypes ⇒
       DomainName_t.validate(t.vLoc, "###.999").isError must beTrue
+    }
+    "reject ab" in TestTypes(scrupal) { t: TestTypes ⇒
+      DomainName_t.validate(t.vLoc, "ab").isError must beTrue
     }
   }
 

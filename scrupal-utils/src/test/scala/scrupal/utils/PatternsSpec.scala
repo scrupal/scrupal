@@ -100,6 +100,19 @@ class PatternsSpec extends Specification {
 
   // TODO: Finish writing Patterns test cases
 
+  "Markdown" should {
+    val pat = Patterns.Markdown
+    "accept 'a'" in {
+      pat.pattern.matcher("a").matches must beTrue
+    }
+    "accept '#'" in {
+      pat.pattern.matcher("#").matches must beTrue
+    }
+    "accept '*'" in {
+      pat.pattern.matcher("#").matches must beTrue
+    }
+  }
+
   "DomainName" should {
     "match legal domain names" in { pending }
     "reject invalid domain names" in { pending }
