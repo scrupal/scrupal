@@ -65,8 +65,8 @@ case class ScrupalesyNode(
   override val mediaType : MediaType = MediaTypes.`text/html`
 
   def apply(context : Context) : Future[Response] = Future.successful {
+    UnimplementedResponse("ScrupalesyNode")
     // TODO: Implement ScrupaleasyNode
-    HtmlResponse(Html.renderContents( Seq( span("Not Implemented"))), Unimplemented)
   }
 }
 

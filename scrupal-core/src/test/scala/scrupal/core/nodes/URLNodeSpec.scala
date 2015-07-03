@@ -15,43 +15,37 @@
 
 package scrupal.core.nodes
 
-import java.time.Instant
+import java.io.StringWriter
+import java.net.URL
 
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model.MediaTypes
+import org.apache.commons.io.IOUtils
 import scrupal.api._
+import scrupal.test.{NodeTest, ScrupalApiSpecification}
 
-import scala.concurrent.Future
+/** Test Case For CommandNode */
+class URLNodeSpec extends ScrupalApiSpecification("MessageNode") with NodeTest {
 
-/** Generate Content by substituting values in a template
-  * This allows users to create template type content in their browser. It is simply
-  * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
-  * You can substitute a node (@{node('mynode}), values from the [[scrupal.api.Context]] (@{context.`var_name`}),
-  * predefined variables/functions (@{datetime}), etc.
-  */
-case class SubstitutionNode (
-  name : String,
-  description: String,
-  script: String,
-  subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
-  modified: Option[Instant] = Some(Instant.now()),
-  created: Option[Instant] = Some(Instant.now()),
-  final val kind: Symbol = SubstitutionNode.kind
-) extends Node {
+  lazy val node = URLNode(specName,specName, new URL("http://scrupal.github.io/"), MediaTypes.`text/html`)
 
-  final val mediaType: MediaType = MediaTypes.`text/html`
-
-  def apply(context : Context) : Future[Response] = {
-    Future.successful { UnimplementedResponse("SubstitutionNode") } // FIXME: Return correct results
+  s"$specName" should {
+    "handle ..." in nodeTest(node) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/html`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[StreamResponse] must beTrue
+      val expected = "<title>Welcome by scrupal</title>"
+      r match {
+        case s: StreamResponse ⇒
+          val writer = new StringWriter()
+          IOUtils.copy(s.content, writer, utf8)
+          val rendered = writer.toString
+          rendered.startsWith("<!DOCTYPE html>") must beTrue
+          rendered.endsWith("</html>") must beTrue
+          rendered.contains(expected) must beTrue
+        case e: ErrorResponse ⇒ failure("Error: " + e.formatted)
+        case x: ExceptionResponse ⇒ throw x.content
+        case _ ⇒ throw new Exception("Unexpected result type")
+      }
+    }
   }
-
-  def resolve(ctxt: Context, tags: Map[String,(Node,Response)]) : Response = {
-    // val layout = Layout(layoutId).getOrElse(Layout.default)
-    val template: Array[Byte] = script.getBytes(utf8)
-    // FIXME: Reinstate LayoutProducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
-    StringResponse("foo", Successful)
-  }
-}
-
-object SubstitutionNode {
-  final val kind = 'Substitution
 }

@@ -15,43 +15,22 @@
 
 package scrupal.core.nodes
 
-import java.time.Instant
-
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
+import scrupal.test.{NodeTest, ScrupalApiSpecification}
 
-import scala.concurrent.Future
+/** Test Case For CommandNode */
+class StringNodeSpec extends ScrupalApiSpecification("StringNode") with NodeTest {
 
-/** Generate Content by substituting values in a template
-  * This allows users to create template type content in their browser. It is simply
-  * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
-  * You can substitute a node (@{node('mynode}), values from the [[scrupal.api.Context]] (@{context.`var_name`}),
-  * predefined variables/functions (@{datetime}), etc.
-  */
-case class SubstitutionNode (
-  name : String,
-  description: String,
-  script: String,
-  subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
-  modified: Option[Instant] = Some(Instant.now()),
-  created: Option[Instant] = Some(Instant.now()),
-  final val kind: Symbol = SubstitutionNode.kind
-) extends Node {
+  lazy val node = StringNode(specName, specName, "The String Node Content")
 
-  final val mediaType: MediaType = MediaTypes.`text/html`
-
-  def apply(context : Context) : Future[Response] = {
-    Future.successful { UnimplementedResponse("SubstitutionNode") } // FIXME: Return correct results
+  s"$specName" should {
+    "respond with same content" in nodeTest(node) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/plain`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[StringResponse] must beTrue
+      val sr = r.asInstanceOf[StringResponse]
+      sr.content must beEqualTo( "The String Node Content" )
+    }
   }
-
-  def resolve(ctxt: Context, tags: Map[String,(Node,Response)]) : Response = {
-    // val layout = Layout(layoutId).getOrElse(Layout.default)
-    val template: Array[Byte] = script.getBytes(utf8)
-    // FIXME: Reinstate LayoutProducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
-    StringResponse("foo", Successful)
-  }
-}
-
-object SubstitutionNode {
-  final val kind = 'Substitution
 }

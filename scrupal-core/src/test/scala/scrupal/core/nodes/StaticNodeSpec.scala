@@ -15,43 +15,31 @@
 
 package scrupal.core.nodes
 
-import java.time.Instant
-
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
+import akka.http.scaladsl.model.MediaTypes
+import scrupal.api.Html._
+import scrupal.api.Response
 import scrupal.api._
+import scrupal.test.{NodeTest, ScrupalApiSpecification}
 
-import scala.concurrent.Future
+import scalatags.Text.all._
 
-/** Generate Content by substituting values in a template
-  * This allows users to create template type content in their browser. It is simply
-  * a bunch of bytes to generate but with @{...} substitutions. What goes in the ... is essentially a function call.
-  * You can substitute a node (@{node('mynode}), values from the [[scrupal.api.Context]] (@{context.`var_name`}),
-  * predefined variables/functions (@{datetime}), etc.
-  */
-case class SubstitutionNode (
-  name : String,
-  description: String,
-  script: String,
-  subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
-  modified: Option[Instant] = Some(Instant.now()),
-  created: Option[Instant] = Some(Instant.now()),
-  final val kind: Symbol = SubstitutionNode.kind
-) extends Node {
+/** Test Case For CommandNode */
+class StaticNodeSpec extends ScrupalApiSpecification("StaticNode") with NodeTest {
 
-  final val mediaType: MediaType = MediaTypes.`text/html`
-
-  def apply(context : Context) : Future[Response] = {
-    Future.successful { UnimplementedResponse("SubstitutionNode") } // FIXME: Return correct results
+  lazy val template = new Html.Template(Symbol(specName)) {
+    val description = "Describe me"
+    def apply(context: Context, args: ContentsArgs) : Contents = Seq(span("scrupal"))
   }
 
-  def resolve(ctxt: Context, tags: Map[String,(Node,Response)]) : Response = {
-    // val layout = Layout(layoutId).getOrElse(Layout.default)
-    val template: Array[Byte] = script.getBytes(utf8)
-    // FIXME: Reinstate LayoutProducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
-    StringResponse("foo", Successful)
-  }
-}
+  lazy val node = StaticNode(specName, specName, template)
 
-object SubstitutionNode {
-  final val kind = 'Substitution
+  s"$specName" should {
+    "handle very simple content" in nodeTest(node) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/html`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[HtmlResponse] must beTrue
+      val sr = r.asInstanceOf[HtmlResponse]
+      sr.content.contains(<span>scrupal</span>.toString()) must beTrue
+    }
+  }
 }
