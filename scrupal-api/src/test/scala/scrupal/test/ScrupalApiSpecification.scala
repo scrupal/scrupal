@@ -77,7 +77,7 @@ trait ProviderTest extends ScrupalApiSpecification {
       val future = reactor.get(stim).map { response ⇒
         f(response)
       }
-      Await.result(future, 10.second)
+      Await.result(future, 30.second)
     }
   }
 }
@@ -88,7 +88,7 @@ trait NodeTest extends ScrupalApiSpecification {
       val future = node.apply(context) map { response : Response ⇒
         f(response)
       }
-      Await.result(future, 10.second)
+      Await.result(future, 30.second)
     }
   }
 }
