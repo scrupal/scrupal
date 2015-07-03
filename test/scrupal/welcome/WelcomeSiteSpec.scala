@@ -18,13 +18,13 @@ package scrupal.welcome
 import akka.http.scaladsl.model.MediaTypes
 import play.api.test.FakeRequest
 import scrupal.api._
-import scrupal.test.{ProviderTest, ScrupalApiSpecification}
+import scrupal.test.{ProviderTest, ScrupalSpecification}
 
 /** Title Of Thing.
   *
   * Description of thing
   */
-class WelcomeSiteSpec extends ScrupalApiSpecification("WelcomeSite") with ProviderTest {
+class WelcomeSiteSpec extends ScrupalSpecification("WelcomeSite") with ProviderTest {
 
   lazy val ws : WelcomeSite = WelcomeSite('welcome)(testScrupal)
 

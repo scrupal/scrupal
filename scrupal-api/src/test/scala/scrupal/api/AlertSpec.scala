@@ -18,7 +18,7 @@ package scrupal.api
 import java.time.Instant
 
 import scrupal.storage.api.{Collection, Schema}
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 import scrupal.utils._
 
 import scala.concurrent.{ExecutionContext, Await}
@@ -28,7 +28,7 @@ import scala.concurrent.duration._
  * One line sentence description here.
  * Further description here.
  */
-class AlertSpec extends ScrupalApiSpecification("AlertSpec") {
+class AlertSpec extends ScrupalSpecification("AlertSpec") {
 
 
 	"Alert" should {

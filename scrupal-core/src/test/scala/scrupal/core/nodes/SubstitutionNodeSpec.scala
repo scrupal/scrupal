@@ -17,10 +17,10 @@ package scrupal.core.nodes
 
 import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalApiSpecification}
+import scrupal.test.{NodeTest, ScrupalSpecification}
 
 /** Test Case For CommandNode */
-class SubstitutionNodeSpec extends ScrupalApiSpecification("MessageNode") with NodeTest {
+class SubstitutionNodeSpec extends ScrupalSpecification("MessageNode") with NodeTest {
 
   lazy val node = SubstitutionNode(specName, specName, "foo @@@bar@@@", Map.empty)
 

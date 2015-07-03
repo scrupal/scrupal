@@ -17,10 +17,10 @@ package scrupal.core.nodes
 
 import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalApiSpecification}
+import scrupal.test.{NodeTest, ScrupalSpecification}
 
 /** Test Case For CommandNode */
-class StringNodeSpec extends ScrupalApiSpecification("StringNode") with NodeTest {
+class StringNodeSpec extends ScrupalSpecification("StringNode") with NodeTest {
 
   lazy val node = StringNode(specName, specName, "The String Node Content")
 

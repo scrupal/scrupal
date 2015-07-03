@@ -20,9 +20,8 @@ import play.api.mvc.{AnyContent, Request}
 import scrupal.api.{Reactor, Stimulus, Response, Provider}
 
 import scala.concurrent.{Await, ExecutionContext}
-import scala.concurrent.duration._
 
-trait ProviderTest extends ScrupalApiSpecification {
+trait ProviderTest extends ScrupalSpecification {
   def providerTest(provider: Provider, request: Request[AnyContent], modelRx : Reactor, modelResp: Response)
       (f : (Reactor,Response) ⇒ Result) : Result = {
     testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
@@ -40,7 +39,7 @@ trait ProviderTest extends ScrupalApiSpecification {
         response.disposition must beEqualTo(modelResp.disposition)
         f(reactor, response)
       }
-      Await.result(future, 30.second)
+      Await.result(future, timeout)
     }
   }
 }

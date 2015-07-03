@@ -15,13 +15,13 @@
 
 package scrupal.core
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 /** Title Of Thing.
   *
   * Description of thing
   */
-class TypesSpec extends ScrupalApiSpecification("Types") {
+class TypesSpec extends ScrupalSpecification("Types") {
 
   "PageBundle_t" should {
     "have some test" in { pending }

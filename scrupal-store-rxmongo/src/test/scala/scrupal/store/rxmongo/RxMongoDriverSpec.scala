@@ -15,9 +15,9 @@
 
 package scrupal.store.rxmongo
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
-class RxMongoDriverSpec extends ScrupalApiSpecification("RxMongoDriver") {
+class RxMongoDriverSpec extends ScrupalSpecification("RxMongoDriver") {
 
   s"$specName" should {
     "provide some test examples" in { pending }

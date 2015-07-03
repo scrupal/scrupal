@@ -20,10 +20,10 @@ import java.io.{StringWriter, File}
 import akka.http.scaladsl.model.MediaTypes
 import org.apache.commons.io.IOUtils
 import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalApiSpecification}
+import scrupal.test.{NodeTest, ScrupalSpecification}
 
 /** Test Case For CommandNode */
-class FileNodeSpec extends ScrupalApiSpecification("FileNode") with NodeTest {
+class FileNodeSpec extends ScrupalSpecification("FileNode") with NodeTest {
 
   lazy val node = FileNode(specName,"File Node",
     new File("scrupal-core/src/test/resources/fakeAsset.txt"),MediaTypes.`text/plain`)

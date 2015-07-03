@@ -15,9 +15,9 @@
 
 package scrupal.storage.impl
 
+import org.specs2.mutable.Specification
 import play.api.libs.json.Json
 import scrupal.storage.api._
-import scrupal.test.ScrupalSpecification
 
 case class DoubleVal(value: Double = 42.0) extends Storable
 case class Simple(a: Double = 42.0, b: Long = 42, c: String = "42") extends Storable
@@ -32,7 +32,7 @@ case class Complex(
   ) extends Storable
 
 
-class StorageFormattersSpec extends ScrupalSpecification("StorageFormatters") {
+class StorageFormattersSpec extends Specification {
 
   def applyFormatter(formatter: StorageFormatter[StorageFormat,Storable], value: Storable) = {
     val result = formatter.read(formatter.write(value))

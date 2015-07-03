@@ -15,9 +15,9 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
-class EventHandlerSpec extends ScrupalApiSpecification("EventHandler") {
+class EventHandlerSpec extends ScrupalSpecification("EventHandler") {
 
   "EventHandler" should {
     "have some test examples" in {

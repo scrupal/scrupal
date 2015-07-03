@@ -15,9 +15,9 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
-class EventSpec extends ScrupalApiSpecification("Event") {
+class EventSpec extends ScrupalSpecification("Event") {
 
   "Event" should {
     "have some test examples" in {

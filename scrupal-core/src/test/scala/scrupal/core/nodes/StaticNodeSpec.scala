@@ -19,12 +19,12 @@ import akka.http.scaladsl.model.MediaTypes
 import scrupal.api.Html._
 import scrupal.api.Response
 import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalApiSpecification}
+import scrupal.test.{NodeTest, ScrupalSpecification}
 
 import scalatags.Text.all._
 
 /** Test Case For CommandNode */
-class StaticNodeSpec extends ScrupalApiSpecification("StaticNode") with NodeTest {
+class StaticNodeSpec extends ScrupalSpecification("StaticNode") with NodeTest {
 
   lazy val template = new Html.Template(Symbol(specName)) {
     val description = "Describe me"

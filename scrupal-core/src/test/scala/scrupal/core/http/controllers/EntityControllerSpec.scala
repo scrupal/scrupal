@@ -16,10 +16,10 @@
 package scrupal.core.http.controllers
 
 import scrupal.core.akkahttp.SiteDirectives
-import scrupal.test.{ ScenarioGenerator, ScrupalApiSpecification }
+import scrupal.test.{ ScenarioGenerator, ScrupalSpecification }
 
 /** Test Suite for EntityController */
-class EntityControllerSpec extends ScrupalApiSpecification("EntityControllerSpec")
+class EntityControllerSpec extends ScrupalSpecification("EntityControllerSpec")
   with SiteDirectives {
 
 

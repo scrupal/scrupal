@@ -13,25 +13,18 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.nodes
+package router.scrupal.core
 
+import scrupal.test.ScrupalSpecification
 
-import akka.http.scaladsl.model.MediaTypes
-import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalSpecification}
+class ReverseAssetsSpec extends ScrupalSpecification("ReverseAssets") {
 
-/** Test Case For CommandNode */
-class CommandNodeSpec extends ScrupalSpecification("CommandNode") with NodeTest {
-
-  lazy val command = CommandNode("echocmd", "A command node", "echo Hello, World!")
-
-  "CommandNodeSpec" should {
-    "handle hello world" in nodeTest(command) { r: Response ⇒
-      r.mediaType must beEqualTo(MediaTypes.`text/plain`)
-      r.disposition.isSuccessful must beTrue
-      r.isInstanceOf[StringResponse] must beTrue
-      val sr = r.asInstanceOf[StringResponse]
-      sr.content must beEqualTo( "Hello, World!" )
+  lazy val ra = new ReverseAssets("")
+  s"$specName" should {
+    "generate stylesheet Call" in {
+      pending("getting application into test")
+      // val call = ra.css("scrupal.css")
+      // call.url must not beEmpty
     }
   }
 }

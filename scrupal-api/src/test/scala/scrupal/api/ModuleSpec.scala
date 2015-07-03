@@ -15,13 +15,13 @@
 
 package scrupal.api
 
-import scrupal.test.{ScrupalApiSpecification, FakeModule}
+import scrupal.test.{ScrupalSpecification, FakeModule}
 import scrupal.utils.Version
 
 import scala.collection.immutable.HashMap
 
 /** Test specifications for the API Module class */
-class ModuleSpec extends ScrupalApiSpecification("Module") {
+class ModuleSpec extends ScrupalSpecification("Module") {
 
   val db = "test-modules"
 

@@ -18,7 +18,7 @@ package scrupal.api
 import java.util.concurrent.TimeUnit
 
 import akka.http.scaladsl.server.PathMatcher
-import scrupal.test.{ScrupalApiSpecification, FakeContext}
+import scrupal.test.{ScrupalSpecification, FakeContext}
 import shapeless.{::, HList, HNil}
 
 import scala.concurrent.{Await, Future}
@@ -26,7 +26,7 @@ import scala.concurrent.duration.Duration
 
 
 /** Test Suite for Actions and Related Traits */
-class ActionSpec extends ScrupalApiSpecification("ActionSpec") {
+class ActionSpec extends ScrupalSpecification("ActionSpec") {
 
   /* TODO: Determine if the ActionSpec test cases are still needed
   case class Fixture(name: String, path: String) extends FakeContext {

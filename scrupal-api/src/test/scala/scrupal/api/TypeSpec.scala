@@ -17,12 +17,12 @@ package scrupal.api
 
 import java.time.Instant
 
-import scrupal.test.{TestTypes, ScrupalApiSpecification}
+import scrupal.test.{TestTypes, ScrupalSpecification}
 
 import scala.language.implicitConversions
 
 /** Test specifications for the abstract Type system portion of the API.  */
-class TypeSpec extends ScrupalApiSpecification("TypeSpec") {
+class TypeSpec extends ScrupalSpecification("TypeSpec") {
 
   "MiddlePeriod" should {
     "accept 'foo.bar'" in TestTypes(scrupal) { t : TestTypes ⇒

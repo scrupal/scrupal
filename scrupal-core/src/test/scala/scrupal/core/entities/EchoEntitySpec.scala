@@ -17,12 +17,12 @@ package scrupal.core.entities
 
 import play.api.test.FakeRequest
 import scrupal.api._
-import scrupal.test.{ScrupalApiSpecification}
+import scrupal.test.{ScrupalSpecification}
 
 /**
  * Created by reid on 11/11/14.
  */
-class EchoEntitySpec extends ScrupalApiSpecification("EchoEntity") {
+class EchoEntitySpec extends ScrupalSpecification("EchoEntity") {
 
   lazy val echo = EchoEntity('EchoSpec)(scrupal)
 

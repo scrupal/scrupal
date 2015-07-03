@@ -15,12 +15,12 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 /** Test specification for Events system portion of the API
  * Further description here.
  */
-class EventsSpec extends ScrupalApiSpecification("Events") {
+class EventsSpec extends ScrupalSpecification("Events") {
 
   "Event" should {
     "work correctly" in {

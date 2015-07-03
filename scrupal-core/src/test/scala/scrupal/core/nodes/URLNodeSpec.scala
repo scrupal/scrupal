@@ -21,10 +21,10 @@ import java.net.URL
 import akka.http.scaladsl.model.MediaTypes
 import org.apache.commons.io.IOUtils
 import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalApiSpecification}
+import scrupal.test.{NodeTest, ScrupalSpecification}
 
 /** Test Case For CommandNode */
-class URLNodeSpec extends ScrupalApiSpecification("MessageNode") with NodeTest {
+class URLNodeSpec extends ScrupalSpecification("MessageNode") with NodeTest {
 
   lazy val node = URLNode(specName,specName, new URL("http://scrupal.github.io/"), MediaTypes.`text/html`)
 

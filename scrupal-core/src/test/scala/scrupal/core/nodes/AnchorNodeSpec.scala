@@ -19,10 +19,10 @@ import java.net.URL
 
 import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalApiSpecification}
+import scrupal.test.{NodeTest, ScrupalSpecification}
 
 /** Test Case For CommandNode */
-class AnchorNodeSpec extends ScrupalApiSpecification("AnchorNode") with NodeTest {
+class AnchorNodeSpec extends ScrupalSpecification("AnchorNode") with NodeTest {
 
   lazy val node = AnchorNode(specName, specName, new URL("http://scrupal.github.io/"))
 

@@ -13,25 +13,51 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.nodes
+package router.scrupal.core
 
+import play.api.Environment
+import play.api.test.FakeRequest
+import scrupal.test.{OneAppPerSpec, ScrupalSpecification}
+import scrupal.core.http.ErrorHandler
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
-import akka.http.scaladsl.model.MediaTypes
-import scrupal.api._
-import scrupal.test.{NodeTest, ScrupalSpecification}
+class AssetsSpec extends ScrupalSpecification("Assets")  {
 
-/** Test Case For CommandNode */
-class CommandNodeSpec extends ScrupalSpecification("CommandNode") with NodeTest {
+  lazy val eh = testScrupal.withConfiguration { config ⇒
+    new ErrorHandler(testScrupal, Environment.simple(), config)
+  }
 
-  lazy val command = CommandNode("echocmd", "A command node", "echo Hello, World!")
+  lazy val assets = new Assets(eh)
 
-  "CommandNodeSpec" should {
-    "handle hello world" in nodeTest(command) { r: Response ⇒
-      r.mediaType must beEqualTo(MediaTypes.`text/plain`)
-      r.disposition.isSuccessful must beTrue
-      r.isInstanceOf[StringResponse] must beTrue
-      val sr = r.asInstanceOf[StringResponse]
-      sr.content must beEqualTo( "Hello, World!" )
+  s"$specName" should {
+    "find a regular asset with at" in {
+      val action = assets.at("stylesheets/scrupal.min.css")
+      val req = FakeRequest("GET", "/assets/stylesheets/scrupal.min.css")
+      val future = action.apply(req).map { result ⇒
+        pending("getting application into test")
+        // result.header.status must beEqualTo(200)
+      }
+      Await.result(future, 2.seconds)
+    }
+    "find a javascript with js" in {
+      pending
+      // def js(file: String) = super.versioned("/public/javascripts", file)
+    }
+    "find an image with img" in {
+      pending
+      // def img(file: String) = super.versioned("/public/images", file)
+    }
+    "find a stylesheet with css" in {
+      pending
+      // def css(file: String) = super.versioned("/public/stylesheets", file)
+    }
+    "find a theme with theme" in {
+      pending
+      // def theme(theme: String, file: String) = super.versioned("/public/lib", s"bootswatch-$theme/$file")
     }
   }
+
 }
+

@@ -15,36 +15,37 @@
 
 package scrupal.test
 
+import java.io.File
 
 import com.typesafe.config.ConfigFactory
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.specs2.execute.{Failure, Result}
-
+import play.api.test.PlaySpecification
 import play.api.Configuration
-import play.api.mvc.{Request, AnyContent}
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 
 import scrupal.api._
 import scrupal.storage.api.{SchemaDesign, Schema, StoreContext}
-import scrupal.utils.ConfigHelpers
-
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
-
+import scrupal.utils.{ScrupalComponent, ConfigHelpers}
 
 /** One line sentence description here.
   * Further description here.
   */
-abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDuration = Duration(5, "seconds"))
-  extends ScrupalSpecification(specName) {
+abstract class ScrupalSpecification(
+  val specName : String, val timeout : FiniteDuration = Duration(5, "seconds")
+) extends PlaySpecification with ScrupalComponent {
 
   // WARNING: Do NOT put anything but def and lazy val because of DelayedInit or app startup will get invoked twice
   // and you'll have a real MESS on your hands!!!! (i.e. no db interaction will work!)
 
-  lazy val testScrupal: Scrupal = FakeScrupal(
-    ScrupalSpecification.next(specName), Map.empty[String,AnyRef]
-  )
+  lazy val testScrupal: Scrupal = {
+    FakeScrupal(
+      ScrupalSpecification.next(specName), Map.empty[String,AnyRef]
+    )
+  }
 
   implicit lazy val scrupal : Scrupal = testScrupal
 
@@ -67,11 +68,7 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
   }
 }
 
-
-
-
-
-object ScrupalApiSpecification {
+object ScrupalSpecification {
 
   val counter = new AtomicInteger(0)
 
@@ -93,3 +90,5 @@ object ScrupalApiSpecification {
     )
   }
 }
+
+

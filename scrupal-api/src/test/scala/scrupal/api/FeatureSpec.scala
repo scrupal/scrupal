@@ -15,13 +15,13 @@
 
 package scrupal.api
 
-import scrupal.test.{ScrupalApiSpecification, FakeModule, FakeContext}
+import scrupal.test.{ScrupalSpecification, FakeModule, FakeContext}
 
 
 /** Test cases for the scrupal.api.Feature class
   * Further description here.
   */
-class FeatureSpec extends ScrupalApiSpecification("FeatureSpec") {
+class FeatureSpec extends ScrupalSpecification("FeatureSpec") {
 
   case class Fixture(name: String) extends {
     implicit val scrupal : Scrupal = testScrupal

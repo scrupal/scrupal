@@ -16,14 +16,14 @@
 package scrupal.api
 
 import scrupal.storage.api.{Collection, Schema, StoreContext, WriteResult}
-import scrupal.test.{FakeEntity, FakeModule, ScrupalApiSpecification}
+import scrupal.test.{FakeEntity, FakeModule, ScrupalSpecification}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
 /** Test Specification For Instance Class */
-class InstanceSpec extends ScrupalApiSpecification("InstanceSpec") {
+class InstanceSpec extends ScrupalSpecification("InstanceSpec") {
 
   class TestModule(db: String) extends FakeModule('foo, db) {
     val thai = StringType('Thai, "Thai Foon", ".*".r)

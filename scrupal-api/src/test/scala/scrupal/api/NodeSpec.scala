@@ -18,12 +18,12 @@ package scrupal.api
 import java.util.concurrent.TimeUnit
 
 import org.specs2.mutable.Specification
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class NodeSpec extends ScrupalApiSpecification("Node") {
+class NodeSpec extends ScrupalSpecification("Node") {
 
   "NodeSpec" should {
     "have some test examples" in {

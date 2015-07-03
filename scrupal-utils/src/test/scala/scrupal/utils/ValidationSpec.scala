@@ -16,13 +16,14 @@
 package scrupal.utils
 
 import org.specs2.execute.{Failure, Result}
+import org.specs2.mutable.Specification
+
 import scrupal.utils.Validation._
 
-import scrupal.test.ScrupalSpecification
 import shapeless._
 
 /** Test Spec for Validator */
-class ValidationSpec extends ScrupalSpecification("Validator") {
+class ValidationSpec extends Specification {
 
   "ValidationLocation" should {
     "correctly derive indexable" in {
@@ -106,14 +107,14 @@ class ValidationSpec extends ScrupalSpecification("Validator") {
           else if (l > max) Some(s"Value $l is out of range, above maximum of $max")
           else None
         }
-        implicit def caseDouble = at[Double] { d : Double ⇒
-          if (d < min) Some(s"Value $d is out of range, below minimum of $min")
-          else if (d > max) Some(s"Value $d is out of range, above maximum of $max")
-          else None
-        }
         implicit def caseFloat = at[Float] { f : Float ⇒
           if (f < min) Some(s"Value $f is out of range, below minimum of $min")
           else if (f > max) Some(s"Value $f is out of range, above maximum of $max")
+          else None
+        }
+        implicit def caseDouble = at[Double] { d : Double ⇒
+          if (d < min) Some(s"Value $d is out of range, below minimum of $min")
+          else if (d > max) Some(s"Value $d is out of range, above maximum of $max")
           else None
         }
         implicit def caseString = at[String] { s: String ⇒

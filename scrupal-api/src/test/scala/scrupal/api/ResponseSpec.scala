@@ -18,11 +18,11 @@ package scrupal.api
 
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
 import play.api.libs.iteratee.Enumerator
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.ExecutionContext
 
-class ResponseSpec extends ScrupalApiSpecification("Response") {
+class ResponseSpec extends ScrupalSpecification("Response") {
 
   "Response" should {
     "have payload, mediaType and disposition" in {

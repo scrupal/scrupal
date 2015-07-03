@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 import org.specs2.execute.AsResult
 import scrupal.storage.api.{Collection, StoreContext, Schema}
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 import scrupal.utils.HasherKinds
 
 import scala.concurrent.{ExecutionContext, Await}
@@ -31,7 +31,7 @@ import scala.concurrent.Future
  * Test that our basic abstractions for accessing the database hold water.
  */
 
-class PrincipalSpec extends ScrupalApiSpecification("Principal")
+class PrincipalSpec extends ScrupalSpecification("Principal")
 {
 	"Principal" should {
 		"save, load and delete from DB" in {

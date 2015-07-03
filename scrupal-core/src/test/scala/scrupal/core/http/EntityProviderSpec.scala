@@ -17,9 +17,9 @@ package scrupal.core.http
 
 import play.api.test.FakeRequest
 import scrupal.api.{Scrupal, BundleType}
-import scrupal.test.{FakeContext, FakeEntity, ScrupalApiSpecification}
+import scrupal.test.{FakeContext, FakeEntity, ScrupalSpecification}
 
-class EntityProviderSpec extends ScrupalApiSpecification("EntityRouter") {
+class EntityProviderSpec extends ScrupalSpecification("EntityRouter") {
 
   case class Fixture(name: String) extends {
     implicit val scrupal : Scrupal = testScrupal

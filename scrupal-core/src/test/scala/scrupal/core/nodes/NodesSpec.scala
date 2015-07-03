@@ -24,7 +24,7 @@ import org.apache.commons.io.IOUtils
 import play.api.libs.iteratee.{Enumerator, Iteratee}
 import scrupal.api.Html.{Contents, ContentsArgs}
 import scrupal.api._
-import scrupal.test.{ScrupalApiSpecification, FakeContext}
+import scrupal.test.{ScrupalSpecification, FakeContext}
 
 import scala.concurrent.{ExecutionContext, Future, Await}
 import scala.concurrent.duration.Duration
@@ -35,7 +35,7 @@ import scalatags.Text.all._
 /** Test Cases For The Nodes in CoreNodes module
   * Created by reidspencer on 11/9/14.
   */
-class NodesSpec extends ScrupalApiSpecification("Nodes") {
+class NodesSpec extends ScrupalSpecification("Nodes") {
 
   sequential
 

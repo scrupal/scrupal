@@ -15,12 +15,12 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 /**
  * Created by reid on 11/11/14.
  */
-class HandlerSpec extends ScrupalApiSpecification("Handler") {
+class HandlerSpec extends ScrupalSpecification("Handler") {
 
   "Handler" should {
     "perform some tests" in {

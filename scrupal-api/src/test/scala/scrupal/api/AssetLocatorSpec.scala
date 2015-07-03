@@ -21,14 +21,14 @@ import java.io.File
 import akka.http.scaladsl.model.MediaTypes
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
-import scrupal.test.{FakeContext, ScrupalApiSpecification}
+import scrupal.test.{FakeContext, ScrupalSpecification}
 import scrupal.utils.OSSLicense
 
 class TestAssetLocator(config: Configuration) extends ConfiguredAssetsLocator(config) {
   override def assets_path = super.assets_path ++ Seq("scrupal-api/src/test/resources")
 }
 
-class AssetLocatorSpec extends ScrupalApiSpecification("AssetLocatorSpec") {
+class AssetLocatorSpec extends ScrupalSpecification("AssetLocatorSpec") {
 sequential
   case class Assets(name: String) extends {
     implicit val scrupal : Scrupal = testScrupal

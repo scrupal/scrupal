@@ -15,9 +15,9 @@
 
 package scrupal.storage.api
 
-import scrupal.test.ScrupalSpecification
+import org.specs2.mutable.Specification
 
-class StorableSpec extends ScrupalSpecification("Storable") {
+class StorableSpec extends Specification {
 
   case class Number(value: Int)
 

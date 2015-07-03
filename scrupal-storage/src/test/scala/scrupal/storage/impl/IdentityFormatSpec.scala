@@ -15,10 +15,10 @@
 
 package scrupal.storage.impl
 
+import org.specs2.mutable.Specification
 import scrupal.storage.api.Storable
-import scrupal.test.ScrupalSpecification
 
-class IdentityFormatSpec extends ScrupalSpecification("IdentityFormat") {
+class IdentityFormatSpec extends Specification {
 
   case class StringStorable(s: String) extends Storable
 

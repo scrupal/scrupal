@@ -19,15 +19,14 @@ import org.specs2.execute.Result
 import scrupal.api.{Response, Node}
 
 import scala.concurrent.{Await, ExecutionContext}
-import scala.concurrent.duration._
 
-trait NodeTest extends ScrupalApiSpecification {
+trait NodeTest extends ScrupalSpecification {
   def nodeTest(node: Node)(f : Response ⇒ Result) : Result = {
     testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
       val future = node.apply(context) map { response : Response ⇒
         f(response)
       }
-      Await.result(future, 30.second)
+      Await.result(future, timeout)
     }
   }
 }

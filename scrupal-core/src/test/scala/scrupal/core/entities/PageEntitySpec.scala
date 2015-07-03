@@ -18,9 +18,9 @@ package scrupal.core.entities
 import org.specs2.mutable.Specification
 import play.api.test.FakeRequest
 import scrupal.api._
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
-class PageEntitySpec extends ScrupalApiSpecification("PageEntity") {
+class PageEntitySpec extends ScrupalSpecification("PageEntity") {
 
   lazy val echo = PageEntity('PageSpec)(scrupal)
 

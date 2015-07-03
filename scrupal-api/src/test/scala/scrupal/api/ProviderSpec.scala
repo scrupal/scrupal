@@ -16,12 +16,12 @@
 package scrupal.api
 
 import play.api.mvc.RequestHeader
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class ProviderSpec extends ScrupalApiSpecification("Provider") {
+class ProviderSpec extends ScrupalSpecification("Provider") {
 
   val provider1 = NullProvider('One)
   val provider2 = NullProvider('Two)

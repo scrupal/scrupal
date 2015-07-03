@@ -19,13 +19,13 @@ import play.api.mvc.{AnyContent, AnyContentAsFormUrlEncoded, Request, RequestHea
 import play.api.test.FakeRequest
 import scrupal.api.Form._
 import scrupal.utils.Validation.{Failure, Success}
-import scrupal.test.{ScrupalApiSpecification, HTML5Validator}
+import scrupal.test.{ScrupalSpecification, HTML5Validator}
 
 import scala.concurrent.{ExecutionContext, Await}
 import scala.concurrent.duration._
 
 /** Test Suite for Forms */
-class FormsSpec extends ScrupalApiSpecification("Forms") {
+class FormsSpec extends ScrupalSpecification("Forms") {
 
   def throwRequirementFailed = throwA[IllegalArgumentException]("requirement failed")
   "Forms.TextField" should {

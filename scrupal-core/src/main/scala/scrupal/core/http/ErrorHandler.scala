@@ -17,12 +17,10 @@ package scrupal.core.http
 
 import javax.inject.Inject
 
-import com.google.inject.Provider
 import play.api.http.DefaultHttpErrorHandler
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results._
-import play.api.routing.Router
-import play.api.{Configuration, Environment, OptionalSourceMapper, UsefulException}
+import play.api.{Configuration, Environment, UsefulException}
 import scrupal.api.Scrupal
 
 import scala.concurrent.Future
@@ -30,10 +28,8 @@ import scala.concurrent.Future
 class ErrorHandler @Inject()(
   scrupal: Scrupal,
   env: Environment,
-  config: Configuration,
-  sourceMapper: OptionalSourceMapper,
-  router: Provider[Router]
-  ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
+  config: Configuration
+) extends DefaultHttpErrorHandler(env, config) {
 
   override def onProdServerError(request: RequestHeader, exception: UsefulException) = {
     Future.successful(

@@ -16,7 +16,7 @@
 package scrupal.api
 
 import scrupal.core.CoreSchemaDesign
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /** One line sentence description here.
   * Further description here.
   */
-class CoreSchemaSpec extends ScrupalApiSpecification("CoreSchema") {
+class CoreSchemaSpec extends ScrupalSpecification("CoreSchema") {
 
   "CoreSchema" should {
     "Accumulate table names correctly" in {

@@ -15,12 +15,12 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
 /** One line sentence description here.
   * Further description here.
   */
-class SiteSpec extends ScrupalApiSpecification("Site") {
+class SiteSpec extends ScrupalSpecification("Site") {
 
   "Site" should {
     "have some test" in { pending("but not written yet") }

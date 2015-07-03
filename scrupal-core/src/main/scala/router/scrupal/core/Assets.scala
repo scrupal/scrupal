@@ -19,19 +19,19 @@ import javax.inject.{Inject, Singleton}
 
 import controllers.Assets.Asset
 import play.api.http.HttpErrorHandler
-import play.api.mvc.{Action, AnyContent}
+
 
 @Singleton
 class Assets @Inject()(errHandler: HttpErrorHandler) extends controllers.Assets(errHandler) {
 
-  def at(file: String) = super.versioned("/public", file)
+  def at(file: String) = super.at("/public", file, aggressiveCaching=true)
 
-  def js(file: String) = super.versioned("/public/javascripts", file)
+  def js(file: Asset) = super.versioned("public/javascripts", file)
 
-  def img(file: String) = super.versioned("/public/images", file)
+  def img(file: Asset) = super.versioned("public/images", file)
 
-  def css(file: String) = super.versioned("/public/stylesheets", file)
+  def css(file: Asset) = super.versioned("public/stylesheets", file)
 
-  def theme(theme: String, file: String) = super.versioned("/public/lib", s"bootswatch-$theme/$file")
+  def theme(theme: String, file: Asset) = super.versioned("public/lib", s"bootswatch-$theme/$file")
 
 }

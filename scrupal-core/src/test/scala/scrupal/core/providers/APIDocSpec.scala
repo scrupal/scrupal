@@ -17,9 +17,9 @@ package scrupal.core.providers
 
 import play.api.test.FakeRequest
 import scrupal.api.{Reactor, Response, NoopResponse}
-import scrupal.test.{ProviderTest, ScrupalApiSpecification}
+import scrupal.test.{ProviderTest, ScrupalSpecification}
 
-class APIDocSpec extends ScrupalApiSpecification("APIDoc") with ProviderTest {
+class APIDocSpec extends ScrupalSpecification("APIDoc") with ProviderTest {
 
   lazy val apidoc = APIDoc()
 

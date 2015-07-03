@@ -16,9 +16,10 @@
 package scrupal.storage.api
 
 import org.specs2.execute.{Error, Result}
+import org.specs2.mutable.Specification
 import play.api.libs.json.Json
 import scrupal.storage.impl.JsonFormatter
-import scrupal.test.ScrupalSpecification
+import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -43,7 +44,7 @@ object DingBotsSchema extends SchemaDesign {
   * as well.
   * @param name The name of the test suite being run
   */
-abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name) {
+abstract class StorageTestSuite(name: String) extends Specification with ScrupalComponent {
 
   def driver: StorageDriver
   def driverName : String

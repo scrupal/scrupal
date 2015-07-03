@@ -15,9 +15,9 @@
 
 package scrupal.api
 
-import scrupal.test.ScrupalApiSpecification
+import scrupal.test.ScrupalSpecification
 
-class ReferenceSpec extends ScrupalApiSpecification("Reference") {
+class ReferenceSpec extends ScrupalSpecification("Reference") {
 
   "ReferenceSpec" should {
     "have some test examples" in {
