@@ -40,7 +40,7 @@ case class success(message : Contents) extends SimpleGenerator {
 case class exception(activity : String, error : Throwable) extends SimpleGenerator {
   def apply() : Contents = {
     danger(Seq(
-      p(s"While attempting to ${activity} an exception occurred:"),
+      p(s"While attempting to $activity an exception occurred:"),
       display_exception(error)()
     ))()
   }
@@ -87,7 +87,7 @@ object display_alerts extends FragmentGenerator {
       div(cls := "alert alert-dismissible @alert.cssClass",
         button(`type` := "button", cls := "close", data("dismiss") := "alert", aria.hidden := "true",
           i(cls := "icon-remove-sign")),
-        strong(alert.iconHtml, "&nbsp;", alert.prefix), "&nbsp;", alert.message)
+        strong(alert.icon(), "&nbsp;", alert.prefix), "&nbsp;", alert.message)
     }
   }
 }

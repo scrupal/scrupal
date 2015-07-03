@@ -59,8 +59,6 @@ trait Type[VT] extends Registrable[Type[_]] with Describable with Validator[VT] 
 
   def registry : Registry[Type[_]] = Types
 
-  type ValueType = VT
-
   /** The plural of the name of the type.
     * The name given to the type should be the singular form (Color not Colors) but things associated with this type
     * may wish to use the plural form. To ensure that everyone uses the same rules for pluralization,
@@ -205,7 +203,6 @@ trait DocumentType[KT, ET, MT] extends Type[MT] with MapValidator[KT, ET, MT] {
 }
 
 trait StructuredType[ET] extends DocumentType[String, ET, Map[String, ET]] {
-  override type ValueType = Map[String, ET]
   def fields : Map[String, Type[_]]
   def validatorFor(id : String) : Option[Type[_]] = fields.get(id)
   def fieldNames : Iterable[String] = fields.keys

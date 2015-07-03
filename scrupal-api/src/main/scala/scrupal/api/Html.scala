@@ -69,6 +69,7 @@ object Html {
     def render(context : Context, args : ContentsArgs) : String = {
       renderContents(apply())
     }
+    override def toString() : String = renderContents(apply())
   }
 
   trait FragmentGenerator extends Generator with ((Context) ⇒ Contents) {

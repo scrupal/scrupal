@@ -17,8 +17,8 @@ package scrupal.api
 
 import java.time.Instant
 
+import scrupal.api.html.Icon
 import scrupal.storage.api.{Query, Queries, Storable}
-import scrupal.utils.{AlertKind, Icons}
 
 /** Representation of an alert message that is shown at the top of every page. Alerts are queued and each user
   * has a "latest" alert they've seen. Alerts expire, however, so it is possible for a user to miss an alert.
@@ -28,7 +28,7 @@ import scrupal.utils.{AlertKind, Icons}
   * @param description Brief description of the alert
   * @param message Text of the message to deliver to users
   * @param alertKind The kind of alert
-  * @param iconKind The icon to use in the alert
+  * @param icon The icon to use in the alert
   * @param prefix The prefix label to use in the alert
   * @param cssClass The cssClass name to use in the alert
   * @param expiry The time at which the alert expires
@@ -39,7 +39,7 @@ case class Alert(
   description : String,
   message : String,
   alertKind : AlertKind,
-  iconKind : Icons.Value,
+  icon : Icon,
   prefix : String,
   cssClass : String,
   expiry : Option[Instant],
@@ -59,8 +59,6 @@ case class Alert(
       this(id, name, description, message, alertKind, alertKind.icon, alertKind.prefix, alertKind.css,
            Some(alertKind.expiry), Some(Instant.now()), Some(Instant.now()))
     }
-
-  def iconHtml : Html.TagContent = Icons.html(iconKind)
 }
 
 trait AlertQueries extends Queries[Alert] {

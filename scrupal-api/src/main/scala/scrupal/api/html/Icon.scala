@@ -13,12 +13,27 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.utils
+package scrupal.api.html
 
-import org.specs2.mutable.Specification
+import scrupal.api.Html._
 
-/** Created by reid on 11/11/14.
-  */
-class AlertKindSpec extends Specification {
+import scalatags.Text.all._
 
+case class Icon(name : String) extends SimpleGenerator {
+  val h = i(cls := s"icon-${name.toLowerCase.replaceAll("[^a-z]","-")}")
+  def apply() : Contents = { Seq(h) }
+}
+
+
+object Icons {
+
+  lazy val ok = Icon("ok")
+  lazy val info = Icon("info")
+  lazy val exclamation = Icon("exclamation")
+  lazy val exclamation_sign = Icon("exclamation-sign")
+  lazy val remove = Icon("remove")
+  lazy val warning_sign = Icon("warning_sign")
+  lazy val heart = Icon("heart")
+  lazy val long_arrow_left = Icon("long_arrow_left")
+  lazy val align_center = Icon("align_center")
 }

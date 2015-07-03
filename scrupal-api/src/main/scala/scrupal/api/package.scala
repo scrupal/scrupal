@@ -87,6 +87,15 @@ package object api {
 
   val emptyAtom : Atom = Coproduct[Atom](false)
 
+
+  type AtomMap = Map[String, Atom]
+  type AtomList = List[Atom]
+
+  type Atoms = Atom :+: AtomMap :+: AtomList :+: CNil
+
+  type AtomsMap = Map[String,Atoms]
+  type AtomsList = List[Atoms]
+
   implicit class Disposition2StatusCode(disposition : Disposition) {
     def toStatusCode: StatusCode = {
       disposition match {

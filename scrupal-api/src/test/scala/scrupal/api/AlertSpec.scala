@@ -19,7 +19,7 @@ import java.time.Instant
 
 import scrupal.storage.api.{Collection, Schema}
 import scrupal.test.ScrupalSpecification
-import scrupal.utils._
+import scrupal.api.html.Icons._
 
 import scala.concurrent.{ExecutionContext, Await}
 import scala.concurrent.duration._
@@ -39,7 +39,7 @@ class AlertSpec extends ScrupalSpecification("AlertSpec") {
 			val alert = new Alert('Alert, "Alert", "Description", "<span>Note Message</span>", NoteAlert)
 			alert.message.toString must beEqualTo("<span>Note Message</span>")
 			alert.alertKind must beEqualTo(NoteAlert)
-			alert.iconKind must beEqualTo(Icons.info)
+			alert.icon must beEqualTo(info)
 			alert.cssClass must beEqualTo("alert alert-info")
 			alert.prefix must beEqualTo("Note:")
 		}
@@ -48,7 +48,7 @@ class AlertSpec extends ScrupalSpecification("AlertSpec") {
 			val alert = new Alert('Alert, "Alert", "Description", "<span>Danger Message</span>", DangerAlert)
 			alert.message.toString must beEqualTo("<span>Danger Message</span>")
 			alert.alertKind must beEqualTo(DangerAlert)
-			alert.iconKind must beEqualTo(Icons.warning_sign)
+			alert.icon must beEqualTo(warning_sign)
 			alert.cssClass must beEqualTo("alert alert-danger")
 			alert.prefix must beEqualTo("Danger!")
 		}
@@ -58,7 +58,7 @@ class AlertSpec extends ScrupalSpecification("AlertSpec") {
 				WarningAlert.icon, WarningAlert.prefix, WarningAlert.css, Some(t))
 			alert.message.toString must beEqualTo("<span>Warning Message</span>")
 			alert.alertKind must beEqualTo(WarningAlert)
-			alert.iconKind must beEqualTo(Icons.exclamation)
+			alert.icon must beEqualTo(exclamation)
 			alert.prefix must beEqualTo("Warning!")
 			alert.cssClass must beEqualTo("alert alert-warning")
 			alert.expiry.get must beEqualTo(t)
@@ -66,17 +66,17 @@ class AlertSpec extends ScrupalSpecification("AlertSpec") {
 
 		"construct with four arguments and give sane results" in {
 			val alert = Alert('Alert, "Alert", "Description", "<span>Caution Message</span>", CautionAlert,
-				Icons.align_center, "Alignment!", "", Some(Instant.ofEpochMilli(0L)))
+				align_center, "Alignment!", "", Some(Instant.ofEpochMilli(0L)))
 			alert.message.toString must beEqualTo("<span>Caution Message</span>")
 			alert.alertKind must beEqualTo(CautionAlert)
-			alert.iconKind must beEqualTo(Icons.align_center)
+			alert.icon must beEqualTo(align_center)
 			alert.cssClass must beEqualTo("")
 			alert.prefix must beEqualTo("Alignment!")
 		}
 
 		"produce correct icon html" in {
 			val alert = new Alert('A, "A", "Description", "<span>Html Message</span>", NoteAlert)
-			alert.iconHtml.toString must beEqualTo("<i class=\"icon-info\"></i>")
+			alert.icon.toString must beEqualTo("<i class=\"icon-info\"></i>")
 		}
 
 		"save to and fetch from the DB" in {

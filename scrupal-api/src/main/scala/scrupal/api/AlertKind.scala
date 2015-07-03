@@ -13,9 +13,11 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.utils
+package scrupal.api
 
 import java.time.Instant
+
+import scrupal.api.html.{Icon,Icons}
 
 /** The kinds of alerts that can be generated are subclasses of this sealed trait. Each alert defines the prefix
   * text, css class, icon and expiration time of the alert via the various kind2xxx methods on this enumeration.
@@ -25,7 +27,7 @@ import java.time.Instant
 sealed trait AlertKind {
   def label : String
   def prefix : String
-  def icon : Icons.Kind
+  def icon : Icon
   def css : String
   def expiry: Instant
 }

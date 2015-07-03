@@ -13,10 +13,7 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-import com.typesafe.sbt.digest.Import.digest
-import com.typesafe.sbt.gzip.Import.gzip
 import com.typesafe.sbt.web.SbtWeb
-import com.typesafe.sbt.web.SbtWeb.autoImport._
 import play.routes.compiler.InjectedRoutesGenerator
 import play.sbt.PlayLayoutPlugin
 import play.sbt.routes.RoutesKeys._
