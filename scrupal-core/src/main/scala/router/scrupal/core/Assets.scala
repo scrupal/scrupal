@@ -24,16 +24,14 @@ import play.api.mvc.{Action, AnyContent}
 @Singleton
 class Assets @Inject()(errHandler: HttpErrorHandler) extends controllers.Assets(errHandler) {
 
-  override def versioned(path: String, file: Asset): Action[AnyContent] = super.versioned(path, file)
+  def at(file: String) = super.versioned("/public", file)
 
-  def js(file: String) = super.at("/public/javascripts", file, aggressiveCaching = true)
+  def js(file: String) = super.versioned("/public/javascripts", file)
 
-  def img(file: String) = super.at("/public/images", file, aggressiveCaching = true)
+  def img(file: String) = super.versioned("/public/images", file)
 
-  def css(file: String) = super.at("/public/stylesheets", file, aggressiveCaching = true)
+  def css(file: String) = super.versioned("/public/stylesheets", file)
 
-  def thm(theme: String, file: String) = super.at("/public/lib", s"bootswatch-$theme/$file", aggressiveCaching = true)
-
-  def ac(path: String, file: String) = super.at(path, file, aggressiveCaching = true)
+  def theme(theme: String, file: String) = super.versioned("/public/lib", s"bootswatch-$theme/$file")
 
 }

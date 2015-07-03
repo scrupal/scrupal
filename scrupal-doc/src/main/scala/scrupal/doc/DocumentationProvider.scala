@@ -17,15 +17,15 @@ package scrupal.doc
 
 import play.api.mvc.RequestHeader
 import play.api.routing.sird._
-import scrupal.api.{FunctionalNodeReactorProvider, Node}
+import scrupal.api.{NodeProvider, Node}
 import scrupal.core.nodes.MarkedDocNode
 import scrupal.utils.ScrupalUtilsInfo
 
 object DocumentationProvider {
   val docPathToDocsPF: PartialFunction[RequestHeader, Node] = {
-    case GET(p"/doc/$rest*") ⇒
+    case GET(p"/doc$rest*") ⇒
       val path = rest.split("/").toIterable
-      MarkedDocNode(s"Scrupal ${ScrupalUtilsInfo.version} Documentation", "doc", "/assets/docs", path)
+      MarkedDocNode(s"Scrupal ${ScrupalUtilsInfo.version} Documentation", "doc", "public/docs", path)
   }
 }
 
@@ -34,6 +34,4 @@ object DocumentationProvider {
   * things on the /doc sub-path from the docs assets. Documentation for scrupal is written in MarkDown format and
   * this provider uses the MarkedDocNode to translate between the two.
   */
-case class DocumentationProvider() extends FunctionalNodeReactorProvider(DocumentationProvider.docPathToDocsPF) {
-
-}
+case class DocumentationProvider() extends NodeProvider(DocumentationProvider.docPathToDocsPF)

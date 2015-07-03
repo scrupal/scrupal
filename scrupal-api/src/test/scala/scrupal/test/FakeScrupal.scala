@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import play.api.Configuration
+import play.api.{Environment, Configuration}
 import scrupal.api.{ConfiguredAssetsLocator, AssetsLocator, Site, Scrupal}
 import scrupal.storage.api.{Storage, StoreContext}
 
@@ -32,62 +32,12 @@ class FakeScrupal(
   config_overrides : Map[String,AnyRef]) extends Scrupal(name) {
 
   implicit val _configuration : Configuration = {
-    val default_config = Configuration(
-      ConfigFactory.parseString(
-        s"""scrupal {
-           |  response {
-           |    timeout : 16000
-           |  }
-           |
-           |  storage {
-           |    config {
-           |      file: "conf/storage.conf"
-           |    }
-           |  }
-           |
-           |  default {
-           |    storage {
-           |      scrupal {
-           |        user :"",
-           |        pass :"",
-           |        uri  :"scrupal-mem://localhost/scrupal"
-           |      }
-           |    }
-           |  }
-           |
-           |  developer {
-           |    mode : true
-           |    footer: true
-           |  }
-           |
-           |  dispatcher {
-           |    # Dispatcher is the name of the event-based dispatcher
-           |    type = Dispatcher
-           |    # What kind of ExecutionService to use
-           |    executor = "fork-join-executor"
-           |    # Configuration for the fork join pool
-           |    fork-join-executor {
-           |      # minimum number of threads to cap factor-based core number to
-           |      core-pool-size-min = 2
-           |      # No of core threads ... ceil(available processors * factor)
-           |      core-pool-size-factor = 2.0
-           |      # maximum number of threads to cap factor-based number to
-           |      core-pool-size-max = 32
-           |    }
-           |
-           |    # Throughput defines the maximum number of messages to be
-           |    # processed per actor before the thread jumps to the next actor.
-           |    # Set to 1 for as fair as possible.
-           |    throughput = 8
-           |  }
-           |}""".stripMargin
-      )
-    )
-    val override_config = Configuration.from(config_overrides)
-    Configuration(override_config.underlying.withFallback(default_config.underlying))
+    Configuration.load(Environment.simple(), config_overrides)
   }
 
-  implicit val _executionContext = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val _executionContext = {
+    scala.concurrent.ExecutionContext.Implicits.global
+  }
 
   implicit val _storeContext = {
     val configToSearch = _configuration.getConfig("scrupal.storage.default")
@@ -95,7 +45,6 @@ class FakeScrupal(
   }
 
   implicit val _actorSystem : ActorSystem = ActorSystem(name, _configuration.underlying)
-
 
   protected def load(config: Configuration, context: StoreContext): Future[Seq[Site]] = {
     Future.successful(Seq.empty[Site])
@@ -107,7 +56,6 @@ class FakeScrupal(
 
   implicit val _assetsLocator : AssetsLocator = new ConfiguredAssetsLocator(_configuration)
 }
-
 
 object FakeScrupal {
   def apply(   nm : String = "Scrupal",

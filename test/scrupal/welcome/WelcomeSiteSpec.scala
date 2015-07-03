@@ -30,7 +30,7 @@ class WelcomeSiteSpec extends ScrupalApiSpecification("WelcomeSite") {
 
   lazy val root = FakeRequest("GET", "/")
   lazy val doc = FakeRequest("GET", "/doc")
-  "$specName" should {
+  s"$specName" should {
     s"route $root to WelcomeSite Root" in providerTest(ws, ws, root) { response: Response ⇒
       response.disposition.isSuccessful must beTrue
       response.mediaType must beEqualTo(MediaTypes.`text/html`)

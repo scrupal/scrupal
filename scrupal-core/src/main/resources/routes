@@ -1,1 +1,5 @@
-GET     /assets/*file       scrupal.core.Assets.versioned(path="/public", file: Asset)
+GET     /assets/theme/:theme/*file  scrupal.core.Assets.theme(theme,file)
+GET     /assets/stylesheets/*file   scrupal.core.Assets.css(file)
+GET     /assets/javascripts/*file   scrupal.core.Assets.js(file)
+GET     /assets/images/*file        scrupal.core.Assets.img(file)
+GET     /assets/*file               scrupal.core.Assets.at(file)

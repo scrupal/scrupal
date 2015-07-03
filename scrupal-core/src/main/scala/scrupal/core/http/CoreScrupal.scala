@@ -67,7 +67,7 @@ class CoreScrupal(
 
   protected def getTimeout: Timeout = {
     Timeout(
-      _configuration.getMilliseconds("scrupal.response.timeout").getOrElse(8000L), TimeUnit.MILLISECONDS
+      _configuration.getMilliseconds("scrupal.timeout.response").getOrElse(8000L), TimeUnit.MILLISECONDS
     )
   }
 
@@ -155,17 +155,25 @@ class CoreScrupal(
       )
     }
 
-    _configuration.getString("scrupal.executor") match {
-      case Some("akka") ⇒ _actorSystem.dispatcher
-      case Some("fixed-thread-pool") ⇒
-        makeFixedThreadPool(_configuration.getConfig("fixed-thread-pool").getOrElse(Configuration()))
-      case Some("work-stealing-pool") ⇒
-        makeWorkStealingPool()
-      case Some("thread-pool") ⇒
-        makeThreadPoolExecutionContext(_configuration.getConfig("thread-pool").getOrElse(Configuration()))
-      case Some("default") ⇒
-        makeWorkStealingPool()
-      case _ ⇒
+    _configuration.getConfig("scrupal.executor") match {
+      case Some(conf) ⇒
+        conf.getString("type") match {
+          case Some("default") ⇒
+            makeWorkStealingPool()
+          case Some("akka") ⇒
+            _actorSystem.dispatcher
+          case Some("fixed-thread-pool") ⇒
+            makeFixedThreadPool(conf.getConfig("fixed-thread-pool").getOrElse(Configuration()))
+          case Some("work-stealing-pool") ⇒
+            makeWorkStealingPool()
+          case Some("thread-pool") ⇒
+            makeThreadPoolExecutionContext(conf.getConfig("thread-pool").getOrElse(Configuration()))
+          case Some(s: String) ⇒
+            toss("Invalid valid for configuration key 'scrupal.executor.type'")
+          case None ⇒
+            makeWorkStealingPool()
+        }
+      case None ⇒
         makeWorkStealingPool()
     }
   }

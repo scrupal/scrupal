@@ -39,7 +39,7 @@ case class Boot(scrupal : Scrupal, config : Configuration) extends ScrupalCompon
     // we need an ActorSystem to host our application in
     implicit val system = ActorSystem("Scrupal-Http")
 
-    implicit val timeout = Timeout(config.getMilliseconds("scrupal.timeout").getOrElse(8000), TimeUnit.MILLISECONDS)
+    implicit val timeout = Timeout(config.getMilliseconds("scrupal.timeout.akka").getOrElse(8000), TimeUnit.MILLISECONDS)
 
     // create and start our service actor
     val service = system.actorOf(Props(classOf[ScrupalServiceActor], scrupal, timeout), ScrupalServiceActor.name)

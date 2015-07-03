@@ -66,7 +66,9 @@ object Provider {
   }
 }
 
-trait IdentifiableProvider extends Provider with Identifiable
+trait IdentifiableProvider extends Provider with Identifiable {
+  override def toString : String = s"Provider(${id.name})"
+}
 
 /** Delegating Provider of Reactors
   *
@@ -90,8 +92,6 @@ trait EnablementProvider[T <: EnablementProvider[T]] extends DelegatingProvider 
     e.asInstanceOf[Provider]
   }
 }
-
-trait SiteProvider[T <: SiteProvider[T]] extends EnablementProvider[T]
 
 trait SingularProvider extends IdentifiableProvider {
   /** The routes for the singular prefix case */
@@ -159,12 +159,10 @@ trait PluralProvider extends SingularProvider {
   *
   * This adapts a node to being a provide of a NodeReactor that just uses the node.
   */
-class FunctionalNodeReactorProvider(nodeF: PartialFunction[RequestHeader, Node]) extends Provider {
+class NodeProvider(nodeF: PartialFunction[RequestHeader, Node]) extends Provider {
   def provide : ReactionRoutes = nodeF.andThen { node : Node ⇒ NodeReactor(node) }
 }
 
-class NodeReactorProvider(node: Node) extends Provider {
+class SingleNodeProvider(node: Node) extends Provider {
   def provide : ReactionRoutes = { case request: RequestHeader ⇒ NodeReactor(node) }
 }
-
-case class NodeProvider()

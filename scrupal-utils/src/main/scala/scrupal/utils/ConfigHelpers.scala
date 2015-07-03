@@ -89,27 +89,8 @@ object ConfigHelpers extends ScrupalComponent {
 
   private[this] lazy val dontAllowMissingConfig = ConfigFactory.load(dontAllowMissingConfigOptions)
 
-  /** loads `Configuration` based on the environment it finds itself in. from config.resource or config.file.
-    * If not found default to 'conf/application.conf' in Dev mode
-    * @return  configuration to be used
-    */
-  private[scrupal] def loadDev(env : Environment, devSettings : Map[String, String]) : Config = {
-    try {
-      lazy val file : File = {
-        devSettings.get("config.file").orElse(Option(System.getProperty("config.file")))
-          .map(f ⇒ new File(f)).getOrElse(env.getExistingFile("conf/application.conf").get)
-      }
-      val config = Option(System.getProperty("config.resource"))
-        .map(ConfigFactory.parseResources).getOrElse(ConfigFactory.parseFileAnySyntax(file))
-
-      ConfigFactory.parseMap(devSettings.asJava).withFallback(ConfigFactory.load(config))
-    } catch {
-      case e : ConfigException ⇒ toss(s"Configuration error: ${e.getMessage}", e)
-    }
-  }
-
   def from(env : Environment) = {
-    new Configuration(loadDev(env, Map.empty[String, String]))
+    Configuration.load(env)
   }
 
   def from(fileName : String) : Option[Configuration] = {
@@ -124,18 +105,7 @@ object ConfigHelpers extends ScrupalComponent {
   }
 
   def default() = {
-    val env = Environment.simple()
-    val cwd = env.rootPath
-    val conf = new File(cwd, "conf")
-    if (conf.isDirectory)
-      from(env)
-    else {
-      val parent = new File(cwd.getParentFile, "conf")
-      if (parent.isDirectory)
-        from (env.copy(rootPath = cwd.getParentFile))
-      else
-        from(ConfigFactory.load())
-    }
+    Configuration.load(Environment.simple())
   }
 }
 

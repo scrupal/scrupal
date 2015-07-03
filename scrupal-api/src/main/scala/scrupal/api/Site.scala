@@ -27,7 +27,7 @@ import scala.util.matching.Regex
 abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
   val id : Identifier = sym
   implicit val scrupal: Scrupal = scr
-} with Settingsable with SiteProvider[Site] with Storable with Registrable[Site]
+} with Settingsable with EnablementProvider[Site] with Storable with Registrable[Site]
   with Nameable with Describable with Modifiable {
 
   val kind = 'Site

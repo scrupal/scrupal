@@ -45,7 +45,7 @@ case class AdminApp(implicit scrpl: Scrupal) extends Application('admin) {
   StatusBar.siteSelectionForm.enable(this)
 
   override def delegates: Iterable[Provider] = {
-    super.delegates ++ Iterable(new NodeReactorProvider(adminLayout(dbForm)))
+    super.delegates ++ Iterable(new SingleNodeProvider(adminLayout(dbForm)))
   }
 
   def adminLayout(dbForm: Form.Form) = {
