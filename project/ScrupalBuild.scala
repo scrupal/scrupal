@@ -93,7 +93,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal API",
       scrupalPackage := "scrupal.api",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 35, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 30, // FIXME: Need more test coverage!
       libraryDependencies ++= api_dependencies
     )
     .dependsOn(utils_deps, storage_deps)
@@ -105,7 +105,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Store For ReactiveMongo",
       scrupalPackage := "scrupal.store.reactivemongo",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
       libraryDependencies ++= store_reactivemongo_dependencies
     )
     .dependsOn(utils_deps, storage_deps, api_deps)
@@ -117,7 +116,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Store For RxMongo",
       scrupalPackage := "scrupal.store.rxmongo",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 0, // FIXME: Need more test coverage!
       libraryDependencies ++= store_rxmongo_dependencies
     )
     .dependsOn(utils_deps, storage_deps, api_deps)
@@ -132,7 +130,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Core",
       scrupalPackage := "scrupal.core",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 25, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 45, // FIXME: Need more test coverage!
       libraryDependencies ++= core_dependencies
     )
     .dependsOn(storage_deps, api_deps, utils_deps)
@@ -177,7 +175,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal",
       scrupalPackage := "scrupal",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 0, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 30, // FIXME: Need more test coverage!
       aggregateReverseRoutes := Seq(core_proj, config_proj, admin_proj, doc_proj),
       libraryDependencies ++= root_dependencies
     )

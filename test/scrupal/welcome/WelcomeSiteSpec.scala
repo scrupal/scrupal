@@ -17,7 +17,7 @@ package scrupal.welcome
 
 import akka.http.scaladsl.model.MediaTypes
 import play.api.test.FakeRequest
-import scrupal.api.Response
+import scrupal.api._
 import scrupal.test.{ProviderTest, ScrupalApiSpecification}
 
 /** Title Of Thing.
@@ -29,14 +29,21 @@ class WelcomeSiteSpec extends ScrupalApiSpecification("WelcomeSite") with Provid
   lazy val ws : WelcomeSite = WelcomeSite('welcome)(testScrupal)
 
   lazy val root = FakeRequest("GET", "/")
+  lazy val rootRx = NodeReactor(Node.empty)
+  lazy val rootResp = HtmlResponse("Main index page for Welcome To Scrupal Site")
   lazy val doc = FakeRequest("GET", "/doc")
+  lazy val docRx = NodeReactor(Node.empty)
+
+  lazy val docResp = HtmlResponse("Documentation")
 
   s"$specName" should {
-    s"route $root to WelcomeSite Root" in providerTest(ws, root) { response: Response ⇒
+    s"route $root to WelcomeSite Root" in
+      providerTest(ws, root, rootRx, rootResp) { (reactor: Reactor, response: Response) ⇒
       response.disposition.isSuccessful must beTrue
       response.mediaType must beEqualTo(MediaTypes.`text/html`)
     }
-    "route GET:/doc to Documentation Root" in providerTest(ws, doc) { response : Response ⇒
+    "route GET:/doc to Documentation Root" in
+      providerTest(ws, doc, docRx, docResp) { (reactor: Reactor, response : Response) ⇒
       response.disposition.isSuccessful must beTrue
       response.mediaType must beEqualTo(MediaTypes.`text/html`)
     }
