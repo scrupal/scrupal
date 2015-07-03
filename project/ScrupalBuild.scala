@@ -68,7 +68,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Utils",
       scrupalPackage := "scrupal.utils",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 40, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
       BuildInfoKeys.buildInfoKeys += ( "themes" → bootswatch_theme_names),
       libraryDependencies ++= utils_dependencies
     )
@@ -81,7 +81,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Storage",
       scrupalPackage := "scrupal.storage",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 40, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
       libraryDependencies ++= storage_dependencies
     )
     .dependsOn(utils_deps)
@@ -93,7 +93,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal API",
       scrupalPackage := "scrupal.api",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 30, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 35, // FIXME: Need more test coverage!
       libraryDependencies ++= api_dependencies
     )
     .dependsOn(utils_deps, storage_deps)
@@ -132,7 +132,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Core",
       scrupalPackage := "scrupal.core",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 5, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 25, // FIXME: Need more test coverage!
       libraryDependencies ++= core_dependencies
     )
     .dependsOn(storage_deps, api_deps, utils_deps)
