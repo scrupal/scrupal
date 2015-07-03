@@ -157,7 +157,14 @@ case class FilesCollection[S <: Storable] private[files] (
 
   override def fetchAll()(implicit ec: ExecutionContext) : Future[Iterable[S]] = Future {
     new Iterable[S] {
-      val stream = Files.walk(dir.toPath).map[S]( new java.util.function.Function[Path,S] {
+      val stream = Files.walk(dir.toPath)
+        .filter {
+          new java.util.function.Predicate[Path] {
+            def test(p : Path) : Boolean = {
+              p.getFileName.toString.head.isDigit && p.toFile.isFile
+            }
+          }
+        }.map[S]( new java.util.function.Function[Path,S] {
         def apply(p : Path) : S = {
           val file = p.toFile
           readObject(file) match {

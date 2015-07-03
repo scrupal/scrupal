@@ -49,17 +49,22 @@ case class ScalaNode(
   def apply(context: Context) : Future[Response] = {
     context.withExecutionContext { implicit ec : ExecutionContext ⇒
         Future {
-          import javax.script._
-          val manager = new ScriptEngineManager(getClass.getClassLoader)
-          val engine = manager.getEngineByName("scala")
-          val settings = engine.asInstanceOf[scala.tools.nsc.interpreter.IMain].settings
-          settings.embeddedDefaults[ScalaNode]
-          val bindings = engine.createBindings()
-          bindings.put("scrupalVersion", ScrupalUtilsInfo.version)
-          engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE)
-          HtmlResponse(Html.renderContents( Seq( span(engine.eval(code).toString) )), Successful)
+          HtmlResponse(Html.renderContents( Seq( span(ScalaNode.engine.eval(code).toString) )), Successful)
         }
     }
   }
 }
 
+object ScalaNode {
+  import javax.script._
+  val engine = {
+    val manager = new ScriptEngineManager(getClass.getClassLoader)
+    val e = manager.getEngineByName("scala")
+    val settings = e.asInstanceOf[scala.tools.nsc.interpreter.IMain].settings
+    settings.embeddedDefaults[ScalaNode]
+    val bindings = e.createBindings()
+    bindings.put("scrupalVersion", ScrupalUtilsInfo.version)
+    e.setBindings(bindings, ScriptContext.ENGINE_SCOPE)
+    e
+  }
+}

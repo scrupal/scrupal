@@ -15,37 +15,26 @@
 
 package scrupal.storage.impl
 
-import java.io.{ObjectInputStream, ByteArrayInputStream, ObjectOutputStream, ByteArrayOutputStream}
+import scrupal.storage.api.Storable
+import scrupal.test.ScrupalSpecification
 
-import scrupal.storage.api.{StorageFormatter, Storable, StorageFormat}
+class IdentityFormatSpec extends ScrupalSpecification("IdentityFormat") {
 
+  case class StringStorable(s: String) extends Storable
 
-case class JavaFormat(bytes: Array[Byte]) extends StorageFormat {
-  def toBytes : Array[Byte] = bytes
-}
-
-case class JavaFormatter[S <: Storable]()  extends StorageFormatter[JavaFormat,S]
-{
-  def write(s : S) : JavaFormat = {
-    val out = new ByteArrayOutputStream()
-    val writer = new ObjectOutputStream(out)
-    try {
-      writer.writeObject(s)
-      JavaFormat(out.toByteArray)
-    } finally {
-      writer.close()
-      out.close()
+  "IdentityFormat" should {
+    "return empty for toBytes" in {
+      val s = StringStorable("foo")
+      IdentityFormat(s).toBytes.length must beEqualTo(0)
     }
   }
 
-  def read(data : JavaFormat) : S = {
-    val in = new ByteArrayInputStream(data.toBytes)
-    val reader = new ObjectInputStream(in)
-    try {
-      reader.readObject().asInstanceOf[S]
-    } finally {
-      reader.close()
-      in.close()
+  "IdentityFormatter" should {
+    "return same object for write/read " in {
+      val sf = IdentityFormatter[StringStorable]()
+      val s = StringStorable("foo")
+      val data = sf.write(s)
+      sf.read(data).s must beEqualTo("foo")
     }
   }
 }

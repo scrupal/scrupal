@@ -140,6 +140,65 @@ abstract class StorageTestSuite(name: String) extends ScrupalSpecification(name)
         }
       }
     }
+
+    "find a dingbot in a collection" in {
+      getContext("testing", create=false) { context ⇒
+        context.withSchema(DingBotsSchema.name) { schema ⇒
+          schema.withCollection[DingBot,Future[Result]]("dingbots") { coll ⇒
+            coll.fetch(1).map { optDB : Option[DingBot] ⇒
+              optDB.nonEmpty must beTrue
+              optDB.get.getPrimaryId must beEqualTo(1)
+            }
+          }
+        }
+      }
+    }
+
+    "resolve a FastReference to a dingbot" in {
+      getContext("testing", create=false) { implicit context: StoreContext ⇒
+        context.withSchema(DingBotsSchema.name) { schema ⇒
+          schema.withCollection[DingBot,Future[Result]]("dingbots") { coll ⇒
+            coll.fetch(1).map { optDB : Option[DingBot] ⇒
+              optDB.nonEmpty must beTrue
+              val obj: DingBot = optDB.get
+              val fr1 = FastReference(coll, obj)
+              val fr2 = FastReference(coll, obj.getPrimaryId())
+              fr1.collection must beEqualTo(coll)
+              fr2.collection must beEqualTo(coll)
+              fr1.id must beEqualTo(obj.getPrimaryId())
+              fr2.id must beEqualTo(obj.getPrimaryId())
+              val f1 = fr1.fetch.map { optObj ⇒
+                optObj.nonEmpty must beTrue
+                optObj.get must beEqualTo(obj)
+              }
+              val f2 = fr2.fetch.map { optObj ⇒
+                optObj.nonEmpty must beTrue
+                optObj.get must beEqualTo(obj)
+              }
+              val res = Await.result(Future sequence Seq(f1,f2), 2.seconds)
+              res.head.isSuccess must beTrue
+              res(1).isSuccess must beTrue
+            }
+          }
+        }
+      }
+
+    }
+
+    "find all dingbots in a collection" in {
+      getContext("testing", create=false) { context ⇒
+        context.withSchema(DingBotsSchema.name) { schema ⇒
+          schema.withCollection[DingBot,Future[Result]]("dingbots") { coll ⇒
+            coll.fetchAll.map { bots : Iterable[DingBot] ⇒
+              val seq = bots.toSeq
+              seq.nonEmpty must beTrue
+              seq.size must beGreaterThanOrEqualTo(1)
+            }
+          }
+        }
+      }
+    }
+
     "close the context" in {
       getContext("testing", create=false) { context ⇒
         context.close()
