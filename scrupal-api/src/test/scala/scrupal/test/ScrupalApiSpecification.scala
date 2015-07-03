@@ -20,7 +20,7 @@ import com.typesafe.config.ConfigFactory
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.specs2.execute.Result
+import org.specs2.execute.{Failure, Result}
 
 import play.api.Configuration
 import play.api.mvc.{Request, AnyContent}
@@ -48,6 +48,10 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
 
   implicit lazy val scrupal : Scrupal = testScrupal
 
+  implicit lazy val site : Site = FakeSite(specName)(testScrupal)
+
+  implicit lazy val context = Context(testScrupal, site)
+
   def withExecutionContext[T](f : ExecutionContext ⇒ T) : T = scrupal.withExecutionContext[T](f)
 
   def withStoreContext[T](f : StoreContext ⇒ T) : T =  scrupal.withStoreContext[T](f)
@@ -61,14 +65,27 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
       }
     }
   }
+}
 
-  def providerTest(site: Site, provider: Provider, request: Request[AnyContent])(f : Response ⇒ Result) : Result = {
+trait ProviderTest extends ScrupalApiSpecification {
+  def providerTest(provider: Provider, request: Request[AnyContent])(f : Response ⇒ Result) : Result = {
     testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
       val reactor = provider.provide.lift(request)
       if (reactor.isEmpty)
         failure(s"No reactor provided by $provider for $request")
-      val stim = Stimulus(Context(testScrupal, site), request)
+      val stim = Stimulus(context, request)
       val future = reactor.get(stim).map { response ⇒
+        f(response)
+      }
+      Await.result(future, 10.second)
+    }
+  }
+}
+
+trait NodeTest extends ScrupalApiSpecification {
+  def nodeTest(node: Node)(f : Response ⇒ Result) : Result = {
+    testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+      val future = node.apply(context) map { response : Response ⇒
         f(response)
       }
       Await.result(future, 10.second)

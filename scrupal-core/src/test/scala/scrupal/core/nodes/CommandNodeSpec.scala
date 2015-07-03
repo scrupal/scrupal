@@ -13,32 +13,25 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.welcome
+package scrupal.core.nodes
+
 
 import akka.http.scaladsl.model.MediaTypes
-import play.api.test.FakeRequest
-import scrupal.api.Response
-import scrupal.test.{ProviderTest, ScrupalApiSpecification}
+import scrupal.api._
+import scrupal.test.{NodeTest, ScrupalApiSpecification}
 
-/** Title Of Thing.
-  *
-  * Description of thing
-  */
-class WelcomeSiteSpec extends ScrupalApiSpecification("WelcomeSite") with ProviderTest {
+/** Test Case For CommandNode */
+class CommandNodeSpec extends ScrupalApiSpecification("CommandNode") with NodeTest {
 
-  lazy val ws : WelcomeSite = WelcomeSite('welcome)(testScrupal)
+  lazy val command = CommandNode("echocmd", "A command node", "echo Hello, World!")
 
-  lazy val root = FakeRequest("GET", "/")
-  lazy val doc = FakeRequest("GET", "/doc")
-
-  s"$specName" should {
-    s"route $root to WelcomeSite Root" in providerTest(ws, root) { response: Response ⇒
-      response.disposition.isSuccessful must beTrue
-      response.mediaType must beEqualTo(MediaTypes.`text/html`)
-    }
-    "route GET:/doc to Documentation Root" in providerTest(ws, doc) { response : Response ⇒
-      response.disposition.isSuccessful must beTrue
-      response.mediaType must beEqualTo(MediaTypes.`text/html`)
+  "CommandNodeSpec" should {
+    "handle hello world" in nodeTest(command) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/plain`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[StringResponse] must beTrue
+      val sr = r.asInstanceOf[StringResponse]
+      sr.content must beEqualTo( "Hello, World!" )
     }
   }
 }

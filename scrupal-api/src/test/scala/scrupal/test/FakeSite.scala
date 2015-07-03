@@ -13,32 +13,21 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.welcome
+package scrupal.test
 
-import akka.http.scaladsl.model.MediaTypes
-import play.api.test.FakeRequest
-import scrupal.api.Response
-import scrupal.test.{ProviderTest, ScrupalApiSpecification}
+import java.time.Instant
 
-/** Title Of Thing.
+import scrupal.api.{Scrupal, Site}
+
+import scala.util.matching.Regex
+
+/** A Fake Site For Testing
   *
-  * Description of thing
+  * This site is very accepting.
   */
-class WelcomeSiteSpec extends ScrupalApiSpecification("WelcomeSite") with ProviderTest {
-
-  lazy val ws : WelcomeSite = WelcomeSite('welcome)(testScrupal)
-
-  lazy val root = FakeRequest("GET", "/")
-  lazy val doc = FakeRequest("GET", "/doc")
-
-  s"$specName" should {
-    s"route $root to WelcomeSite Root" in providerTest(ws, root) { response: Response ⇒
-      response.disposition.isSuccessful must beTrue
-      response.mediaType must beEqualTo(MediaTypes.`text/html`)
-    }
-    "route GET:/doc to Documentation Root" in providerTest(ws, doc) { response : Response ⇒
-      response.disposition.isSuccessful must beTrue
-      response.mediaType must beEqualTo(MediaTypes.`text/html`)
-    }
-  }
+case class FakeSite(name: String)(implicit scrpl: Scrupal) extends Site(Symbol(name)) {
+  val created : Option[Instant] = Some(Instant.now())
+  val modified: Option[Instant] = Some(Instant.now())
+  val description: String = s"A Fake Site for: $name"
+  override def hostNames: Regex = ".*".r
 }

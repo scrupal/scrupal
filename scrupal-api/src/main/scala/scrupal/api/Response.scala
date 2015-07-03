@@ -63,6 +63,17 @@ trait Response {
   }
 }
 
+object Response {
+  def safely( f: () ⇒ Response ) : Response = {
+    try {
+      f()
+    } catch {
+      case x : Throwable ⇒
+        ExceptionResponse(x)
+    }
+  }
+}
+
 object NoopResponse extends Response {
   def disposition = Unimplemented
   def toEnumerator(implicit ec: ExecutionContext) = Enumerator.empty[Array[Byte]]

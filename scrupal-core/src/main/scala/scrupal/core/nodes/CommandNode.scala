@@ -30,27 +30,26 @@ import scala.concurrent.Future
   * pipeline is the best thing, this is the tool to use. It simply passes the string to the local operating system's
   * command processor for interpretation and execution. Whatever it generates is Streamed as a result to this node.
   *
-  * @param description
-  * @param command
-  * @param modified
-  * @param created
+  * @param name The name of this command node
+  * @param description A description of the results produced by this command node
+  * @param command The shell command to execute and obtain its output
+  * @param modified The last modification time of this command
+  * @param created The date at which this command was created.
   */
 case class CommandNode(
   name : String,
   description : String,
   command : String,
   modified : Option[Instant] = Some(Instant.now()),
-  created : Option[Instant] = Some(Instant.now()),
-  final val kind : Symbol = CommandNode.kind) extends Node {
-  override val mediaType : MediaType = MediaTypes.`text/html`
-
+  created : Option[Instant] = Some(Instant.now())
+) extends Node {
+  override val mediaType : MediaType = MediaTypes.`text/plain`
   def apply(context: Context) : Future[Response] = Future.successful {
-    // TODO: implement CommandNode
-    HtmlResponse(span("Not Implemented").toString(), Unimplemented)
+    Response.safely { () ⇒
+      import sys.process._
+      val output = command.!!
+      val result = { if (output.endsWith("\n")) output.dropRight(1) else output }
+      StringResponse(result, Successful)
+    }
   }
 }
-
-object CommandNode {
-  final val kind = 'Command
-}
-
