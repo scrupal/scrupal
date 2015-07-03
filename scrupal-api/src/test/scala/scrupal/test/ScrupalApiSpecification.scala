@@ -67,31 +67,9 @@ abstract class ScrupalApiSpecification(val specName : String, timeout : FiniteDu
   }
 }
 
-trait ProviderTest extends ScrupalApiSpecification {
-  def providerTest(provider: Provider, request: Request[AnyContent])(f : Response ⇒ Result) : Result = {
-    testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-      val reactor = provider.provide.lift(request)
-      if (reactor.isEmpty)
-        failure(s"No reactor provided by $provider for $request")
-      val stim = Stimulus(context, request)
-      val future = reactor.get(stim).map { response ⇒
-        f(response)
-      }
-      Await.result(future, 30.second)
-    }
-  }
-}
 
-trait NodeTest extends ScrupalApiSpecification {
-  def nodeTest(node: Node)(f : Response ⇒ Result) : Result = {
-    testScrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-      val future = node.apply(context) map { response : Response ⇒
-        f(response)
-      }
-      Await.result(future, 30.second)
-    }
-  }
-}
+
+
 
 object ScrupalApiSpecification {
 

@@ -16,261 +16,205 @@
 package scrupal.core.providers
 
 import play.api.test.FakeRequest
-import scrupal.api.Scrupal
-import scrupal.test.{FakeContext, ScrupalApiSpecification}
+import scrupal.api.{Reactor, Response, NoopResponse}
+import scrupal.test.{ProviderTest, ScrupalApiSpecification}
 
-class APIDocSpec extends ScrupalApiSpecification("APIDoc") {
+class APIDocSpec extends ScrupalApiSpecification("APIDoc") with ProviderTest {
+
+  lazy val apidoc = APIDoc()
 
   lazy val getNumDoc = FakeRequest("GET", "/apidoc/foo/GET/1/facet/facet_id/rest")
+  lazy val getNumDocModel = apidoc.GetNumDoc("foo", 1, "facet", "facet_id", "/rest")
+  lazy val getNumDocResp = NoopResponse
   lazy val getNamDoc = FakeRequest("GET", "/apidoc/foo/GET/name/facet/facet_id/rest")
+  lazy val getNamDocModel = apidoc.GetNameDoc("foo", "name", "facet", "facet_id", "/rest")
+  lazy val getNamDocResp = NoopResponse
   lazy val facetInfoNumDoc = FakeRequest("GET", "/apidoc/foo/HEAD/1/facet/facet_id/rest")
+  lazy val facetInfoNumModel = apidoc.FacetInfoNumDoc("foo", 1, "facet", "facet_id", "/rest")
+  lazy val facetInfoNumResp  = NoopResponse
   lazy val facetInfoNamDoc = FakeRequest("GET", "/apidoc/foo/HEAD/name/facet/facet_id/rest")
+  lazy val facetInfoNamModel = apidoc.FacetInfoNameDoc("foo", "name", "facet", "facet_id", "/rest")
+  lazy val facetInfoNamResp  = NoopResponse
   lazy val findNumDoc = FakeRequest("GET", "/apidoc/foo/OPTIONS/1/facet/rest")
+  lazy val findNumModel = apidoc.FindNumDoc("foo", 1, "facet", "/rest")
+  lazy val findNumResp  = NoopResponse
   lazy val findNamDoc = FakeRequest("GET", "/apidoc/foo/OPTIONS/name/facet/rest")
+  lazy val findNamModel = apidoc.FindNameDoc("foo", "name", "facet", "/rest")
+  lazy val findNamResp  = NoopResponse
   lazy val addNumDoc = FakeRequest("GET", "/apidoc/foo/POST/1/facet/rest")
+  lazy val addNumModel = apidoc.AddNumDoc("foo", 1, "facet", "/rest")
+  lazy val addNumResp  = NoopResponse
   lazy val addNamDoc = FakeRequest("GET", "/apidoc/foo/POST/name/facet/rest")
+  lazy val addNamModel = apidoc.AddNameDoc("foo", "name", "facet", "/rest")
+  lazy val addNamResp  = NoopResponse
   lazy val setNumDoc = FakeRequest("GET", "/apidoc/foo/PUT/1/facet/facet_id/rest")
+  lazy val setNumModel = apidoc.SetNumDoc("foo", 1, "facet", "facet_id", "/rest")
+  lazy val setNumResp = NoopResponse
   lazy val setNamDoc = FakeRequest("GET", "/apidoc/foo/PUT/name/facet/facet_id/rest")
+  lazy val setNamModel = apidoc.SetNameDoc("foo", "name", "facet", "facet_id", "/rest")
+  lazy val setNamResp = NoopResponse
   lazy val removeNumDoc = FakeRequest("GET", "/apidoc/foo/DELETE/1/facet/facet_id/rest")
+  lazy val removeNumModel = apidoc.RemoveNumDoc("foo", 1, "facet", "facet_id", "/rest")
+  lazy val removeNumResp = NoopResponse
   lazy val removeNamDoc = FakeRequest("GET", "/apidoc/foo/DELETE/name/facet/facet_id/rest")
+  lazy val removeNamModel = apidoc.RemoveNameDoc("foo", "name", "facet", "facet_id", "/rest")
+  lazy val removeNamResp = NoopResponse
   lazy val retrieveNumDoc= FakeRequest("GET", "/apidoc/foo/GET/1/rest")
+  lazy val retrieveNumModel = apidoc.RetrieveNumDoc("foo", 1, "/rest")
+  lazy val retrieveNumResp = NoopResponse
   lazy val retrieveNamDoc = FakeRequest("GET", "/apidoc/foo/GET/name/rest")
-  lazy val infoNumDoc= FakeRequest("GET", "/apidoc/foo/HEAD/1/rest")
+  lazy val retrieveNamModel = apidoc.RetrieveNameDoc("foo", "name", "/rest")
+  lazy val retrieveNamResp = NoopResponse
+  lazy val infoNumDoc = FakeRequest("GET", "/apidoc/foo/HEAD/1/rest")
+  lazy val infoNumModel = apidoc.InfoNumDoc("foo", 1, "/rest")
+  lazy val infoNumResp = NoopResponse
   lazy val infoNamDoc = FakeRequest("GET", "/apidoc/foo/HEAD/name/rest")
+  lazy val infoNamModel = apidoc.InfoNameDoc("foo", "name", "/rest")
+  lazy val infoNamResp = NoopResponse
   lazy val queryDoc = FakeRequest("GET", "/apidoc/foo/OPTIONS/rest")
+  lazy val queryModel = apidoc.QueryDoc("foo", "/rest")
+  lazy val queryResp = NoopResponse
   lazy val createDoc = FakeRequest("GET", "/apidoc/foo/POST/rest")
+  lazy val createModel = apidoc.CreateDoc("foo", "/rest")
+  lazy val createResp = NoopResponse
   lazy val updateNumDoc = FakeRequest("GET", "/apidoc/foo/PUT/1/rest")
+  lazy val updateNumModel = apidoc.UpdateNumDoc("foo", 1, "/rest")
+  lazy val updateNumResp = NoopResponse
   lazy val updateNamDoc = FakeRequest("GET", "/apidoc/foo/PUT/name/rest")
+  lazy val updateNamModel = apidoc.UpdateNameDoc("foo", "name", "/rest")
+  lazy val updateNamResp = NoopResponse
   lazy val deleteNumDoc = FakeRequest("GET", "/apidoc/foo/DELETE/1/rest")
+  lazy val deleteNumModel = apidoc.DeleteNumDoc("foo", 1, "/rest")
+  lazy val deleteNumResp = NoopResponse
   lazy val deleteNamDoc = FakeRequest("GET", "/apidoc/foo/DELETE/name/rest")
+  lazy val deleteNamModel = apidoc.DeleteNameDoc("foo", "name", "/rest")
+  lazy val deleteNamResp = NoopResponse
   lazy val entityIntroDoc = FakeRequest("GET", "/apidoc/foo")
+  lazy val entityIntroModel = apidoc.EntityIntroduction("foo")
+  lazy val entityIntroResp = NoopResponse
   lazy val introductionDoc = FakeRequest("GET", "/apidoc")
-
-  case class fixture() extends {
-    val name = "APIDocFixture"
-    implicit val scrupal: Scrupal = testScrupal
-  } with FakeContext[fixture] {
-    val apidoc = APIDoc()
-  }
+  lazy val introductionModel = apidoc.ApiDocIntroduction()
+  lazy val introductionResp = NoopResponse
 
   "APIDoc" should {
-    s"generate proper Reactor for $getNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(getNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("GetNumDoc")
-      reactor must beEqualTo(fix.apidoc.GetNumDoc("foo", 1, "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
-    s"generate proper Reactor for $getNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(getNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("GetNameDoc")
-      reactor must beEqualTo(fix.apidoc.GetNameDoc("foo", "name", "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
-    s"generate proper Reactor for $facetInfoNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(facetInfoNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("FacetInfoNumDoc")
-      reactor must beEqualTo(fix.apidoc.FacetInfoNumDoc("foo", 1, "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
-    s"generate proper Reactor for $facetInfoNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(facetInfoNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("FacetInfoNameDoc")
-      reactor must beEqualTo(fix.apidoc.FacetInfoNameDoc("foo", "name", "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
+    s"generate proper Reactor for $getNumDoc" in
+      providerTest(apidoc, getNumDoc, getNumDocModel, getNumDocResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
+    s"generate proper Reactor for $getNamDoc" in
+      providerTest(apidoc, getNamDoc, getNamDocModel, getNamDocResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
+    s"generate proper Reactor for $facetInfoNumDoc" in
+      providerTest(apidoc, facetInfoNumDoc, facetInfoNumModel, facetInfoNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
     }
 
-    s"generate proper Reactor for $findNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(findNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("FindNumDoc")
-      reactor must beEqualTo(fix.apidoc.FindNumDoc("foo", 1, "facet", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $facetInfoNamDoc" in
+      providerTest(apidoc, facetInfoNamDoc, facetInfoNamModel, facetInfoNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $findNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(findNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("FindNameDoc")
-      reactor must beEqualTo(fix.apidoc.FindNameDoc("foo", "name", "facet", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $findNumDoc" in
+      providerTest(apidoc, findNumDoc, findNumModel, findNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $addNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(addNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("AddNumDoc")
-      reactor must beEqualTo(fix.apidoc.AddNumDoc("foo", 1, "facet", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $findNamDoc" in
+      providerTest(apidoc, findNamDoc, findNamModel, findNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $addNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(addNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("AddNameDoc")
-      reactor must beEqualTo(fix.apidoc.AddNameDoc("foo", "name", "facet", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $addNumDoc" in
+      providerTest(apidoc, addNumDoc, addNumModel, addNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $setNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(setNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("SetNumDoc")
-      reactor must beEqualTo(fix.apidoc.SetNumDoc("foo", 1, "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $addNamDoc" in
+      providerTest(apidoc, addNamDoc, addNamModel, addNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $setNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(setNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("SetNameDoc")
-      reactor must beEqualTo(fix.apidoc.SetNameDoc("foo", "name", "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
-    s"generate proper Reactor for $removeNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(removeNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("RemoveNumDoc")
-      reactor must beEqualTo(fix.apidoc.RemoveNumDoc("foo", 1, "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $setNumDoc" in
+      providerTest(apidoc, setNumDoc, setNumModel, setNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $removeNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(removeNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("RemoveNameDoc")
-      reactor must beEqualTo(fix.apidoc.RemoveNameDoc("foo", "name", "facet", "facet_id", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $setNamDoc" in
+      providerTest(apidoc, setNamDoc, setNamModel, setNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $retrieveNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(retrieveNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("RetrieveNumDoc")
-      reactor must beEqualTo(fix.apidoc.RetrieveNumDoc("foo", 1, "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $removeNumDoc" in
+      providerTest(apidoc, removeNumDoc, removeNumModel, removeNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $retrieveNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(retrieveNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("RetrieveNameDoc")
-      reactor must beEqualTo(fix.apidoc.RetrieveNameDoc("foo", "name", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $removeNamDoc" in
+      providerTest(apidoc, removeNamDoc, removeNamModel, removeNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $infoNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(infoNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("InfoNumDoc")
-      reactor must beEqualTo(fix.apidoc.InfoNumDoc("foo", 1, "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $retrieveNumDoc" in
+      providerTest(apidoc, retrieveNumDoc, retrieveNumModel, retrieveNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $infoNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(infoNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("InfoNameDoc")
-      reactor must beEqualTo(fix.apidoc.InfoNameDoc("foo", "name", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $retrieveNamDoc" in
+      providerTest(apidoc, retrieveNamDoc, retrieveNamModel, retrieveNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $queryDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(queryDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("QueryDoc")
-      reactor must beEqualTo(fix.apidoc.QueryDoc("foo", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $infoNumDoc" in
+      providerTest(apidoc, infoNumDoc, infoNumModel, infoNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $createDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(createDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("CreateDoc")
-      reactor must beEqualTo(fix.apidoc.CreateDoc("foo", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $infoNamDoc" in
+      providerTest(apidoc, infoNamDoc, infoNamModel, infoNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $updateNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(updateNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("UpdateNumDoc")
-      reactor must beEqualTo(fix.apidoc.UpdateNumDoc("foo", 1, "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $queryDoc" in
+      providerTest(apidoc, queryDoc, queryModel, queryResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $updateNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(updateNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("UpdateNameDoc")
-      reactor must beEqualTo(fix.apidoc.UpdateNameDoc("foo", "name", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $createDoc" in
+      providerTest(apidoc, createDoc, createModel, createResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $deleteNumDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(deleteNumDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("DeleteNumDoc")
-      reactor must beEqualTo(fix.apidoc.DeleteNumDoc("foo", 1, "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $updateNumDoc" in
+      providerTest(apidoc, updateNumDoc, updateNumModel, updateNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $deleteNamDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(deleteNamDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("DeleteNameDoc")
-      reactor must beEqualTo(fix.apidoc.DeleteNameDoc("foo", "name", "/rest"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $updateNamDoc" in
+      providerTest(apidoc, updateNamDoc, updateNamModel, updateNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $entityIntroDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(entityIntroDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("EntityIntroduction")
-      reactor must beEqualTo(fix.apidoc.EntityIntroduction("foo"))
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $deleteNumDoc" in
+      providerTest(apidoc, deleteNumDoc, deleteNumModel, deleteNumResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    s"generate proper Reactor for $introductionDoc" in fixture() { fix : fixture ⇒
-      val reactorOption = fix.apidoc.provide.lift.apply(introductionDoc)
-      reactorOption.isDefined must beTrue
-      val reactor = reactorOption.get
-      reactor.name must beEqualTo("ApiDocIntroduction")
-      reactor must beEqualTo(fix.apidoc.ApiDocIntroduction())
-      // TODO: test result returned by Reactor
-    }
+    s"generate proper Reactor for $deleteNamDoc" in
+      providerTest(apidoc, deleteNamDoc, deleteNamModel, deleteNamResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
+    s"generate proper Reactor for $entityIntroDoc" in
+      providerTest(apidoc, entityIntroDoc, entityIntroModel, entityIntroResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Documentation for Entity type foo")
+      }
 
-    /*
-        lazy val entityIntroDoc = FakeRequest("GET", "/apidoc/foo")
-        lazy val introductionDoc = FakeRequest("GET", "")
-    */
+    s"generate proper Reactor for $introductionDoc" in
+      providerTest(apidoc, introductionDoc, introductionModel, introductionResp) { (reactor: Reactor, response: Response) ⇒
+        reactor.description must contain("Entity API Introduction")
+      }
+
   }
 
 }

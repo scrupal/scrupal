@@ -117,124 +117,124 @@ case class APIDoc() extends { val id : Symbol = 'apidoc } with SingularProvider 
   }
 
   case class CreateDoc(kind: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, create with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class UpdateNumDoc(kind: String, num: Long, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, update $num with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class UpdateNameDoc(kind: String, nam: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, update $nam with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class DeleteNumDoc(kind: String, num: Long, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, delete $num with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class DeleteNameDoc(kind: String, nam: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, delete $nam with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class EntityIntroduction(kind: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, introduction"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class ApiDocIntroduction() extends Reactor {
-    def description: String = ""
+    def description: String = "Entity API Introduction"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class GetNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, get $num/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class GetNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, get $nam/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class FacetInfoNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, facet Info for $num/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class FacetInfoNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, facet Info for $nam/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
 
   case class FindNumDoc(kind : String, num: Long, facet: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, find for $num/$facet with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class FindNameDoc(kind : String, nam: String, facet: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, find for $nam/$facet with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class AddNumDoc(kind : String, num: Long, facet: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, add for $num/$facet with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class AddNameDoc(kind : String, nam: String, facet: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, find for $nam/$facet with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class SetNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, set for $num/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class SetNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, set for $nam/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class RemoveNumDoc(kind : String, num: Long, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, remove for $num/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec: ExecutionContext ⇒ Future {NoopResponse} }
     }
   }
   case class RemoveNameDoc(kind : String, nam: String, facet: String, facet_id: String, rest: String) extends Reactor {
-    def description: String = ""
+    def description: String = s"Documentation for Entity type $kind, remove for $nam/$facet/$facet_id with $rest"
     def apply(stimulus: Stimulus) : Future[Response] = {
       stimulus.context.withExecutionContext { implicit ec : ExecutionContext ⇒
         Future {
