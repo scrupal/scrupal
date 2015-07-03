@@ -15,51 +15,23 @@
 
 package scrupal.core.nodes
 
-import java.time.Instant
-
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
-
-import scalatags.Text.all._
+import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
+import scrupal.test.{NodeTest, ScrupalApiSpecification}
 import scrupal.utils.ScrupalUtilsInfo
 
-import scala.concurrent.{ ExecutionContext, Future }
+/** Test Case For CommandNode */
+class ScalaNodeSpec extends ScrupalApiSpecification("ScalaNode") with NodeTest {
 
-/** Generate content with Scala code
-  *
-  * For the professional programmer maintaining a site, this is essentially an Enumeratee that reads a stream of
-  * bytes (potentially empty) and produces a stream as output. The output is the generated content. The full power of
-  * Scala is at your fingertips with REPL like simplicity. The code is dynamically compiled and executed to produce
-  * the filter. Like Scrupaleasy, these can be producers, consuemrs or filters and are intented to execute stand-alone or
-  * in a pipeline.
-  * @param description
-  * @param code
-  * @param modified
-  * @param created
-  */
-case class ScalaNode(
-  name : String,
-  description : String,
-  code : String,
-  modified : Option[Instant] = Some(Instant.now()),
-  created : Option[Instant] = Some(Instant.now())
-) extends Node {
-  override val mediaType : MediaType = MediaTypes.`text/html`
+  lazy val node = ScalaNode(specName, specName, "scrupalVersion.asInstanceOf[String]")
 
-  def apply(context: Context) : Future[Response] = {
-    context.withExecutionContext { implicit ec : ExecutionContext ⇒
-        Future {
-          import javax.script._
-          val manager = new ScriptEngineManager(getClass.getClassLoader)
-          val engine = manager.getEngineByName("scala")
-          val settings = engine.asInstanceOf[scala.tools.nsc.interpreter.IMain].settings
-          settings.embeddedDefaults[ScalaNode]
-          val bindings = engine.createBindings()
-          bindings.put("scrupalVersion", ScrupalUtilsInfo.version)
-          engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE)
-          HtmlResponse(Html.renderContents( Seq( span(engine.eval(code).toString) )), Successful)
-        }
+  s"$specName" should {
+    "provide correct value for scrupalVersion properly" in nodeTest(node) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/html`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[HtmlResponse] must beTrue
+      val sr = r.asInstanceOf[HtmlResponse]
+      sr.content must beEqualTo( s"<span>${ScrupalUtilsInfo.version}</span>" )
     }
   }
 }
-

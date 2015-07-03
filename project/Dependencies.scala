@@ -64,6 +64,7 @@ trait Dependencies
   // Fundamental Libraries
   val shapeless               = "com.chuusai"               %% "shapeless"                % "2.2.1"
   val scala_arm               = "com.jsuereth"              %% "scala-arm"                % "1.4"
+  val scala_compiler          = "org.scala-lang"            % "scala-compiler"            % "2.11.6" // FIXME: locate
 
   // Database, Caches, Serialization, Data Storage stuff
   val rxmongo                 = "com.reactific"             %% "rxmongo"                  % "0.1.0-SNAPSHOT"
@@ -205,7 +206,7 @@ trait Dependencies
 
   val core_dependencies : Seq[ModuleID] = Seq(
     commons_lang3, scala_arm, scala_pickling, livestream_scredis, akka_actor, play_iteratees, akka_http, shapeless,
-    scalatags, wj_marked, wj_font_awesome, wj_bootstrap,
+    scalatags, wj_marked, wj_font_awesome, wj_bootstrap, scala_compiler,
     Test.akka_testkit, Test.commons_io
   ) ++ common_dependencies ++ bootswatch_themes
 

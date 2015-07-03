@@ -50,7 +50,7 @@ class NodesSpec extends ScrupalApiSpecification("Nodes") {
     val html = HtmlNode("Html", "An Html Node", template)
     val file = FileNode("File", "A File Node",
                         new File("scrupal-core/src/test/resources/fakeAsset.txt"), MediaTypes.`text/plain`)
-    val link = LinkNode("Link", "A Link Node", new URL("http://scrupal.org/"))
+    val link = AnchorNode("Link", "A Link Node", new URL("http://scrupal.org/"))
 //    val mdn = MarkedDocNode("MarkedDoc", "mdn", "docs", Iterable.empty[String])
 
     val tags = Map[String,Either[Node.Ref,Node]](

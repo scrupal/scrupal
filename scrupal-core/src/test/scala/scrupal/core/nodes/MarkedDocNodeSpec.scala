@@ -15,32 +15,38 @@
 
 package scrupal.core.nodes
 
-import java.net.URL
-import java.time.Instant
-
-import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import scalatags.Text.all._
+import akka.http.scaladsl.model.MediaTypes
 import scrupal.api._
+import scrupal.test.{NodeTest, ScrupalApiSpecification}
 
-import scala.concurrent.Future
+/** Test Case For CommandNode */
+class MarkedDocNodeSpec extends ScrupalApiSpecification("MarkedDocNode") with NodeTest {
 
-/** Link Node
-  * This node type contains a URL to a resource and generates a link to it.
-  */
-case class LinkNode(
-  name: String,
-  description : String,
-  url : URL,
-  modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now),
-  final val kind : Symbol = LinkNode.kind) extends Node {
-  override val mediaType : MediaType = MediaTypes.`text/html`
-  def apply(context: Context) : Future[Response] = Future.successful {
-    HtmlResponse(Html.renderContents(Seq(a(href := url.toString, description))), Successful)
+  lazy val node = MarkedDocNode(specName, "/foo", "root", Iterable("foo.txt"))
+
+  lazy val node2 = MarkedDocNode(specName+"2", "/foo", "root", Iterable("foo.md"))
+
+  s"$specName" should {
+    "find a plain file, foo.txt" in nodeTest(node) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/html`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[HtmlResponse] must beTrue
+      val sr = r.asInstanceOf[HtmlResponse]
+      sr.content.contains("<div id=\"marked\">This is some text\n</div>") must beTrue
+    }
   }
-}
 
-object LinkNode {
-  final val kind = 'Link
-}
+  s"$specName" should {
+    "find a markdown file, foo.md" in nodeTest(node2) { r: Response ⇒
+      r.mediaType must beEqualTo(MediaTypes.`text/html`)
+      r.disposition.isSuccessful must beTrue
+      r.isInstanceOf[HtmlResponse] must beTrue
+      val sr = r.asInstanceOf[HtmlResponse]
+      sr.content.contains("""<div id="marked"># Title
+                            |
+                            |Some content
+                            |</div>""".stripMargin) must beTrue
+    }
+  }
 
+}
