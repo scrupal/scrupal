@@ -17,7 +17,7 @@ package scrupal.utils
 
 import org.specs2.execute.{ Result, AsResult }
 import org.specs2.mutable.Specification
-import org.specs2.specification.{ ForEach, FixtureExample }
+import org.specs2.specification.{ ForEach }
 
 trait Abstract extends Registrable[Abstract] {
   def doit() : Unit = { throw new Exception("did it!") }
@@ -37,6 +37,21 @@ class RegistrationSpec extends Specification with ForEach[TestRegistry] {
   override protected def foreach[R](f : (TestRegistry) ⇒ R)(implicit evidence$3 : AsResult[R]) : Result = {
     val arg = new TestRegistry {}
     AsResult(f(arg))
+  }
+
+  "Identifiable" should {
+    "convert id to label" in {
+      val i = new { val id : Symbol = 'id } with Identifiable
+      i.label must beEqualTo("id")
+      i.id must beEqualTo('id)
+    }
+  }
+
+  "IdentifiedWithRegistry" should {
+    "get registry name" in { test_registry : TestRegistry ⇒
+      val iwr = new { val id = 'iwr } with IdentifiedWithRegistry { val registry = test_registry }
+      iwr.registryName must beEqualTo("Abstract-Registry")
+    }
   }
 
   "Registration" should {
@@ -152,4 +167,23 @@ class RegistrationSpec extends Specification with ForEach[TestRegistry] {
 
   }
 
+  "RegistryReference" should {
+    "make a reference to Registrable" in {
+      object treg extends Registry[Foo] { val registryName = "TestRegistry"; val registrantsName = "Tests" }
+      case class Foo(override val id : Symbol) extends Registrable[Foo] {
+        override def registry = treg
+        // override def asT: Test = this
+      }
+
+      val one = Foo('one)
+      val two = Foo('two)
+      val ref1 = RegistryReference.to(one)
+      val ref2 = RegistryReference.to(two)
+      ref1.equals(ref2) must beFalse
+      ref1.registry must beEqualTo(treg)
+      ref2.registry must beEqualTo(treg)
+      ref1.id must beEqualTo('one)
+      ref2.id must beEqualTo('two)
+    }
+  }
 }

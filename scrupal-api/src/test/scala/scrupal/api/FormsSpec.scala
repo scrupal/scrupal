@@ -28,6 +28,7 @@ import scala.concurrent.duration._
 class FormsSpec extends ScrupalSpecification("Forms") {
 
   def throwRequirementFailed = throwA[IllegalArgumentException]("requirement failed")
+
   "Forms.TextField" should {
     "accept an AnyString_t" in {
       val field = TextField("Foo", "Description", AnyString_t)

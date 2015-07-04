@@ -114,11 +114,23 @@ class PatternsSpec extends Specification {
   }
 
   "DomainName" should {
-    "match legal domain names" in { pending }
-    "reject invalid domain names" in { pending }
+    val pat = Patterns.DomainName
+    "match legal domain names" in {
+      pat.pattern.matcher("scrupal.org").matches must beTrue
+    }
+    "reject invalid domain names" in {
+      pat.pattern.matcher("a").matches must beFalse
+
+    }
   }
 
   "Title" should {
-    "not allow non word characters except a few separators and punctuation" in { pending }
+    "not allow non word characters except a few separators and punctuation" in {
+      Patterns.Title.pattern.matcher("#@$%!@%!@$#@#%)(*&)(").matches must beFalse
+    }
+    "allow word characters" in {
+      Patterns.Title.pattern.matcher("This IS A Title").matches must beTrue
+
+    }
   }
 }

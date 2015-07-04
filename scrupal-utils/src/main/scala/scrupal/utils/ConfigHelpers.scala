@@ -15,14 +15,12 @@
 
 package scrupal.utils
 
-import java.io.{ PrintWriter, File }
+import java.io.File
 
 import com.typesafe.config._
 import play.api.{ Environment, Configuration }
 
-import scala.collection.JavaConverters._
 import scala.collection.immutable.TreeMap
-import scala.util.Try
 import scala.util.matching.Regex
 
 /** This object provides a set of operations to create `Configuration` values.
@@ -54,40 +52,7 @@ object ConfigHelpers extends ScrupalComponent {
       val entries = under.entrySet.toSeq.filter { case (x, y) ⇒ elide.findPrefixOf(x).isEmpty }
       TreeMap[String, ConfigValue](entries.toSeq : _*)
     }
-
-    import scrupal.utils.ClassHelpers._
-
-    /** Convert any class name into an instance of that class, assuming it has an empty args constructor
-      *
-      * @param name The class name
-      * @param m A manifest for the class
-      * @tparam C The kind of class expected, a base class
-      * @return An instance of C that is of class `name` or None if it couldn't be instantiated.
-      */
-    def getInstance[C <: AnyRef](name : String)(implicit m : Manifest[C]) : Option[C] = {
-      try {
-        Option(string2instance[C](name))
-      } catch {
-        case x : IllegalAccessException ⇒
-          log.error("Cannot access class " + name + " while instantiating: ", x); None
-        case x : InstantiationException ⇒
-          log.error("Cannot instantiate uninstantiable class " + name + ": ", x); None
-        case x : ExceptionInInitializerError ⇒
-          log.error("Instance initialization of " + name + " failed: ", x); None
-        case x : SecurityException ⇒
-          log.error("Security exception while instantiating " + name + ": ", x); None
-        case x : LinkageError ⇒
-          log.error("Linkage error while instantiating " + name + ": ", x); None
-        case x : ClassNotFoundException ⇒
-          log.error("Cannot find class " + name + " to instantiate: ", x); None
-        case x : Throwable ⇒ throw x
-      }
-    }
   }
-
-  private[this] lazy val dontAllowMissingConfigOptions = ConfigParseOptions.defaults().setAllowMissing(false)
-
-  private[this] lazy val dontAllowMissingConfig = ConfigFactory.load(dontAllowMissingConfigOptions)
 
   def from(env : Environment) = {
     Configuration.load(env)
