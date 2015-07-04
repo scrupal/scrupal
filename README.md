@@ -22,13 +22,13 @@ Scrupal may be nearing its initial releases that could be tried in production.
 
 ## Quick Start
 
-
+TBD
 
 ## Technologies
 Scrupal is opinionated as it integrates the best modern web technologies and will continue to utilize the best as
 new technologies develop. Some of the technologies Scrupal utilizes are:
 
-- [JVM 8]() - Version 8 of the Java Virtual Machine
+- [JVM 8](http://www.oracle.com/technetwork/java/javase/documentation/8u-relnotes-2225394.html) - Version 8 of the Java Virtual Machine
 
 - [Scala](http://scala-lang.org/) - A hybrid functional object-oriented language.
 
@@ -48,20 +48,16 @@ new technologies develop. Some of the technologies Scrupal utilizes are:
 
 - [shapeless](https://github.com/milessabin/shapeless) - A generic programming library for Scala
 
-
 - [Twitter Bootstrap](http://getbootstrap.com/) - The standard for modern HTML5 web site construction
 
 - [marked](https://github.com/chjj/marked) - An efficient mardown processor
 
 - [sbt-web]() - A web assets pipeline system
 
-- [WebJars] - A system for easily incorporating web assets into a project
-
+- [WebJars](http://www.webjars.org/) - A system for easily incorporating web assets into a project
 
 - [Specs2](https://github.com/etorreborre/specs2) - BDD style testing
 
-
-
 - - -
 
-<sub><sup>&copy; Copyright 2015, Reactific Software, Inc.. All Rights Reserved.</sup></sub>
+<sub><sup>&copy; Copyright 2015, Reactific Software, LLC. All Rights Reserved.</sup></sub>
