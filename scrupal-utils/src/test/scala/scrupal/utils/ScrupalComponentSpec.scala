@@ -42,7 +42,7 @@ class ScrupalComponentSpec extends Specification {
     }
     "produce decent exception on await timeout" in {
       case object test1a extends ScrupalComponent
-      test1a.await( Future { 42 }, FiniteDuration(0,"seconds"), "test await") match {
+      test1a.await( Future { Thread.sleep(100); 42 }, FiniteDuration(0,"seconds"), "test await") match {
         case x: Success[Int] ⇒ failure
         case Failure(x) ⇒
           x.getMessage must contain("while waiting")
