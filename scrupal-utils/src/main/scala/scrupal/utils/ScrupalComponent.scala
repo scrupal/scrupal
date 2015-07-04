@@ -18,7 +18,6 @@ package scrupal.utils
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ Await, Future }
 import scala.util.{ Failure, Success, Try }
-import grizzled.slf4j.Logger
 
 /** Utilities used throughout Scrupla. Should probably be an aspect, but we just mix this in as needed.
   * Helps with logging, throwing exceptions and dealing with futures.
@@ -27,7 +26,9 @@ trait ScrupalComponent {
 
   def logger_identity : String = this.getClass.getName
 
-  val log = Logger({ if (logger_identity == null) "scrupal.utils.NoCanonicalName" else logger_identity })
+  val log = grizzled.slf4j.Logger({
+    if (logger_identity == null) "scrupal.utils.NoCanonicalName" else logger_identity }
+  )
 
   /** Identity Aware Exception Toss
     * This function makes it easier to throw (toss) an exception that adds a message to it and also identifies the

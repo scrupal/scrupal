@@ -90,6 +90,16 @@ object LoggingHelpers extends ScrupalComponent {
     }
   }
 
+  def getLoggingLevel(regex: String) : Level = {
+    val lc = loggerContext
+    val loggers = findLoggers(regex)
+    if (loggers.isEmpty)
+      Level.OFF
+    else
+      loggers.head.getEffectiveLevel
+  }
+
+
   /** Find loggers matching a pattern
     * @param pattern A Scala regular expression string for the names of the loggers to match
     * @return A sequence of the matching loggers
