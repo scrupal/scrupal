@@ -576,7 +576,7 @@ case class RealType(
 
     def checkString(s: String) : Option[String] = {
       try {
-        check(s.toLong, s)
+        check(s.toDouble, s)
       } catch {
         case x: Throwable ⇒
           Some(s"Value '$s' is not convertible to a number: ${x.getClass.getSimpleName}: ${x.getMessage}")
@@ -748,7 +748,7 @@ case class StringType(
     } else if (s.length < minLen) {
       Some(s"String of length ${s.length} is shorter than minimum of $minLen")
     } else if (!regex.pattern.matcher(s).matches()) {
-      Some(s"'$s' does not match $patternName.")
+      Some(s"'$s' does not match $patternName")
     } else
       None
   }
@@ -801,9 +801,9 @@ object Password_t extends StringType('Password,
   "A type for human written passwords", anchored(Password), 64, 6, "a password") {
   override def check(bs: String) = {
     if (bs.length > maxLen)
-      Some(s"Value is too short for a password.")
+      Some(s"Password is too short")
     else if (!regex.pattern.matcher(bs).matches())
-      Some(s"Value is not legal for a password.")
+      Some(s"Password is not legal")
     else
         None
   }
@@ -823,7 +823,7 @@ object DomainName_t extends StringType('DomainName,
   * We should probably have one for URIs too,  per http://tools.ietf.org/html/rfc3986
   */
 object URL_t extends StringType('URL,
-  "Uniform Resource Locator", anchored(UniformResourceLocator))
+  "Uniform Resource Locator", anchored(UniformResourceLocator), patternName="the URL pattern")
 
 /** The Scrupal Type for IP version 4 addresses */
 object IPv4Address_t extends StringType('IPv4Address,
@@ -855,36 +855,42 @@ case class TimestampType(
   assert(min.toEpochMilli <= max.toEpochMilli)
 
   private object validation extends Poly1 {
-    def check(l: Long): Option[String] = {
-      if (l < min.toEpochMilli)
-        Some(s"Timestamp $l is out of range, below minimum of $min")
-      else if (l > max.toEpochMilli)
-        Some(s"Timestamp $l is out of range, above maximum of $max")
-      else
-        None
+    def check(longByRef: () ⇒ Long): Option[String] = {
+      try {
+        val l = longByRef()
+        if (l < min.toEpochMilli)
+          Some(s"Timestamp $l is out of range, below minimum of $min")
+        else if (l > max.toEpochMilli)
+          Some(s"Timestamp $l is out of range, above maximum of $max")
+        else
+          None
+      } catch {
+        case x: Throwable ⇒
+          Some(s"${x.getClass.getSimpleName}: ${x.getMessage}")
+      }
     }
 
-    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ Some("") }
+    implicit def caseBoolean = at[Boolean] { b: Boolean ⇒ check( () ⇒ {if (b) 1 else 0})}
 
-    implicit def caseByte = at[Byte] { b: Byte ⇒ check(b.toLong) }
+    implicit def caseByte = at[Byte] { b: Byte ⇒ check( () ⇒ b.toLong) }
 
-    implicit def caseShort = at[Short] { s: Short ⇒ check(s.toLong) }
+    implicit def caseShort = at[Short] { s: Short ⇒ check( () ⇒ s.toLong) }
 
-    implicit def caseInt = at[Int] { i: Int ⇒ check(i.toLong) }
+    implicit def caseInt = at[Int] { i: Int ⇒ check( () ⇒ i.toLong) }
 
-    implicit def caseLong = at[Long] { l: Long ⇒ check(l.toLong) }
+    implicit def caseLong = at[Long] { l: Long ⇒ check( () ⇒ l) }
 
-    implicit def caseFloat = at[Float] { f: Float ⇒ check(f.toLong) }
+    implicit def caseFloat = at[Float] { f: Float ⇒ check( () ⇒ f.toLong) }
 
-    implicit def caseDouble = at[Double] { d: Double ⇒ check(d.toLong) }
+    implicit def caseDouble = at[Double] { d: Double ⇒ check( () ⇒ d.toLong) }
 
-    implicit def caseSymbol = at[Symbol] { s: Symbol ⇒ check(s.name.toLong) }
+    implicit def caseSymbol = at[Symbol] { s: Symbol ⇒ check( () ⇒ s.name.toLong) }
 
-    implicit def caseString = at[String] { s: String ⇒ check(s.toLong) }
+    implicit def caseString = at[String] { s: String ⇒ check( () ⇒ s.toLong) }
 
-    implicit def caseInstant = at[Instant] { i: Instant ⇒ check(i.toEpochMilli) }
+    implicit def caseInstant = at[Instant] { i: Instant ⇒ check( () ⇒ i.toEpochMilli) }
 
-    implicit def caseDuration = at[Duration] { i: Duration ⇒ check(i.toMillis) }
+    implicit def caseDuration = at[Duration] { i: Duration ⇒ check( () ⇒ i.toMillis) }
   }
 
   def validate(ref: Location, value: Atom): VResult = {

@@ -17,12 +17,30 @@ package scrupal.api
 
 import java.time.Instant
 
+import org.specs2.execute.Result
 import scrupal.test.{TestTypes, ScrupalSpecification}
+import scrupal.utils.Validation
+import scrupal.utils.Validation.SimpleLocation
 
+import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 /** Test specifications for the abstract Type system portion of the API.  */
 class TypeSpec extends ScrupalSpecification("TypeSpec") {
+
+  def atomGauntlet(t : Type[Atom], values: List[Atom], results:List[Boolean]) : Result ={
+    val location = SimpleLocation(t.getClass.getSimpleName)
+    val zipped : List[(Atom,Boolean)] = values.zipAll(results,atomFromInt(0), false)
+    for ((v,e) ← zipped ) {
+      val result = t.validate(location, v)
+      if (result.isError == e)
+        if (result.isError)
+          failure(result.message)
+        else
+          failure(s"Validation of $v should have failed but didn't")
+    }
+    success
+  }
 
   "MiddlePeriod" should {
     "accept 'foo.bar'" in TestTypes(scrupal) { t : TestTypes ⇒
@@ -53,6 +71,11 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject 21" in TestTypes(scrupal) { t: TestTypes ⇒
       t.rangeTy.validate(t.vLoc, 21).isError must beTrue
     }
+    "run atomGauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(t.rangeTy,
+        List[Atom](true, 7.toByte, 20, 8L, 17.toShort, 20.0F, 18.0D, Instant.now(), Duration(10,"seconds")),
+        List(false, false, true, false, true, true, true, false, false))
+    }
   }
 
   "RealType(10.1,20.9)" should {
@@ -71,6 +94,11 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject 20.91" in TestTypes(scrupal) { t: TestTypes ⇒
       t.realTy.validate(t.vLoc, 20.91).isError must beTrue
     }
+    "run atomGauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(t.realTy,
+        List[Atom](true, 7.toByte, 20, 8L, 17.toShort, 20.0F, 18.0D, Instant.now(), Duration(5,"seconds")),
+        List(false, false, true, false, true, true, true, false))
+    }
   }
 
   "EnumType(fibonacci)" should {
@@ -82,6 +110,18 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     }
     "provide 13 for 'six' " in TestTypes(scrupal) { t: TestTypes ⇒
       t.enumTy.valueOf("six").get must beEqualTo(13)
+    }
+    "reject Instant and Duration values" in TestTypes(scrupal) { t: TestTypes ⇒
+      t.enumTy.validate(t.vLoc, Instant.now()).isError must beTrue
+    }
+    "reject Instant and Duration values" in TestTypes(scrupal) { t: TestTypes ⇒
+      t.enumTy.validate(t.vLoc, Duration(2,"seconds")).isError must beTrue
+    }
+
+    "run atomGauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(t.enumTy,
+        List[Atom](true, 7.toByte, 20, 8L, 13.toShort, 20.0F, 18.0D),
+        List(true, false, false, true, true, false, false))
     }
   }
 
@@ -207,8 +247,11 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
 
   "AnyString_t" should {
     "accept some Atom types" in TestTypes(scrupal) { t: TestTypes ⇒
-      AnyString_t.validate(t.vLoc, "aString").isError must beFalse
-      AnyString_t.validate(t.vLoc, 42.0).isError must beFalse
+      atomGauntlet(AnyString_t,
+        List[Atom](true, 42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0",
+          Instant.now(), Duration(2, "seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true, true)
+      )
     }
   }
 
@@ -219,15 +262,29 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject non-numeric string" in TestTypes(scrupal) { t: TestTypes ⇒
       AnyInteger_t.validate(t.vLoc, "Hello, World!").isError must beTrue
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(AnyInteger_t,
+        List[Atom](true, 42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42",
+          Instant.ofEpochMilli(42), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true, true)
+      )
+    }
   }
 
   "AnyReal_t" should {
     "accept 42.0" in TestTypes(scrupal) { t: TestTypes ⇒
-      AnyInteger_t.validate(t.vLoc, 42.0D).isError must beFalse
-      AnyInteger_t.validate(t.vLoc, 42.0F).isError must beFalse
+      AnyReal_t.validate(t.vLoc, 42.0D).isError must beFalse
+      AnyReal_t.validate(t.vLoc, 42.0F).isError must beFalse
     }
     "reject non-numeric string" in TestTypes(scrupal) { t: TestTypes ⇒
-      AnyInteger_t.validate(t.vLoc, "Hello, World!").isError must beTrue
+      AnyReal_t.validate(t.vLoc, "Hello, World!").isError must beTrue
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(AnyReal_t,
+        List[Atom](true, 42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0",
+          Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true, true)
+      )
     }
   }
 
@@ -235,6 +292,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "accept Instant and Long" in TestTypes(scrupal) { t: TestTypes ⇒
       AnyTimestamp_t.validate(t.vLoc, Instant.now()).isError must beFalse
       AnyTimestamp_t.validate(t.vLoc, 141231512L).isError must beFalse
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(AnyTimestamp_t,
+        List[Atom](true, 42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, false, "42",
+          Instant.now(), Duration(2,"seconds"), "42.0", Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true, false, true)
+      )
     }
   }
 
@@ -249,6 +313,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
       Boolean_t.validate(t.vLoc, true).isError must beFalse
       Boolean_t.validate(t.vLoc, false).isError must beFalse
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(Boolean_t,
+        List[Atom](false, 1, 1.0F, 1.0D, 1L, 1.toShort, 1.toByte, true, "off",
+          Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true, true)
+      )
+    }
   }
 
   "NonEmptyString_t" should {
@@ -257,6 +328,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     }
     "reject an empty string" in TestTypes(scrupal) { t: TestTypes ⇒
       NonEmptyString_t.validate(t.vLoc, "").isError must beTrue
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(NonEmptyString_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0",
+          Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true)
+      )
     }
   }
 
@@ -267,6 +345,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject an invalid password" in TestTypes(scrupal) { t: TestTypes ⇒
       Password_t.validate(t.vLoc, "short").isError must beTrue
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(Password_t,
+        List[Atom](424242, 424242.0F, 424242.0D, 424242L, "42.0000",
+          Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, false, false, true, false, true, false, false)
+      )
+    }
   }
 
   "Description_t" should {
@@ -276,6 +361,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject" in TestTypes(scrupal) { t: TestTypes ⇒
       Description_t.validate(t.vLoc, "Too short").isError must beTrue
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(Description_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0000000",
+          Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(false, false, false, false, false, false, false, true, true, false, false)
+      )
+    }
   }
 
   "Markdown_t" should {
@@ -284,6 +376,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     }
     "reject empty string" in TestTypes(scrupal) { t: TestTypes ⇒
       Markdown_t.validate(t.vLoc, "").isError must beTrue
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(Markdown_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "# Title",
+          Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, false, false, true, true, true, true, true, true, true, true)
+      )
     }
   }
 
@@ -297,6 +396,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject ab" in TestTypes(scrupal) { t: TestTypes ⇒
       DomainName_t.validate(t.vLoc, "ab").isError must beTrue
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(DomainName_t,
+        List[Atom](420, 420L, 420.toShort, 126.toByte, true, "42.com", "42.0",
+                   Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, false, true, true, false)
+      )
+    }
   }
 
   "URI_t" should {
@@ -305,6 +411,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     }
     "reject Not\\A@URI" in TestTypes(scrupal) { t: TestTypes ⇒
       URL_t.validate(t.vLoc, "Not\\A@URI").isError must beTrue
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(URL_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0",
+                   Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(false, false, false, false, false, false, false, false, false, false, false)
+      )
     }
   }
 
@@ -315,6 +428,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject 1.2.3.400" in TestTypes(scrupal) { t: TestTypes ⇒
       IPv4Address_t.validate(t.vLoc, "1.2.3.400").isError must beTrue
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(IPv4Address_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0",
+                   Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(false, false, false, false, false, false, false, false, false, false, false, false)
+      )
+    }
   }
 
   "TcpPort_t" should {
@@ -323,6 +443,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     }
     "reject 65537" in TestTypes(scrupal) { t: TestTypes ⇒
       TcpPort_t.validate(t.vLoc, "65537").isError must beTrue
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(TcpPort_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0", "42",
+                   Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, false, true, false, true, true)
+      )
     }
   }
 
@@ -340,6 +467,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     "reject no body@scrupal.org" in TestTypes(scrupal) { t: TestTypes ⇒
       EmailAddress_t.validate(t.vLoc, "no body@scrupal.org").isError must beTrue
     }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(EmailAddress_t,
+        List[Atom](4242421, 42.42422F, 42.42423D, 4242424L, 42.toShort, 42.toByte, true, "42.0", "enough@long",
+                   Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(false, false, false, false, false, false, false, false, true, false, false, false )
+      )
+    }
   }
 
   "LegalName_t" should {
@@ -348,6 +482,13 @@ class TypeSpec extends ScrupalSpecification("TypeSpec") {
     }
     "reject tab char" in TestTypes(scrupal) { t: TestTypes ⇒
       LegalName_t.validate(t.vLoc, "\t").isError must beTrue
+    }
+    "run the atom gauntlet" in TestTypes(scrupal) { t: TestTypes ⇒
+      atomGauntlet(LegalName_t,
+        List[Atom](42, 42.0F, 42.0D, 42L, 42.toShort, 42.toByte, true, "42.0",
+                   Instant.now(), Duration(2,"seconds"), Symbol("42")),
+        List(true, true, true, true, true, true, true, true, true, true, true)
+      )
     }
   }
 }
