@@ -16,7 +16,9 @@
 package scrupal.api.html
 
 import play.api.libs.json._
-import scrupal.api.Html
+import play.api.mvc.{AnyContentAsText, Headers}
+import play.api.test.FakeRequest
+import scrupal.api.{Stimulus, ExceptionResponse, Html}
 import scrupal.api.Html.{SimpleGenerator, Contents, ContentsArgs, Generator}
 import scrupal.test.ScrupalSpecification
 
@@ -33,9 +35,15 @@ class utilsSpec extends ScrupalSpecification("html-utils") {
     "a" → EasyGen(Seq(span("a"),span("1"))),
     "b" → EasyGen(Seq(span("b"),span("2")))
   )
-  def generatorTest(gen: Generator, content: Contents) = {
-    gen.render(context, theArgs) must beEqualTo(Html.renderContents(content))
-    // gen.generate(context, theArgs) must beEqualTo(content) FIXME: This should be true!
+  def generatorTest(gen: Generator, must_contain: Seq[String]) = {
+    val rendered = gen.render(context, theArgs)
+    for (item ← must_contain) {
+      rendered must contain(item)
+    }
+    val generated = Html.renderContents(gen.generate(context, theArgs))
+    for (item ← must_contain) {
+      generated must contain(item)
+    }
     for (tag ← theArgs.keys) {
       gen.tag(tag, context, theArgs).nonEmpty must beTrue
     }
@@ -44,13 +52,41 @@ class utilsSpec extends ScrupalSpecification("html-utils") {
 
   "utils" should {
     "have a danger generator" in {
-      generatorTest(danger(Seq(span("foo"))), Seq(div(cls:="bg-danger",span("foo"))))
+      generatorTest(danger(Seq(span("foo"))), Seq("class=\"bg-danger\"","foo"))
     }
     "have a warning generator" in {
-      generatorTest(warning(Seq(span("foo"))), Seq(div(cls:="bg-warning",span("foo"))))
+      generatorTest(warning(Seq(span("foo"))), Seq("class=\"bg-warning\"","foo"))
     }
     "have a success generator" in {
-      generatorTest(_root_.scrupal.api.html.success(Seq(span("foo"))), Seq(div(cls:="bg-success",span("foo"))))
+      generatorTest(_root_.scrupal.api.html.success(Seq(span("foo"))), Seq("class=\"bg-success\"","foo"))
+    }
+    "have an exception generator" in {
+      generatorTest(exception("testing", new IllegalArgumentException("42")),
+        Seq("IllegalArgumentException", "42", "testing", "exception occurred"))
+    }
+    "have a display_stimulus_table generator" in {
+      val fr = FakeRequest("GET", "/path", new Headers(Seq("key"→"value")), AnyContentAsText("content"),
+        remoteAddress  = "127.0.0.1", version = "HTTP/1.1", id = 666, tags = Map.empty[String, String], secure =false)
+      val stim = Stimulus(context, fr)
+      generatorTest(display_stimulus_table(stim),
+        Seq("html-utils", "Request Header", "Context", "Version", "GET", "/path", "key", "value",
+            "127.0.0.1", "HTTP/1.1", "666", "false"))
+    }
+    "have a debug_footer generator" in {
+      // FIXME: how to make the debug_footer enabled?
+      generatorTest(debug_footer, Seq())
+    }
+    "have a display_alerts generator" in {
+      // FIXME: how to make alerts in the data cache?
+      generatorTest(display_alerts, Seq())
+    }
+    "have a display_exception generator" in {
+      generatorTest(display_exception(new IllegalArgumentException("42")),
+        Seq("Exception:", "Message:", "Cause:", "42", "IllegalArgumentException"))
+    }
+    "have a display_exception_response generator" in {
+      generatorTest(display_exception_response(ExceptionResponse(new IllegalArgumentException("42"))),
+        Seq("class=\"bg-danger\"", "IllegalArgumentException", "42") )
     }
     "have a json document panel" in {
       val panel = json_document_panel("Test Panel",

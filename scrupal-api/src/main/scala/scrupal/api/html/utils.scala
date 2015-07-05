@@ -19,7 +19,7 @@ import java.io.{PrintWriter, StringWriter}
 
 import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.libs.json._
-import scrupal.api.{DataCache, Context}
+import scrupal.api.{Stimulus, DataCache, Context}
 import scrupal.api.Html._
 
 import scalatags.Text.Modifier
@@ -48,26 +48,46 @@ case class exception(activity : String, error : Throwable) extends SimpleGenerat
 
 object display_context_table extends FragmentGenerator {
   def apply(context : Context) = {
-    Seq(div(cls := "span10 row", style := "font-size: 0.75em",
-      table(cls := "span10 table table-striped table-bordered table-condensed",
-        caption(style := "font-size: 1.2em; font-weight: bold;", "Context Details"),
-        thead(tr(th("Parameter"), th("Value"))),
-        tbody(
-          tr(th("Site"), td(context.siteName)),
-          tr(th("User"), td(context.user)),
-          tr(th("Theme"), td(context.themeName))
-        )
-      ),
-      table(cls := "span10 table table-striped table-bordered table-condensed",
-        caption(style := "font-size: 1.2em; font-weight: bold;", "Request Header Details"),
-        thead(tr(th("Parameter"), th("Value"))),
-        tbody(
-          //tr(th("Request"), td(context.method.toString(), ": ", context.uri.toString())),
-          // tr(th("Protocol"), td(context.protocol.toString())),
-          // tr(th("Headers"), td(context.headers.toString()))
+    Seq(
+      div(cls := "span10 row", style := "font-size: 0.75em",
+        table(cls := "span10 table table-striped table-bordered table-condensed",
+          caption(style := "font-size: 1.2em; font-weight: bold;", "Context Details"),
+          thead(tr(th("Parameter"), th("Value"))),
+          tbody(
+            tr(th("Site"), td(context.siteName)),
+            tr(th("User"), td(context.user)),
+            tr(th("Theme"), td(context.themeName))
+          )
         )
       )
-    ))
+    )
+  }
+}
+
+case class display_stimulus_table(stimulus: Stimulus) extends FragmentGenerator {
+  def apply(context : Context) = {
+    Seq(
+      div(cls := "span10 row", style := "font-size: 0.75em",
+        table(cls := "span10 table table-striped table-bordered table-condensed",
+          caption(style := "font-size: 1.2em; font-weight: bold;", "Request Header Details"),
+          thead(tr(th("Parameter"), th("Value"))),
+          tbody(
+            tr(th("Method"), td(stimulus.method.toString),
+            tr(th("Path", td(stimulus.path))),
+            tr(th("URI", td(stimulus.uri))),
+            tr(th("Version"), td(stimulus.version)),
+            tr(th("ID", td(stimulus.id))),
+            tr(th("Query", td(stimulus.queryString.toString())))),
+            tr(th("RemoteAddress"), td(stimulus.remoteAddress)),
+            tr(th("Secure"), td(stimulus.secure.toString)),
+            tr(th("Tags"), td(stimulus.tags.toString())),
+            tr(th("Headers"), td(stimulus.headers.toString())),
+            tr(th("MediaType"), td(stimulus.mediaType.toString)),
+            tr(th("Context"), td(display_context_table.apply(stimulus.context)))
+          )
+        )
+      )
+    )
   }
 }
 
@@ -119,7 +139,7 @@ case class display_exception(xcptn : Throwable) extends SimpleGenerator {
   }
 }
 
-case class display_exception_result(xcptn : scrupal.api.ExceptionResponse) extends SimpleGenerator {
+case class display_exception_response(xcptn : scrupal.api.ExceptionResponse) extends SimpleGenerator {
   def apply() = { Seq(div(cls := "bg-danger", display_exception(xcptn.content)())) }
 }
 
