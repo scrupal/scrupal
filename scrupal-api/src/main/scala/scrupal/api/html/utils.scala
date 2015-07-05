@@ -138,9 +138,7 @@ trait json_fragment extends SimpleGenerator {
   }
   def array(array : JsArray) : Modifier = {
     div(s"Array(${array.value.size}) [",
-      {
-        for (e ← array.value) { Seq(value(e), ", ") }
-      },
+      array.value.flatMap { e ⇒ Seq[Modifier](value(e), ", ") },
       "]"
     )
   }
@@ -148,7 +146,9 @@ trait json_fragment extends SimpleGenerator {
   def document(doc : JsObject) : Modifier = {
     div(s"Document(${doc.value.size}) {",
       dl(cls := "dl-horizontal",
-        for ((k, v) ← doc.value) { Seq(dt(k), dd(value(v))) }
+        {for ((k, v) ← doc.value) yield {
+          Seq(dt(k), dd(value(v)))
+        }}.flatten.toSeq
       ),
       "}"
     )
@@ -172,6 +172,6 @@ case class json_document_panel(title : String, doc : JsObject) extends json_frag
 
 object reactific_copyright extends SimpleGenerator {
   def apply() = {
-    Seq(sub(sup("Copyright &copy; 2012-2014, Reactific Software LLC. All Rights Reserved.")))
+    Seq(sub(sup("Copyright &copy; 2012-2015, Reactific Software LLC. All Rights Reserved.")))
   }
 }
