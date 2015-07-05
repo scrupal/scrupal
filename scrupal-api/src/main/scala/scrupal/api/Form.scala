@@ -20,7 +20,6 @@ import java.time.Instant
 import play.api.routing.sird._
 import scrupal.api.Html._
 import scrupal.api.html.Forms
-import scrupal.api.html.Forms.{AttrList,EmptyAttrList}
 import scrupal.utils.Enablee
 import scrupal.utils.Validation._
 
@@ -29,6 +28,9 @@ import scalatags.Text.all._
 import scalatags.Text.attrs
 
 object Form {
+
+  type AttrList = Seq[AttrPair]
+  val EmptyAttrList = Seq.empty[AttrPair]
 
   /** Abstract Form Item.
     *
@@ -74,7 +76,7 @@ object Form {
 
     def attributes(attrs: AttrList): AttrList = {
       attrs ++ Seq(title := description) ++ {
-        if (!optional) Seq(required := "required") else Seq.empty[AttrPair]
+        if (!optional) Seq(required := "required") else EmptyAttrList
       }
     }
 
@@ -155,7 +157,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      Forms.text(name, form.values.getString(name), attributes(attrs))
+      Forms.text(name, form.values.getString(name), attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value
@@ -172,7 +174,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      Forms.password(name, form.values.getString(name), attributes(attrs))
+      Forms.password(name, form.values.getString(name), attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value
@@ -189,7 +191,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      Forms.textarea(name, form.values.getString(name), attributes(attrs))
+      Forms.textarea(name, form.values.getString(name), attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value
@@ -206,7 +208,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      Forms.checkbox(name, form.values.getBoolean(name).getOrElse(false), attributes(attrs))
+      Forms.checkbox(name, form.values.getBoolean(name).getOrElse(false), attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value.toBoolean
@@ -226,7 +228,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
 
     def render(form: Form): TagContent = {
-      Forms.number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attributes(attrs))
+      Forms.number(name, form.values.getDouble(name), minVal.toDouble, maxVal.toDouble, attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value.toLong
@@ -246,7 +248,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
 
     def render(form: Form): TagContent = {
-      Forms.number(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
+      Forms.number(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value.toDouble
@@ -266,7 +268,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
 
     def render(form: Form): TagContent = {
-      Forms.range(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs))
+      Forms.range(name, form.values.getDouble(name), minVal, maxVal, attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value.toDouble
@@ -284,7 +286,7 @@ object Form {
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
       val options = fieldType.choices.map { choice ⇒ choice → choice }
-      Forms.select(name, form.values.getString(name), options.toMap, attributes(attrs))
+      Forms.select(name, form.values.getString(name), options.toMap, attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value
@@ -301,7 +303,7 @@ object Form {
     prefix: Boolean = false,
     showHelp: Boolean = false) extends Field {
     def render(form: Form): TagContent = {
-      Forms.datetime(name, form.values.getInstant(name), attributes(attrs))
+      Forms.datetime(name, form.values.getInstant(name), attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = Instant.ofEpochMilli(value.toLong)
@@ -325,7 +327,7 @@ object Form {
     def defaultValue: Atom = false
 
     def render(form: Form): TagContent = {
-      Forms.reset(name, Some(label), attributes(attrs))
+      Forms.reset(name, Some(label), attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value.nonEmpty
@@ -347,13 +349,13 @@ object Form {
   } with Field {
     override def attributes(attrs: AttrList): AttrList = {
       attrs ++ Seq(title := description) ++
-        (frmaction match {case Some(x) ⇒ Seq(formaction := x); case _ ⇒ Seq.empty[AttrPair]})
+        (frmaction match {case Some(x) ⇒ Seq(formaction := x); case _ ⇒ EmptyAttrList})
     }
 
     def defaultValue = false
 
     def render(form: Form): TagContent = {
-      Forms.submit(name, label, attributes(attrs))
+      Forms.submit(name, label, attributes(attrs):_*)
     }
 
     def decode(value: String): Atom = value.nonEmpty
@@ -417,7 +419,7 @@ object Form {
       * @return The TagContent for the final markup for the field
       */
     def wrap(field: Field): TagContent = {
-      val the_label = html.Forms.label(field.name, field.name, Seq(cls := "control-label text-info"))
+      val the_label = html.Forms.label(field.name, field.name, cls := "control-label text-info")
       val the_field = field.render(this)
       div(cls := "clearfix form-group" + (if (hasErrors(field)) " text-danger" else ""),
         if (field.name.isEmpty) {
