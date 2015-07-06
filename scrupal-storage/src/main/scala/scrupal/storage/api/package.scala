@@ -18,7 +18,7 @@ package scrupal.storage
   * what is natural, useful and efficient for that type of storage.
   *
   * This package contains one concrete implementation that uses transient memory for storage.
-  * See [[scrupal.storage.mem]] for details.
+  * See [[scrupal.store.mem]] for details.
   */
 package object api {
   type ID = Long

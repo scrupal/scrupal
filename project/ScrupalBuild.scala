@@ -88,7 +88,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal API",
       scrupalPackage := "scrupal.api",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 30, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
       libraryDependencies ++= api_dependencies
     )
     .dependsOn(utils_deps, storage_deps)
@@ -104,7 +104,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal Core",
       scrupalPackage := "scrupal.core",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 45, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 40, // FIXME: Need more test coverage!
       libraryDependencies ++= core_dependencies
     )
     .dependsOn(storage_deps, api_deps, utils_deps)
@@ -149,7 +149,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(
       scrupalTitle := "Scrupal",
       scrupalPackage := "scrupal",
-      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 30, // FIXME: Need more test coverage!
+      ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 60, // FIXME: Need more test coverage!
       aggregateReverseRoutes := Seq(core_proj, config_proj, admin_proj, doc_proj),
       libraryDependencies ++= root_dependencies
     )

@@ -110,8 +110,8 @@ case class NodeIdReactor(id : Long) extends Reactor {
   }
 }
 
-/** A Query to Find Nodes by their alias path
-  *     val selector = BSONDocument("$eq" → BSONDocument("pathAlias" → BSONString(path)))
+/** A Query to Find Nodes by their alias path, like this:
+  *     {{{val selector = BSONDocument("$eq" → BSONDocument("pathAlias" → BSONString(path)))}}}
   */
 trait NodeQueries extends Queries[Node] {
   def byAlias(alias: String) : Query[Node]

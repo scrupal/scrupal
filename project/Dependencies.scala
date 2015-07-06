@@ -35,7 +35,7 @@ trait Dependencies
 
   object Ver {
     val play = "2.4.2"
-    val akka = "2.3.9"
+    val akka = "2.3.11"
     val spray = "1.3.2"
     val akka_http = "1.0-RC3"
     val kamon = "0.4.0"
@@ -82,7 +82,7 @@ trait Dependencies
   val wj_marked               = "org.webjars"               % "marked"                    % "0.3.2-1"
   val wj_requirejs            = "org.webjars"               % "requirejs"                 % "2.1.18"
   val wj_requirejs_domready   = "org.webjars"               % "requirejs-domready"        % "2.0.1-2"
-  val wj_font_awesome         = "org.webjars"               % "font-awesome"              % "4.3.0"
+  val wj_font_awesome         = "org.webjars"               % "font-awesome"              % "4.3.0-3"
 
   // Hashing Algorithms
   val pbkdf2                  = "io.github.nremond"         %% "pbkdf2-scala"             % "0.4"
@@ -105,8 +105,8 @@ trait Dependencies
 
   // Miscellaneous
   val osgi_core               = "org.osgi"                  % "org.osgi.core"             % "6.0.0"
-  val config                  =  "com.typesafe"             %  "config"                   % "1.2.1"
-  val commons_lang3           = "org.apache.commons"        % "commons-lang3"             % "3.3.2"
+  val config                  =  "com.typesafe"             %  "config"                   % "1.3.0"
+  val commons_lang3           = "org.apache.commons"        % "commons-lang3"             % "3.4"
   val hsp                     = "com.reactific"             %% "hotspot-profiler"         % "0.1.0-SNAPSHOT"
   // Test Libraries
 

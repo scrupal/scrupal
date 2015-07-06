@@ -26,35 +26,13 @@ import scala.concurrent.duration.Duration
 
 /** Scrupal API Library.
   * This package provides all the abstract type definitions that Scrupal provides. These are the main abstractions
-  * needed to write an application with Scrupal. We use the Acronym *MANIFEST*(O) to remember the key types of
-  * objects Scrupal defines:
-  *
-  * - M - Module: A container of functionality that defines Applications, Nodes, Entities, and Types
-  *
-  * - A - Application: A URL context and a set of enabled modules, entities and nodes
-  *
-  * - N - Node: A content generation function
-  *
-  * - I - Instance: An instance of an entity (essentially a document)
-  *
-  * - F - Facet: Something to add on to an instance's main payload
-  *
-  * - E - Entity: A type of instance with definitions for the actions that can be performed on it
-  *
-  * - S - Site: Site management data and a set of applications enabled for it.
-  *
-  * - T - Type: A fundamental data type used for validating BSONValue structured information (Instances and Node results)
-  *
-  * - O - ???
-  *
-  * If you can grok these few concepts then you have understood the core concepts of Scrupal.
-  *
+  * needed to write an application with Scrupal.
   */
 package object api {
 
   lazy val utf8 = StandardCharsets.UTF_8
 
-  /** The typical type of identifer.
+  /** The typical type of identifier.
     * We use Symbol because they are memoized by the compiler which means we only pay for the memory of a given
     * identifier once. They aren't as easily mistaken for a string either.
     */
