@@ -17,7 +17,6 @@ package scrupal.core.nodes
 
 import java.time.Instant
 
-import scalatags.Text.all._
 import scrupal.api._
 import akka.http.scaladsl.model.{ MediaType, MediaTypes }
 

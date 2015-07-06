@@ -25,12 +25,18 @@ class SubstitutionNodeSpec extends ScrupalSpecification("MessageNode") with Node
   lazy val node = SubstitutionNode(specName, specName, "foo @@@bar@@@", Map.empty)
 
   s"$specName" should {
-    "handle ..." in nodeTest(node) { r: Response ⇒
+    "handle a simple substitution" in nodeTest(node) { r: Response ⇒
       r.mediaType must beEqualTo(MediaTypes.`text/plain`)
       r.disposition.isSuccessful must beFalse
       r.isInstanceOf[UnimplementedResponse] must beTrue
       val sr = r.asInstanceOf[UnimplementedResponse]
       sr.what must beEqualTo( "SubstitutionNode" )
+    }
+    "resolve substitutions" in {
+      val tags : Map[String,(Node,Response)] = Map("bar" → (StringNode("bar","bar","bar") → StringResponse("bar")))
+      val resolved = node.resolve(context, tags)
+      resolved.isInstanceOf[StringResponse] must beTrue
+      // FIXME: Update this test when SubstitutionNode actually does substitutions
     }
   }
 }

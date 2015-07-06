@@ -34,8 +34,7 @@ case class SubstitutionNode (
   script: String,
   subordinates: Map[String, Either[Node.Ref,Node]] = Map.empty[String, Either[Node.Ref,Node]],
   modified: Option[Instant] = Some(Instant.now()),
-  created: Option[Instant] = Some(Instant.now()),
-  final val kind: Symbol = SubstitutionNode.kind
+  created: Option[Instant] = Some(Instant.now())
 ) extends Node {
 
   final val mediaType: MediaType = MediaTypes.`text/html`
@@ -50,8 +49,4 @@ case class SubstitutionNode (
     // FIXME: Reinstate LayoutProducer in: EnumeratorResult(LayoutProducer(template, tags).buildEnumerator, mediaType)
     StringResponse("foo", Successful)
   }
-}
-
-object SubstitutionNode {
-  final val kind = 'Substitution
 }

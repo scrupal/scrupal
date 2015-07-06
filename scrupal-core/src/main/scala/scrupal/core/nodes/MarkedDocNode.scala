@@ -43,8 +43,8 @@ case class MarkedDocNode(
   root : String,
   path : Iterable[String],
   modified : Option[Instant] = Some(Instant.now()),
-  created : Option[Instant] = Some(Instant.now()),
-  final val kind : Symbol = MarkedDocNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now())
+) extends Node {
   override def mediaType : MediaType = MediaTypes.`text/html`
   def description : String = "A node that provides a marked document from a resource as html."
 
@@ -130,8 +130,6 @@ case class MarkedDocNode(
 }
 
 object MarkedDocNode {
-  final val kind = 'MarkedDoc
-
   def docNav(uplink : String, files : Map[String, String], dirs : Map[String, Map[String, String]]) = {
     div(cls := "well-small col-md-2",
       div(cls := "btn-toolbar-vertical", role := "group",

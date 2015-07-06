@@ -34,16 +34,11 @@ case class MessageNode(
   css_class : String,
   message : String,
   modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now),
-  final val kind : Symbol = MessageNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now)
+) extends Node {
   final val mediaType : MediaType = MediaTypes.`text/html`
   def apply(context: Context) : Future[Response] = Future.successful {
     val text = div(cls := css_class, message)
     HtmlResponse(Html.renderContents(Seq(text)), Successful)
   }
 }
-
-object MessageNode {
-  final val kind = 'Message
-}
-

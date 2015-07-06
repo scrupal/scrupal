@@ -23,7 +23,6 @@ import scrupal.core.PageBundle_t
   * Description of thing
   */
 case class PageEntity(override val id: Symbol = 'Page)(implicit  scrpl : Scrupal) extends Entity(id)(scrpl) {
-  def kind = 'Page
   val description = "An entity for simple HTML5 pages."
   val author = scrupal.author
   val copyright = scrupal.copyright

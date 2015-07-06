@@ -38,8 +38,8 @@ case class FileNode(
   file : File,
   override val mediaType : MediaType = MediaTypes.`text/html`,
   modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now),
-  final val kind : Symbol = FileNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now)
+) extends Node {
   def apply(context: Context) : Future[Response] = {
     val extension = {
       val name = file.getName
@@ -54,8 +54,4 @@ case class FileNode(
     }
     Future.successful(StreamResponse(new FileInputStream(file), mediaType))
   }
-}
-
-object FileNode {
-  final val kind = 'File
 }

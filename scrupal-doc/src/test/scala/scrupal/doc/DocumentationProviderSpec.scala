@@ -13,23 +13,23 @@
  * the specific language governing permissions and limitations under the License.                                     *
  **********************************************************************************************************************/
 
-package scrupal.core.nodes
+package scrupal.doc
 
-import java.time.Instant
+import play.api.test.FakeRequest
+import scrupal.api.Reactor
+import scrupal.test.ScrupalSpecification
 
-import akka.http.scaladsl.model.MediaTypes
-import scrupal.api._
-import scala.concurrent.Future
+class DocumentationProviderSpec extends ScrupalSpecification("DocumentationProvider") {
 
-case class StringNode(
-  name : String,
-  description : String,
-  text : String,
-  modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now)
-) extends Node {
-  final val mediaType = MediaTypes.`text/plain`
-  def apply(context : Context) : Future[Response] = {
-    Future.successful { StringResponse(text) }
+  s"$specName" should {
+    "route /doc appropriately" in {
+      val fr = FakeRequest("GET", "/doc")
+      DocumentationProvider().provide.lift(fr) match {
+        case Some(r: Reactor) ⇒
+          success
+        case None ⇒
+          failure("No reactor from DocumentationProvider")
+      }
+    }
   }
 }

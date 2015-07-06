@@ -29,14 +29,9 @@ case class URLNode(
   url : URL,
   mediaType : MediaType = MediaTypes.`text/html`,
   modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now),
-  final val kind : Symbol = URLNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now)
+) extends Node {
   def apply(context : Context) : Future[Response] = Future.successful {
     StreamResponse(url.openStream(), mediaType)
   }
 }
-
-object URLNode {
-  final val kind = 'URL
-}
-

@@ -32,15 +32,10 @@ case class AnchorNode(
   description : String,
   url : URL,
   modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now),
-  final val kind : Symbol = AnchorNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now)
+) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
   def apply(context: Context) : Future[Response] = Future.successful {
     HtmlResponse(Html.renderContents(Seq(a(href := url.toString, description))), Successful)
   }
 }
-
-object AnchorNode {
-  final val kind = 'Link
-}
-

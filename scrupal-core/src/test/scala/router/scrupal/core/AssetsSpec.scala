@@ -41,6 +41,7 @@ class AssetsSpec extends ScrupalSpecification("Assets")  {
       }
       Await.result(future, 2.seconds)
     }
+    // TODO: Write Asset test cases
     "find a javascript with js" in {
       pending
       // def js(file: String) = super.versioned("/public/javascripts", file)

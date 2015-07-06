@@ -18,7 +18,6 @@ package scrupal.core.nodes
 import java.time.Instant
 
 import akka.http.scaladsl.model.{MediaTypes, MediaType}
-import scalatags.Text.all._
 import scrupal.api._
 
 import scala.concurrent.Future
@@ -60,8 +59,8 @@ case class ScrupalesyNode(
   description : String,
   scrupalesy : String,
   modified : Option[Instant] = Some(Instant.now()),
-  created : Option[Instant] = Some(Instant.now()),
-  final val kind : Symbol = ScrupalesyNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now())
+) extends Node {
   override val mediaType : MediaType = MediaTypes.`text/html`
 
   def apply(context : Context) : Future[Response] = Future.successful {
@@ -69,8 +68,3 @@ case class ScrupalesyNode(
     // TODO: Implement ScrupaleasyNode
   }
 }
-
-object ScrupalesyNode {
-  final val kind = 'Scrupalesy
-}
-

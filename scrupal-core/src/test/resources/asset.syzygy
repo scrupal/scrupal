@@ -1,0 +1,3 @@
+This is a file to
+test getting a file with an unrecognized extension yields
+a sensible media type or not.

@@ -28,15 +28,11 @@ case class StaticNode(
   description : String,
   body : Html.Template,
   modified : Option[Instant] = Some(Instant.now),
-  created : Option[Instant] = Some(Instant.now),
-  final val kind : Symbol = StaticNode.kind) extends Node {
+  created : Option[Instant] = Some(Instant.now)
+) extends Node {
   def args : ContentsArgs = Html.EmptyContentsArgs
   val mediaType : MediaType = MediaTypes.`text/html`
   def apply(context : Context) : Future[Response] = Future.successful {
     HtmlResponse(body.render(context, args), Successful)
   }
-}
-
-object StaticNode {
-  final val kind = 'Static
 }
