@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/scrupal/scrupal.svg?branch=master)](https://travis-ci.org/scrupal/scrupal)
 [![Coverage Status](https://coveralls.io/repos/scrupal/scrupal/badge.svg?branch=master)](https://coveralls.io/r/scrupal/scrupal?branch=master)
 [![Release](https://img.shields.io/github/release/scrupal/scrupal.svg?style=plastic)](https://github.com/scrupal/scrupal/releases)
-[![Downloads](https://img.shields.io/github/downloads/scrupal/scrupal/total.svg)]()
+[![Downloads](https://img.shields.io/github/downloads/scrupal/scrupal/latest/total.svg)](https://github.com/scrupal/scrupal/releases)
 [![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal)
 [![Join the chat at https://gitter.im/scrupal/scrupal](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scrupal/scrupal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
