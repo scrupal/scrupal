@@ -39,6 +39,7 @@ trait Dependencies
     val spray = "1.3.2"
     val akka_http = "1.0-RC3"
     val kamon = "0.4.0"
+    val bootswatch = "3.3.1+2"
   }
 
   // Things we borrow from Play Framework
@@ -78,8 +79,10 @@ trait Dependencies
   val scalatags               = "com.lihaoyi"               %% "scalatags"                % "0.5.2"
 
   // WebJars We Use
-  val wj_bootstrap            = "org.webjars"               % "bootstrap"                 % "3.3.5"
+  val wj_bootswatch           = "org.webjars"               % "bootswatch"                % Ver.bootswatch
+  // val wj_bootstrap            = "org.webjars"               % "bootstrap"                 % "3.3.5"
   val wj_marked               = "org.webjars"               % "marked"                    % "0.3.2-1"
+  val wj_jquery               = "org.webjars"               % "jquery"                    % "2.1.4"
   val wj_requirejs            = "org.webjars"               % "requirejs"                 % "2.1.18"
   val wj_requirejs_domready   = "org.webjars"               % "requirejs-domready"        % "2.0.1-2"
   val wj_font_awesome         = "org.webjars"               % "font-awesome"              % "4.3.0-3"
@@ -176,35 +179,11 @@ trait Dependencies
     Test.akka_testkit, Test.commons_io, Test.nu_validator
   ) ++ common_dependencies
 
-  val bootswatch_themes: Seq[ModuleID] = Seq(
-    "org.webjars" % "bootswatch-amelia" % "3.2.0-1",
-    "org.webjars" % "bootswatch-cerulean" % "3.3.1+2",
-    "org.webjars" % "bootswatch-cosmo" % "3.3.1+2",
-    "org.webjars" % "bootswatch-cupid" % "3.1.0+1",
-    "org.webjars" % "bootswatch-cyborg" % "3.3.1+2",
-    "org.webjars" % "bootswatch-darkly" % "3.3.1+2",
-    "org.webjars" % "bootswatch-default" % "3.3.1+2",
-    "org.webjars" % "bootswatch-flatly" % "3.3.1+2",
-    "org.webjars" % "bootswatch-journal" % "3.3.1+2",
-    "org.webjars" % "bootswatch-lumen" % "3.3.1+2",
-    "org.webjars" % "bootswatch-paper" % "3.3.1+2",
-    "org.webjars" % "bootswatch-readable" % "3.3.1+2",
-    "org.webjars" % "bootswatch-sandstone" % "3.3.1+2",
-    "org.webjars" % "bootswatch-simplex" % "3.3.1+2",
-    "org.webjars" % "bootswatch-slate" % "3.3.1+2",
-    "org.webjars" % "bootswatch-spacelab" % "3.3.1+2",
-    "org.webjars" % "bootswatch-superhero" % "3.3.1+2",
-    "org.webjars" % "bootswatch-united" % "3.3.1+2",
-    "org.webjars" % "bootswatch-yeti" % "3.3.1+2"
-  )
-
-  val bootswatch_theme_names : Seq[String] = bootswatch_themes.map { mid ⇒ mid.name.replace("bootswatch-","") }
-
   val core_dependencies : Seq[ModuleID] = Seq(
     commons_lang3, scala_arm, scala_pickling, livestream_scredis, akka_actor, play_iteratees, akka_http, shapeless,
-    scalatags, wj_marked, wj_font_awesome, wj_bootstrap, scala_compiler,
+    scalatags, wj_marked, wj_font_awesome, wj_bootswatch, wj_jquery, scala_compiler,
     Test.akka_testkit, Test.commons_io
-  ) ++ common_dependencies ++ bootswatch_themes
+  ) ++ common_dependencies
 
   val config_dependencies : Seq[ModuleID] = Seq()
 

@@ -36,8 +36,21 @@ object PathOf {
     s"/assets/lib/$library/$path"
   }
 
-  def theme(file: String)(implicit context: Context) = {
-    s"/assets/lib/${context.themeProvider}-${context.themeName}/$file"
+  def webjar(library: String, path: String)(implicit context: Context) = {
+    s"/webjar/$library/$path"
+  }
+
+  def theme(themeName: String)(implicit context: Context) = {
+    DataCache.themes.get(themeName) match {
+      case Some(thm) ⇒
+        thm.`css-min`
+      case None ⇒
+        s"/assets/theme/$themeName"
+    }
+  }
+
+  def bsjs(file: String) = {
+    s"/assets/bsjs/$file"
   }
 
   def css(name: String)(implicit context: Context) = {

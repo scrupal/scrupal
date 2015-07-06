@@ -15,21 +15,23 @@
 
 package scrupal.api
 
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import scrupal.storage.api.{Collection, Schema}
-import scrupal.utils.ScrupalUtilsInfo
+import scrupal.utils.ScrupalComponent
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.util.{Failure, Success, Try}
 
-abstract class DataCache {
+abstract class DataCache extends ScrupalComponent {
 
   def update(scrupal : Scrupal, schema : Schema)
 }
 
 object DataCache extends DataCache {
 
-  private var _themes = Seq.empty[String]
+  private var _themes : Map[String,Theme] = emptyThemeInfo
 
-  def themes : Seq[String] = _themes
+  def themes : Map[String,Theme] = _themes
 
   private var _sites = Seq.empty[String]
   def sites : Seq[String] = _sites
@@ -38,20 +40,61 @@ object DataCache extends DataCache {
   def alerts : Seq[Alert] = _alerts
 
   def update(scrupal : Scrupal, schema : Schema) : Unit = {
-    _themes = ScrupalUtilsInfo.themes
-    scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
-      val f1 = {
-        schema.withCollection("alerts") { alertsColl : Collection[Alert] ⇒
-          alertsColl.fetchAll().map { alerts ⇒
-            val unexpired = for (a ← alerts if a.unexpired) yield { a }
-            _alerts = unexpired.toSeq
+    this.synchronized {
+      updateThemeInfo
+      scrupal.withExecutionContext { implicit ec: ExecutionContext ⇒
+        val f1 = {
+          schema.withCollection("alerts") { alertsColl: Collection[Alert] ⇒
+            alertsColl.fetchAll().map { alerts ⇒
+              val unexpired = for (a ← alerts if a.unexpired) yield {a}
+              _alerts = unexpired.toSeq
+            }
           }
         }
+        val f2 = Future {
+          _sites = scrupal.Sites.values.map { site ⇒ site.name }
+        }
+        Future sequence Seq(f1, f2)
       }
-      val f2 = Future {
-        _sites = scrupal.Sites.values.map { site ⇒ site.name }
-      }
-      Future sequence Seq(f1, f2)
     }
+  }
+
+  def updateThemeInfo() : Unit = {
+    _themes = getThemeInfo
+  }
+
+  case class Theme(name: String, description: String, thumbnail: String, preview: String, css: String,
+    `css-min`: String)
+  implicit val ThemeReads = Json.reads[Theme]
+  case class ThemeInfo(version: String, themes: List[Theme])
+  implicit val ThemeInfoReads = Json.reads[ThemeInfo]
+
+  lazy val emptyThemeInfo = Map.empty[String,Theme]
+
+  def getThemeInfo : Map[String,Theme] = Try[Map[String,Theme]] {
+    val theme_path = "META-INF/resources/webjars/bootswatch/3.3.1+2/2/api/themes.json"
+    val loader = this.getClass.getClassLoader
+    Option(loader.getResourceAsStream(theme_path)) match {
+      case Some(stream) ⇒ {
+        val jsval = Json.parse(stream)
+        ThemeInfoReads.reads(jsval) match {
+          case JsSuccess(value, path) ⇒ value.themes.map { t ⇒ t.name → t }.toMap
+          case JsError(errors) ⇒
+            log.warn(s"Failed to parse Bootswatch themes Json: ${JsError.toJson(errors)}")
+            emptyThemeInfo
+          case _ ⇒
+            log.warn(s"Failed to parse Bootswatch themes Json: mismatched result")
+            emptyThemeInfo
+        }
+      }
+      case None ⇒
+        log.warn(s"Failed to find Bootswatch themes resource at $theme_path")
+        emptyThemeInfo
+    }
+  } match {
+    case Success(x) ⇒ x
+    case Failure(x) ⇒
+      log.warn("Failed to acquire Bootswatch themes:", x)
+      emptyThemeInfo
   }
 }

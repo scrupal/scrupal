@@ -28,8 +28,12 @@ object Html {
   type Contents = Seq[Modifier]
   val emptyContents = Seq.empty[Modifier]
 
-  def js(javascript : String) = script(`type` := "application/javascript", javascript)
-  def jslib(lib : String, path : String) = script(`type` := "application/javascript", src := s"/assets/lib/$lib/$path")
+  def js(javascript : String) = script(`type` := "application/javascript",
+    javascript)
+  def jslib(lib : String, path : String) =
+    script(`type` := "application/javascript", src := s"/assets/lib/$lib/$path")
+  def webjar(lib: String, path: String) =
+    script(`type` := "application/javascript", src := s"/webjar/$lib/$path")
 
   val nbsp = raw("&nbsp;")
 

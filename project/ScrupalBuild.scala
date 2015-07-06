@@ -64,7 +64,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
       scrupalTitle := "Scrupal Utils",
       scrupalPackage := "scrupal.utils",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
-      BuildInfoKeys.buildInfoKeys += ( "themes" → bootswatch_theme_names),
+      BuildInfoKeys.buildInfoKeys += ( "bootswatch_version" → Ver.bootswatch),
       libraryDependencies ++= utils_dependencies
     )
 

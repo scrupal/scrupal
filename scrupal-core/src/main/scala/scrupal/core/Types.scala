@@ -30,7 +30,7 @@ object PageBundle_t
     )
   )
 
-object Theme_t extends SelectionType('Theme, "Choice of themes", DataCache.themes)
+object Theme_t extends SelectionType('Theme, "Choice of themes", DataCache.themes.keys.toSeq)
 
 object Site_t extends SelectionType('Site, "Choice of sites", DataCache.sites)
 

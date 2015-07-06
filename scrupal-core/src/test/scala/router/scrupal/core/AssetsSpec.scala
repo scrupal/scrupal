@@ -15,15 +15,33 @@
 
 package router.scrupal.core
 
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.inject._
 import play.api.Environment
+import play.api.mvc.Handler
+import play.api.routing.Router
 import play.api.test.FakeRequest
+import scrupal.api.DataCache
+import scrupal.storage.api.Schema
 import scrupal.test.{OneAppPerSpec, ScrupalSpecification}
 import scrupal.core.http.ErrorHandler
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class AssetsSpec extends ScrupalSpecification("Assets")  {
+
+class AssetsSpec extends ScrupalSpecification("Assets") with OneAppPerSpec {
+
+  override   def fakeApplicationBuilder(
+    path: java.io.File = new java.io.File("."),
+    classloader: ClassLoader = classOf[OneAppPerSpec].getClassLoader,
+    additionalConfiguration: Map[String, _ <: Any] = Map.empty,
+    withRoutes: PartialFunction[(String, String), Handler] = PartialFunction.empty,
+    router : Router = null
+  ) : GuiceApplicationBuilder = {
+    super.fakeApplicationBuilder(path,classloader,additionalConfiguration)
+      .overrides(bind[Router].to[_root_.router.Routes])
+  }
 
   lazy val eh = testScrupal.withConfiguration { config ⇒
     new ErrorHandler(testScrupal, Environment.simple(), config)
@@ -36,28 +54,37 @@ class AssetsSpec extends ScrupalSpecification("Assets")  {
       val action = assets.at("stylesheets/scrupal.min.css")
       val req = FakeRequest("GET", "/assets/stylesheets/scrupal.min.css")
       val future = action.apply(req).map { result ⇒
-        pending("getting application into test")
-        // result.header.status must beEqualTo(200)
+        result.header.status must beEqualTo(200)
       }
       Await.result(future, 2.seconds)
     }
-    // TODO: Write Asset test cases
-    "find a javascript with js" in {
-      pending
-      // def js(file: String) = super.versioned("/public/javascripts", file)
-    }
     "find an image with img" in {
-      pending
-      // def img(file: String) = super.versioned("/public/images", file)
+      val action = assets.img("scrupal.ico")
+      val req = FakeRequest("GET", "/assets/images/scrupal.ico")
+      val future = action.apply(req).map { result ⇒
+        result.header.status must beEqualTo(200)
+      }
+      Await.result(future, 2.seconds)
     }
     "find a stylesheet with css" in {
-      pending
-      // def css(file: String) = super.versioned("/public/stylesheets", file)
+      val action = assets.css("scrupal.min.css")
+      val req = FakeRequest("GET", "/assets/stylesheets/scrupal.min.css")
+      val future = action.apply(req).map { result ⇒
+        result.header.status must beEqualTo(200)
+      }
+      Await.result(future, 2.seconds)
     }
     "find a theme with theme" in {
-      pending
-      // def theme(theme: String, file: String) = super.versioned("/public/lib", s"bootswatch-$theme/$file")
+      DataCache.updateThemeInfo
+      val action = assets.theme("Cyborg")
+      val req = FakeRequest("GET", "/assets/theme/cyborg")
+      val future = action.apply(req).map { result ⇒
+        result.header.status must beEqualTo(200)
+      }
+      Await.result(future, 2.seconds)
     }
+    // TODO: Write an asset test for javascript files
+
   }
 
 }

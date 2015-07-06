@@ -24,9 +24,9 @@ trait BasicPageGenerator extends PageGenerator {
   def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
     implicit val ctxt : Context = context
     Seq(
-      link(rel := "stylesheet", href := PathOf.lib("font-awesome", "css/font-awesome.css"), media := "screen"),
+      link(rel := "stylesheet", href := PathOf.webjar("font-awesome", "css/font-awesome.min.css"), media := "screen"),
       link(rel := "stylesheet", href := PathOf.css("scrupal"), media := "screen"),
-      jslib("marked", "marked.js")
+      webjar("marked", "marked.js")
     )
   }
 
@@ -50,11 +50,10 @@ trait BootstrapPageGenerator extends BasicPageGenerator {
   override def headSuffix(context : Context, args : ContentsArgs) : Html.Contents = {
     implicit val ctxt: Context = context
     Seq(
-      link(rel := "stylesheet", media := "screen", href := PathOf.theme("css/bootstrap.min.css")),
-      link(rel := "stylesheet", media := "screen", href := PathOf.theme("css/bootstrap-theme.min.css")),
-      link(rel := "stylesheet", media := "screen", href := PathOf.theme("css/bootstrap-theme.min.css")),
-      jslib("jquery", "jquery.js"),
-      script(`type` := "application/javascript", src := PathOf.theme("js/bootstrap.min.js"))
+      link(rel := "stylesheet", media := "screen", href := PathOf.theme(ctxt.themeName)),
+      webjar("jquery", "jquery.js"),
+      script(`type` := "application/javascript", src := PathOf.bsjs("bootstrap.min.js")),
+      script(`type` := "application/javascript", src := PathOf.bsjs("bootswatch.js"))
     ) ++ super.headSuffix(context)
   }
 
@@ -75,7 +74,7 @@ class BootstrapPage(
 trait MarkedPageGenerator extends BootstrapPageGenerator {
   override def headSuffix(context : Context, args : ContentsArgs) = {
     super.headSuffix(context, args) ++ Seq(
-      jslib("marked", "marked.js")
+      webjar("marked", "marked.js")
     )
   }
 

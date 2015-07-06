@@ -43,7 +43,7 @@ abstract class Site(sym : Identifier)(implicit scr : Scrupal) extends {
 
   def themeProvider : String = "bootswatch"
 
-  def themeName : String = "default" // = getString("theme").get
+  def themeName : String = "Default" // = getString("theme").get
 
   def favicon: String = "scrupal.ico"
 

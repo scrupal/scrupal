@@ -40,7 +40,7 @@ trait Context {
 
   val favicon: String = "scrupal.ico"
   val themeProvider : String = "bootswatch"
-  val themeName : String = "default"
+  val themeName : String = "Default"
   val description : String = ""
   val user : String = "guest"
 

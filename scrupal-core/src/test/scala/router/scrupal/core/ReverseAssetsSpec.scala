@@ -20,11 +20,19 @@ import scrupal.test.ScrupalSpecification
 class ReverseAssetsSpec extends ScrupalSpecification("ReverseAssets") {
 
   lazy val ra = new ReverseAssets("")
+
   s"$specName" should {
     "generate stylesheet Call" in {
-      pending("getting application into test")
-      // val call = ra.css("scrupal.css")
-      // call.url must not beEmpty
+      val call = ra.css("scrupal.css")
+      call.url must contain("/assets/stylesheets/scrupal.css")
+    }
+    "generate javascript Call" in {
+      val call = ra.js("foo.js")
+      call.url must contain("/assets/javascripts/foo.js")
+    }
+    "generate theme Call" in {
+      val call = ra.theme("default")
+      call.url must contain("/assets/theme/default")
     }
   }
 }

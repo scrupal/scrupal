@@ -33,7 +33,7 @@ case class WelcomeSite(sym : Identifier)(implicit scrpl: Scrupal) extends Site(s
   val description : String = "The default 'Welcome To Scrupal' site that is built in to Scrupal"
   val modified : Option[Instant] = Some(Instant.now)
   val created : Option[Instant] = Some(Instant.parse("2014-11-18T17:40:00.00Z"))
-  override val themeName = "cyborg"
+  override val themeName = "Cyborg"
   def hostNames : Regex = ".*".r
 
   val documentation = DocumentationProvider()

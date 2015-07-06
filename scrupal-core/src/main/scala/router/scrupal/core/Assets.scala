@@ -17,21 +17,60 @@ package router.scrupal.core
 
 import javax.inject.{Inject, Singleton}
 
-import controllers.Assets.Asset
 import play.api.http.HttpErrorHandler
+import play.api.mvc.{RequestHeader, Action}
+import scrupal.api.DataCache
+import scrupal.utils.ScrupalUtilsInfo
 
 
 @Singleton
 class Assets @Inject()(errHandler: HttpErrorHandler) extends controllers.Assets(errHandler) {
 
-  def at(file: String) = super.at("/public", file, aggressiveCaching=true)
+  def mkPrefix(subdir: String, lib: String = "scrupal-core", version : String = ScrupalUtilsInfo.version) = {
+    s"/META-INF/resources/webjars/$lib/$version$subdir"
+  }
 
-  def js(file: Asset) = super.versioned("public/javascripts", file)
+  def at(file: String) = super.at(mkPrefix(""), file, aggressiveCaching=true)
 
-  def img(file: Asset) = super.versioned("public/images", file)
+  def js(file: String) = super.at(mkPrefix("/javascripts"), file)
 
-  def css(file: Asset) = super.versioned("public/stylesheets", file)
+  def img(file: String) = super.at(mkPrefix("/images"), file)
 
-  def theme(theme: String, file: Asset) = super.versioned("public/lib", s"bootswatch-$theme/$file")
+  def css(file: String) = super.at(mkPrefix("/stylesheets"), file)
+
+  def bsjs(file: String)= {
+    versionMap.get("bootswatch") match {
+      case Some(version) ⇒
+        val path = s"/META-INF/resources/webjars/bootswatch/$version/2/js"
+        super.at(path, file)
+      case None ⇒
+        Action { req: RequestHeader ⇒ NotFound(s"Bootswatch version") }
+
+    }
+  }
+
+  def theme(theme: String) = {
+    DataCache.themes.get(theme) match {
+      case Some(thm) ⇒
+        val path = s"/META-INF/resources/webjars/bootswatch/${ScrupalUtilsInfo.bootswatch_version}/${theme.toLowerCase}"
+        super.at(path, "bootstrap.min.css")
+      case None ⇒
+        Action { req: RequestHeader ⇒ NotFound(s"Theme '$theme'") }
+    }
+  }
+
+  val versionMap = Map(
+    "font-awesome" → "4.3.0-3", "marked" → "0.3.2", "jquery" → "2.1.4", "bootswatch" → "3.3.1+2"
+  )
+
+  def webjar(library: String, file: String) = {
+    versionMap.get(library) match {
+      case Some(version) ⇒
+        val path = s"/META-INF/resources/webjars/$library/$version"
+        super.at(path, file)
+      case None ⇒
+        Action { req: RequestHeader ⇒ NotFound(s"WebJar '$library'") }
+    }
+  }
 
 }
