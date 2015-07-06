@@ -93,17 +93,6 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     )
     .dependsOn(utils_deps, storage_deps)
   lazy val api_deps = api_proj % "compile->compile;test->test"
-  lazy val store_reactivemongo_proj = Project(base_name + "-store-reactivemongo", file("./scrupal-store-reactivemongo"))
-    .enablePlugins(ScrupalPlugin)
-    .disablePlugins(PlayLayoutPlugin)
-    .settings(buildSettings:_*)
-    .settings(
-      scrupalTitle := "Scrupal Store For ReactiveMongo",
-      scrupalPackage := "scrupal.store.reactivemongo",
-      libraryDependencies ++= store_reactivemongo_dependencies
-    )
-    .dependsOn(utils_deps, storage_deps, api_deps)
-  lazy val store_reactivemongo_deps = store_reactivemongo_proj % "compile->compile;test->test"
 
   lazy val core_proj = Project(base_name + "-core", file("./scrupal-core"))
     .enablePlugins(ScrupalPlugin, SbtWeb)
