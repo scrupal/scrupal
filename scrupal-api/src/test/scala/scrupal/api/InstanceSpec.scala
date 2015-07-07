@@ -54,7 +54,7 @@ class InstanceSpec extends ScrupalSpecification("InstanceSpec") {
             }
           }
         }
-        Await.result(future, 2.seconds)
+        Await.result(future, 5.seconds)
       }
       // FIXME: Do Update and Delete too!
     }

@@ -22,10 +22,11 @@ import scrupal.core.nodes.MarkedDocNode
 import scrupal.utils.ScrupalUtilsInfo
 
 object DocumentationProvider {
+  val assets_path = s"META-INF/resources/webjars/scrupal-doc/${ScrupalUtilsInfo.version}/docs"
   val docPathToDocsPF: PartialFunction[RequestHeader, Node] = {
     case GET(p"/doc$rest*") ⇒
       val path = rest.split("/").toIterable
-      MarkedDocNode(s"Scrupal ${ScrupalUtilsInfo.version} Documentation", "doc", "public/docs", path)
+      MarkedDocNode(s"Scrupal ${ScrupalUtilsInfo.version} Documentation", "doc", assets_path, path)
   }
 }
 
