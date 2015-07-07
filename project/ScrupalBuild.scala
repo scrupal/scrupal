@@ -41,7 +41,7 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     // publishTo := Some(Resolvers.MyArtifactHost),
     organization := "org.scrupal",
-    version := "0.2.0-SNAPSHOT",
+    version := "0.2.0",
     maxErrors := 50,
     routesGenerator := InjectedRoutesGenerator,
     namespaceReverseRouter := true,
