@@ -4,7 +4,7 @@
 [![Dependent Packages](https://www.versioneye.com/user/projects/559e6c6f616634001b000f68/badge.svg?style=flat)](https://www.versioneye.com/user/projects/559e6c6f616634001b000f68?child=summary)
 [![Release](https://img.shields.io/github/release/scrupal/scrupal.svg?style=flat)](https://github.com/scrupal/scrupal/releases)
 [![Downloads](https://img.shields.io/github/downloads/scrupal/scrupal/latest/total.svg)](https://github.com/scrupal/scrupal/releases)
-[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=ready)](https://waffle.io/scrupal/scrupal)
+[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=Ready)](https://waffle.io/scrupal/scrupal)
 [![Join the chat at https://gitter.im/scrupal/scrupal](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scrupal/scrupal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
