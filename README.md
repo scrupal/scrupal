@@ -1,11 +1,13 @@
+
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Build Status](https://travis-ci.org/scrupal/scrupal.svg?branch=master)](https://travis-ci.org/scrupal/scrupal)
 [![Coverage Status](https://coveralls.io/repos/scrupal/scrupal/badge.svg?branch=master)](https://coveralls.io/r/scrupal/scrupal?branch=master)
 [![Dependent Packages](https://www.versioneye.com/user/projects/559e6c6f616634001b000f68/badge.svg?style=flat)](https://www.versioneye.com/user/projects/559e6c6f616634001b000f68?child=summary)
 [![Release](https://img.shields.io/github/release/scrupal/scrupal.svg?style=flat)](https://github.com/scrupal/scrupal/releases)
 [![Downloads](https://img.shields.io/github/downloads/scrupal/scrupal/latest/total.svg)](https://github.com/scrupal/scrupal/releases)
-[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.png?label=Ready)](https://waffle.io/scrupal/scrupal)
+
 [![Join the chat at https://gitter.im/scrupal/scrupal](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scrupal/scrupal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Stories in Ready](https://badge.waffle.io/scrupal/scrupal.svg?label=ready&title=Ready)](http://waffle.io/scrupal/scrupal)
 
 
 # Scrupal
