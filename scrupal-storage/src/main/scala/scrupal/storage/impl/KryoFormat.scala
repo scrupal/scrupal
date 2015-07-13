@@ -24,6 +24,7 @@ import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 
 import com.twitter.chill.ScalaKryoInstantiator
+import org.objenesis.strategy.StdInstantiatorStrategy
 
 import scrupal.storage.api.Storable
 import scrupal.storage.api.StorageFormat

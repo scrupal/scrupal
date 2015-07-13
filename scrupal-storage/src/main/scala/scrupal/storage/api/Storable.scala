@@ -17,6 +17,7 @@
 
 package scrupal.storage.api
 
+import com.esotericsoftware.kryo.Serializer
 import scrupal.utils.ScrupalComponent
 
 /** A Storable Object
@@ -35,6 +36,8 @@ trait Storable extends Serializable with Equals {
     }
   }
 }
+
+trait StorableSerializer[T <: Storable] extends Serializer[T]
 
 trait StorageFormat {
   def toBytes : Array[Byte]

@@ -71,9 +71,8 @@ trait Dependencies
   val rxmongo                 = "com.reactific"             %% "rxmongo"                  % "0.1.0-SNAPSHOT"
   val reactivemongo           = "org.reactivemongo"         %% "reactivemongo"            % "0.11.0-SNAPSHOT"
   val livestream_scredis      = "com.livestream"            %% "scredis"                  % "2.0.6"
-  val akka_kryo_serialization = "com.github.romix.akka"     %% "akka-kryo-serialization"  % "0.3.3"
   val scala_pickling          = "org.scala-lang.modules"    %% "scala-pickling"           % "0.10.1"
-  val chill                   = "com.twitter"               %% "chill"                    % "0.6.0"
+  val chill                   = "com.twitter"               %% "chill"                    % "0.7.0-SNAPSHOT"
 
   // UI Based Stuff
   val scalatags               = "com.lihaoyi"               %% "scalatags"                % "0.5.2"
