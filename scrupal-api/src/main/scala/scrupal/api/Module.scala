@@ -43,7 +43,6 @@ abstract class Module(implicit scrpl : Scrupal) extends {
     * if you override this, your module's own content will be stored in the correspondingly named database.
     */
   val dbName : String = "scrupal"
-  def asT = this
 
   def moreDetailsURL : URL
 
