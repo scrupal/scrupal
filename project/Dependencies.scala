@@ -72,7 +72,7 @@ trait Dependencies
   val reactivemongo           = "org.reactivemongo"         %% "reactivemongo"            % "0.11.0-SNAPSHOT"
   val livestream_scredis      = "com.livestream"            %% "scredis"                  % "2.0.6"
   val scala_pickling          = "org.scala-lang.modules"    %% "scala-pickling"           % "0.10.1"
-  val chill                   = "com.twitter"               %% "chill"                    % "0.7.0-SNAPSHOT"
+  val chill                   = "org.scrupal"               %% "chill"                    % "0.7.0-SNAPSHOT"
 
   // UI Based Stuff
   val scalatags               = "com.lihaoyi"               %% "scalatags"                % "0.5.2"
