@@ -15,12 +15,15 @@
 
 package scrupal.storage.api
 
+import java.io.{ByteArrayInputStream, InputStream, OutputStream}
+
 import akka.util.{ByteString, ByteStringBuilder}
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.Serializer
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer
 import com.esotericsoftware.kryo.pool._
 import com.twitter.chill.{KryoBase, Input, Output, ScalaKryoInstantiator}
+import play.api.libs.iteratee.Enumerator
 import scrupal.utils.{Registry, Registrable}
 
 /** Encode/Decode Of Storable with Kryo/Chill Serialization
@@ -47,21 +50,55 @@ trait Codec[T <: Storable] extends Registrable[Codec[_]] {
   def regNum : Int
   def clazz : Class[T]
   def serializer(kryo: Kryo) : Serializer[T] = new CompatibleFieldSerializer[T](kryo, clazz)
+
   final def encode(obj : T) : Array[Byte] = {
+    val bldr : ByteStringBuilder = ByteString.newBuilder
+    encode(obj, bldr)
+    bldr.result().toArray
+  }
+
+  final def encode(obj : T, bldr: ByteStringBuilder) : Unit = {
     registry.withKryo { kryo: Kryo ⇒
-      val bldr : ByteStringBuilder = ByteString.newBuilder
       val output = new Output(bldr.asOutputStream)
-      kryo.writeClassAndObject(output, obj)
-      output.close()
-      bldr.result().toArray
+      try {
+        kryo.writeClassAndObject(output, obj)
+      } finally{
+        output.close()
+      }
+    }
+  }
+
+  final def encode(obj : T, out: OutputStream) : Unit = {
+    registry.withKryo { kryo: Kryo ⇒
+      val output = new Output(out)
+      try {
+        kryo.writeClassAndObject(output, obj)
+      } finally {
+        output.close()
+      }
     }
   }
 
   final def decode(bytes: Array[Byte]) : T = {
     registry.withKryo { kryo: Kryo ⇒
-      val bs = ByteString(bytes)
-      val input = new Input(bs.iterator.asInputStream)
-      kryo.readClassAndObject(input).asInstanceOf[T]
+      val bais = new ByteArrayInputStream(bytes)
+      val input = new Input(bais)
+      try {
+        kryo.readClassAndObject(input).asInstanceOf[T]
+      } finally {
+        input.close()
+      }
+    }
+  }
+
+  final def decode(in : InputStream) : T = {
+    registry.withKryo { kryo : Kryo ⇒
+      val input = new Input(in)
+      try {
+        kryo.readClassAndObject(input).asInstanceOf[T]
+      } finally {
+        input.close()
+      }
     }
   }
 }
@@ -69,6 +106,8 @@ trait Codec[T <: Storable] extends Registrable[Codec[_]] {
 class CodecRegistry extends Registry[Codec[_]] {
   def registrantsName = "codec"
   def registryName = "Codecs"
+
+  val MinimumRegistrationNumber = 128
 
   lazy val instantiator = new ScalaKryoInstantiator {
     val storables : Seq[Codec[_]] = {
@@ -96,16 +135,31 @@ class CodecRegistry extends Registry[Codec[_]] {
       if (conflicts.nonEmpty) {
         toss(s"Codec registrations conflict with standard serializers: ${conflicts.mkString(",\n")}.")
       }
+      val tooSmalls = for ( (sym,codec) ← _registry if codec.regNum < MinimumRegistrationNumber) yield  {
+        s"#${codec.regNum}: ${codec.clazz.getSimpleName}"
+      }
+      if (tooSmalls.nonEmpty) {
+        toss(s"Codec registration numbers too small: ${tooSmalls.mkString(",\n")}.")
+      }
       _registry.map { case (sym,codec) ⇒ codec }.toSeq
     }
 
     override def newKryo(): KryoBase = {
       val kryo = super.newKryo()
-      kryo.setDefaultSerializer(classOf[CompatibleFieldSerializer[_]])
+      kryo.setAsmEnabled(true)
+      kryo.setReferences(true)
       kryo.setRegistrationRequired(true)
+      kryo.addDefaultSerializer(classOf[Storable], new CompatibleFieldSerializer[Storable](kryo, classOf[Storable]))
+      kryo.setDefaultSerializer(classOf[CompatibleFieldSerializer[_]])
+      var min = Integer.MAX_VALUE
+      var max = Integer.MIN_VALUE
       for (s ← storables) {
         kryo.register(s.clazz, s.serializer(kryo), s.regNum)
+        if (s.regNum < min) min = s.regNum
+        if (s.regNum > max) max = s.regNum
       }
+      val after = kryo.getNextRegistrationId
+      log.info(s"Registered ${storables.size} Storable serializers with minID=$min and maxID=$max. Next ID=${kryo.getNextRegistrationId}")
       kryo
     }
   }

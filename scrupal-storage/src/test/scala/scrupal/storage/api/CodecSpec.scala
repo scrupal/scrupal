@@ -15,6 +15,8 @@
 
 package scrupal.storage.api
 
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+
 import org.specs2.mutable.Specification
 import scrupal.utils.{ScrupalComponent, ScrupalException}
 
@@ -28,55 +30,80 @@ class CodecSpec extends Specification with ScrupalComponent {
   case class TestCodec[T <: Storable](
     id: Symbol, registry: CodecRegistry, regNum: Int, clazz : Class[T]
   ) extends Codec[T]
+  case class BigClass(one: Boolean, two: Byte, three: Short, four: Int, five: Long, six: Float, seven: Double,
+    eight: String, nine: (String,Long), ten: Char, eleven: Any, twelve: AnyRef, thirteen: Option[Int]) extends Storable
 
   "Codec" should {
     "encode/decode simple class" in {
       val reg = new CodecRegistry
-      val c1 = TestStorableCodec('hundred, reg, 100)
+      val c1 = TestStorableCodec('hundred, reg, reg.MinimumRegistrationNumber)
       val encodable = TestStorable("fooness")
       val bytes = c1.encode(encodable)
       val decoded : TestStorable = c1.decode(bytes)
       encodable.data must beEqualTo(decoded.data)
     }
     "encode/decode class with many fields" in {
-      case class BigClass(one: Boolean, two: Byte, three: Short, four: Int, five: Long, six: Float, seven: Double,
-        eight: String, nine: (String,Long), ten: Char, eleven: Any, twelve: AnyRef, thirteen: Option[Int]) extends Storable
       val reg = new CodecRegistry
-      val codec = new TestCodec('big, reg, 99, classOf[BigClass])
+      val codec = new TestCodec('big, reg, reg.MinimumRegistrationNumber, classOf[BigClass])
       val encodable = BigClass(true, 0x2.toByte, 3.toShort, 4, 5L, 6.0F, 7.0D, "8", "five" → 4, 10.toChar, "eleven", "twelve",
         Some(13))
       val bytes = codec.encode(encodable)
       val decoded : BigClass = codec.decode(bytes)
       encodable must beEqualTo(decoded)
     }
+    "encode/decode big class to/from stream" in {
+      val reg = new CodecRegistry
+      val codec = new TestCodec('big, reg, reg.MinimumRegistrationNumber, classOf[BigClass])
+      val encodable = BigClass(true, 0x2.toByte, 3.toShort, 4, 5L, 6.0F, 7.0D, "8", "five" → 4, 10.toChar, "eleven", "twelve",
+        Some(13))
+      val baos = new ByteArrayOutputStream
+      codec.encode(encodable, baos)
+      val bytes = baos.toByteArray
+      val bais = new ByteArrayInputStream(bytes)
+      val decoded : BigClass = codec.decode(bais)
+      encodable must beEqualTo(decoded)
+    }
   }
 
   "Codec Registry" should {
-    "prevent duplicate registrations" in {
+    "ensure registration numbers are not too small" in{
       val reg = new CodecRegistry
-      val c1 = TestStorableCodec('hundred, reg, 100)
-      val c2 = TestStorableCodec('oh_one, reg, 100)
+      val c1 = TestStorableCodec('ninetyNine, reg, reg.MinimumRegistrationNumber - 1)
       try {
         c1.encode(new TestStorable)
         failure("Should have thrown ScrupalException")
       } catch {
         case x: ScrupalException ⇒
           log.info(s"Got exception: ${x.getMessage}")
-          (x.getMessage must contain("#100: hundred:TestStorable, oh_one:TestStorable")).toResult
+          (x.getMessage must contain("registration numbers too small")).toResult
+        case x: Throwable ⇒ failure(s"Wrong Exception: $x")
+      }
+    }
+    "prevent duplicate registrations" in {
+      val reg = new CodecRegistry
+      val c1 = TestStorableCodec('hundred, reg, reg.MinimumRegistrationNumber)
+      val c2 = TestStorableCodec('oh_one, reg, reg.MinimumRegistrationNumber)
+      try {
+        c1.encode(new TestStorable)
+        failure("Should have thrown ScrupalException")
+      } catch {
+        case x: ScrupalException ⇒
+          log.info(s"Got exception: ${x.getMessage}")
+          (x.getMessage must contain(s"#${reg.MinimumRegistrationNumber}: hundred:TestStorable, oh_one:TestStorable")).toResult
         case x: Throwable ⇒ failure(s"Wrong Exception: $x")
       }
     }
 
     "prevent overriding standard serializers" in {
       val reg = new CodecRegistry
-      val c = TestStorableCodec('one,reg,1)
+      val c = TestStorableCodec('one, reg, 1)
       try {
         c.encode(new TestStorable)
         failure("Should have thorwn ScrupalException")
       } catch {
         case x: ScrupalException ⇒
           log.info(s"Got exception: ${x.getMessage}")
-          (x.getMessage must contain("#1: ")).toResult
+          (x.getMessage must contain("#1: TestStorable")).toResult
         case x: Throwable ⇒ failure(s"Wrong Exception: $x")
       }
     }
