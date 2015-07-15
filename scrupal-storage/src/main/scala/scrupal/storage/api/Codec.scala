@@ -23,7 +23,6 @@ import com.esotericsoftware.kryo.Serializer
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer
 import com.esotericsoftware.kryo.pool._
 import com.twitter.chill.{KryoBase, Input, Output, ScalaKryoInstantiator}
-import play.api.libs.iteratee.Enumerator
 import scrupal.utils.{Registry, Registrable}
 
 /** Encode/Decode Of Storable with Kryo/Chill Serialization
