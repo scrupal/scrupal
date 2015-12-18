@@ -157,8 +157,10 @@ class CodecRegistry extends Registry[Codec[_]] {
         if (s.regNum < min) min = s.regNum
         if (s.regNum > max) max = s.regNum
       }
+      kryo.register(classOf[scrupal.storage.api.Storable.StorablePimps[_]], kryo.getNextRegistrationId)
+      kryo.register(classOf[scrupal.storage.api.Storable#LongQueryable], kryo.getNextRegistrationId)
       val after = kryo.getNextRegistrationId
-      log.info(s"Registered ${storables.size} Storable serializers with minID=$min and maxID=$max. Next ID=${kryo.getNextRegistrationId}")
+      log.info(s"Registered ${storables.size} Storable serializers with minID=$min and maxID=$max. Next ID=${after}")
       kryo
     }
   }

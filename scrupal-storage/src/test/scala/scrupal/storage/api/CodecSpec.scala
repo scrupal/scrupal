@@ -54,8 +54,8 @@ class CodecSpec extends Specification with ScrupalComponent {
     "encode/decode big class to/from stream" in {
       val reg = new CodecRegistry
       val codec = new TestCodec('big, reg, reg.MinimumRegistrationNumber, classOf[BigClass])
-      val encodable = BigClass(true, 0x2.toByte, 3.toShort, 4, 5L, 6.0F, 7.0D, "8", "five" → 4, 10.toChar, "eleven", "twelve",
-        Some(13))
+      val encodable = BigClass(true, 0x2.toByte, 3.toShort, 4, 5L, 6.0F, 7.0D, "8",
+        "five" → 4, 10.toChar, "eleven", "twelve", Some(13))
       val baos = new ByteArrayOutputStream
       codec.encode(encodable, baos)
       val bytes = baos.toByteArray

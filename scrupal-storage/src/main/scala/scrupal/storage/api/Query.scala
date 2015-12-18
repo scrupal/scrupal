@@ -30,3 +30,5 @@ trait Queries[S <: Storable] {
 }
 
 // FIXME: Implement queries in Scrupal Storage
+
+trait Queryable[T] extends ( () ⇒ T)
