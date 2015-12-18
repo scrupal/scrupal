@@ -39,9 +39,8 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
   val base_name = "scrupal"
   val buildSettings: Seq[Def.Setting[_]] = Seq(
     // credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
-    // publishTo := Some(Resolvers.MyArtifactHost),
     organization := "org.scrupal",
-    version := "0.3-SNAPSHOT",
+    version := "0.2.1-SNAPSHOT",
     maxErrors := 50,
     routesGenerator := InjectedRoutesGenerator,
     namespaceReverseRouter := true,
@@ -51,9 +50,9 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := classesIgnoredByScoverage,
     resolvers ++= all_resolvers,
-    scrupalCopyrightHolder := "Reactific Software LLC",
-    scrupalCopyrightYears := Seq(2013, 2014, 2015),
-    scrupalDeveloperUrl := url("http://reactific.com/")
+    copyrightHolder := "Reactific Software LLC",
+    copyrightYears := Seq(2013, 2014, 2015),
+    developerUrl := url("http://reactific.com/")
   )
 
   lazy val utils_proj = Project(base_name + "-utils", file("./scrupal-utils"))
@@ -61,33 +60,34 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings: _*)
     .settings(
-      scrupalTitle := "Scrupal Utils",
-      scrupalPackage := "scrupal.utils",
+      titleForDocs := "Scrupal Utils",
+      codePackage := "scrupal.utils",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
       BuildInfoKeys.buildInfoKeys += ( "bootswatch_version" → Ver.bootswatch),
       libraryDependencies ++= utils_dependencies
     )
-
   lazy val utils_deps = utils_proj % "compile->compile;test->test"
+
   lazy val storage_proj = Project(base_name + "-storage", file("./scrupal-storage"))
     .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Storage",
-      scrupalPackage := "scrupal.storage",
+      titleForDocs := "Scrupal Storage",
+      codePackage := "scrupal.storage",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 45, // FIXME: Need more test coverage!
       libraryDependencies ++= storage_dependencies
     )
     .dependsOn(utils_deps)
   lazy val storage_deps = storage_proj % "compile->compile;test->test"
+
   lazy val api_proj = Project(base_name + "-api", file("./scrupal-api"))
     .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal API",
-      scrupalPackage := "scrupal.api",
+      titleForDocs := "Scrupal API",
+      codePackage := "scrupal.api",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 50, // FIXME: Need more test coverage!
       libraryDependencies ++= api_dependencies
     )
@@ -102,53 +102,57 @@ object ScrupalBuild extends Build with AssetsSettings with Dependencies {
     .settings(less_settings:_*)
     .settings(core_pipeline_settings:_*)
     .settings(
-      scrupalTitle := "Scrupal Core",
-      scrupalPackage := "scrupal.core",
+      titleForDocs := "Scrupal Core",
+      codePackage := "scrupal.core",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 40, // FIXME: Need more test coverage!
       libraryDependencies ++= core_dependencies
     )
     .dependsOn(storage_deps, api_deps, utils_deps)
   lazy val core_deps = core_proj % "compile->compile;test->test"
+
   lazy val admin_proj = Project(base_name + "-admin", file("./scrupal-admin"))
     .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Administration Module",
-      scrupalPackage := "scrupal.admin",
+      titleForDocs := "Scrupal Administration Module",
+      codePackage := "scrupal.admin",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 0, // FIXME: Need more test coverage!
       libraryDependencies ++= admin_dependencies)
     .dependsOn(utils_deps, api_deps, core_deps, storage_deps)
   lazy val admin_deps = admin_proj % "compile->compile;test->test"
+
   lazy val config_proj = Project(base_name + "-config", file("./scrupal-config"))
     .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Configuration Module",
-      scrupalPackage := "scrupal.config",
+      titleForDocs := "Scrupal Configuration Module",
+      codePackage := "scrupal.config",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 0, // FIXME: Need more test coverage!
       libraryDependencies ++= config_dependencies)
     .dependsOn(utils_deps, core_deps)
   lazy val config_deps = config_proj % "compile->compile;test->test"
+
   lazy val doc_proj = Project(base_name + "-doc", file("./scrupal-doc"))
     .enablePlugins(ScrupalPlugin)
     .disablePlugins(PlayLayoutPlugin)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal Documentation Module",
-      scrupalPackage := "scrupal.doc",
+      titleForDocs := "Scrupal Documentation Module",
+      codePackage := "scrupal.doc",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 0, // FIXME: Need more test coverage!
       resolvers ++= all_resolvers,
       libraryDependencies ++= doc_dependencies)
     .dependsOn(utils_deps, api_deps, core_deps, storage_deps)
   lazy val doc_deps = doc_proj % "compile->compile;test->test"
+
   lazy val root = Project(base_name, file("."))
     .enablePlugins(ScrupalPlugin, SbtWeb)
     .settings(buildSettings:_*)
     .settings(
-      scrupalTitle := "Scrupal",
-      scrupalPackage := "scrupal",
+      titleForDocs := "Scrupal",
+      codePackage := "scrupal",
       ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 60, // FIXME: Need more test coverage!
       aggregateReverseRoutes := Seq(core_proj, config_proj, admin_proj, doc_proj),
       libraryDependencies ++= root_dependencies

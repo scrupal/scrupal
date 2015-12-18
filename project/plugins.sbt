@@ -1,6 +1,8 @@
 resolvers ++=  Seq( Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots") )
 
-addSbtPlugin("org.scrupal" % "scrupal-sbt" % "0.2.0-SNAPSHOT" )
+scalaVersion := "2.10.5"
+
+addSbtPlugin("org.scrupal" % "scrupal-sbt" % "0.2.7" )
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.2.2")
 
@@ -17,6 +19,4 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.0")
 addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.0")
-
-// addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.0.2")
 
